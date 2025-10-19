@@ -5,6 +5,7 @@ This module provides secure API endpoints with authentication and authorization
 using the Marty MSF security framework.
 """
 import logging
+import uuid
 from datetime import datetime
 from typing import Any
 
@@ -179,7 +180,6 @@ async def create_pet(
     """Create a new pet (admin only)"""
     try:
         # Generate new pet ID
-        import uuid
         pet_id = f"pet-{uuid.uuid4().hex[:8]}"
 
         # Create pet data
@@ -249,7 +249,6 @@ async def create_order(
     """Create a new order"""
     try:
         # Generate new order ID
-        import uuid
         order_id = f"order-{uuid.uuid4().hex[:8]}"
 
         # Create order data

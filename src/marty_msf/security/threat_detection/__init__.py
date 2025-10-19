@@ -21,9 +21,10 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
 
+from prometheus_client import Counter, Histogram
+
 # External dependencies (optional)
 try:
-    from prometheus_client import Counter, Histogram
 
     REDIS_AVAILABLE = True
 

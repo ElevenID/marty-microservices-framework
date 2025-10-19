@@ -15,6 +15,9 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
+import aio_pika
+import redis.asyncio as redis
+
 from .core import ExchangeConfig, Message, MessageExchange, MessageQueue, QueueConfig
 
 logger = logging.getLogger(__name__)
@@ -334,7 +337,6 @@ class RabbitMQBackend(MessageBackend):
     async def connect(self):
         """Connect to RabbitMQ."""
         try:
-            import aio_pika
 
             connection_url = self._build_connection_url()
             self._connection = await aio_pika.connect_robust(
@@ -389,7 +391,6 @@ class RabbitMQBackend(MessageBackend):
 
     async def create_exchange(self, config: ExchangeConfig) -> MessageExchange:
         """Create RabbitMQ exchange."""
-        import aio_pika
 
         exchange_type = getattr(aio_pika.ExchangeType, config.exchange_type.upper())
 
@@ -408,7 +409,6 @@ class RabbitMQBackend(MessageBackend):
     async def publish(self, message: Message) -> bool:
         """Publish message to RabbitMQ."""
         try:
-            import aio_pika
 
             # Create AMQP message
             amqp_message = aio_pika.Message(
@@ -599,7 +599,6 @@ class RedisBackend(MessageBackend):
     async def connect(self):
         """Connect to Redis."""
         try:
-            import redis.asyncio as redis
 
             self._redis = redis.from_url(
                 f"redis://{self.config.host}:{self.config.port}",

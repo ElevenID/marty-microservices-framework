@@ -8,6 +8,7 @@ failure analysis, message recovery, and DLQ monitoring.
 import asyncio
 import builtins
 import logging
+import random
 import statistics
 import time
 from collections.abc import Callable
@@ -184,7 +185,6 @@ class DLQMessage:
 
         # Add jitter if enabled
         if retry_config.jitter:
-            import random
 
             jitter_amount = delay * 0.1  # 10% jitter
             delay += random.uniform(-jitter_amount, jitter_amount)

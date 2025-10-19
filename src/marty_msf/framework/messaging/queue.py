@@ -16,6 +16,7 @@ Features:
 
 import asyncio
 import builtins
+import datetime
 import io
 import json
 import logging
@@ -29,63 +30,17 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, TypeVar
 
-# Optional imports for different brokers
-try:
-    import aio_pika
-    from aio_pika import DeliveryMode, ExchangeType, Message
-    from aio_pika.abc import (
-        AbstractChannel,
-        AbstractConnection,
-        AbstractExchange,
-        AbstractQueue,
-    )
-
-    RABBITMQ_AVAILABLE = True
-except ImportError:
-    RABBITMQ_AVAILABLE = False
-
-try:
-    import aiokafka
-    from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
-    from aiokafka.errors import KafkaError
-
-    KAFKA_AVAILABLE = True
-except ImportError:
-    KAFKA_AVAILABLE = False
-
-
-# Optional imports for different brokers
-try:
-    import aio_pika
-    from aio_pika import DeliveryMode, ExchangeType, Message
-    from aio_pika.abc import (
-        AbstractChannel,
-        AbstractConnection,
-        AbstractExchange,
-        AbstractQueue,
-    )
-
-    RABBITMQ_AVAILABLE = True
-except ImportError:
-    RABBITMQ_AVAILABLE = False
-
-try:
-    import aiokafka
-    from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
-    from aiokafka.errors import KafkaError
-
-    KAFKA_AVAILABLE = True
-except ImportError:
-    KAFKA_AVAILABLE = False
-
-try:
-    import aiokafka
-    from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
-    from aiokafka.errors import KafkaError
-
-    KAFKA_AVAILABLE = True
-except ImportError:
-    KAFKA_AVAILABLE = False
+import aio_pika
+import aiokafka
+from aio_pika import DeliveryMode, ExchangeType, Message
+from aio_pika.abc import (
+    AbstractChannel,
+    AbstractConnection,
+    AbstractExchange,
+    AbstractQueue,
+)
+from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
+from aiokafka.errors import KafkaError
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +74,6 @@ class RestrictedUnpickler(pickle.Unpickler):
             return getattr(builtins, name)
         # Allow datetime objects which are commonly used in messages
         if module == "datetime" and name in {"datetime", "date", "time", "timedelta"}:
-            import datetime
 
             return getattr(datetime, name)
         # Block everything else
@@ -177,7 +131,7 @@ class MessageConfig:
 
 
 @dataclass
-class Message:
+class QueueMessage:
     """Message container."""
 
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
@@ -229,7 +183,6 @@ class MessageSerializer:
             if self.format == "json":
                 return json.dumps(payload).encode("utf-8")
             if self.format == "pickle":
-                import pickle
 
                 return pickle.dumps(payload)
             return str(payload).encode("utf-8")
@@ -260,7 +213,7 @@ class MessageHandler(ABC):
     """Abstract message handler interface."""
 
     @abstractmethod
-    async def handle(self, message: Message) -> bool:
+    async def handle(self, message: QueueMessage) -> bool:
         """Handle incoming message. Return True if successful."""
 
     @abstractmethod
@@ -280,7 +233,7 @@ class MessageBrokerInterface(ABC):
         """Disconnect from message broker."""
 
     @abstractmethod
-    async def publish(self, message: Message) -> bool:
+    async def publish(self, message: QueueMessage) -> bool:
         """Publish message to broker."""
 
     @abstractmethod
@@ -301,7 +254,7 @@ class InMemoryBroker(MessageBrokerInterface):
 
     def __init__(self, config: MessageConfig):
         self.config = config
-        self.topics: dict[str, list[Message]] = {}
+        self.topics: dict[str, list[QueueMessage]] = {}
         self.handlers: dict[str, list[MessageHandler]] = {}
         self.stats = MessageStats()
         self._running = False
@@ -324,7 +277,7 @@ class InMemoryBroker(MessageBrokerInterface):
                 pass
         logger.info("Disconnected from in-memory message broker")
 
-    async def publish(self, message: Message) -> bool:
+    async def publish(self, message: QueueMessage) -> bool:
         """Publish message to broker."""
         try:
             topic = message.topic or message.routing_key
@@ -409,10 +362,6 @@ class RabbitMQBroker(MessageBrokerInterface):
     """RabbitMQ message broker."""
 
     def __init__(self, config: MessageConfig):
-        if not RABBITMQ_AVAILABLE:
-            raise ImportError(
-                "RabbitMQ support not available. Install aio-pika: pip install aio-pika"
-            )
 
         self.config = config
         self.connection: AbstractConnection | None = None
@@ -447,7 +396,7 @@ class RabbitMQBroker(MessageBrokerInterface):
             self.channel = None
             self.exchange = None
 
-    async def publish(self, message: Message) -> bool:
+    async def publish(self, message: QueueMessage) -> bool:
         """Publish message to RabbitMQ."""
         if not self.exchange:
             await self.connect()
@@ -639,7 +588,7 @@ class MessageQueue:
             def get_topics(self) -> list[str]:
                 return [reply_topic]
 
-            async def handle(self, message: Message) -> bool:
+            async def handle(self, message: QueueMessage) -> bool:
                 nonlocal reply_payload
                 if message.correlation_id == correlation_id:
                     reply_payload = message.payload

@@ -3,12 +3,13 @@
 import logging
 import time
 
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker
+
 from ..base import ExternalSystemConnector
 from ..config import ExternalSystemConfig, IntegrationRequest, IntegrationResponse
 
 try:
-    from sqlalchemy import create_engine, text
-    from sqlalchemy.orm import sessionmaker
 
     SQLALCHEMY_AVAILABLE = True
 except ImportError:

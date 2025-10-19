@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 import grpc
+import jwt as pyjwt
 
 from marty_msf.security.secrets import SecretManager
 from marty_msf.security.unified_framework import (
@@ -205,7 +206,6 @@ class AuthenticationInterceptor(SecurityInterceptor):
     def _validate_jwt_token(self, token: str) -> dict[str, Any]:
         """Validate JWT token."""
         try:
-            import jwt as pyjwt
 
             # Get JWT secret from secret manager
             jwt_secret = asyncio.run(self.secret_manager.get_secret("jwt_secret"))

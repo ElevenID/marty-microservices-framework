@@ -11,6 +11,8 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from functools import wraps
 
+import redis.asyncio as redis
+
 from .config import RateLimitConfig
 from .errors import RateLimitExceededError
 
@@ -85,7 +87,6 @@ class RedisRateLimitBackend(RateLimitBackend):
         """Get Redis connection (lazy initialization)."""
         if self._redis is None:
             try:
-                import redis.asyncio as redis
 
                 self._redis = redis.from_url(self.redis_url)
             except ImportError:
@@ -355,7 +356,6 @@ def rate_limit(
             return func(*args, **kwargs)
 
         # Return appropriate wrapper based on whether function is async
-        import asyncio
 
         if asyncio.iscoroutinefunction(func):
             return async_wrapper

@@ -12,11 +12,9 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Optional
 
-if TYPE_CHECKING:
-    # These would be the actual MMF service types when available
-    from marty_msf.framework.config import PluginConfigManager
+from marty_msf.framework.config import PluginConfigManager
 
-    from .services import ServiceDefinition
+from .services import ServiceDefinition
 
 logger = logging.getLogger(__name__)
 

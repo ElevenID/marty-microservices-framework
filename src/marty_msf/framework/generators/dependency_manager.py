@@ -15,6 +15,11 @@ from typing import Any
 import networkx as nx
 import yaml
 
+from marty_msf.framework.cache.manager import CacheManager
+from marty_msf.framework.config import BaseServiceConfig
+from marty_msf.framework.messaging.queue import MessageQueue
+from marty_msf.framework.messaging.streams import EventStreamManager
+
 
 class DependencyType(Enum):
     """Types of dependencies in the framework."""
@@ -254,22 +259,18 @@ class DependencyInjectionContainer:
     async def _create_infrastructure_instance(self, spec: DependencySpec) -> Any:
         """Create infrastructure component instances."""
         if spec.name.startswith("framework-config"):
-            from marty_msf.framework.config import BaseServiceConfig
 
             return BaseServiceConfig(**spec.configuration)
 
         if spec.name.startswith("framework-cache"):
-            from marty_msf.framework.cache.manager import CacheManager
 
             return CacheManager(spec.configuration)
 
         if spec.name.startswith("framework-messaging"):
-            from marty_msf.framework.messaging.queue import MessageQueue
 
             return MessageQueue(spec.configuration)
 
         if spec.name.startswith("framework-events"):
-            from marty_msf.framework.messaging.streams import EventStreamManager
 
             return EventStreamManager(spec.configuration)
 

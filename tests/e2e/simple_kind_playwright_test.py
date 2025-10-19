@@ -24,12 +24,12 @@ from pathlib import Path
 
 import pytest
 import yaml
+from kubernetes import client, config
+from kubernetes.client.rest import ApiException
 from playwright.async_api import async_playwright
 
 # Import Kubernetes client
 try:
-    from kubernetes import client, config
-    from kubernetes.client.rest import ApiException
 
     KUBERNETES_AVAILABLE = True
 except ImportError:

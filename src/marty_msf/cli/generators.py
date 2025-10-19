@@ -9,12 +9,9 @@ import re
 from pathlib import Path
 from typing import Any
 
-try:
-    from jinja2 import Environment, FileSystemLoader
-except ImportError:
-    # Fallback for when Jinja2 is not available
-    Environment = None
-    FileSystemLoader = None
+from jinja2 import Environment, FileSystemLoader
+
+from ..framework.service_mesh import EnhancedServiceMeshManager
 
 
 class ServiceGenerator:
@@ -682,16 +679,17 @@ async def process_request(request: RequestModel):
         """
         try:
             # Import the service mesh manager
-            from ..framework.service_mesh import ServiceMeshManager
 
             # Create manager and generate deployment files
-            manager = ServiceMeshManager()
+            manager = EnhancedServiceMeshManager()
 
             generated_files = manager.generate_deployment_script(
-                project_name=project_name,
-                output_dir=output_dir,
-                domain=domain,
-                mesh_type=mesh_type
+                service_name=project_name,
+                config={
+                    "output_dir": output_dir,
+                    "domain": domain,
+                    "mesh_type": mesh_type
+                }
             )
 
             print(f"✅ Generated service mesh deployment for {project_name}")

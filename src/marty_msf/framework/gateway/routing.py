@@ -8,6 +8,7 @@ and composite routing strategies for sophisticated request routing capabilities.
 import builtins
 import fnmatch
 import logging
+import random
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -450,7 +451,6 @@ class WeightedRouter:
                     pass
 
         # Use weighted random selection
-        import random
 
         if self._total_weight <= 0:
             return self.weighted_routes[0][0].find_route(request)

@@ -3,6 +3,7 @@ Tests for observability components
 """
 
 import pytest
+from observability import setup_observability
 
 from marty_msf.observability.kafka import EventBus, EventMessage, KafkaConfig
 from marty_msf.observability.load_testing.load_tester import (
@@ -151,7 +152,6 @@ class TestObservabilityIntegration:
 
     def test_observability_setup_function(self):
         """Test the main setup function"""
-        from observability import setup_observability
 
         # Test that the function exists and is callable
         assert callable(setup_observability)
@@ -165,7 +165,6 @@ class TestObservabilityStack:
     @pytest.mark.asyncio
     async def test_full_observability_stack(self):
         """Test that all components can be initialized together"""
-        from observability import setup_observability
 
         # This would require actual Kafka running for full test
         # For now, just test the setup function doesn't crash

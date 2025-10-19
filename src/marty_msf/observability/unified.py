@@ -28,6 +28,7 @@ from opentelemetry import metrics, trace
 
 # OpenTelemetry components
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
+from opentelemetry.context import attach
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 
@@ -53,7 +54,7 @@ from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import SERVICE_NAME, SERVICE_VERSION, Resource
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 from prometheus_client import Counter, Gauge, Histogram, start_http_server
 
@@ -261,7 +262,6 @@ class UnifiedObservability:
 
         # Setup console exporter for debugging
         if self.config.enable_console_exporter:
-            from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 
             console_exporter = ConsoleSpanExporter()
             tracer_provider.add_span_processor(BatchSpanProcessor(console_exporter))
@@ -505,7 +505,6 @@ class UnifiedObservability:
         context = extract(headers)
         if context:
             # Activate the extracted context
-            from opentelemetry.context import attach
 
             token = attach(context)
             return token

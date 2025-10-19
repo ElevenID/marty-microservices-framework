@@ -3,6 +3,8 @@ Vault configuration and deployment examples for the Marty Microservices Framewor
 """
 
 # vault-config.hcl
+import os
+
 VAULT_CONFIG = '''
 ui = true
 
@@ -311,7 +313,6 @@ path "auth/token/renew-self" {
 
 if __name__ == "__main__":
     # Write configuration files
-    import os
 
     config_dir = "vault-configs"
     os.makedirs(config_dir, exist_ok=True)

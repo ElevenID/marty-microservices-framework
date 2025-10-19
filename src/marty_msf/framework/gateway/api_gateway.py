@@ -32,6 +32,9 @@ from typing import Any
 
 # HTTP client imports
 import aiohttp
+import jwt
+
+from marty_msf.framework.config.injection import container
 
 logger = logging.getLogger(__name__)
 
@@ -356,7 +359,6 @@ class JWTAuthenticator(Authenticator):
     def __init__(self, config: AuthConfig):
         self.config = config
         try:
-            import jwt
 
             self.jwt = jwt
         except ImportError:
@@ -765,20 +767,14 @@ class APIGateway:
         return self.stats
 
 
-# Global gateway instance
-_gateway: APIGateway | None = None
-
-
 def get_gateway() -> APIGateway | None:
-    """Get global API gateway."""
-    return _gateway
+    """Get API gateway from container."""
+    return container.get("api_gateway")
 
 
 def create_gateway() -> APIGateway:
-    """Create and set global API gateway."""
-    global _gateway
-    _gateway = APIGateway()
-    return _gateway
+    """Create and register API gateway with container."""
+    return container.get_or_create("api_gateway", lambda: APIGateway())
 
 
 @asynccontextmanager

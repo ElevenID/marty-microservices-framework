@@ -8,7 +8,6 @@ This is now a shim module that re-exports components from their dedicated packag
 For new code, prefer importing directly from the component packages.
 """
 
-# Feature management
 from marty_msf.framework.ml.feature_store.feature_store import FeatureStore
 
 # Model types and data structures
@@ -48,9 +47,6 @@ from marty_msf.framework.ml.serving.model_server import ModelServer
 # Legacy compatibility - create_ml_platform function
 def create_ml_platform():
     """Create complete ML platform."""
-    from marty_msf.framework.ml.feature_store.feature_store import FeatureStore
-    from marty_msf.framework.ml.registry.model_registry import ModelRegistry
-    from marty_msf.framework.ml.serving.model_server import ModelServer
 
     model_registry = ModelRegistry()
     feature_store = FeatureStore()

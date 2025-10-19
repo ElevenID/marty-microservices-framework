@@ -333,7 +333,6 @@ class CORSHandler:
 
     def _handle_preflight(self, request: GatewayRequest, origin: str) -> GatewayResponse:
         """Handle CORS preflight request."""
-        from .core import GatewayResponse
 
         response = GatewayResponse(status_code=200, body=b"")
 
@@ -802,7 +801,6 @@ class SecurityMiddleware:
 
     def _create_security_response(self, event: SecurityEvent) -> GatewayResponse:
         """Create security block response."""
-        from .core import GatewayResponse
 
         response = GatewayResponse(status_code=403, body=b"Forbidden: Security policy violation")
 

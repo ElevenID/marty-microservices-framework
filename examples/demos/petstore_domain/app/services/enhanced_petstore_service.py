@@ -15,28 +15,37 @@ from typing import Any
 from fastapi import HTTPException
 from pydantic import BaseModel
 
+from marty_msf.framework.event_streaming.core import (
+    DomainEvent,
+    EventBus,
+    EventMetadata,
+    EventType,
+)
+from marty_msf.framework.event_streaming.saga import (
+    Saga,
+    SagaContext,
+    SagaOrchestrator,
+    SagaStep,
+    StepStatus,
+)
+from marty_msf.framework.resilience.circuit_breaker import CircuitBreaker
+from marty_msf.framework.resilience.retry import RetryPolicy, with_retry
+from marty_msf.observability.unified_observability import ObservabilityManager
+from marty_msf.security.middleware import AuthenticationMiddleware, RateLimitMiddleware
+
+from .petstore_extended_messaging_service import (
+    PetstoreEventType,
+    PetstoreExtendedMessagingService,
+    PetstoreMessagingPattern,
+    create_petstore_extended_messaging_service,
+)
+from .petstore_resilience_service import (
+    PetstoreResilienceManager,
+    PetstoreResilientOperations,
+)
+
 # MMF imports for enhanced capabilities
 try:
-    from marty_msf.framework.event_streaming.core import (
-        DomainEvent,
-        EventBus,
-        EventMetadata,
-        EventType,
-    )
-    from marty_msf.framework.event_streaming.saga import (
-        Saga,
-        SagaContext,
-        SagaOrchestrator,
-        SagaStep,
-        StepStatus,
-    )
-    from marty_msf.framework.resilience.circuit_breaker import CircuitBreaker
-    from marty_msf.framework.resilience.retry import RetryPolicy, with_retry
-    from marty_msf.observability.unified_observability import ObservabilityManager
-    from marty_msf.security.middleware import (
-        AuthenticationMiddleware,
-        RateLimitMiddleware,
-    )
     MMF_AVAILABLE = True
 except ImportError:
     # Fallback when MMF modules are not available
@@ -45,10 +54,6 @@ except ImportError:
 
 # Import the new resilience service
 try:
-    from .petstore_resilience_service import (
-        PetstoreResilienceManager,
-        PetstoreResilientOperations,
-    )
     RESILIENCE_SERVICE_AVAILABLE = True
 except ImportError:
     RESILIENCE_SERVICE_AVAILABLE = False
@@ -56,12 +61,6 @@ except ImportError:
 
 # Import the new extended messaging service
 try:
-    from .petstore_extended_messaging_service import (
-        PetstoreEventType,
-        PetstoreExtendedMessagingService,
-        PetstoreMessagingPattern,
-        create_petstore_extended_messaging_service,
-    )
     EXTENDED_MESSAGING_AVAILABLE = True
 except ImportError:
     EXTENDED_MESSAGING_AVAILABLE = False

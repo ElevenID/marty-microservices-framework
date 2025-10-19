@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from app.core.config import get_settings
+from app.core.config import get_config_summary, get_settings
 from app.models.petstore_domain_models import (
     ErrorResponse,
     PetstoreDomainRequest,
@@ -20,6 +20,7 @@ from app.models.petstore_domain_models import (
 )
 from app.services.petstore_domain_service import PetstoreDomainService
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from main import get_service
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger("petstore-domain.api")
@@ -45,7 +46,6 @@ def get_service() -> PetstoreDomainService:
     """
     # This is a placeholder - in the actual application,
     # the service instance will be injected from main.py
-    from main import get_service
     return get_service()
 
 # API Models for request/response validation
@@ -255,7 +255,6 @@ async def get_service_config(request: Request):
     WARNING: This endpoint should be removed in production or properly secured
     as it may expose sensitive configuration information.
     """
-    from app.core.config import get_config_summary
 
     correlation_id = getattr(request.state, 'correlation_id', str(uuid.uuid4()))
 

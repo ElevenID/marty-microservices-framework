@@ -36,6 +36,8 @@ from prometheus_client import (
     generate_latest,
 )
 
+from ...core.di_container import get_service_optional, register_instance
+
 logger = logging.getLogger(__name__)
 
 
@@ -708,13 +710,11 @@ def get_monitoring_manager() -> MonitoringManager | None:
     Returns:
         MonitoringManager instance or None if not registered
     """
-    from ...core.di_container import get_service_optional
     return get_service_optional(MonitoringManager)
 
 
 def set_monitoring_manager(manager: MonitoringManager) -> None:
     """Set the monitoring manager instance using dependency injection."""
-    from ...core.di_container import register_instance
     register_instance(MonitoringManager, manager)
 
 

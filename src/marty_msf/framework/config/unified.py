@@ -36,6 +36,7 @@ import builtins
 import json
 import logging
 import os
+import secrets
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -43,19 +44,24 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Generic, Optional, TypeVar, Union
 
+import boto3
 import yaml
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient  # type: ignore
+from google.cloud import secretmanager  # type: ignore
 from pydantic import BaseModel, Field, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from marty_msf.framework.config.manager import Environment
+from marty_msf.security.secrets import VaultClient, VaultConfig
+
 # Import existing security module components with fallbacks
 try:
-    from marty_msf.security.secrets import VaultClient, VaultConfig
     VAULT_INTEGRATION_AVAILABLE = True
 except ImportError:
     VAULT_INTEGRATION_AVAILABLE = False
 
 # Only import the Environment enum from existing manager
-from marty_msf.framework.config.manager import Environment
 
 logger = logging.getLogger(__name__)
 
@@ -240,7 +246,6 @@ class AWSSecretsManagerBackend(SecretBackendInterface):
         """Check if AWS SDK is available."""
         if self._available is None:
             try:
-                import boto3
                 self._available = True
             except ImportError:
                 self._available = False
@@ -254,7 +259,6 @@ class AWSSecretsManagerBackend(SecretBackendInterface):
             raise RuntimeError("boto3 is required for AWS Secrets Manager backend")
 
         if self._client is None:
-            import boto3
             session = boto3.Session(profile_name=self.profile_name)
             self._client = session.client('secretsmanager', region_name=self.region_name)
         return self._client
@@ -362,7 +366,6 @@ class GCPSecretManagerBackend(SecretBackendInterface):
         """Check if GCP SDK is available."""
         if self._available is None:
             try:
-                from google.cloud import secretmanager
                 self._available = True
             except ImportError:
                 self._available = False
@@ -376,7 +379,6 @@ class GCPSecretManagerBackend(SecretBackendInterface):
             raise RuntimeError("google-cloud-secret-manager is required for GCP Secret Manager backend")
 
         if self._client is None:
-            from google.cloud import secretmanager
             self._client = secretmanager.SecretManagerServiceClient()
         return self._client
 
@@ -489,8 +491,6 @@ class AzureKeyVaultBackend(SecretBackendInterface):
         """Check if Azure SDK is available."""
         if self._available is None:
             try:
-                from azure.identity import DefaultAzureCredential
-                from azure.keyvault.secrets import SecretClient
                 self._available = True
             except ImportError:
                 self._available = False
@@ -504,8 +504,6 @@ class AzureKeyVaultBackend(SecretBackendInterface):
             raise RuntimeError("azure-keyvault-secrets is required for Azure Key Vault backend")
 
         if self._client is None:
-            from azure.identity import DefaultAzureCredential
-            from azure.keyvault.secrets import SecretClient
 
             credential = DefaultAzureCredential()
             self._client = SecretClient(vault_url=self.vault_url, credential=credential)
@@ -671,21 +669,18 @@ class EnvironmentDetector:
 
         # Check AWS
         try:
-            import boto3
             available.append(SecretBackend.AWS_SECRETS_MANAGER)
         except ImportError:
             pass
 
         # Check GCP
         try:
-            from google.cloud import secretmanager  # type: ignore
             available.append(SecretBackend.GCP_SECRET_MANAGER)
         except ImportError:
             pass
 
         # Check Azure
         try:
-            from azure.keyvault.secrets import SecretClient  # type: ignore
             available.append(SecretBackend.AZURE_KEY_VAULT)
         except ImportError:
             pass
@@ -1169,7 +1164,6 @@ class UnifiedConfigurationManager(Generic[T]):
 
     def _generate_secret_value(self, key: str, metadata: SecretMetadata) -> str:
         """Generate new secret value (placeholder - implement per type)."""
-        import secrets
         return secrets.token_urlsafe(32)
 
     async def health_check(self) -> dict[str, bool]:

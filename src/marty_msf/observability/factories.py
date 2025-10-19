@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from ..core.di_container import ServiceFactory
+from ..core.di_container import ServiceFactory, get_service, register_factory
 from .framework_metrics import FrameworkMetrics
 from .standard import StandardObservability, StandardObservabilityService
 from .tracing import TracingService
@@ -36,7 +36,6 @@ class StandardObservabilityFactory(ServiceFactory[StandardObservability]):
 
     def create(self, config: dict[str, Any] | None = None) -> StandardObservability:
         """Create a new StandardObservability instance."""
-        from ..core.di_container import get_service
 
         # Get or create the service instance
         service = get_service(StandardObservabilityService)
@@ -94,7 +93,6 @@ class FrameworkMetricsFactory(ServiceFactory[FrameworkMetrics]):
 # Convenience functions for registering observability services
 def register_observability_services(service_name: str = "unknown") -> None:
     """Register all observability services with the DI container."""
-    from ..core.di_container import register_factory
 
     register_factory(StandardObservabilityService, StandardObservabilityServiceFactory())
     register_factory(StandardObservability, StandardObservabilityFactory())

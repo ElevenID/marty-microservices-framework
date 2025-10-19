@@ -15,6 +15,9 @@ from typing import Any
 import grpc
 from grpc import aio as grpc_aio
 from prometheus_client import Counter, Histogram
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
 
 # Framework imports
 from marty_msf.framework.grpc import UnifiedGrpcServer
@@ -78,9 +81,6 @@ class MetricsMiddleware:
 
 
 # FastAPI middleware
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
-from starlette.responses import Response
 
 
 class FastAPIMetricsMiddleware(BaseHTTPMiddleware):

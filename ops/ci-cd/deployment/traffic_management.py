@@ -20,15 +20,10 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
+from kubernetes import client, config
+
 # External dependencies availability checks
 KUBERNETES_AVAILABLE = importlib.util.find_spec("kubernetes") is not None
-
-# Conditional imports for kubernetes
-if KUBERNETES_AVAILABLE:
-    try:
-        from kubernetes import client, config
-    except ImportError:
-        KUBERNETES_AVAILABLE = False
 
 
 class TrafficBackend(Enum):

@@ -8,6 +8,7 @@ Marty Microservices Framework.
 import logging
 from contextlib import asynccontextmanager
 
+import uvicorn
 from fastapi import FastAPI
 from observability import init_observability
 
@@ -73,7 +74,6 @@ async def root():
 
 
 if __name__ == "__main__":
-    import uvicorn
 
     # Load configuration
     config = create_service_config(service_name="morty_service", environment="development")

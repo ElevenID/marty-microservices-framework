@@ -9,9 +9,13 @@ from __future__ import annotations
 
 import logging
 
+from prometheus_client import Counter, Gauge, Histogram, Info
+
+from ..core.di_container import configure_service, get_service, get_service_optional
+from .factories import register_observability_services
+
 logger = logging.getLogger(__name__)
 
-from prometheus_client import Counter, Gauge, Histogram, Info
 
 
 class FrameworkMetrics:
@@ -229,7 +233,6 @@ def get_framework_metrics(service_name: str) -> FrameworkMetrics:
     Returns:
         FrameworkMetrics instance
     """
-    from ..core.di_container import configure_service, get_service_optional
 
     # Try to get existing metrics
     metrics = get_service_optional(FrameworkMetrics)
@@ -237,11 +240,9 @@ def get_framework_metrics(service_name: str) -> FrameworkMetrics:
         return metrics
 
     # Auto-register if not found or service name changed
-    from .factories import register_observability_services
     register_observability_services(service_name)
 
     # Configure with service name
     configure_service(FrameworkMetrics, {"service_name": service_name})
 
-    from ..core.di_container import get_service
     return get_service(FrameworkMetrics)

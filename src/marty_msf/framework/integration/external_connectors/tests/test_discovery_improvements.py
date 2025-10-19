@@ -9,6 +9,20 @@ import os
 import sys
 import unittest
 
+from marty_msf.framework.discovery.cache import ServiceCache
+from marty_msf.framework.discovery.clients import (
+    ClientSideDiscovery,
+    MockKubernetesClient,
+    ServerSideDiscovery,
+    ServiceMeshDiscovery,
+)
+from marty_msf.framework.discovery.config import (
+    CacheStrategy,
+    DiscoveryConfig,
+    ServiceQuery,
+)
+from marty_msf.framework.discovery.results import DiscoveryResult
+
 # Add the project root to path
 project_root = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "..")
 sys.path.insert(0, project_root)
@@ -20,13 +34,6 @@ class TestDiscoveryImprovements(unittest.TestCase):
     def test_discovery_imports(self):
         """Test that discovery modules can be imported."""
         try:
-            from marty_msf.framework.discovery.clients import (
-                ClientSideDiscovery,
-                ServerSideDiscovery,
-                ServiceMeshDiscovery,
-            )
-            from marty_msf.framework.discovery.config import ServiceQuery
-            from marty_msf.framework.discovery.results import DiscoveryResult
 
             # Basic tests to ensure classes are properly defined
             self.assertTrue(hasattr(ServiceQuery, "service_name"))
@@ -41,7 +48,6 @@ class TestDiscoveryImprovements(unittest.TestCase):
     def test_service_query_dataclass(self):
         """Test ServiceQuery dataclass functionality."""
         try:
-            from marty_msf.framework.discovery.config import ServiceQuery
 
             # Test basic instantiation
             query = ServiceQuery(service_name="test-service")
@@ -69,8 +75,6 @@ class TestDiscoveryImprovements(unittest.TestCase):
     def test_discovery_result_cache_age(self):
         """Test that DiscoveryResult includes cache age information."""
         try:
-            from marty_msf.framework.discovery.config import ServiceQuery
-            from marty_msf.framework.discovery.results import DiscoveryResult
 
             # Test DiscoveryResult structure
             test_query = ServiceQuery(service_name="test-service")
@@ -94,8 +98,6 @@ class TestDiscoveryImprovements(unittest.TestCase):
     def test_server_side_discovery_http_client(self):
         """Test that ServerSideDiscovery has HTTP client capability."""
         try:
-            from marty_msf.framework.discovery.clients import ServerSideDiscovery
-            from marty_msf.framework.discovery.config import DiscoveryConfig
 
             # Create discovery config (mock)
             config = DiscoveryConfig()
@@ -120,8 +122,6 @@ class TestDiscoveryImprovements(unittest.TestCase):
     def test_service_mesh_discovery_integration(self):
         """Test that ServiceMeshDiscovery has mesh integration."""
         try:
-            from marty_msf.framework.discovery.clients import ServiceMeshDiscovery
-            from marty_msf.framework.discovery.config import DiscoveryConfig
 
             # Create discovery config and mesh config
             config = DiscoveryConfig()
@@ -156,7 +156,6 @@ class TestDiscoveryImprovements(unittest.TestCase):
     def test_mock_kubernetes_client(self):
         """Test MockKubernetesClient functionality."""
         try:
-            from marty_msf.framework.discovery.clients import MockKubernetesClient
 
             # Test client initialization
             mesh_config = {"type": "istio", "allow_stub": True}
@@ -175,11 +174,6 @@ class TestDiscoveryFunctionality(unittest.TestCase):
     def test_cache_functionality(self):
         """Test cache behavior and age calculation."""
         try:
-            from marty_msf.framework.discovery.cache import ServiceCache
-            from marty_msf.framework.discovery.config import (
-                CacheStrategy,
-                DiscoveryConfig,
-            )
 
             # Create cache config
             config = DiscoveryConfig()

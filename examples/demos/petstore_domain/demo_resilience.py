@@ -9,11 +9,17 @@ circuit breakers, and external dependency management in the petstore domain.
 import asyncio
 import json
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import yaml
+from app.services.enhanced_petstore_service import EnhancedPetstoreDomainService
+from app.services.petstore_resilience_service import (
+    PetstoreResilienceManager,
+    PetstoreResilientOperations,
+)
 
 # Setup logging
 logging.basicConfig(
@@ -24,11 +30,6 @@ logger = logging.getLogger(__name__)
 
 # Import petstore services
 try:
-    from app.services.enhanced_petstore_service import EnhancedPetstoreDomainService
-    from app.services.petstore_resilience_service import (
-        PetstoreResilienceManager,
-        PetstoreResilientOperations,
-    )
     SERVICES_AVAILABLE = True
 except ImportError as e:
     SERVICES_AVAILABLE = False
@@ -331,7 +332,6 @@ class PetstoreResilienceDemo:
 async def main():
     """Main demo execution."""
     # Change to the plugin directory
-    import os
     plugin_dir = Path(__file__).parent
     os.chdir(plugin_dir)
 

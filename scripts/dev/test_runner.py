@@ -9,6 +9,10 @@ import sys
 import time
 from pathlib import Path
 
+from click.testing import CliRunner
+
+from marty_msf.cli import cli  # MartyTemplateManager, MartyProjectManager
+
 
 def run_tests():
     """Run the CLI test suite."""
@@ -92,12 +96,10 @@ def validate_cli_installation():
 
     try:
         # Test import
-        from marty_msf.cli import cli  # MartyTemplateManager, MartyProjectManager
 
         print("✅ CLI modules import successfully")
 
         # Test Click CLI
-        from click.testing import CliRunner
 
         runner = CliRunner()
 

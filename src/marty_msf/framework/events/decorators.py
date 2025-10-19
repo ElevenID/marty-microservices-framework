@@ -4,6 +4,7 @@ Event Publishing Decorators
 Decorators for automatic event publishing on method success/failure using Enhanced Event Bus.
 """
 
+import asyncio
 import functools
 import logging
 import uuid
@@ -11,31 +12,38 @@ from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
 from typing import Any, TypeVar
 
+from marty_msf.core.enhanced_di import get_service
+
 from .enhanced_event_bus import (
     BaseEvent,
     EnhancedEventBus,
     EventMetadata,
     EventPriority,
-    KafkaConfig,
 )
+from .event_bus_service import EventBusService
 from .types import AuditEventType
 
 logger = logging.getLogger(__name__)
 
 F = TypeVar("F", bound=Callable[..., Awaitable[Any]])
 
-# Global event bus instance for decorators
-_global_event_bus: EnhancedEventBus | None = None
+
+def _get_event_bus() -> EnhancedEventBus:
+    """Get the event bus instance from the DI container."""
+    event_bus_service = get_service(EventBusService)
+    return event_bus_service.get_event_bus()
 
 
-async def _get_event_bus() -> EnhancedEventBus:
-    """Get or create global event bus instance."""
-    global _global_event_bus
-    if _global_event_bus is None:
-        kafka_config = KafkaConfig()
-        _global_event_bus = EnhancedEventBus(kafka_config)
-        await _global_event_bus.start()
-    return _global_event_bus
+def initialize_event_bus_service() -> None:
+    """Initialize the event bus service."""
+    event_bus_service = get_service(EventBusService)
+    if not event_bus_service.is_initialized:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # Schedule initialization in the background
+            loop.create_task(event_bus_service.initialize())
+        else:
+            loop.run_until_complete(event_bus_service.initialize())
 
 
 def audit_event(
@@ -73,7 +81,7 @@ def audit_event(
 
                 # Publish audit event on success
                 try:
-                    event_bus = await _get_event_bus()
+                    event_bus = _get_event_bus()
 
                     # Extract resource ID if specified
                     resource_id = None
@@ -125,7 +133,7 @@ def audit_event(
                 # Publish audit event on failure if not success_only
                 if not success_only:
                     try:
-                        event_bus = await _get_event_bus()
+                        event_bus = _get_event_bus()
 
                         event_data = {
                             "action": action,
@@ -190,7 +198,7 @@ def domain_event(
             result = await func(*args, **kwargs)
 
             try:
-                event_bus = await _get_event_bus()
+                event_bus = _get_event_bus()
 
                 # Extract aggregate ID if specified
                 aggregate_id = None
@@ -255,7 +263,7 @@ def publish_on_success(
             result = await func(*args, **kwargs)
 
             try:
-                event_bus = await _get_event_bus()
+                event_bus = _get_event_bus()
 
                 # Build event data
                 if event_data_builder:
@@ -308,7 +316,7 @@ def publish_on_error(
                 return await func(*args, **kwargs)
             except Exception as e:
                 try:
-                    event_bus = await _get_event_bus()
+                    event_bus = _get_event_bus()
 
                     # Build event data
                     if event_data_builder:
@@ -344,8 +352,7 @@ def publish_on_error(
 
 
 async def cleanup_decorators_event_bus():
-    """Cleanup the global event bus used by decorators."""
-    global _global_event_bus
-    if _global_event_bus:
-        await _global_event_bus.stop()
-        _global_event_bus = None
+    """Cleanup the event bus service."""
+    event_bus_service = get_service(EventBusService)
+    if event_bus_service.is_initialized:
+        await event_bus_service.shutdown()

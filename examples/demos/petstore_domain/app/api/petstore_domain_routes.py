@@ -16,6 +16,9 @@ The enhanced implementation showcases enterprise-grade microservice patterns
 while maintaining backward compatibility with the original API.
 """
 
+import logging
+import uuid
+from datetime import datetime
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -23,19 +26,16 @@ from pydantic import BaseModel
 
 # Import both original and enhanced implementations
 from ..services.petstore_domain_service import PetstoreDomainService
+from .enhanced_petstore_routes import router as enhanced_router
 
 # Try to import enhanced routes, fall back to basic if not available
 try:
-    from .enhanced_petstore_routes import router as enhanced_router
     ENHANCED_AVAILABLE = True
 except ImportError as e:
     print(f"Enhanced routes not available: {e}")
     ENHANCED_AVAILABLE = False
     enhanced_router = None
 
-import logging
-import uuid
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 

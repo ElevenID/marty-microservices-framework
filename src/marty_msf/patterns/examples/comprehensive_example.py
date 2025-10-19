@@ -13,6 +13,7 @@ Example: E-commerce Order Processing with Full Data Consistency
 
 import asyncio
 import json
+import random
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -23,15 +24,20 @@ from ..patterns.cqrs.enhanced_cqrs import (
     BaseCommand,
     BaseQuery,
     CommandHandler,
+    CommandResult,
+    CommandStatus,
     QueryHandler,
+    ValidationResult,
 )
 
 # Import our data consistency patterns
 from ..patterns.outbox.enhanced_outbox import (
+    EnhancedOutboxProcessor,
     EnhancedOutboxRepository,
     OutboxConfig,
     create_kafka_message_broker,
 )
+from ..patterns.saga.saga_patterns import SagaOrchestrator
 
 
 # Domain Models for E-commerce Example
@@ -79,7 +85,6 @@ class CreateOrderCommand(BaseCommand):
 
     def validate(self):
         """Validate the create order command."""
-        from ..patterns.cqrs.enhanced_cqrs import ValidationResult
 
         errors = []
 
@@ -118,7 +123,6 @@ class ProcessPaymentCommand(BaseCommand):
         self.amount = amount
 
     def validate(self):
-        from ..patterns.cqrs.enhanced_cqrs import ValidationResult
 
         errors = []
 
@@ -151,7 +155,6 @@ class ReserveInventoryCommand(BaseCommand):
         self.reservations = reservations  # [{"product_id": "...", "quantity": 1}, ...]
 
     def validate(self):
-        from ..patterns.cqrs.enhanced_cqrs import ValidationResult
 
         errors = []
 
@@ -186,7 +189,6 @@ class GetOrderQuery(BaseQuery):
         self.order_id = order_id
 
     def validate(self):
-        from ..patterns.cqrs.enhanced_cqrs import ValidationResult
 
         errors = []
 
@@ -208,7 +210,6 @@ class GetCustomerOrdersQuery(BaseQuery):
         self.customer_id = customer_id
 
     def validate(self):
-        from ..patterns.cqrs.enhanced_cqrs import ValidationResult
 
         errors = []
 
@@ -231,7 +232,6 @@ class CreateOrderCommandHandler(CommandHandler[CreateOrderCommand]):
         self.saga_orchestrator = saga_orchestrator
 
     async def _execute(self, command: CreateOrderCommand):
-        from ..patterns.cqrs.enhanced_cqrs import CommandResult, CommandStatus
 
         try:
             # Create the order
@@ -313,7 +313,6 @@ class ProcessPaymentCommandHandler(CommandHandler[ProcessPaymentCommand]):
         self.outbox_repository = outbox_repository
 
     async def _execute(self, command: ProcessPaymentCommand):
-        from ..patterns.cqrs.enhanced_cqrs import CommandResult, CommandStatus
 
         try:
             # Create payment record
@@ -373,7 +372,6 @@ class ProcessPaymentCommandHandler(CommandHandler[ProcessPaymentCommand]):
         await asyncio.sleep(0.1)  # Simulate network call
 
         # Simulate occasional payment failures
-        import random
         if random.random() < 0.1:  # 10% failure rate
             raise Exception("Payment gateway timeout")
 
@@ -458,7 +456,6 @@ class ECommerceDataConsistencyExample:
         }
 
         # Initialize saga orchestrator
-        from ..patterns.saga.saga_patterns import SagaOrchestrator
         self.saga_orchestrator = SagaOrchestrator("ecommerce-orchestrator")
         await self.saga_orchestrator.start(worker_count=self.config.saga.worker_count)
 
@@ -466,7 +463,6 @@ class ECommerceDataConsistencyExample:
         await self._register_saga_handlers()
 
         # Initialize outbox processor
-        from ..patterns.outbox.enhanced_outbox import EnhancedOutboxProcessor
         message_broker = create_kafka_message_broker(None)  # Mock broker
         self.outbox_processor = EnhancedOutboxProcessor(
             repository=self.repositories['outbox'],

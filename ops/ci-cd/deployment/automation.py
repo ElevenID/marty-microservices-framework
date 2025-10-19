@@ -19,6 +19,8 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
 
+from prometheus_client import Counter, Histogram
+
 # Import our deployment components
 from .strategies import (
     DeploymentOperation,
@@ -38,14 +40,6 @@ from .traffic_management import (
 # External dependencies availability checks
 KUBERNETES_AVAILABLE = importlib.util.find_spec("kubernetes") is not None
 METRICS_AVAILABLE = importlib.util.find_spec("prometheus_client") is not None
-
-# Conditional imports for prometheus metrics
-if METRICS_AVAILABLE:
-    try:
-        from prometheus_client import Counter, Histogram
-    except ImportError:
-        METRICS_AVAILABLE = False
-
 
 class Environment(Enum):
     """Deployment environment types"""

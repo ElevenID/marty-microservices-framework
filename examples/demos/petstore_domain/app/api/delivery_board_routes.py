@@ -6,6 +6,8 @@ from typing import Any, Dict, List
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from ..services.delivery_board_service import DeliveryBoardService
+
 router = APIRouter(prefix="/delivery-board", tags=["delivery-board"])
 
 class RequestModel(BaseModel):
@@ -31,7 +33,6 @@ async def get_health():
 async def process_request(request: RequestModel):
     """Process a service request."""
     # Import service here to avoid circular imports
-    from ..services.delivery_board_service import DeliveryBoardService
 
     service = DeliveryBoardService()
     result = await service.process_request(request.data)

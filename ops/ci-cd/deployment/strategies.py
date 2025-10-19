@@ -22,25 +22,11 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-# External dependencies availability checks
-KUBERNETES_AVAILABLE = importlib.util.find_spec("kubernetes") is not None
-METRICS_AVAILABLE = importlib.util.find_spec("prometheus_client") is not None
+from kubernetes import client, config
+from prometheus_client import Counter, Gauge, Histogram
 
-# Conditional imports for kubernetes
-if KUBERNETES_AVAILABLE:
-    try:
-        from kubernetes import client, config
-    except ImportError:
-        KUBERNETES_AVAILABLE = False
-
-# Conditional imports for prometheus metrics
-if METRICS_AVAILABLE:
-    try:
-        from prometheus_client import Counter, Gauge, Histogram
-    except ImportError:
-        METRICS_AVAILABLE = False
-
-
+importlib.util.find_spec("kubernetes")
+importlib.util.find_spec("prometheus_client")
 class DeploymentStrategy(Enum):
     """Deployment strategy types"""
 
@@ -221,17 +207,16 @@ class DeploymentStrategyBase(ABC):
         self.operations: builtins.dict[str, DeploymentOperation] = {}
 
         # Metrics
-        if METRICS_AVAILABLE:
-            self.deployments_total = Counter(
-                f"marty_deployments_{name}_total",
-                f"{name} deployments total",
-                ["status"],
-            )
+        self.deployments_total = Counter(
+            f"marty_deployments_{name}_total",
+            f"{name} deployments total",
+            ["status"],
+        )
 
-            self.deployment_duration = Histogram(
-                f"marty_deployment_{name}_duration_seconds",
-                f"{name} deployment duration",
-            )
+        self.deployment_duration = Histogram(
+            f"marty_deployment_{name}_duration_seconds",
+            f"{name} deployment duration",
+        )
 
     @abstractmethod
     async def deploy(self, operation: DeploymentOperation) -> bool:
@@ -274,17 +259,16 @@ class BlueGreenDeploymentStrategy(DeploymentStrategyBase):
         super().__init__("blue_green")
         self.kubernetes_client = None
 
-        if KUBERNETES_AVAILABLE:
+        try:
+            config.load_incluster_config()
+        except Exception as incluster_error:
             try:
-                config.load_incluster_config()
-            except Exception as incluster_error:
-                try:
-                    config.load_kube_config()
-                except Exception as kubeconfig_error:
-                    print(
-                        "⚠️ Kubernetes config not available for Blue-Green deployment: "
-                        f"in-cluster error={incluster_error}, kubeconfig error={kubeconfig_error}"
-                    )
+                config.load_kube_config()
+            except Exception as kubeconfig_error:
+                print(
+                    "⚠️ Kubernetes config not available for Blue-Green deployment: "
+                    f"in-cluster error={incluster_error}, kubeconfig error={kubeconfig_error}"
+                )
 
     async def deploy(self, operation: DeploymentOperation) -> bool:
         """Execute Blue-Green deployment"""
@@ -339,9 +323,8 @@ class BlueGreenDeploymentStrategy(DeploymentStrategyBase):
             ).total_seconds()
 
             # Update metrics
-            if METRICS_AVAILABLE:
-                self.deployments_total.labels(status="success").inc()
-                self.deployment_duration.observe(operation.deployment_duration)
+            self.deployments_total.labels(status="success").inc()
+            self.deployment_duration.observe(operation.deployment_duration)
 
             print(f"✅ Blue-Green deployment completed for {operation.application_name}")
             return True
@@ -351,8 +334,7 @@ class BlueGreenDeploymentStrategy(DeploymentStrategyBase):
             operation.error_message = str(e)
             operation.completed_at = datetime.now()
 
-            if METRICS_AVAILABLE:
-                self.deployments_total.labels(status="failed").inc()
+            self.deployments_total.labels(status="failed").inc()
 
             print(f"❌ Blue-Green deployment failed for {operation.application_name}: {e}")
             return False
@@ -373,16 +355,6 @@ class BlueGreenDeploymentStrategy(DeploymentStrategyBase):
         """Deploy green environment"""
 
         try:
-            if not self.kubernetes_client and KUBERNETES_AVAILABLE:
-                # Mock deployment for demo
-                print(f"🟢 Deploying green environment: {operation.green_deployment}")
-
-                # Simulate deployment time
-                await asyncio.sleep(2)
-
-                # Simulate successful deployment
-                return True
-
             # Real Kubernetes deployment would go here
             apps_v1 = client.AppsV1Api()
 
@@ -411,11 +383,6 @@ class BlueGreenDeploymentStrategy(DeploymentStrategyBase):
         try:
             print("🔄 Switching traffic to green environment")
 
-            if not self.kubernetes_client and KUBERNETES_AVAILABLE:
-                # Mock traffic switching
-                await asyncio.sleep(1)
-                return True
-
             # Update service selector to point to green deployment
             core_v1 = client.CoreV1Api()
 
@@ -441,11 +408,6 @@ class BlueGreenDeploymentStrategy(DeploymentStrategyBase):
         try:
             print(f"🧹 Cleaning up blue environment: {operation.blue_deployment}")
 
-            if not self.kubernetes_client and KUBERNETES_AVAILABLE:
-                # Mock cleanup
-                await asyncio.sleep(1)
-                return
-
             # Delete blue deployment
             apps_v1 = client.AppsV1Api()
             apps_v1.delete_namespaced_deployment(
@@ -461,11 +423,6 @@ class BlueGreenDeploymentStrategy(DeploymentStrategyBase):
 
         try:
             print(f"🧹 Cleaning up failed green environment: {operation.green_deployment}")
-
-            if not self.kubernetes_client and KUBERNETES_AVAILABLE:
-                # Mock cleanup
-                await asyncio.sleep(1)
-                return
 
             # Delete green deployment
             apps_v1 = client.AppsV1Api()
@@ -516,11 +473,6 @@ class BlueGreenDeploymentStrategy(DeploymentStrategyBase):
 
         try:
             print("🔄 Switching traffic back to blue environment")
-
-            if not self.kubernetes_client and KUBERNETES_AVAILABLE:
-                # Mock traffic switching
-                await asyncio.sleep(1)
-                return True
 
             # Update service selector to point back to blue deployment
             core_v1 = client.CoreV1Api()
@@ -819,9 +771,8 @@ class CanaryDeploymentStrategy(DeploymentStrategyBase):
                 operation.completed_at - operation.started_at
             ).total_seconds()
 
-            if METRICS_AVAILABLE:
-                self.deployments_total.labels(status="success").inc()
-                self.deployment_duration.observe(operation.deployment_duration)
+            self.deployments_total.labels(status="success").inc()
+            self.deployment_duration.observe(operation.deployment_duration)
 
             print(f"✅ Canary deployment completed for {operation.application_name}")
             return True
@@ -831,8 +782,7 @@ class CanaryDeploymentStrategy(DeploymentStrategyBase):
             operation.error_message = str(e)
             operation.completed_at = datetime.now()
 
-            if METRICS_AVAILABLE:
-                self.deployments_total.labels(status="failed").inc()
+            self.deployments_total.labels(status="failed").inc()
 
             print(f"❌ Canary deployment failed for {operation.application_name}: {e}")
             return False
@@ -1038,9 +988,8 @@ class RollingDeploymentStrategy(DeploymentStrategyBase):
                 operation.completed_at - operation.started_at
             ).total_seconds()
 
-            if METRICS_AVAILABLE:
-                self.deployments_total.labels(status="success").inc()
-                self.deployment_duration.observe(operation.deployment_duration)
+            self.deployments_total.labels(status="success").inc()
+            self.deployment_duration.observe(operation.deployment_duration)
 
             print(f"✅ Rolling deployment completed for {operation.application_name}")
             return True
@@ -1050,8 +999,7 @@ class RollingDeploymentStrategy(DeploymentStrategyBase):
             operation.error_message = str(e)
             operation.completed_at = datetime.now()
 
-            if METRICS_AVAILABLE:
-                self.deployments_total.labels(status="failed").inc()
+            self.deployments_total.labels(status="failed").inc()
 
             print(f"❌ Rolling deployment failed for {operation.application_name}: {e}")
             return False
@@ -1168,12 +1116,11 @@ class DeploymentOrchestrator:
         self.operations: builtins.dict[str, DeploymentOperation] = {}
 
         # Metrics
-        if METRICS_AVAILABLE:
-            self.active_deployments = Gauge(
-                "marty_active_deployments_total",
-                "Active deployments by strategy",
-                ["strategy"],
-            )
+        self.active_deployments = Gauge(
+            "marty_active_deployments_total",
+            "Active deployments by strategy",
+            ["strategy"],
+        )
 
     async def deploy(
         self,

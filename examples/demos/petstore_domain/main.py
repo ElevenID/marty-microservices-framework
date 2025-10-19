@@ -50,6 +50,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
+    REGISTRY,
+    CollectorRegistry,
     Counter,
     Gauge,
     Histogram,
@@ -69,7 +71,6 @@ logging.basicConfig(
 logger = logging.getLogger("petstore-domain")
 
 # Prometheus Metrics (with duplicate registration protection)
-from prometheus_client import REGISTRY, CollectorRegistry
 
 # Initialize metrics with error handling for duplicates
 REQUEST_COUNTER = None

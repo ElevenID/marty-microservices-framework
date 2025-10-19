@@ -7,6 +7,7 @@ import os
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
+from urllib.parse import parse_qs, urlparse
 
 
 class DatabaseType(Enum):
@@ -157,7 +158,6 @@ class DatabaseConfig:
     @classmethod
     def from_url(cls, url: str, service_name: str = "unknown") -> "DatabaseConfig":
         """Create DatabaseConfig from a connection URL."""
-        from urllib.parse import parse_qs, urlparse
 
         parsed = urlparse(url)
 

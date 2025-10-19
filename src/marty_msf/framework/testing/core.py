@@ -9,6 +9,7 @@ import asyncio
 import builtins
 import json
 import logging
+import os
 import traceback
 import uuid
 from abc import ABC, abstractmethod
@@ -299,7 +300,6 @@ class TestReporter:
             "generated_at": datetime.utcnow().isoformat(),
         }
 
-        import os
 
         os.makedirs(self.output_dir, exist_ok=True)
 
@@ -319,7 +319,6 @@ class TestReporter:
             results=json.dumps([result.to_dict() for result in self.results]),
         )
 
-        import os
 
         os.makedirs(self.output_dir, exist_ok=True)
 

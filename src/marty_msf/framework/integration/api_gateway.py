@@ -6,10 +6,12 @@ management, event-driven architecture, message brokers, external system connecto
 and enterprise service bus patterns.
 """
 
+import base64
 import builtins
 import hashlib
 import json
 import logging
+import random
 import re
 import threading
 import time
@@ -606,7 +608,6 @@ class APIGateway:
 
             # Decode basic auth (simplified)
             try:
-                import base64
 
                 encoded_credentials = auth_header[6:]
                 decoded_credentials = base64.b64decode(encoded_credentials).decode("utf-8")
@@ -748,7 +749,6 @@ class APIGateway:
 
         if service.load_balancing == LoadBalancingStrategy.ROUND_ROBIN:
             # Simple round-robin (stateless)
-            import random
 
             return random.choice(service.endpoints)
 
@@ -761,14 +761,12 @@ class APIGateway:
                     endpoints.extend([endpoint] * int(weight * 10))
 
                 if endpoints:
-                    import random
 
                     return random.choice(endpoints)
 
             return random.choice(service.endpoints)
 
         if service.load_balancing == LoadBalancingStrategy.RANDOM:
-            import random
 
             return random.choice(service.endpoints)
 

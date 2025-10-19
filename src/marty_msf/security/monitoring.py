@@ -21,23 +21,24 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
+import redis
+from elasticsearch import Elasticsearch
+from prometheus_client import CollectorRegistry, Counter, Gauge, Histogram
+
 # External dependencies
 try:
-    import redis
 
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
 
 try:
-    from prometheus_client import CollectorRegistry, Counter, Gauge, Histogram
 
     METRICS_AVAILABLE = True
 except ImportError:
     METRICS_AVAILABLE = False
 
 try:
-    from elasticsearch import Elasticsearch
 
     ELASTICSEARCH_AVAILABLE = True
 except ImportError:

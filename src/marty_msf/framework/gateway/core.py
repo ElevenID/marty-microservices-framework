@@ -7,6 +7,7 @@ framework including request/response handling, routing, middleware, and plugins.
 
 import asyncio
 import builtins
+import json
 import logging
 import time
 import uuid
@@ -178,7 +179,6 @@ class GatewayResponse:
 
     def set_json_body(self, data: Any):
         """Set JSON response body."""
-        import json
 
         self.body = json.dumps(data).encode("utf-8")
         self.set_header("Content-Type", "application/json")

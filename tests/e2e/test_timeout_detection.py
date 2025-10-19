@@ -10,6 +10,7 @@ This test demonstrates:
 
 import asyncio
 import json
+import random
 import time
 from pathlib import Path
 
@@ -282,7 +283,6 @@ class TestTimeoutDetection:
         # Check if we should inject a timeout (make operation artificially slow)
         timeout_injection_rate = getattr(simulation_plugin.config, "timeout_injection_rate", 0.0)
 
-        import random
 
         if random.random() < timeout_injection_rate:
             # Inject artificial delay that might cause timeout

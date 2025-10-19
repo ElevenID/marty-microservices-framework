@@ -16,7 +16,11 @@ from enum import Enum
 from functools import wraps
 from typing import TypeVar
 
-from .circuit_breaker import CircuitBreakerConfig, CircuitBreakerError
+from .circuit_breaker import (
+    CircuitBreakerConfig,
+    CircuitBreakerError,
+    get_circuit_breaker,
+)
 
 T = TypeVar("T")
 logger = logging.getLogger(__name__)
@@ -371,7 +375,6 @@ async def retry_with_circuit_breaker(
         RetryError: If all attempts fail
         CircuitBreakerError: If circuit breaker is open
     """
-    from .circuit_breaker import get_circuit_breaker
 
     retry_cfg = retry_config or RetryConfig()
     circuit = get_circuit_breaker(circuit_breaker_name, circuit_breaker_config)

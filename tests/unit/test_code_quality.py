@@ -10,6 +10,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from scripts import check_code_quality
+from scripts.check_code_quality import check_cyclomatic_complexity
+
 
 class TestCodeQuality:
     """Test suite for code quality checks."""
@@ -110,7 +113,6 @@ def simple_function(x):
         mock_result.stderr = ""
         mock_run.return_value = mock_result
 
-        from scripts.check_code_quality import check_cyclomatic_complexity
 
         # Test that the function completes without error
         result = check_cyclomatic_complexity("src/framework/")
@@ -131,7 +133,6 @@ def simple_function(x):
         mock_result.stderr = ""
         mock_run.return_value = mock_result
 
-        from scripts.check_code_quality import check_cyclomatic_complexity
 
         # Test that violations are detected
         result = check_cyclomatic_complexity("src/framework/")
@@ -142,7 +143,6 @@ def simple_function(x):
     def test_import_quality_script(self):
         """Test that the original script can be imported."""
         try:
-            from scripts import check_code_quality
             assert hasattr(check_code_quality, 'check_cyclomatic_complexity')
             assert hasattr(check_code_quality, 'run_command')
         except ImportError as e:

@@ -12,6 +12,7 @@ import asyncio
 import builtins
 import json
 import logging
+import random
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -519,7 +520,6 @@ class TestAuditability:
                 await asyncio.sleep(0.5)
 
                 # Randomly generate performance alerts
-                import random
 
                 if random.random() < 0.2:  # 20% chance of alert
                     alert_severity = random.choice(["warning", "error"])
@@ -703,7 +703,6 @@ class TestAuditability:
         ]
 
         while (datetime.now() - start_time).seconds < duration:
-            import random
 
             event_type = random.choice(security_events)
             correlation_id = str(uuid.uuid4())

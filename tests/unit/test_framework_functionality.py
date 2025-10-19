@@ -9,6 +9,13 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+import yaml
+
+from marty_msf.framework.config import BaseServiceConfig
+from marty_msf.framework.logging import UnifiedServiceLogger
+from marty_msf.framework.monitoring.core import MetricsCollector
+from scripts import test_framework
+from scripts.test_framework import run_command
 
 
 class TestFrameworkFunctionality:
@@ -39,7 +46,6 @@ class TestFrameworkFunctionality:
 
                 elif template_file.suffix in ['.yml', '.yaml']:
                     # Validate YAML syntax
-                    import yaml
                     with open(template_file, encoding='utf-8') as f:
                         yaml.safe_load(f)
 
@@ -65,7 +71,6 @@ class TestFrameworkFunctionality:
         mock_result.stderr = ""
         mock_run.return_value = mock_result
 
-        from scripts.test_framework import run_command
 
         # Test service generation command
         result = run_command("python scripts/generate_service.py test-service")
@@ -108,7 +113,6 @@ class TestFrameworkFunctionality:
         if not config_files:
             pytest.skip("No config files found")
 
-        import yaml
         config_errors = []
 
         for config_file in config_files:
@@ -168,7 +172,6 @@ class TestFrameworkFunctionality:
         if not manifest_files:
             pytest.skip("No Kubernetes manifests found")
 
-        import yaml
         manifest_errors = []
 
         for manifest_file in manifest_files:
@@ -211,7 +214,6 @@ class TestFrameworkFunctionality:
         mock_result.stderr = ""
         mock_run.return_value = mock_result
 
-        from scripts.test_framework import run_command
 
         # Test build command
         result = run_command("make build")
@@ -264,9 +266,6 @@ class TestFrameworkFunctionality:
         """Test integration between framework features."""
         try:
             # Test that components can work together
-            from marty_msf.framework.config import BaseServiceConfig
-            from marty_msf.framework.logging import UnifiedServiceLogger
-            from marty_msf.framework.monitoring.core import MetricsCollector
 
             # Test basic integration
             config = BaseServiceConfig()
@@ -349,7 +348,6 @@ def read_root():
     def test_import_original_framework_script(self):
         """Test that the original framework script can be imported."""
         try:
-            from scripts import test_framework
 
             # Check that main functions exist
             assert hasattr(test_framework, 'run_command')

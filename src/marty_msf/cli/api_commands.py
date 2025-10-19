@@ -25,34 +25,37 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
+from ..framework.documentation.api_docs import (
+    APIDocumentationManager,
+    APIVersionManager,
+    DocumentationConfig,
+    generate_api_docs,
+)
+from ..framework.testing.contract_testing import (
+    ContractManager,
+    ContractRepository,
+    pact_contract,
+    verify_contracts_for_provider,
+)
+from ..framework.testing.grpc_contract_testing import (
+    EnhancedContractManager,
+    GRPCContractRepository,
+    generate_contract_from_proto,
+    grpc_contract,
+)
+
 # Import our documentation and testing modules
 try:
-    from ..framework.documentation.api_docs import (
-        APIDocumentationManager,
-        DocumentationConfig,
-        generate_api_docs,
-    )
     documentation_available = True
 except ImportError:
     documentation_available = False
 
 try:
-    from ..framework.testing.contract_testing import (
-        ContractManager,
-        ContractRepository,
-        verify_contracts_for_provider,
-    )
     contract_testing_available = True
 except ImportError:
     contract_testing_available = False
 
 try:
-    from ..framework.testing.grpc_contract_testing import (
-        EnhancedContractManager,
-        GRPCContractRepository,
-        generate_contract_from_proto,
-        grpc_contract,
-    )
     grpc_contract_testing_available = True
 except ImportError:
     grpc_contract_testing_available = False
@@ -373,7 +376,6 @@ async def _create_contract(consumer: str, provider: str, version: str,
                 service_name = click.prompt("gRPC service name")
 
             # Create manual gRPC contract
-            from ..framework.testing.grpc_contract_testing import grpc_contract
             builder = grpc_contract(consumer, provider, service_name, version)
 
             if interactive:
@@ -400,7 +402,6 @@ async def _create_contract(consumer: str, provider: str, version: str,
 
     else:  # REST contract
         # Create REST contract
-        from ..framework.testing.contract_testing import pact_contract
         builder = pact_contract(consumer, provider, version)
 
         if interactive:
@@ -532,7 +533,6 @@ async def _register_version(service_name: str, version: str,
                           deprecation_date: str | None,
                           migration_guide: str | None, status: str):
     """Register an API version."""
-    from ..framework.documentation.api_docs import APIVersionManager
 
     version_manager = APIVersionManager(Path.cwd())
 
@@ -557,7 +557,6 @@ async def _register_version(service_name: str, version: str,
 
 async def _list_versions(service_name: str | None, status: str):
     """List API versions."""
-    from ..framework.documentation.api_docs import APIVersionManager
 
     version_manager = APIVersionManager(Path.cwd())
 

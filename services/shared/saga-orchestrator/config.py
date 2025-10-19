@@ -13,7 +13,9 @@ Key Features:
 - Performance tuning parameters
 """
 
+import asyncio
 import builtins
+import concurrent.futures
 import os
 from dataclasses import dataclass, field
 from enum import Enum
@@ -594,12 +596,10 @@ def create_kubernetes_config() -> SagaOrchestratorConfig:
 
 def get_unified_config() -> UnifiedSagaOrchestratorConfig:
     """Get unified configuration (synchronous helper)."""
-    import asyncio
     try:
         loop = asyncio.get_event_loop()
         if loop.is_running():
             # If loop is already running, create task
-            import concurrent.futures
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 future = executor.submit(asyncio.run, create_unified_saga_config())
                 return future.result()

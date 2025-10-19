@@ -28,7 +28,7 @@ import jwt
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from ..core.di_container import get_service, get_service_optional
+from ..core.di_container import configure_service, get_service, get_service_optional
 from ..core.services import SecurityService
 from .audit import (
     AuditLevel,
@@ -48,6 +48,7 @@ from .exceptions import (
     TokenMalformedError,
     handle_security_exception,
 )
+from .factories import register_security_services
 from .unified_framework import SecurityPrincipal, UnifiedSecurityFramework
 
 logger = logging.getLogger(__name__)
@@ -564,7 +565,6 @@ def get_security_manager_service() -> ConsolidatedSecurityManagerService:
         return get_service(ConsolidatedSecurityManagerService)
     except ValueError:
         # Auto-register if not found (for backward compatibility)
-        from .factories import register_security_services
         register_security_services()
         return get_service(ConsolidatedSecurityManagerService)
 
@@ -580,7 +580,6 @@ def get_security_manager() -> ConsolidatedSecurityManager:
         return get_service(ConsolidatedSecurityManager)
     except ValueError:
         # Auto-register if not found (for backward compatibility)
-        from .factories import register_security_services
         register_security_services()
         return get_service(ConsolidatedSecurityManager)
 
@@ -595,13 +594,11 @@ def configure_security_manager(config: dict[str, Any]) -> ConsolidatedSecurityMa
     Returns:
         ConsolidatedSecurityManager instance
     """
-    from ..core.di_container import configure_service
 
     # Ensure services are registered
     try:
         get_service(ConsolidatedSecurityManagerService)
     except ValueError:
-        from .factories import register_security_services
         register_security_services()
 
     # Configure the service

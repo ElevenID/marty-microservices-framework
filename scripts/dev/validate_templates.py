@@ -14,12 +14,7 @@ import sys
 from pathlib import Path
 from typing import Any, cast
 
-try:
-    from jinja2 import Environment, FileSystemLoader, TemplateSyntaxError
-except ImportError:
-    print("Error: Jinja2 is required for template validation.")
-    print("Install it with: uv add jinja2 or uv sync")
-    sys.exit(1)
+from jinja2 import Environment, FileSystemLoader, TemplateSyntaxError
 
 
 class ServiceTemplateValidator:

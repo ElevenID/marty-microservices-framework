@@ -24,18 +24,24 @@ import asyncio
 import builtins
 import logging
 import os
+import shlex
 import shutil
 import signal
 import subprocess
 import sys
+import traceback
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import asyncpg
 import click
 import jinja2
+import toml
+import uvicorn
 import yaml
+from cookiecutter.main import cookiecutter
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -43,16 +49,11 @@ from rich.prompt import Confirm, Prompt
 from rich.table import Table
 from rich.text import Text
 
-# Optional imports with fallbacks
-try:
-    import toml
-except ImportError:
-    toml = None
+import marty_msf
+from marty_msf.cli.commands import migrate, plugin, service, service_mesh
 
-try:
-    from cookiecutter.main import cookiecutter
-except ImportError:
-    cookiecutter = None
+from ..framework.database.sql_generator import SQLGenerator
+from .api_commands import add_api_commands
 
 __version__ = "1.0.0"
 
@@ -155,7 +156,6 @@ class MartyTemplateManager:
 
         # Try installed package location
         try:
-            import marty_msf
 
             return Path(marty_msf.__file__).parent
         except ImportError:
@@ -184,7 +184,6 @@ class MartyTemplateManager:
                 else:
                     # Fallback to basic YAML parsing
                     with open(self.config_path) as f:
-                        import yaml
 
                         return yaml.safe_load(f) or default_config
             except Exception as e:
@@ -422,7 +421,6 @@ class MartyTemplateManager:
                 console.print(f"[blue]Running post-hook: {command}[/blue]")
 
                 # Parse command safely without shell=True
-                import shlex
 
                 command_args = shlex.split(command)
 
@@ -869,7 +867,6 @@ class MartyServiceRunner:
 
     def _run_http_server(self, config: ServiceConfig):
         """Run FastAPI HTTP server."""
-        import uvicorn
 
         uvicorn_config = uvicorn.Config(
             config.app_module,
@@ -886,7 +883,6 @@ class MartyServiceRunner:
 
     def _run_dual_servers(self, config: ServiceConfig):
         """Run both HTTP and gRPC servers concurrently."""
-        import uvicorn
 
         async def run_servers():
             # Import the gRPC serve function dynamically
@@ -950,6 +946,13 @@ def cli(ctx, verbose):
             subtitle=f"Version {__version__}",
         )
     )
+
+
+# Register imported command groups
+cli.add_command(migrate)
+cli.add_command(plugin)
+cli.add_command(service)
+cli.add_command(service_mesh)
 
 
 @cli.command()
@@ -1293,7 +1296,6 @@ def runservice(
     except Exception as e:
         console.print(f"[red]Failed to start service: {e}[/red]")
         if debug:
-            import traceback
 
             console.print(traceback.format_exc())
         sys.exit(1)
@@ -1466,88 +1468,6 @@ def create():
     pass
 
 
-@create.command()
-@click.option("--name", required=True, help="Service name")
-@click.option(
-    "--type", "service_type", default="fastapi", help="Service type (fastapi, flask, grpc)"
-)
-@click.option("--output", default=".", help="Output directory")
-@click.option("--with-database", is_flag=True, help="Include database support")
-@click.option("--with-monitoring", is_flag=True, help="Include monitoring support")
-@click.option("--with-caching", is_flag=True, help="Include caching support")
-@click.option("--with-auth", is_flag=True, help="Include authentication support")
-@click.option("--with-tls", is_flag=True, help="Include TLS/SSL support")
-def service(
-    name, service_type, output, with_database, with_monitoring, with_caching, with_auth, with_tls
-):
-    """Create a new microservice.
-
-    Examples:
-        marty create service --name user-service --type fastapi
-        marty create service --name order-service --type fastapi --with-database
-    """
-    console.print(f"🚀 Creating {service_type} service '{name}'...")
-
-    output_path = Path(output) / name
-    output_path.mkdir(parents=True, exist_ok=True)
-
-    # Create main.py
-    main_py_content = _generate_main_py(
-        service_type, name, with_database, with_monitoring, with_caching, with_auth, with_tls
-    )
-    (output_path / "main.py").write_text(main_py_content)
-
-    # Create config directory and multiple config files
-    config_dir = output_path / "config"
-    config_dir.mkdir(exist_ok=True)
-
-    # Main config.yaml
-    config_yaml_content = _generate_config_yaml(
-        name, with_database, with_monitoring, with_caching, with_auth, with_tls
-    )
-    (output_path / "config.yaml").write_text(config_yaml_content)
-
-    # Environment-specific configs
-    dev_config = _generate_env_config_yaml(
-        name, "development", with_database, with_monitoring, with_caching, with_auth, with_tls
-    )
-    (config_dir / "development.yaml").write_text(dev_config)
-
-    test_config = _generate_env_config_yaml(
-        name, "testing", with_database, with_monitoring, with_caching, with_auth, with_tls
-    )
-    (config_dir / "testing.yaml").write_text(test_config)
-
-    prod_config = _generate_env_config_yaml(
-        name, "production", with_database, with_monitoring, with_caching, with_auth, with_tls
-    )
-    (config_dir / "production.yaml").write_text(prod_config)
-
-    # Create requirements.txt
-    requirements_content = _generate_requirements(
-        service_type, with_database, with_monitoring, with_caching, with_auth, with_tls
-    )
-    (output_path / "requirements.txt").write_text(requirements_content)
-
-    # Create Dockerfile
-    dockerfile_content = _generate_dockerfile(service_type, name)
-    (output_path / "Dockerfile").write_text(dockerfile_content)
-
-    # Create additional files based on options
-    if with_database:
-        _create_database_files(output_path)
-
-    if with_monitoring:
-        _create_monitoring_files(output_path)
-
-    # Create security files (always create for E2E tests)
-    _create_security_files(output_path)
-
-    console.print(f"✅ Service '{name}' created successfully in {output_path}")
-    console.print("\nNext steps:")
-    console.print(f"  cd {output_path}")
-    console.print("  pip install -r requirements.txt")
-    console.print("  python main.py")
 
 
 # Database command group
@@ -1642,57 +1562,10 @@ def db():
     pass
 
 
-@db.command()
-@click.option("--service-path", default=".", help="Path to service directory")
-@click.option("--db-host", default="localhost", help="Database host")
-@click.option("--db-port", default=5432, help="Database port")
-@click.option("--db-name", default="postgres", help="Database name")
-@click.option("--db-user", default="postgres", help="Database user")
-@click.option("--db-password", default="postgres", help="Database password")
-def migrate(service_path, db_host, db_port, db_name, db_user, db_password):
-    """Run database migrations."""
-    import asyncio
 
-    import asyncpg
 
-    async def run_migrations():
-        console.print("🔄 Running database migrations...")
 
-        service_path_obj = Path(service_path)
-        migrations_dir = service_path_obj / "migrations"
 
-        if not migrations_dir.exists():
-            console.print("[red]❌ No migrations directory found[/red]")
-            return False
-
-        migration_files = list(migrations_dir.glob("*.sql"))
-        if not migration_files:
-            console.print("[yellow]⚠️  No migration files found[/yellow]")
-            return False
-
-        try:
-            # Connect to database
-            conn = await asyncpg.connect(
-                host=db_host, port=db_port, database=db_name, user=db_user, password=db_password
-            )
-
-            # Run migrations in order
-            for migration_file in sorted(migration_files):
-                console.print(f"  📄 Running {migration_file.name}")
-                migration_sql = migration_file.read_text()
-                await conn.execute(migration_sql)
-
-            await conn.close()
-            console.print("✅ Database migrations completed")
-            return True
-
-        except Exception as e:
-            console.print(f"[red]❌ Error running migrations: {e}[/red]")
-            return False
-
-    result = asyncio.run(run_migrations())
-    if not result:
-        raise click.ClickException("Migration failed")
 
 
 @db.command()
@@ -1704,9 +1577,7 @@ def migrate(service_path, db_host, db_port, db_name, db_user, db_password):
 @click.option("--db-password", default="postgres", help="Database password")
 def seed(service_path, db_host, db_port, db_name, db_user, db_password):
     """Seed database with initial data."""
-    import asyncio
 
-    import asyncpg
 
     async def run_seeding():
         console.print("🌱 Seeding database...")
@@ -2159,7 +2030,6 @@ CMD ["python", "main.py"]
 
 def _create_database_files(output_path):
     """Create database-related files with valid PostgreSQL syntax."""
-    from ..framework.database.sql_generator import SQLGenerator
 
     migrations_dir = output_path / "migrations"
     migrations_dir.mkdir(exist_ok=True)
@@ -2259,21 +2129,8 @@ scrape_configs:
 """)
 
 
-# Import and add migration commands
-try:
-    from marty_msf.cli.commands import migrate, plugin, service, service_mesh
-
-    cli.add_command(migrate)
-    cli.add_command(plugin)
-    cli.add_command(service)
-    cli.add_command(service_mesh)
-except ImportError:
-    # Migration, plugin, service, and service mesh commands not available
-    pass
-
 # Add API documentation and contract testing commands
 try:
-    from .api_commands import add_api_commands
     add_api_commands(cli)
 except ImportError:
     # API commands not available
@@ -2281,4 +2138,4 @@ except ImportError:
 
 
 if __name__ == "__main__":
-    cli()
+    cli.main(standalone_mode=False)

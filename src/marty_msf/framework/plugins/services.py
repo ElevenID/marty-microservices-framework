@@ -14,8 +14,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
-if TYPE_CHECKING:
-    from .core import PluginContext, PluginManager
+from .core import PluginContext, PluginManager
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +89,6 @@ class PluginService(ABC):
     """
 
     def __init__(self, context: "PluginContext" = None):
-        from .core import PluginContext
 
         self.context: PluginContext = context
         self.logger = logging.getLogger(f"service.{self.__class__.__name__}")
@@ -128,7 +126,6 @@ class ServiceRegistry:
     """Registry for managing plugin services."""
 
     def __init__(self, plugin_manager: "PluginManager"):
-        from .core import PluginManager
 
         self.plugin_manager: PluginManager = plugin_manager
         self.services: dict[str, ServiceDefinition] = {}

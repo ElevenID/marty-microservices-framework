@@ -22,6 +22,7 @@ This directory contains utility scripts for development, testing, and maintenanc
 - **validate_templates.py** - Template validation
 - **verify_security_framework.py** - Security framework verification
 - **check_dependencies.py** - Dependency checking and validation
+- **check_import_order.py** - Import placement validation (pre-commit hook)
 
 ## Generation Scripts
 

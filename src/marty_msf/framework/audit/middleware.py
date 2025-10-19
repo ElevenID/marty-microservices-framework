@@ -5,16 +5,25 @@ This module provides middleware components that automatically log audit events
 for API requests, authentication events, and other application activities.
 """
 
+import asyncio
+import builtins
 import json
 import logging
+import random
 import time
 from typing import Any
 
+import grpc
+from fastapi import FastAPI, Request, Response
+from fastapi.middleware.base import BaseHTTPMiddleware
+from grpc._server import _Context as GrpcContext
+from starlette.middleware.base import RequestResponseEndpoint
+
+from .events import AuditEventType, AuditOutcome, AuditSeverity
+from .logger import AuditLogger, get_audit_logger
+
 # FastAPI imports
 try:
-    from fastapi import FastAPI, Request, Response
-    from fastapi.middleware.base import BaseHTTPMiddleware
-    from starlette.middleware.base import RequestResponseEndpoint
 
     FASTAPI_AVAILABLE = True
 except ImportError:
@@ -22,17 +31,12 @@ except ImportError:
 
 # gRPC imports
 try:
-    import grpc
-    from grpc._server import _Context as GrpcContext
 
     GRPC_AVAILABLE = True
 except ImportError:
     GRPC_AVAILABLE = False
 
-import builtins
 
-from .events import AuditEventType, AuditOutcome, AuditSeverity
-from .logger import AuditLogger, get_audit_logger
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +92,6 @@ def should_log_request(request_path: str, method: str, config: AuditMiddlewareCo
         return False
 
     # Apply sampling rate
-    import random
 
     if random.random() > config.sample_rate:
         return False
@@ -542,4 +545,3 @@ def setup_grpc_audit_interceptor(server, config: AuditMiddlewareConfig = None):
 
 
 # Import asyncio at module level for gRPC usage
-import asyncio

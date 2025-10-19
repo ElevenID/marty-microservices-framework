@@ -5,6 +5,8 @@ Demonstrates the comprehensive testing strategy without problematic imports.
 """
 
 import asyncio
+import os
+import shutil
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -26,7 +28,6 @@ def temp_dir():
     temp_path = Path(tempfile.mkdtemp())
     yield temp_path
 
-    import shutil
 
     if temp_path.exists():
         shutil.rmtree(temp_path)
@@ -109,7 +110,6 @@ def pytest_collection_modifyitems(config, items):
 @pytest.fixture(autouse=True)
 def setup_test_environment():
     """Set up test environment for all tests."""
-    import os
 
     # Set test environment variables
     original_env = {}

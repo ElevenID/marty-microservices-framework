@@ -15,6 +15,14 @@ import uuid
 from contextvars import ContextVar
 from typing import Any, Optional
 
+import grpc
+from fastapi import Request, Response
+from grpc import ServicerContext
+from opentelemetry import trace
+from starlette.middleware.base import BaseHTTPMiddleware
+
+from marty_msf.framework.grpc import ServiceDefinition
+
 logger = logging.getLogger(__name__)
 
 # Context variables for correlation tracking
@@ -140,8 +148,6 @@ class CorrelationContext:
 
 
 # FastAPI Middleware
-from fastapi import Request, Response
-from starlette.middleware.base import BaseHTTPMiddleware
 
 
 class StandardCorrelationMiddleware(BaseHTTPMiddleware):
@@ -172,11 +178,8 @@ class StandardCorrelationMiddleware(BaseHTTPMiddleware):
 
 
 # gRPC Interceptor
-import grpc
-from grpc import ServicerContext
 
 # Framework imports
-from marty_msf.framework.grpc import ServiceDefinition
 
 
 class StandardCorrelationInterceptor(grpc.ServerInterceptor):
@@ -303,7 +306,6 @@ def clear_correlation() -> None:
 
 
 # Integration with OpenTelemetry
-from opentelemetry import trace
 
 
 def inject_correlation_to_span(span: Any | None = None) -> None:

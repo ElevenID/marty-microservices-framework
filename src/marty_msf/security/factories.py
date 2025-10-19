@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from ..core.di_container import ServiceFactory
+from ..core.di_container import ServiceFactory, get_service, register_factory
 from .audit import SecurityAuditor
 from .manager import ConsolidatedSecurityManager, ConsolidatedSecurityManagerService
 
@@ -34,7 +34,6 @@ class SecurityManagerFactory(ServiceFactory[ConsolidatedSecurityManager]):
 
     def create(self, config: dict[str, Any] | None = None) -> ConsolidatedSecurityManager:
         """Create a new ConsolidatedSecurityManager instance."""
-        from ..core.di_container import get_service
 
         # Get or create the service instance
         service = get_service(ConsolidatedSecurityManagerService)
@@ -74,7 +73,6 @@ class SecurityAuditorFactory(ServiceFactory[SecurityAuditor]):
 # Convenience functions for registering security services
 def register_security_services(service_name: str = "unknown") -> None:
     """Register all security services with the DI container."""
-    from ..core.di_container import register_factory
 
     register_factory(ConsolidatedSecurityManagerService, SecurityManagerServiceFactory())
     register_factory(ConsolidatedSecurityManager, SecurityManagerFactory())

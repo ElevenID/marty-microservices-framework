@@ -7,9 +7,11 @@ connection pooling, circuit breakers, and load testing.
 
 import asyncio
 import logging
+import random
 from contextlib import asynccontextmanager
 from typing import Any, Dict
 
+import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 
@@ -242,7 +244,6 @@ async def heavy_computation():
 @app.get("/api/error-prone")
 async def error_prone_endpoint():
     """Endpoint that occasionally fails (tests circuit breaker)"""
-    import random
 
     # Simulate random failures (20% failure rate)
     if random.random() < 0.2:
@@ -274,7 +275,6 @@ async def get_pool_status():
 
 
 if __name__ == "__main__":
-    import uvicorn
 
     # Configure logging
     logging.basicConfig(

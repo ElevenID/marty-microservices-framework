@@ -11,6 +11,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 import yaml
 
+from marty_msf.security.monitoring import SecurityMonitor
+from scripts import verify_security_framework
+
 
 class TestSecurityFramework:
     """Test suite for security framework validation."""
@@ -299,7 +302,6 @@ class TestSecurityFramework:
 
         # Test that security monitoring can be imported
         try:
-            from marty_msf.security.monitoring import SecurityMonitor
             monitor = SecurityMonitor()
             assert monitor is not None
         except ImportError:
@@ -385,7 +387,6 @@ class TestSecurityFramework:
     def test_import_original_security_script(self):
         """Test that the original security script can be imported."""
         try:
-            from scripts import verify_security_framework
 
             # Check that main validation functions exist
             assert hasattr(verify_security_framework, '__file__')

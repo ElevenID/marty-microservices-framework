@@ -267,22 +267,23 @@ class ResilienceManager:
 
 
 # Global resilience manager
-_resilience_manager = ResilienceManager()
+# Service-based resilience manager access (not supported - use consolidated_manager instead)
 
 
 def get_resilience_manager() -> ResilienceManager:
-    """Get the global resilience manager."""
-    return _resilience_manager
+    """Get the default resilience manager (not supported)."""
+    raise NotImplementedError(
+        "patterns.get_resilience_manager is not supported. Use consolidated_manager.get_resilience_manager instead."
+    )
 
 
 def initialize_resilience(
     config: ResilienceConfig | None = None,
 ) -> ResilienceManager:
-    """Initialize resilience patterns with configuration."""
-    global _resilience_manager
-    _resilience_manager = ResilienceManager(config)
-    logger.info("Initialized resilience patterns")
-    return _resilience_manager
+    """Initialize resilience patterns with configuration (not supported)."""
+    raise NotImplementedError(
+        "patterns.initialize_resilience is not supported. Use the DI container to configure ResilienceManagerService instead."
+    )
 
 
 def resilience_pattern(config: ResilienceConfig | None = None, operation_name: str | None = None):

@@ -8,6 +8,7 @@ of microservices with database, events, and external dependencies.
 import asyncio
 import builtins
 import logging
+import time
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 from typing import Any
@@ -252,7 +253,6 @@ async def wait_for_condition(
     interval: float = 0.1,
 ) -> bool:
     """Wait for a condition to become true."""
-    import time
 
     start_time = time.time()
     while time.time() - start_time < timeout:
@@ -328,7 +328,6 @@ class PerformanceTestMixin:
 
     async def measure_execution_time(self, operation: Callable) -> float:
         """Measure operation execution time."""
-        import time
 
         start_time = time.time()
         await operation()
@@ -341,7 +340,6 @@ class PerformanceTestMixin:
         total_requests: int = 100,
     ) -> builtins.dict[str, Any]:
         """Run a simple load test."""
-        import time
 
         start_time = time.time()
 

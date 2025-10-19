@@ -15,6 +15,7 @@ from typing import Any, Union
 import aioredis
 from aioredis import ConnectionPool, Redis
 from aioredis.exceptions import ConnectionError, RedisError, TimeoutError
+from aioredis.sentinel import Sentinel
 
 logger = logging.getLogger(__name__)
 
@@ -222,7 +223,6 @@ class RedisConnectionPool:
                 )
             elif self.config.sentinel_hosts:
                 # Redis Sentinel support
-                from aioredis.sentinel import Sentinel
                 sentinel = Sentinel(
                     [(host["host"], host["port"]) for host in self.config.sentinel_hosts]
                 )

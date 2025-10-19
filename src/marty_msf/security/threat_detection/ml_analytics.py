@@ -18,22 +18,23 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, dict, list
 
+import joblib
+import numpy as np
+from prometheus_client import Counter, Gauge, Histogram
+from sklearn.cluster import DBSCAN
+from sklearn.ensemble import IsolationForest, RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
 # External dependencies (optional)
 try:
-    import joblib
-    import numpy as np
-    from sklearn.cluster import DBSCAN
-    from sklearn.ensemble import IsolationForest, RandomForestClassifier
-    from sklearn.metrics import classification_report, confusion_matrix
-    from sklearn.model_selection import train_test_split
-    from sklearn.preprocessing import StandardScaler
 
     ML_AVAILABLE = True
 except ImportError:
     ML_AVAILABLE = False
 
 try:
-    from prometheus_client import Counter, Gauge, Histogram
 
     METRICS_AVAILABLE = True
 except ImportError:

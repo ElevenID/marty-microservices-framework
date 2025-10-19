@@ -16,6 +16,8 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
 
+from ..deployment import DeploymentOrchestrator
+
 # Local imports
 from . import (
     ArtifactType,
@@ -38,13 +40,6 @@ from . import (
 # External dependencies availability checks
 DEPLOYMENT_AVAILABLE = importlib.util.find_spec("devops.deployment") is not None
 KUBERNETES_AVAILABLE = importlib.util.find_spec("kubernetes") is not None
-
-# Conditional imports
-if DEPLOYMENT_AVAILABLE:
-    try:
-        from ..deployment import DeploymentOrchestrator
-    except ImportError:
-        DEPLOYMENT_AVAILABLE = False
 
 
 @dataclass

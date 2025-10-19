@@ -15,6 +15,8 @@ import importlib
 import subprocess
 import sys
 
+from playwright.sync_api import sync_playwright
+
 
 def check_import(module_name: str, package_name: str | None = None) -> bool:
     """Check if a module can be imported successfully."""
@@ -105,7 +107,6 @@ def main():
 
     # Check if playwright browsers are installed
     try:
-        from playwright.sync_api import sync_playwright
 
         with sync_playwright() as p:
             try:

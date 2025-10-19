@@ -16,6 +16,8 @@ Features:
 
 import asyncio
 import builtins
+import datetime
+import io
 import json
 import logging
 import pickle
@@ -28,11 +30,12 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Generic, TypeVar
 
+import redis.asyncio as redis
+from redis.asyncio import Redis
+from redis.exceptions import RedisError
+
 # Optional Redis imports
 try:
-    import redis.asyncio as redis
-    from redis.asyncio import Redis
-    from redis.exceptions import RedisError
 
     REDIS_AVAILABLE = True
 except ImportError:
@@ -89,7 +92,6 @@ class RestrictedUnpickler(pickle.Unpickler):
             return getattr(builtins, name)
         # Allow datetime objects which are commonly cached
         if module == "datetime" and name in {"datetime", "date", "time", "timedelta"}:
-            import datetime
 
             return getattr(datetime, name)
         # Block everything else
@@ -172,7 +174,6 @@ class CacheSerializer:
                     UserWarning,
                     stacklevel=2,
                 )
-                import io
 
                 return RestrictedUnpickler(io.BytesIO(data)).load()
             if self.format == SerializationFormat.JSON:

@@ -9,6 +9,7 @@ from collections.abc import Iterable
 from contextlib import suppress
 
 import structlog
+import uvloop
 from microservice_template import __version__
 from microservice_template.config import AppSettings
 from microservice_template.observability import configure_logging, configure_tracer
@@ -31,7 +32,6 @@ def cli(argv: Iterable[str] | None = None) -> int:
 
     if sys.platform != "win32":
         with suppress(ImportError):
-            import uvloop
 
             uvloop.install()
 

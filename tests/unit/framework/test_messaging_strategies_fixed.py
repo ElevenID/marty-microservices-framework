@@ -9,6 +9,8 @@ import inspect
 
 import pytest
 
+from marty_msf.framework.messaging import core as core_module
+from marty_msf.framework.messaging import dlq as dlq_module
 from marty_msf.framework.messaging.core import (
     Message,
     MessageHeaders,
@@ -158,8 +160,6 @@ def test_retry_strategy_delay_calculation():
 
 def test_discover_messaging_strategy_classes():
     """Discover all messaging strategy-related classes."""
-    from marty_msf.framework.messaging import core as core_module
-    from marty_msf.framework.messaging import dlq as dlq_module
 
     # Find strategy-related classes in DLQ module
     dlq_classes = []

@@ -3,15 +3,18 @@ Simple tests for event strategies and types.
 Tests basic event strategy patterns and data types.
 """
 
+import uuid
+from datetime import datetime, timezone
 from enum import Enum
 
 import pytest
+
+from marty_msf.framework.events.types import Event, EventMetadata, EventPriority
 
 
 def test_import_event_types():
     """Test that event types can be imported."""
     try:
-        from marty_msf.framework.events.types import EventPriority
 
         assert issubclass(EventPriority, Enum)
         print("✓ EventPriority imported successfully")
@@ -22,7 +25,6 @@ def test_import_event_types():
 def test_event_priority_enum():
     """Test EventPriority enum values."""
     try:
-        from marty_msf.framework.events.types import EventPriority
 
         # Test enum members exist
         assert hasattr(EventPriority, "LOW")
@@ -45,7 +47,6 @@ def test_event_priority_enum():
 def test_event_priority_iteration():
     """Test that event priorities can be iterated."""
     try:
-        from marty_msf.framework.events.types import EventPriority
 
         priorities = list(EventPriority)
         assert len(priorities) == 4
@@ -65,7 +66,6 @@ def test_event_priority_iteration():
 def test_event_models():
     """Test basic event model imports."""
     try:
-        from marty_msf.framework.events.types import Event, EventMetadata
 
         # Test classes exist
         assert Event is not None
@@ -80,10 +80,7 @@ def test_event_models():
 def test_event_data_creation():
     """Test event data object creation."""
     try:
-        import uuid
-        from datetime import datetime, timezone
 
-        from marty_msf.framework.events.types import Event, EventPriority
 
         # Create basic event
         event_data = {
@@ -112,7 +109,6 @@ def test_event_data_creation():
 def test_event_validation():
     """Test event validation and constraints."""
     try:
-        from marty_msf.framework.events.types import EventPriority
 
         # Test priority values
         assert EventPriority.CRITICAL != EventPriority.LOW

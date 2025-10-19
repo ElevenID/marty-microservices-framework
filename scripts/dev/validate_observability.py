@@ -17,6 +17,9 @@ from pathlib import Path
 from typing import list
 
 import yaml
+from observability.kafka import EventBus, KafkaConfig
+from observability.load_testing.load_tester import LoadTestConfig, LoadTestRunner
+from observability.metrics import MetricsCollector, MetricsConfig
 
 
 def validate_kafka_configs() -> builtins.list[str]:
@@ -41,7 +44,6 @@ def validate_kafka_configs() -> builtins.list[str]:
     # Validate Python modules can be imported
     try:
         sys.path.insert(0, str(Path.cwd()))
-        from observability.kafka import EventBus, KafkaConfig
 
         # Basic instantiation test
         config = KafkaConfig()
@@ -134,7 +136,6 @@ def validate_metrics_components() -> builtins.list[str]:
 
     try:
         sys.path.insert(0, str(Path.cwd()))
-        from observability.metrics import MetricsCollector, MetricsConfig
 
         # Test basic metrics collector functionality
         config = MetricsConfig(service_name="test-service")
@@ -168,10 +169,6 @@ def validate_load_testing() -> builtins.list[str]:
 
     try:
         sys.path.insert(0, str(Path.cwd()))
-        from observability.load_testing.load_tester import (
-            LoadTestConfig,
-            LoadTestRunner,
-        )
 
         # Test configuration creation
         config = LoadTestConfig(

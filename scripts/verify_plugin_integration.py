@@ -100,7 +100,6 @@ def test_configuration():
     plugin_config = framework_root / "config" / "plugins" / "production_payment_service.yaml"
     if plugin_config.exists():
         try:
-            import yaml
             with open(plugin_config) as f:
                 config = yaml.safe_load(f)
 
@@ -120,11 +119,9 @@ def test_framework_integration():
 
     try:
         # Test plugin context creation
-        from marty_msf.framework.plugins.core import PluginContext
         print("  ✅ PluginContext can be imported")
 
         # Test plugin manager
-        from marty_msf.framework.plugins.core import PluginManager
         print("  ✅ PluginManager can be imported")
 
         # Test service definitions

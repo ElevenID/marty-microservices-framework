@@ -13,7 +13,7 @@ Key Features:
 - Performance monitoring and anomaly detection
 
 Usage:
-    from marty_msf.framework.audit import (
+from marty_msf.framework.audit import (
         AuditLogger, AuditConfig, AuditContext,
         AuditEventType, AuditSeverity, AuditOutcome,
         setup_fastapi_audit_middleware,

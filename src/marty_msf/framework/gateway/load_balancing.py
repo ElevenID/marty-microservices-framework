@@ -16,6 +16,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
+import requests
+
 from .core import GatewayRequest, GatewayResponse
 
 logger = logging.getLogger(__name__)
@@ -491,7 +493,6 @@ class HealthChecker:
 
     def _perform_health_check(self, server: UpstreamServer):
         """Perform health check for server."""
-        import requests
 
         start_time = time.time()
 
@@ -639,7 +640,6 @@ class LoadBalancingMiddleware:
         server = self.manager.select_server(route_config.upstream, request)
         if not server:
             logger.error(f"No available servers in group: {route_config.upstream}")
-            from .core import GatewayResponse
 
             return GatewayResponse(status_code=503, body=b"Service Unavailable")
 

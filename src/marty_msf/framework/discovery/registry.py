@@ -12,11 +12,19 @@ import logging
 import time
 from typing import Any
 
+import aiohttp
+import consul.aio
+import etcd3
+from kubernetes import client
+from kubernetes import config as k8s_config
+
 from .core import (
     HealthStatus,
+    ServiceEndpoint,
     ServiceEvent,
     ServiceInstance,
     ServiceInstanceType,
+    ServiceMetadata,
     ServiceRegistry,
     ServiceRegistryConfig,
     ServiceStatus,
@@ -305,7 +313,6 @@ class InMemoryServiceRegistry(ServiceRegistry):
     async def _http_health_check(self, instance: ServiceInstance, health_check) -> HealthStatus:
         """Perform HTTP health check."""
         try:
-            import aiohttp
 
             url = health_check.url
             if not url.startswith(("http://", "https://")):
@@ -415,7 +422,6 @@ class ConsulServiceRegistry(ServiceRegistry):
         """Get Consul client."""
         if self._consul is None:
             try:
-                import consul.aio
 
                 self._consul = consul.aio.Consul(
                     host=self.consul_config.get("host", "localhost"),
@@ -615,7 +621,6 @@ class ConsulServiceRegistry(ServiceRegistry):
                     instance_id = service_id
 
             # Create service instance
-            from .core import ServiceEndpoint, ServiceMetadata
 
             endpoint = ServiceEndpoint(host=service["Address"], port=service["Port"])
 
@@ -666,7 +671,6 @@ class EtcdServiceRegistry(ServiceRegistry):
         """Get etcd client."""
         if self._etcd is None:
             try:
-                import etcd3
 
                 self._etcd = etcd3.client(
                     host=self.etcd_config.get("host", "localhost"),
@@ -803,7 +807,6 @@ class EtcdServiceRegistry(ServiceRegistry):
     def _dict_to_instance(self, data: builtins.dict[str, Any]) -> ServiceInstance | None:
         """Convert dictionary data to ServiceInstance."""
         try:
-            from .core import ServiceEndpoint, ServiceMetadata
 
             # Create endpoint
             endpoint_data = data["endpoint"]
@@ -869,8 +872,6 @@ class KubernetesServiceRegistry(ServiceRegistry):
         """Get Kubernetes client."""
         if self._k8s_client is None:
             try:
-                from kubernetes import client
-                from kubernetes import config as k8s_config
 
                 if self.k8s_config.get("in_cluster", False):
                     k8s_config.load_incluster_config()
@@ -974,7 +975,6 @@ class KubernetesServiceRegistry(ServiceRegistry):
     ) -> ServiceInstance | None:
         """Convert Kubernetes endpoint to ServiceInstance."""
         try:
-            from .core import ServiceEndpoint, ServiceMetadata
 
             # Create instance ID from IP and port
             instance_id = f"{address.ip}-{port.port}"

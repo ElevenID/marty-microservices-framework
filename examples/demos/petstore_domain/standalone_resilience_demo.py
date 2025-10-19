@@ -276,7 +276,6 @@ class StandaloneResilienceDemo:
 
     def _mock_payment_operation(self, amount: float) -> dict[str, Any]:
         """Mock payment operation (synchronous for thread pool)."""
-        import time
 
         # Simulate processing time
         time.sleep(random.uniform(0.5, 3.0))
@@ -306,7 +305,6 @@ class StandaloneResilienceDemo:
 
     def _mock_ml_operation(self, customer_id: str) -> dict[str, Any]:
         """Mock ML operation (synchronous for thread pool)."""
-        import time
 
         # Simulate ML processing time
         time.sleep(random.uniform(1.0, 6.0))

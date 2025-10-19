@@ -11,16 +11,27 @@ import logging
 import os
 from typing import Any, Optional
 
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.grpc import (
+    GrpcAioInstrumentorClient,
+    GrpcAioInstrumentorServer,
+)
+from opentelemetry.instrumentation.kafka import KafkaInstrumentor
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
+from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+
+from ..core.di_container import get_service
 from ..core.services import ObservabilityService
+from .factories import register_observability_services
 
 logger = logging.getLogger(__name__)
 
 try:
-    from opentelemetry import trace
-    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-    from opentelemetry.sdk.resources import Resource
-    from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
 
     OPENTELEMETRY_AVAILABLE = True
 except ImportError:
@@ -114,13 +125,11 @@ def get_tracing_service() -> TracingService:
     Raises:
         ValueError: If service is not registered in the DI container
     """
-    from ..core.di_container import get_service
 
     try:
         return get_service(TracingService)
     except ValueError:
         # Auto-register if not found (for backward compatibility)
-        from .factories import register_observability_services
         register_observability_services()
         return get_service(TracingService)
 
@@ -209,10 +218,6 @@ def instrument_grpc() -> None:
         return
 
     try:
-        from opentelemetry.instrumentation.grpc import (
-            GrpcAioInstrumentorClient,
-            GrpcAioInstrumentorServer,
-        )
 
         # Instrument gRPC client
         client_instrumentor = GrpcAioInstrumentorClient()
@@ -243,7 +248,6 @@ def instrument_fastapi() -> None:
         return
 
     try:
-        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
         if not FastAPIInstrumentor().is_instrumented_by_opentelemetry:
             FastAPIInstrumentor.instrument()
@@ -266,7 +270,6 @@ def instrument_sqlalchemy() -> None:
         return
 
     try:
-        from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 
         if not SQLAlchemyInstrumentor().is_instrumented_by_opentelemetry:
             SQLAlchemyInstrumentor().instrument()
@@ -289,7 +292,6 @@ def instrument_requests() -> None:
         return
 
     try:
-        from opentelemetry.instrumentation.requests import RequestsInstrumentor
 
         if not RequestsInstrumentor().is_instrumented_by_opentelemetry:
             RequestsInstrumentor().instrument()
@@ -312,7 +314,6 @@ def instrument_kafka() -> None:
         return
 
     try:
-        from opentelemetry.instrumentation.kafka import KafkaInstrumentor
 
         if not KafkaInstrumentor().is_instrumented_by_opentelemetry:
             KafkaInstrumentor().instrument()

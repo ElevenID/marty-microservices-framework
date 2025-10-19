@@ -7,6 +7,7 @@ circuit breakers, and other resilience patterns in a microservice.
 
 import asyncio
 import logging
+import random
 from typing import Any
 
 # Import resilience patterns for robust service design
@@ -127,7 +128,6 @@ class ResilientExternalService:
         await asyncio.sleep(0.01)
 
         # Simulate cache miss 50% of the time
-        import random
         if random.random() < 0.5:
             return None
 

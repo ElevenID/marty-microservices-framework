@@ -26,6 +26,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -617,5 +618,4 @@ async def simulate_recommendation_load(requests_count: int = 100):
 
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8003)

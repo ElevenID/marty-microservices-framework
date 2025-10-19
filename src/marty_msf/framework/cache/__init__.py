@@ -11,7 +11,7 @@ This package provides comprehensive caching capabilities including:
 - Serialization and compression
 
 Usage:
-    from marty_msf.framework.cache import (
+from marty_msf.framework.cache import (
         CacheManager, CacheConfig, CacheBackend, CachePattern,
         create_cache_manager, get_cache_manager, cache_context,
         cached, cache_invalidate

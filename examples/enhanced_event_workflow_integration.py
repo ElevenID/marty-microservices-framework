@@ -18,6 +18,7 @@ from marty_msf.framework.events.enhanced_event_bus import (
     EnhancedEventBus,
     EventFilter,
     EventPriority,
+    PersistenceBase,
     enhanced_event_bus_context,
 )
 from marty_msf.framework.events.enhanced_events import (
@@ -30,6 +31,7 @@ from marty_msf.framework.events.enhanced_events import (
 from marty_msf.framework.plugins.event_subscription import (
     PluginConfig,
     PluginEventSubscriptionManager,
+    PluginSubscriptionBase,
     create_event_filter,
     plugin_subscription_manager_context,
     register_plugin_with_events,
@@ -38,6 +40,7 @@ from marty_msf.framework.workflow.enhanced_workflow_engine import (
     ActionStep,
     DecisionStep,
     StepResult,
+    WorkflowBase,
     WorkflowContext,
     WorkflowDefinition,
     WorkflowEngine,
@@ -373,9 +376,6 @@ async def main():
     async_session_factory = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     # Create all tables
-    from marty_msf.framework.events.enhanced_event_bus import PersistenceBase
-    from marty_msf.framework.plugins.event_subscription import PluginSubscriptionBase
-    from marty_msf.framework.workflow.enhanced_workflow_engine import WorkflowBase
 
     async with engine.begin() as conn:
         await conn.run_sync(PersistenceBase.metadata.create_all)

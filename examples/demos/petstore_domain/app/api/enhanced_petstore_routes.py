@@ -19,70 +19,20 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 
 # MMF Framework imports
-try:
-    from marty_msf.framework.cache import cache_result
-    from marty_msf.framework.config import get_config_value, get_feature_flag
-    from marty_msf.framework.plugins.decorators import event_handler
-    from marty_msf.framework.resilience.retry import with_retry
-    from marty_msf.observability.metrics import track_metrics
-    from marty_msf.observability.tracing import trace_operation
-    from marty_msf.security.authentication import requires_auth, verify_jwt_token
-    from marty_msf.security.rate_limiting import rate_limit
-    MMF_AVAILABLE = True
-except ImportError:
-    # Mock decorators when MMF is not available
-    def trace_operation(operation_name: str):
-        def decorator(func):
-            return func
-        return decorator
+from marty_msf.framework.cache import cache_result
+from marty_msf.framework.config import get_config_value, get_feature_flag
+from marty_msf.framework.plugins.decorators import event_handler
+from marty_msf.framework.resilience.retry import with_retry
+from marty_msf.observability.metrics import track_metrics
+from marty_msf.observability.tracing import trace_operation
+from marty_msf.security.authentication import requires_auth, verify_jwt_token
+from marty_msf.security.rate_limiting import rate_limit
 
-    def track_metrics(metric_name: str):
-        def decorator(func):
-            return func
-        return decorator
+from ..services.enhanced_petstore_service import EnhancedPetstoreDomainService
 
-    def requires_auth(func):
-        return func
-
-    def rate_limit(requests_per_minute: int):
-        def decorator(func):
-            return func
-        return decorator
-
-    def cache_result(ttl_seconds: int):
-        def decorator(func):
-            return func
-        return decorator
-
-    def with_retry(max_attempts: int = 3):
-        def decorator(func):
-            return func
-        return decorator
-
-    def event_handler(event_type: str):
-        def decorator(func):
-            return func
-        return decorator
-
-    async def get_feature_flag(flag_name: str, default: bool = False) -> bool:
-        return default
-
-    async def get_config_value(key: str, default: Any = None) -> Any:
-        return default
-
-    async def verify_jwt_token(token: str) -> dict:
-        return {"user_id": "demo-user", "roles": ["customer"]}
-
-    MMF_AVAILABLE = False
+MMF_AVAILABLE = True
 
 # Import our enhanced service
-try:
-    from ..services.enhanced_petstore_service import EnhancedPetstoreDomainService
-except ImportError:
-    # Fallback to original service
-    from ..services.petstore_domain_service import (
-        PetstoreDomainService as EnhancedPetstoreDomainService,
-    )
 
 logger = logging.getLogger(__name__)
 

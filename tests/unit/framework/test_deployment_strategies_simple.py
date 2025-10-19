@@ -7,12 +7,17 @@ from enum import Enum
 
 import pytest
 
+from marty_msf.framework.deployment.strategies import (
+    DeploymentPhase,
+    DeploymentStatus,
+    DeploymentStrategy,
+)
+
 
 # Test basic deployment strategy imports
 def test_import_deployment_strategies():
     """Test that deployment strategies can be imported."""
     try:
-        from marty_msf.framework.deployment.strategies import DeploymentStrategy
 
         assert issubclass(DeploymentStrategy, Enum)
         print("✓ DeploymentStrategy imported successfully")
@@ -23,7 +28,6 @@ def test_import_deployment_strategies():
 def test_deployment_strategy_enum():
     """Test DeploymentStrategy enum values."""
     try:
-        from marty_msf.framework.deployment.strategies import DeploymentStrategy
 
         # Test enum members exist
         assert hasattr(DeploymentStrategy, "BLUE_GREEN")
@@ -48,7 +52,6 @@ def test_deployment_strategy_enum():
 def test_deployment_phase_enum():
     """Test DeploymentPhase enum values."""
     try:
-        from marty_msf.framework.deployment.strategies import DeploymentPhase
 
         # Test enum members exist
         assert hasattr(DeploymentPhase, "PLANNING")
@@ -69,7 +72,6 @@ def test_deployment_phase_enum():
 def test_deployment_status_enum():
     """Test DeploymentStatus enum values."""
     try:
-        from marty_msf.framework.deployment.strategies import DeploymentStatus
 
         # Test enum members exist
         assert hasattr(DeploymentStatus, "PENDING")
@@ -83,7 +85,6 @@ def test_deployment_status_enum():
 def test_deployment_strategy_iteration():
     """Test that deployment strategies can be iterated."""
     try:
-        from marty_msf.framework.deployment.strategies import DeploymentStrategy
 
         strategies = list(DeploymentStrategy)
         assert len(strategies) == 5
@@ -103,7 +104,6 @@ def test_deployment_strategy_iteration():
 def test_deployment_strategy_creation():
     """Test creating deployment strategy instances."""
     try:
-        from marty_msf.framework.deployment.strategies import DeploymentStrategy
 
         # Test direct access
         blue_green = DeploymentStrategy.BLUE_GREEN

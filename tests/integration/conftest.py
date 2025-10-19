@@ -9,8 +9,10 @@ import asyncio
 from collections.abc import AsyncGenerator
 from pathlib import Path
 
+import asyncpg
 import docker
 import pytest
+import redis.asyncio as redis
 from testcontainers.kafka import KafkaContainer
 from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
@@ -54,7 +56,6 @@ async def kafka_container() -> AsyncGenerator[KafkaContainer, None]:
 @pytest.fixture
 async def real_database_connection(postgres_container: PostgresContainer):
     """Provide a real database connection for integration tests."""
-    import asyncpg
 
     connection_url = postgres_container.get_connection_url()
     # Convert psycopg2 URL to asyncpg format
@@ -82,7 +83,6 @@ async def real_database_connection(postgres_container: PostgresContainer):
 @pytest.fixture
 async def real_redis_client(redis_container: RedisContainer):
     """Provide a real Redis client for integration tests."""
-    import redis.asyncio as redis
 
     redis_url = f"redis://localhost:{redis_container.get_exposed_port(6379)}/0"
     client = redis.from_url(redis_url)

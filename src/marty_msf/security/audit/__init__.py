@@ -17,7 +17,14 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Optional, Union
 
+from ...core.di_container import (
+    configure_service,
+    get_container,
+    get_service,
+    get_service_optional,
+)
 from ..exceptions import SecurityError, SecurityErrorType
+from ..factories import register_security_services
 
 logger = logging.getLogger(__name__)
 
@@ -539,7 +546,6 @@ def get_security_auditor(service_name: str | None = None) -> SecurityAuditor:
     Returns:
         SecurityAuditor instance
     """
-    from ...core.di_container import configure_service, get_service_optional
 
     # Try to get existing auditor
     auditor = get_service_optional(SecurityAuditor)
@@ -550,20 +556,17 @@ def get_security_auditor(service_name: str | None = None) -> SecurityAuditor:
     if not service_name:
         service_name = "unknown"
 
-    from ..factories import register_security_services
     register_security_services(service_name)
 
     # Configure with service name if provided
     if service_name != "unknown":
         configure_service(SecurityAuditor, {"service_name": service_name})
 
-    from ...core.di_container import get_service
     return get_service(SecurityAuditor)
 
 
 def reset_security_auditor() -> None:
     """Reset security auditor (for testing)."""
-    from ...core.di_container import get_container
     get_container().remove(SecurityAuditor)
 
 

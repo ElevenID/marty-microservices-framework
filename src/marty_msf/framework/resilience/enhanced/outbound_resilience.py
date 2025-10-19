@@ -10,7 +10,7 @@ from collections.abc import Awaitable, Callable
 from typing import TypeVar
 
 from .advanced_retry import AdvancedRetryConfig, async_retry_with_advanced_policy
-from .enhanced_circuit_breaker import EnhancedCircuitBreakerConfig
+from .enhanced_circuit_breaker import EnhancedCircuitBreakerConfig, get_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,6 @@ async def async_call_with_resilience(
     # Create circuit breaker if config provided
     circuit_breaker = None
     if circuit_breaker_config is not None:
-        from .enhanced_circuit_breaker import get_circuit_breaker
 
         circuit_breaker = get_circuit_breaker(circuit_breaker_name, circuit_breaker_config)
 

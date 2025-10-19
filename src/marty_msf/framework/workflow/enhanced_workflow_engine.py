@@ -26,7 +26,17 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Any, Optional, Union
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Integer,
+    String,
+    Text,
+    and_,
+    select,
+    update,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import declarative_base
 
@@ -534,7 +544,6 @@ class WorkflowEngine:
             return None
 
         async with self._get_session() as session:
-            from sqlalchemy import select
 
             query = select(WorkflowInstance).where(WorkflowInstance.workflow_id == workflow_id)
             result = await session.execute(query)
@@ -884,7 +893,6 @@ class WorkflowEngine:
             return
 
         async with self._get_session() as session:
-            from sqlalchemy import and_, select
 
             # Find workflows that were running but have no active task
             query = select(WorkflowInstance).where(
@@ -946,7 +954,6 @@ class WorkflowEngine:
     async def _update_workflow_status(self, workflow_id: str, status: WorkflowStatus) -> None:
         """Update workflow status."""
         async with self._get_session() as session:
-            from sqlalchemy import select, update
 
             query = update(WorkflowInstance).where(
                 WorkflowInstance.workflow_id == workflow_id
@@ -961,7 +968,6 @@ class WorkflowEngine:
     async def _update_current_step(self, workflow_id: str, step_id: str) -> None:
         """Update current step."""
         async with self._get_session() as session:
-            from sqlalchemy import update
 
             query = update(WorkflowInstance).where(
                 WorkflowInstance.workflow_id == workflow_id
@@ -981,7 +987,6 @@ class WorkflowEngine:
     ) -> None:
         """Update workflow completion."""
         async with self._get_session() as session:
-            from sqlalchemy import update
 
             query = update(WorkflowInstance).where(
                 WorkflowInstance.workflow_id == workflow_id
@@ -1019,7 +1024,6 @@ class WorkflowEngine:
     async def _load_workflow_context(self, workflow_id: str) -> WorkflowContext | None:
         """Load workflow context from database."""
         async with self._get_session() as session:
-            from sqlalchemy import select
 
             query = select(WorkflowInstance).where(WorkflowInstance.workflow_id == workflow_id)
             result = await session.execute(query)

@@ -11,7 +11,7 @@ This module provides:
 - Outbox pattern for reliable event publishing
 
 Example usage:
-    from marty_msf.framework.database import DatabaseConfig, DatabaseManager, Repository
+from marty_msf.framework.database import DatabaseConfig, DatabaseManager, Repository
 
     # Configure database for a service
     config = DatabaseConfig(
@@ -34,6 +34,11 @@ Example usage:
     user = await user_repository.create({"name": "John", "email": "john@example.com"})
 """
 
+# Outbox pattern components
+from ...patterns.outbox.enhanced_outbox import EnhancedOutboxEvent as OutboxEvent
+from ...patterns.outbox.enhanced_outbox import (
+    EnhancedOutboxRepository as OutboxRepository,
+)
 from .config import ConnectionPoolConfig, DatabaseConfig, DatabaseType
 from .manager import (
     ConnectionError,
@@ -58,9 +63,6 @@ from .models import (
     TimestampMixin,
     UUIDMixin,
 )
-
-# Outbox pattern components
-from .outbox import OutboxEvent, OutboxRepository
 from .repository import (
     BaseRepository,
     ConflictError,

@@ -41,7 +41,7 @@ from app.services.petstore_domain_service import PetstoreDomainService
 from app.services.security_service import cleanup_security_service, get_security_service
 from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 # MMF Standard Observability - Zero Configuration Required
 from marty_msf.observability.standard import (
@@ -250,7 +250,6 @@ async def health_check():
 async def metrics():
     """Standard Prometheus metrics endpoint."""
     if observability:
-        from fastapi.responses import Response
         metrics_data = observability.get_metrics()
         return Response(
             metrics_data,

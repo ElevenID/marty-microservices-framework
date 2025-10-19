@@ -9,9 +9,16 @@ import logging
 from pathlib import Path
 from typing import Any
 
+import yaml
 from pydantic import BaseModel, Field, ValidationError
 
-from .manager import BaseServiceConfig, ConfigManager, ConfigProvider
+from .manager import (
+    BaseServiceConfig,
+    ConfigManager,
+    ConfigProvider,
+    EnvVarConfigProvider,
+    FileConfigProvider,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +107,6 @@ class PluginConfigProvider(ConfigProvider):
         plugin_config_file = self.config_dir / f"{self.plugin_name}.yaml"
 
         if plugin_config_file.exists():
-            import yaml
 
             with open(plugin_config_file) as f:
                 config = yaml.safe_load(f) or {}
@@ -120,7 +126,6 @@ class PluginConfigProvider(ConfigProvider):
             # Load existing config if it exists
             existing_config = {}
             if plugin_config_file.exists():
-                import yaml
 
                 with open(plugin_config_file) as f:
                     existing_config = yaml.safe_load(f) or {}
@@ -129,7 +134,6 @@ class PluginConfigProvider(ConfigProvider):
             existing_config[key] = config
 
             # Save back to file
-            import yaml
 
             with open(plugin_config_file, "w") as f:
                 yaml.dump(existing_config, f, default_flow_style=False)
@@ -291,7 +295,6 @@ def create_plugin_config_manager(
     providers: list[ConfigProvider] | None = None,
 ) -> PluginConfigManager:
     """Create a plugin configuration manager with default providers."""
-    from .manager import EnvVarConfigProvider, FileConfigProvider
 
     if providers is None:
         providers = [FileConfigProvider(Path(config_dir)), EnvVarConfigProvider("MMF")]

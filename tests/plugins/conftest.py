@@ -9,9 +9,11 @@ Configuration for running the plugin system test suite including:
 """
 
 import asyncio
+import json
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+import yaml
 
 from marty_msf.framework.plugins import (
     MMFPlugin,
@@ -19,6 +21,7 @@ from marty_msf.framework.plugins import (
     PluginManager,
     PluginMetadata,
 )
+from plugins.marty.plugin_config import MartyTrustPKIConfig
 
 
 # Mock classes for testing
@@ -106,7 +109,6 @@ def mock_plugin_manager():
 def marty_config():
     """Create test Marty configuration."""
     try:
-        from plugins.marty.plugin_config import MartyTrustPKIConfig
 
         return MartyTrustPKIConfig(
             trust_anchor_url="https://test-trust.example.com",
@@ -379,9 +381,7 @@ list_setting:
         },
     }
 
-    import json
 
-    import yaml
 
     for filename, config_data in configs.items():
         config_file = config_dir / filename

@@ -7,6 +7,7 @@ implementations with a single, comprehensive solution.
 """
 
 import asyncio
+import copy
 import logging
 import time
 from collections.abc import Awaitable, Callable
@@ -15,12 +16,15 @@ from enum import Enum
 from functools import wraps
 from typing import Any, TypeVar
 
+from marty_msf.core.enhanced_di import get_service
+
 from .bulkhead import BulkheadConfig, BulkheadError, SemaphoreBulkhead
 from .circuit_breaker import CircuitBreaker, CircuitBreakerConfig, CircuitBreakerError
 from .enhanced.advanced_retry import (
     AdvancedRetryConfig,
     async_retry_with_advanced_policy,
 )
+from .resilience_manager_service import ResilienceManagerService
 from .timeout import TimeoutConfig, with_sync_timeout, with_timeout
 
 logger = logging.getLogger(__name__)
@@ -78,7 +82,6 @@ class ConsolidatedResilienceConfig:
             return self
 
         # Create a copy with strategy-specific overrides
-        import copy
         config = copy.deepcopy(self)
         overrides = self.strategy_overrides[strategy]
 
@@ -452,24 +455,25 @@ class ConsolidatedResilienceManager:
             bulkhead.reset_stats()
 
 
-# Global instance for convenience
-_global_resilience_manager: ConsolidatedResilienceManager | None = None
+# Service-based resilience manager access
 
 
 def get_resilience_manager(config: ConsolidatedResilienceConfig | None = None, service_config: dict[str, Any] | None = None) -> ConsolidatedResilienceManager:
-    """Get the global consolidated resilience manager instance."""
-    global _global_resilience_manager
+    """Get the resilience manager instance from the DI container."""
+    # Import here to avoid circular dependency
 
-    if _global_resilience_manager is None or config is not None or service_config is not None:
-        _global_resilience_manager = ConsolidatedResilienceManager(config, service_config)
-
-    return _global_resilience_manager
+    service = get_service(ResilienceManagerService)
+    # Update config if provided
+    if config is not None or service_config is not None:
+        service.update_config(service_config or {})
+    return service.get_manager()
 
 
 def set_resilience_manager(manager: ConsolidatedResilienceManager):
-    """Set the global resilience manager instance."""
-    global _global_resilience_manager
-    _global_resilience_manager = manager
+    """Set the resilience manager instance (not supported - use DI container instead)."""
+    raise NotImplementedError(
+        "set_resilience_manager is not supported. Use the DI container to register ResilienceManagerService instead."
+    )
 
 
 # Convenience functions for common strategies
@@ -573,6 +577,7 @@ def create_resilience_manager_from_service_config(service_config: dict[str, Any]
 
 
 def configure_resilience_manager(service_config: dict[str, Any]) -> None:
-    """Configure the global resilience manager with service configuration."""
-    global _global_resilience_manager
-    _global_resilience_manager = ConsolidatedResilienceManager(service_config=service_config)
+    """Configure the resilience manager with service configuration (not supported)."""
+    raise NotImplementedError(
+        "configure_resilience_manager is not supported. Use the DI container to configure ResilienceManagerService instead."
+    )

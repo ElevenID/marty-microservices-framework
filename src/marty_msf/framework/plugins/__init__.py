@@ -13,7 +13,7 @@ Key Components:
 - Decorators for service integration
 
 Example Usage:
-    from marty_msf.framework.plugins import MMFPlugin, PluginContext, plugin_service
+from marty_msf.framework.plugins import MMFPlugin, PluginContext, plugin_service
 
     @plugin_service(name="MyService", version="1.0.0")
     class MyPlugin(MMFPlugin):

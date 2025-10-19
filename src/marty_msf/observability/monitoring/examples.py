@@ -6,27 +6,17 @@ for implementing advanced monitoring in microservices.
 """
 
 import asyncio
+import builtins
 import logging
 from typing import Any
 
-# FastAPI example
-from fastapi import FastAPI, HTTPException
-
-# Database example
-try:
-    from sqlalchemy import create_engine
-    from sqlalchemy.orm import sessionmaker
-
-    SQLALCHEMY_AVAILABLE = True
-except ImportError:
-    SQLALCHEMY_AVAILABLE = False
-
-import builtins
-
-# Redis example
 import aioredis
 
-# Framework imports
+# FastAPI example
+from fastapi import FastAPI, HTTPException
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 from marty_msf.framework.monitoring import (
     AlertLevel,
     AlertRule,
@@ -44,6 +34,23 @@ from marty_msf.framework.monitoring import (
     record_user_registration,
     setup_fastapi_monitoring,
 )
+from marty_msf.framework.monitoring.core import (
+    HealthCheck,
+    HealthCheckResult,
+    HealthStatus,
+)
+
+# Database example
+try:
+
+    SQLALCHEMY_AVAILABLE = True
+except ImportError:
+    SQLALCHEMY_AVAILABLE = False
+
+
+# Redis example
+
+# Framework imports
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -303,11 +310,6 @@ async def advanced_health_checks_example():
     monitoring_manager = initialize_monitoring("health-check-example")
 
     # Import the base health check class
-    from marty_msf.framework.monitoring.core import (
-        HealthCheck,
-        HealthCheckResult,
-        HealthStatus,
-    )
 
     # Custom health check class
     class CustomServiceHealthCheck(HealthCheck):

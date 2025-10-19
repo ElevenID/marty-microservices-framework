@@ -19,8 +19,6 @@ Key Changes:
 
 import logging
 
-logger = logging.getLogger(__name__)
-
 from . import policy_engines
 from .abac import (
     ABACContext,
@@ -86,6 +84,9 @@ from .policy_engines import (
     get_policy_service,
 )
 from .rbac import Permission, PermissionAction, RBACManager, ResourceType, Role
+
+logger = logging.getLogger(__name__)
+
 
 __all__ = [
     # Authentication

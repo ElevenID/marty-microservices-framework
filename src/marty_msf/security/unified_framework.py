@@ -20,6 +20,7 @@ Key Features:
 """
 
 import asyncio
+import ipaddress
 import logging
 import re
 import time
@@ -31,6 +32,21 @@ from enum import Enum
 from threading import RLock
 from typing import Any, Optional, Union
 from uuid import uuid4
+
+import jsonschema
+
+from ..framework.service_mesh import create_enhanced_service_mesh_manager
+from .compliance.unified_scanner import UnifiedComplianceScanner
+from .engines.acl_engine import ACLPolicyEngine
+from .engines.builtin_engine import BuiltinPolicyEngine
+from .engines.opa_engine import OPAPolicyEngine
+from .engines.oso_engine import OsoPolicyEngine
+from .mesh.istio_security import IstioSecurityManager
+from .mesh.linkerd_security import LinkerdSecurityManager
+from .providers.local_provider import LocalProvider
+from .providers.oauth2_provider import OAuth2Provider
+from .providers.oidc_provider import OIDCProvider
+from .providers.saml_provider import SAMLProvider
 
 logger = logging.getLogger(__name__)
 
@@ -837,7 +853,6 @@ class UnifiedSecurityFramework:
         """
         try:
             # Import here to avoid circular dependency
-            from ..framework.service_mesh import create_enhanced_service_mesh_manager
 
             # Create enhanced service mesh manager with security integration
             enhanced_manager = create_enhanced_service_mesh_manager(
@@ -935,16 +950,12 @@ class UnifiedSecurityFramework:
             provider_type = provider_config.get("type")
 
             if provider_type == "oidc":
-                from .providers.oidc_provider import OIDCProvider
                 provider = OIDCProvider(provider_config)
             elif provider_type == "oauth2":
-                from .providers.oauth2_provider import OAuth2Provider
                 provider = OAuth2Provider(provider_config)
             elif provider_type == "saml":
-                from .providers.saml_provider import SAMLProvider
                 provider = SAMLProvider(provider_config)
             elif provider_type == "local":
-                from .providers.local_provider import LocalProvider
                 provider = LocalProvider(provider_config)
             else:
                 logger.warning(f"Unknown identity provider type: {provider_type}")
@@ -960,16 +971,12 @@ class UnifiedSecurityFramework:
             engine_type = engine_config.get("type")
 
             if engine_type == "opa":
-                from .engines.opa_engine import OPAPolicyEngine
                 engine = OPAPolicyEngine(engine_config)
             elif engine_type == "oso":
-                from .engines.oso_engine import OsoPolicyEngine
                 engine = OsoPolicyEngine(engine_config)
             elif engine_type == "builtin":
-                from .engines.builtin_engine import BuiltinPolicyEngine
                 engine = BuiltinPolicyEngine(engine_config)
             elif engine_type == "acl":
-                from .engines.acl_engine import ACLPolicyEngine
                 engine = ACLPolicyEngine(engine_config)
             else:
                 logger.warning(f"Unknown policy engine type: {engine_type}")
@@ -985,10 +992,8 @@ class UnifiedSecurityFramework:
             mesh_type = mesh_config.get("type", "istio")
 
             if mesh_type == "istio":
-                from .mesh.istio_security import IstioSecurityManager
                 self.service_mesh_manager = IstioSecurityManager(mesh_config)
             elif mesh_type == "linkerd":
-                from .mesh.linkerd_security import LinkerdSecurityManager
                 self.service_mesh_manager = LinkerdSecurityManager(mesh_config)
             else:
                 logger.warning(f"Unknown service mesh type: {mesh_type}")
@@ -998,7 +1003,6 @@ class UnifiedSecurityFramework:
         compliance_config = self.config.get("compliance", {})
 
         if compliance_config.get("enabled", False):
-            from .compliance.unified_scanner import UnifiedComplianceScanner
             self.compliance_scanner = UnifiedComplianceScanner(compliance_config)
 
     async def _evaluate_all_policies(self, context: SecurityContext) -> SecurityDecision:
@@ -1270,7 +1274,6 @@ class UnifiedSecurityFramework:
                 self.cache_manager.invalidate_by_category("policy")
 
                 # Log audit event
-                import asyncio
                 try:
                     loop = asyncio.get_event_loop()
                     loop.create_task(self._audit_log_event("acl_rule_added", {
@@ -1312,7 +1315,6 @@ class UnifiedSecurityFramework:
                 self.cache_manager.invalidate_by_category("policy")
 
                 # Log audit event
-                import asyncio
                 try:
                     loop = asyncio.get_event_loop()
                     loop.create_task(self._audit_log_event("acl_rules_removed", {
@@ -1423,7 +1425,6 @@ class UnifiedSecurityFramework:
         """Quick check if principal has access to perform action on resource"""
         try:
             # Use the authorize method which handles all policy engines
-            import asyncio
             try:
                 loop = asyncio.get_event_loop()
                 decision = loop.run_until_complete(
@@ -1539,7 +1540,6 @@ class UnifiedSecurityFramework:
 
         try:
             try:
-                import jsonschema
 
                 # Get policies from engine if possible
                 if hasattr(engine, 'policies'):
@@ -1644,7 +1644,6 @@ class UnifiedSecurityFramework:
                 if not isinstance(condition_value, list):
                     errors.append(f"ACL entry {entry_index}: ip_range must be a list")
                 else:
-                    import ipaddress
                     for ip_range in condition_value:
                         try:
                             ipaddress.ip_network(ip_range)

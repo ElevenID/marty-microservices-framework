@@ -9,6 +9,7 @@ This module provides various destinations for audit events:
 
 import asyncio
 import builtins
+import gzip
 import json
 import logging
 from collections.abc import AsyncGenerator
@@ -17,16 +18,20 @@ from pathlib import Path
 from typing import Any
 
 import aiofiles
+import aiohttp
+from colorama import Fore, Style, init
 from sqlalchemy import Column, DateTime, Integer, String, Text, and_, select
 from sqlalchemy.dialects.postgresql import INET, JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import declarative_base
 
 from .events import (
+    AuditContext,
     AuditDestination,
     AuditEncryption,
     AuditEvent,
     AuditEventType,
+    AuditOutcome,
     AuditSeverity,
 )
 
@@ -183,7 +188,6 @@ class FileAuditDestination(AuditDestination):
     async def _compress_file(self, file_path: Path) -> None:
         """Compress rotated log file."""
         try:
-            import gzip
 
             compressed_path = file_path.with_suffix(file_path.suffix + ".gz")
             with open(file_path, "rb") as f_in:
@@ -212,7 +216,6 @@ class FileAuditDestination(AuditDestination):
     def _dict_to_event(self, event_data: builtins.dict[str, Any]) -> AuditEvent:
         """Convert dictionary back to AuditEvent (simplified)."""
         # This is a simplified conversion - in production you might want more robust handling
-        from .events import AuditEventType, AuditOutcome
 
         return AuditEvent(
             event_id=event_data.get("event_id", ""),
@@ -353,7 +356,6 @@ class DatabaseAuditDestination(AuditDestination):
 
     def _record_to_event(self, record: AuditLogRecord) -> AuditEvent:
         """Convert database record to AuditEvent."""
-        from .events import AuditContext, AuditOutcome, AuditSeverity
 
         # Decrypt sensitive fields if needed
         details = record.details or {}
@@ -407,7 +409,6 @@ class ConsoleAuditDestination(AuditDestination):
         self.include_details = include_details
         # Setup colored output if available
         try:
-            from colorama import Fore, Style, init
 
             init()
             self.colors = {
@@ -502,7 +503,6 @@ class SIEMAuditDestination(AuditDestination):
         if not self._batch:
             return
         try:
-            import aiohttp
 
             # Prepare payload
             events_data = [event.to_dict() for event in self._batch]

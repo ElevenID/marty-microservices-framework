@@ -9,7 +9,9 @@ disruption testing for microservices resilience validation.
 import asyncio
 import builtins
 import logging
+import os
 import subprocess
+import tempfile
 import threading
 import time
 from abc import ABC, abstractmethod
@@ -382,8 +384,6 @@ class ResourceExhaustionAction(ChaosAction):
         """Stress I/O resources."""
 
         def io_stress():
-            import os
-            import tempfile
 
             with tempfile.NamedTemporaryFile(delete=False) as f:
                 temp_file = f.name

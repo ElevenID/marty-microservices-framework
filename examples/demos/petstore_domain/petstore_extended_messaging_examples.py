@@ -12,6 +12,12 @@ import logging
 from datetime import datetime
 from typing import Any
 
+from app.services.enhanced_petstore_service import EnhancedPetstoreDomainService
+from app.services.petstore_extended_messaging_service import (
+    PetstoreEventType,
+    PetstoreMessagingPattern,
+)
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -25,11 +31,6 @@ async def demonstrate_petstore_extended_messaging():
 
     try:
         # Import petstore service with extended messaging
-        from app.services.enhanced_petstore_service import EnhancedPetstoreDomainService
-        from app.services.petstore_extended_messaging_service import (
-            PetstoreEventType,
-            PetstoreMessagingPattern,
-        )
 
         # Configuration for extended messaging
         config = {

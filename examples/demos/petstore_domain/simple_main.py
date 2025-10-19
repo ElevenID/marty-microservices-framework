@@ -14,6 +14,7 @@ from collections import defaultdict, deque
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+import uvicorn
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -432,7 +433,6 @@ async def get_event_stats():
     }
 
 if __name__ == "__main__":
-    import uvicorn
     print("🚀 Starting Enhanced Petstore Service with Event Streaming...")
     print("📊 Health: http://localhost:8080/health")
     print("📋 API Docs: http://localhost:8080/docs")

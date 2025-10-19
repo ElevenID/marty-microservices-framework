@@ -4,6 +4,7 @@ Run with: python -m pytest tests/examples/test_data_consistency_examples.py -v
 """
 
 import asyncio
+import random
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -273,7 +274,6 @@ class TestDataConsistencyPatterns:
 
         async def unreliable_operation(success_rate: float = 0.5):
             """Simulate an operation that might fail."""
-            import random
             if random.random() < success_rate:
                 return True
             else:

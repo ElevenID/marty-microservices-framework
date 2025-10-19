@@ -17,6 +17,7 @@ Author: Marty Framework Team
 Version: 1.0.0
 """
 
+import argparse
 import asyncio
 import json
 import logging
@@ -714,7 +715,6 @@ async def generate_api_docs(source_paths: list[str], output_dir: str,
 
 
 if __name__ == "__main__":
-    import argparse
 
     parser = argparse.ArgumentParser(description="Generate API documentation")
     parser.add_argument("source_paths", nargs="+", help="Source code paths to scan")

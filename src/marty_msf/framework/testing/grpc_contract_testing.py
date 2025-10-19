@@ -19,6 +19,7 @@ Version: 1.0.0
 import asyncio
 import json
 import logging
+import re
 from collections.abc import AsyncGenerator, Callable
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -40,6 +41,7 @@ from ..testing.contract_testing import (
     TestResult,
     TestStatus,
     VerificationLevel,
+    verify_contracts_for_provider,
 )
 
 logger = logging.getLogger(__name__)
@@ -538,7 +540,6 @@ class EnhancedContractManager:
 
         # Verify REST contracts
         if rest_url:
-            from ..testing.contract_testing import verify_contracts_for_provider
             rest_results = await verify_contracts_for_provider(provider, rest_url, self.repository)
             results.extend(rest_results)
 
@@ -574,7 +575,6 @@ async def generate_contract_from_proto(proto_file: Path, consumer: str, provider
         content = proto_file.read_text()
 
         # Extract service name (simplified parsing)
-        import re
         service_match = re.search(r'service\s+(\w+)', content)
         service_name = service_match.group(1) if service_match else "UnknownService"
 

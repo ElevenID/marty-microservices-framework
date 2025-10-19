@@ -9,6 +9,8 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Optional, Protocol, runtime_checkable
 
+from ..compliance import ComplianceFramework as ExistingFramework
+from ..compliance import ComplianceManager
 from ..unified_framework import ComplianceFramework, ComplianceScanner
 
 logger = logging.getLogger(__name__)
@@ -23,8 +25,6 @@ class UnifiedComplianceScanner(ComplianceScanner):
 
         # Import existing compliance infrastructure
         try:
-            from ..compliance import ComplianceFramework as ExistingFramework
-            from ..compliance import ComplianceManager
             self.compliance_manager = ComplianceManager()
             self.existing_framework_mapping = {
                 ComplianceFramework.GDPR: ExistingFramework.GDPR,

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from ..core import ServiceEndpoint, ServiceInstanceType, ServiceMetadata
+
 """
 Service mesh discovery client that integrates with mesh control planes.
 """
@@ -112,11 +114,6 @@ class ServiceMeshDiscovery(ServiceDiscoveryClient):
             instances = []
             for endpoint in endpoints:
                 try:
-                    from ..core import (
-                        ServiceEndpoint,
-                        ServiceInstanceType,
-                        ServiceMetadata,
-                    )
 
                     service_endpoint = ServiceEndpoint(
                         host=endpoint.get("host", "localhost"),

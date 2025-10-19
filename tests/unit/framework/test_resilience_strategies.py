@@ -9,28 +9,31 @@ import inspect
 
 import pytest
 
+from marty_msf.framework.resilience import fallback as fallback_module
+from marty_msf.framework.resilience import retry as retry_module
+from marty_msf.framework.resilience.fallback import (
+    CacheFallback,
+    ChainFallback,
+    FallbackConfig,
+    FallbackManager,
+    FallbackStrategy,
+    FunctionFallback,
+    StaticFallback,
+    create_function_fallback,
+    create_static_fallback,
+)
+from marty_msf.framework.resilience.retry import (
+    BackoffStrategy,
+    ConstantBackoff,
+    ExponentialBackoff,
+    LinearBackoff,
+    RetryConfig,
+    RetryManager,
+    RetryStrategy,
+)
+
 # Import resilience strategy components
 try:
-    from marty_msf.framework.resilience.fallback import (
-        CacheFallback,
-        ChainFallback,
-        FallbackConfig,
-        FallbackManager,
-        FallbackStrategy,
-        FunctionFallback,
-        StaticFallback,
-        create_function_fallback,
-        create_static_fallback,
-    )
-    from marty_msf.framework.resilience.retry import (
-        BackoffStrategy,
-        ConstantBackoff,
-        ExponentialBackoff,
-        LinearBackoff,
-        RetryConfig,
-        RetryManager,
-        RetryStrategy,
-    )
 
     RESILIENCE_IMPORTS_AVAILABLE = True
 except ImportError as e:
@@ -225,8 +228,6 @@ async def test_static_fallback_execution():
 def test_discover_resilience_strategy_classes():
     """Discover all resilience strategy-related classes."""
     try:
-        from marty_msf.framework.resilience import fallback as fallback_module
-        from marty_msf.framework.resilience import retry as retry_module
 
         # Find strategy-related classes in fallback module
         fallback_classes = []

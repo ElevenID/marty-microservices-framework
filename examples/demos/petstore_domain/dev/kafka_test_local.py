@@ -9,6 +9,9 @@ import os
 import sys
 from pathlib import Path
 
+from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
+from confluent_kafka import Producer
+
 # Add the app directory to the path so we can import our modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -126,14 +129,12 @@ def test_import_functionality():
     logger.info("📚 Testing import functionality...")
 
     try:
-        from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
         logger.info("✅ aiokafka imports successful")
     except ImportError as e:
         logger.error(f"❌ aiokafka import failed: {e}")
         return False
 
     try:
-        from confluent_kafka import Producer
         logger.info("✅ confluent-kafka imports successful")
     except ImportError as e:
         logger.error(f"❌ confluent-kafka import failed: {e}")

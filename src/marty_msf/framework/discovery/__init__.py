@@ -15,8 +15,8 @@ Key Components:
 - Metrics & Monitoring: Comprehensive observability and performance tracking
 
 Usage:
-    from marty_msf.framework.discovery import ServiceRegistry, LoadBalancer, ServiceDiscovery
-    from marty_msf.framework.discovery import ServiceInstance, HealthCheck, LoadBalancingStrategy
+from marty_msf.framework.discovery import ServiceRegistry, LoadBalancer, ServiceDiscovery
+from marty_msf.framework.discovery import ServiceInstance, HealthCheck, LoadBalancingStrategy
 
     # Create service registry
     registry = ServiceRegistry()

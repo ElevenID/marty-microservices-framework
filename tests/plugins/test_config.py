@@ -17,56 +17,16 @@ from typing import Any
 
 import yaml
 
+from marty_msf.framework.config import MartyTrustPKIConfig
+from marty_msf.framework.config.plugin_config import (
+    PluginConfigManager,
+    PluginConfigSection,
+    create_plugin_config_manager,
+)
+
 framework_path = Path(__file__).parent.parent.parent / "src"
 sys.path.insert(0, str(framework_path))
 
-try:
-    from marty_msf.framework.config.plugin_config import (
-        PluginConfigManager,
-        PluginConfigSection,
-        create_plugin_config_manager,
-    )
-except ImportError:
-    # Create mock classes for testing structure
-    class PluginConfigSection:
-        def __init__(self, enabled: bool = True, **kwargs):
-            self.enabled = enabled
-            for key, value in kwargs.items():
-                setattr(self, key, value)
-
-    class PluginConfigManager:
-        def __init__(self, base_config_path: Path):
-            self.base_config_path = base_config_path
-            self.configs = {}
-
-        def load_plugin_config(self, plugin_name: str, config_class):
-            return config_class()
-
-        def get_plugin_config(self, plugin_name: str):
-            return self.configs.get(plugin_name)
-
-    def create_plugin_config_manager(base_config_path: Path):
-        return PluginConfigManager(base_config_path)
-
-
-# Try to import MartyTrustPKIConfig, create mock if not available
-try:
-    from marty_msf.framework.config import MartyTrustPKIConfig
-except ImportError:
-    # Create mock MartyTrustPKIConfig for testing
-    class MartyTrustPKIConfig:
-        def __init__(self, **kwargs):
-            self.enabled = kwargs.get("enabled", True)
-            self.trust_anchor_url = kwargs.get("trust_anchor_url", "")
-            self.pkd_url = kwargs.get("pkd_url", "")
-            self.document_signer_url = kwargs.get("document_signer_url", "")
-            self.signing_algorithms = kwargs.get("signing_algorithms", [])
-            self.certificate_validation_enabled = kwargs.get("certificate_validation_enabled", True)
-            self.require_mutual_tls = kwargs.get("require_mutual_tls", False)
-            # Set any additional attributes from kwargs
-            for key, value in kwargs.items():
-                if not hasattr(self, key):
-                    setattr(self, key, value)
 
 
 class TestPluginConfigSection:

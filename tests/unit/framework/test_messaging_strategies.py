@@ -4,58 +4,28 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from marty_msf.framework.messaging import core as core_module
+from marty_msf.framework.messaging import dlq as dlq_module
+
 # Import messaging components
-try:
-    from marty_msf.framework.messaging.core import Message, MessageStatus
-    from marty_msf.framework.messaging.dlq import (
-        DLQConfig,
-        DLQManager,
-        RetryConfig,
-        RetryStrategy,
-    )
-except ImportError:
-    # Create mock classes if imports fail
-    class Message:
-        def __init__(self, **kwargs):
-            for key, value in kwargs.items():
-                setattr(self, key, value)
-
-    class MessageStatus:
-        pass
-
-    class RetryStrategy:
-        IMMEDIATE = "immediate"
-        EXPONENTIAL_BACKOFF = "exponential_backoff"
-        LINEAR_BACKOFF = "linear_backoff"
-
-    class RetryConfig:
-        def __init__(self, max_attempts=3, strategy=None, initial_delay=1.0, max_delay=300.0):
-            self.max_attempts = max_attempts
-            self.strategy = strategy or RetryStrategy.EXPONENTIAL_BACKOFF
-            self.initial_delay = initial_delay
-            self.max_delay = max_delay
-
-    class DLQConfig:
-        def __init__(self, dlq_suffix=".dlq", retry_suffix=".retry", retry_config=None):
-            self.dlq_suffix = dlq_suffix
-            self.retry_suffix = retry_suffix
-            self.retry_config = retry_config or RetryConfig()
-
-    class DLQManager:
-        def __init__(self):
-            pass
+from marty_msf.framework.messaging.core import (
+    Message,
+    MessageHeaders,
+    MessagePriority,
+    MessageStatus,
+)
+from marty_msf.framework.messaging.dlq import (
+    DLQConfig,
+    DLQManager,
+    RetryConfig,
+    RetryStrategy,
+)
 
 
 # Try direct imports to see if messaging modules work better
 def test_import_messaging_strategies():
     """Test importing messaging strategy classes."""
     try:
-        from marty_msf.framework.messaging.core import Message, MessageStatus
-        from marty_msf.framework.messaging.dlq import (
-            DLQManager,
-            RetryConfig,
-            RetryStrategy,
-        )
 
         assert RetryStrategy is not None
         assert DLQManager is not None
@@ -75,7 +45,6 @@ def test_import_messaging_strategies():
 def test_retry_strategy_enum():
     """Test RetryStrategy enum functionality."""
     try:
-        from marty_msf.framework.messaging.dlq import RetryStrategy
 
         # Test all available strategies
         all_strategies = list(RetryStrategy)
@@ -109,7 +78,6 @@ def test_message_creation():
         assert simple_message.id is not None and len(simple_message.id) > 0
 
         # Test message with custom headers
-        from marty_msf.framework.messaging.core import MessageHeaders, MessagePriority
 
         custom_headers = MessageHeaders(
             correlation_id="corr-123", routing_key="user.created", priority=MessagePriority.HIGH
@@ -211,8 +179,6 @@ async def test_retry_strategy_delay_calculation():
 def test_discover_messaging_strategy_classes():
     """Discover all messaging strategy-related classes."""
     try:
-        from marty_msf.framework.messaging import core as core_module
-        from marty_msf.framework.messaging import dlq as dlq_module
 
         # Find strategy-related classes in DLQ module
         dlq_classes = []
@@ -252,13 +218,6 @@ def test_discover_messaging_strategy_classes():
 async def test_messaging_strategy_integration():
     """Test integration between messaging strategies and components."""
     try:
-        from marty_msf.framework.messaging.core import Message
-        from marty_msf.framework.messaging.dlq import (
-            DLQConfig,
-            DLQManager,
-            RetryConfig,
-            RetryStrategy,
-        )
 
         # Create a comprehensive test with multiple components
         RetryConfig(

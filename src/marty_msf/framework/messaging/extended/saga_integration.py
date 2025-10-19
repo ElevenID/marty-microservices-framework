@@ -10,19 +10,20 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any
 
+from marty_msf.framework.event_streaming import Command, CommandBus, Event, EventBus
+from marty_msf.framework.event_streaming.saga import (
+    Saga,
+    SagaManager,
+    SagaOrchestrator,
+    SagaStatus,
+    SagaStep,
+)
+
 from .extended_architecture import MessageMetadata, SagaEventBus
 from .unified_event_bus import UnifiedEventBusImpl
 
 # Import existing saga components
 try:
-    from marty_msf.framework.event_streaming import Command, CommandBus, Event, EventBus
-    from marty_msf.framework.event_streaming.saga import (
-        Saga,
-        SagaManager,
-        SagaOrchestrator,
-        SagaStatus,
-        SagaStep,
-    )
     SAGA_AVAILABLE = True
 except ImportError:
     SAGA_AVAILABLE = False

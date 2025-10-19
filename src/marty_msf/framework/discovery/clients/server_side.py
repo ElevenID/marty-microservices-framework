@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from ..core import ServiceEndpoint, ServiceInstanceType, ServiceMetadata
+
 """
 Server-side discovery client that calls an external discovery endpoint.
 """
@@ -125,7 +127,6 @@ class ServerSideDiscovery(ServiceDiscoveryClient):
 
     def _parse_discovery_response(self, data: dict) -> builtins.list[ServiceInstance]:
         """Parse discovery service response into ServiceInstance objects."""
-        from ..core import ServiceEndpoint, ServiceInstanceType, ServiceMetadata
 
         instances = []
 

@@ -23,6 +23,7 @@ import logging
 import time
 from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional
+from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field
 
@@ -33,6 +34,7 @@ from marty_msf.framework.config import (
     create_unified_config_manager,
 )
 from marty_msf.framework.database import DatabaseManager, create_database_manager
+from marty_msf.framework.database.config import ConnectionPoolConfig, DatabaseConfig
 from marty_msf.framework.grpc.unified_grpc_server import UnifiedGrpcServer
 from marty_msf.observability.monitoring import MonitoringManager, initialize_monitoring
 
@@ -184,12 +186,7 @@ class ModernExampleService:
         try:
             # Parse database URL to extract connection details
             # For simplicity, assume PostgreSQL URL format: postgresql://user:pass@host:port/db
-            from urllib.parse import urlparse
 
-            from marty_msf.framework.database.config import (
-                ConnectionPoolConfig,
-                DatabaseConfig,
-            )
 
             parsed = urlparse(self.config.database_url)
 

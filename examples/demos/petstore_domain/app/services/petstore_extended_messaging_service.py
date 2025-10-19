@@ -11,19 +11,20 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
+from marty_msf.framework.messaging.extended import (
+    AWSSNSBackend,
+    AWSSNSConfig,
+    DistributedSagaManager,
+    MessageBackendType,
+    MessagingPattern,
+    NATSBackend,
+    NATSConfig,
+    UnifiedEventBus,
+    create_distributed_saga_manager,
+    create_unified_event_bus,
+)
+
 try:
-    from marty_msf.framework.messaging.extended import (
-        AWSSNSBackend,
-        AWSSNSConfig,
-        DistributedSagaManager,
-        MessageBackendType,
-        MessagingPattern,
-        NATSBackend,
-        NATSConfig,
-        UnifiedEventBus,
-        create_distributed_saga_manager,
-        create_unified_event_bus,
-    )
     EXTENDED_MESSAGING_AVAILABLE = True
 except ImportError:
     EXTENDED_MESSAGING_AVAILABLE = False

@@ -17,8 +17,6 @@ Core Components:
 
 import logging
 
-logger = logging.getLogger(__name__)
-
 from .correlation import (
     CorrelationContext,
     CorrelationHTTPClient,
@@ -35,15 +33,18 @@ from .correlation import (
     set_user_id,
     with_correlation,
 )
-
-# Legacy middleware exports (maintained for backward compatibility)
 from .correlation_middleware import (
     CorrelationIdMiddleware,
     add_correlation_id_middleware,
 )
+from .unified import ObservabilityConfig, UnifiedObservability
+
+logger = logging.getLogger(__name__)
+
+
+# Legacy middleware exports (maintained for backward compatibility)
 
 # Import unified observability components
-from .unified import ObservabilityConfig, UnifiedObservability
 
 # All exports
 __all__ = [

@@ -14,6 +14,8 @@ This template demonstrates all configuration patterns and best practices.
 
 import asyncio
 import logging
+import signal
+import sys
 from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional
 
@@ -28,9 +30,9 @@ from marty_msf.framework.config import (
 
 
 # Define service configuration model
-class {{SERVICE_NAME_PASCAL}}ServiceConfig(BaseModel):
-    """Configuration model for {{SERVICE_NAME}} service."""
-    service_name: str = Field(default="{{SERVICE_NAME}}-service")
+class SERVICE_NAME_PASCAL_ServiceConfig(BaseModel):
+    """Configuration model for SERVICE_NAME service."""
+    service_name: str = Field(default="SERVICE_NAME-service")
     host: str = Field(default="0.0.0.0")
     port: int = Field(default=8080)
     debug: bool = Field(default=False)
@@ -50,7 +52,7 @@ class {{SERVICE_NAME_PASCAL}}ServiceConfig(BaseModel):
     enable_tracing: bool = Field(default=True)
 
 
-class Modern{{SERVICE_NAME_PASCAL}}:
+class ModernSERVICE_NAME_PASCAL:
     """
     Modern {{SERVICE_NAME}} service using unified configuration management.
 
@@ -71,19 +73,19 @@ class Modern{{SERVICE_NAME_PASCAL}}:
             config_dir: Directory containing configuration files
             environment: Environment name (development, testing, staging, production)
         """
-        self.logger = logging.getLogger(f"marty.{{SERVICE_NAME}}")
+        self.logger = logging.getLogger(f"marty.SERVICE_NAME")
 
         # Create unified configuration manager
         self.config_manager = create_unified_config_manager(
-            service_name="{{SERVICE_NAME}}-service",
+            service_name="SERVICE_NAME-service",
             environment=Environment(environment),
-            config_class={{SERVICE_NAME_PASCAL}}ServiceConfig,
+            config_class=SERVICE_NAME_PASCAL_ServiceConfig,
             config_dir=config_dir,
             strategy=ConfigurationStrategy.AUTO_DETECT
         )
 
         # Configuration will be loaded in start() method
-        self.config: Optional[{{SERVICE_NAME_PASCAL}}ServiceConfig] = None
+        self.config: Optional[SERVICE_NAME_PASCAL_ServiceConfig] = None
 
         # Initialize components
         self.db_pool = None
@@ -91,16 +93,16 @@ class Modern{{SERVICE_NAME_PASCAL}}:
         self.metrics_server = None
         self._running = False
 
-        self.logger.info("{{SERVICE_NAME}} service initialized with unified configuration")
+        self.logger.info("SERVICE_NAME service initialized with unified configuration")
 
     async def start(self) -> None:
-        """Start the {{SERVICE_NAME}} service."""
+        """Start the SERVICE_NAME service."""
         if self._running:
             self.logger.warning("Service is already running")
             return
 
         try:
-            self.logger.info("Starting {{SERVICE_NAME}} service...")
+            self.logger.info("Starting SERVICE_NAME service...")
 
             # Initialize database connection
             await self._init_database()
@@ -126,19 +128,19 @@ class Modern{{SERVICE_NAME_PASCAL}}:
             await self._start_background_tasks()
 
             self._running = True
-            self.logger.info("{{SERVICE_NAME}} service started successfully")
+            self.logger.info("SERVICE_NAME service started successfully")
 
         except Exception as e:
-            self.logger.error(f"Failed to start {{SERVICE_NAME}} service: {e}")
+            self.logger.error(f"Failed to start SERVICE_NAME service: {e}")
             await self.stop()
             raise
 
     async def stop(self) -> None:
-        """Stop the {{SERVICE_NAME}} service."""
+        """Stop the SERVICE_NAME service."""
         if not self._running:
             return
 
-        self.logger.info("Stopping {{SERVICE_NAME}} service...")
+        self.logger.info("Stopping SERVICE_NAME service...")
 
         try:
             # Stop background tasks
@@ -156,10 +158,10 @@ class Modern{{SERVICE_NAME_PASCAL}}:
                 await self.db_pool.close()
 
             self._running = False
-            self.logger.info("{{SERVICE_NAME}} service stopped")
+            self.logger.info("SERVICE_NAME service stopped")
 
         except Exception as e:
-            self.logger.error(f"Error stopping {{SERVICE_NAME}} service: {e}")
+            self.logger.error(f"Error stopping SERVICE_NAME service: {e}")
 
     async def _init_database(self) -> None:
         """Initialize database connection pool."""
@@ -315,7 +317,7 @@ class Modern{{SERVICE_NAME_PASCAL}}:
                 await asyncio.sleep(60)
 
     # Service-specific business logic methods
-    async def process_{{SERVICE_NAME}}_operation(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    async def process_SERVICE_NAME_operation(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """
         Process a {{SERVICE_NAME}} operation.
 
@@ -383,8 +385,6 @@ class Modern{{SERVICE_NAME_PASCAL}}:
 # Example usage and main function
 async def main():
     """Main function to run the {{SERVICE_NAME}} service."""
-    import signal
-    import sys
 
     # Setup logging
     logging.basicConfig(
@@ -394,7 +394,7 @@ async def main():
 
     # Create service instance
     config_path = sys.argv[1] if len(sys.argv) > 1 else "config/services/{{SERVICE_NAME}}.yaml"
-    service = Modern{{SERVICE_NAME_PASCAL}}(config_path)
+    service = ModernSERVICE_NAME_PASCAL(config_path)
 
     # Setup signal handlers for graceful shutdown
     def signal_handler(signum, frame):

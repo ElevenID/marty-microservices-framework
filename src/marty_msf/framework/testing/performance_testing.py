@@ -10,6 +10,8 @@ import asyncio
 import builtins
 import json
 import logging
+import os
+import random
 import statistics
 import threading
 import time
@@ -527,7 +529,6 @@ class LoadGenerator:
         variation = self.load_config.think_time_variation
 
         # Add random variation
-        import random
 
         variation_factor = 1 + random.uniform(-variation, variation)
         return max(0, base_time * variation_factor)
@@ -678,7 +679,6 @@ class PerformanceReportGenerator:
 
     def __init__(self, output_dir: str = "./performance_reports"):
         self.output_dir = output_dir
-        import os
 
         os.makedirs(output_dir, exist_ok=True)
 
@@ -707,7 +707,6 @@ class PerformanceReportGenerator:
             report["tests"].append(test_data)
 
         # Save JSON report
-        import os
 
         report_path = os.path.join(self.output_dir, f"{report_name}.json")
         with open(report_path, "w") as f:
@@ -784,7 +783,6 @@ class PerformanceReportGenerator:
         plt.legend()
         plt.grid(True, alpha=0.3)
 
-        import os
 
         plt.savefig(os.path.join(self.output_dir, f"{report_name}_response_time_dist.png"))
         plt.close()
@@ -820,7 +818,6 @@ class PerformanceReportGenerator:
         plt.legend()
         plt.grid(True, alpha=0.3)
 
-        import os
 
         plt.savefig(os.path.join(self.output_dir, f"{report_name}_throughput.png"))
         plt.close()
@@ -864,7 +861,6 @@ class PerformanceReportGenerator:
 
             plt.tight_layout()
 
-            import os
 
             plt.savefig(os.path.join(self.output_dir, f"{report_name}_comparison.png"))
             plt.close()

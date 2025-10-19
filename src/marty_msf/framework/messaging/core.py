@@ -14,6 +14,9 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
+from .backends import BackendConfig, BackendType
+from .manager import MessagingConfig, MessagingManager
+
 logger = logging.getLogger(__name__)
 
 
@@ -432,8 +435,6 @@ class MessageBus:
     def __init__(self, service_name: str, config: dict[str, Any] | None = None):
         """Initialize MessageBus with service name and configuration."""
         # Import here to avoid circular imports
-        from .backends import BackendConfig, BackendType
-        from .manager import MessagingConfig, MessagingManager
 
         if config is None:
             config = {}

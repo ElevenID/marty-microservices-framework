@@ -6,7 +6,7 @@ import asyncio
 
 import pytest
 
-from marty_msf.framework.discovery.core import ServiceInstance
+from marty_msf.framework.discovery.core import HealthStatus, ServiceInstance
 from marty_msf.framework.discovery.load_balancing import (
     AdaptiveBalancer,
     ConsistentHashBalancer,
@@ -417,7 +417,6 @@ class TestLoadBalancerHealthCheckFixed:
         assert result == healthy_instance or result is None
 
 
-import pytest
 
 
 class TestServiceInstanceFixedV2:
@@ -449,7 +448,6 @@ class TestServiceInstanceFixedV2:
         )
 
         # Default health status should be unknown
-        from marty_msf.framework.discovery.core import HealthStatus
 
         assert instance.health_status == HealthStatus.UNKNOWN
 
@@ -690,7 +688,6 @@ class TestHealthBasedBalancerFixed:
     @pytest.fixture
     def mixed_health_instances(self):
         """Create instances with mixed health status."""
-        from marty_msf.framework.discovery.core import HealthStatus
 
         instances = [
             ServiceInstance(
@@ -720,13 +717,11 @@ class TestHealthBasedBalancerFixed:
         for _ in range(10):
             selected = balancer.select_instance(mixed_health_instances, config, None)
             if selected:
-                from marty_msf.framework.discovery.core import HealthStatus
 
                 assert selected.health_status == HealthStatus.HEALTHY
 
     def test_health_based_all_unhealthy_returns_none(self):
         """Test health-based balancer with all unhealthy instances."""
-        from marty_msf.framework.discovery.core import HealthStatus
 
         instances = [
             ServiceInstance(
@@ -827,7 +822,6 @@ class TestLoadBalancingIntegrationFixed:
     @pytest.fixture
     def realistic_service_pool(self):
         """Create a realistic pool of service instances."""
-        from marty_msf.framework.discovery.core import HealthStatus
 
         instances = [
             ServiceInstance(

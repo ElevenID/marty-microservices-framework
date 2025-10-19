@@ -19,9 +19,10 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
 
+from prometheus_client import Counter, Gauge, Histogram
+
 # External dependencies
 try:
-    from prometheus_client import Counter, Gauge, Histogram
 
     METRICS_AVAILABLE = True
 except ImportError:

@@ -16,6 +16,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Any
 
+from fastapi import FastAPI, Request
 from opentelemetry import metrics, trace
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
 from opentelemetry.exporter.jaeger.thrift import JaegerExporter
@@ -37,16 +38,16 @@ from opentelemetry.instrumentation.urllib3 import URLLib3Instrumentor
 # Propagators for context passing
 from opentelemetry.propagate import extract, inject
 from opentelemetry.propagators.b3 import B3MultiFormat, B3SingleFormat
+from opentelemetry.propagators.composite import CompositeHTTPPropagator
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.resources import SERVICE_NAME, SERVICE_VERSION, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+from starlette.middleware.base import BaseHTTPMiddleware
 
 # FastAPI and gRPC imports
 try:
-    from fastapi import FastAPI, Request
-    from starlette.middleware.base import BaseHTTPMiddleware
 
     FASTAPI_AVAILABLE = True
 except ImportError:
@@ -246,7 +247,6 @@ class DistributedTracing:
 
     def _setup_propagators(self):
         """Setup context propagators"""
-        from opentelemetry.propagators.composite import CompositeHTTPPropagator
 
         # Configure multiple propagators for compatibility
         propagators = [

@@ -13,6 +13,7 @@ Implements comprehensive zero-trust security including:
 import asyncio
 import builtins
 import hashlib
+import re
 import secrets
 import time
 from dataclasses import asdict, dataclass, field
@@ -29,10 +30,10 @@ from cryptography.hazmat.primitives.serialization import (
     PrivateFormat,
 )
 from cryptography.x509.oid import NameOID
+from prometheus_client import Counter, Gauge, Histogram
 
 # External dependencies (optional)
 try:
-    from prometheus_client import Counter, Gauge, Histogram
 
     EXTERNAL_DEPS_AVAILABLE = True
 except ImportError:
@@ -158,7 +159,6 @@ class AccessPolicy:
                     return False
             elif isinstance(expected, dict):
                 if "regex" in expected:
-                    import re
 
                     if not re.match(expected["regex"], str(data[key])):
                         return False

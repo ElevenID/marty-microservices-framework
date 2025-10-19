@@ -9,13 +9,21 @@ End-to-end integration tests for the plugin system including:
 """
 
 import asyncio
+import json
 
 # Fix import paths
 import sys
+import time
 from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
+from conftest import TestPlugin
+
+from marty_msf.framework.config.plugin_config import create_plugin_config_manager
+from marty_msf.framework.plugins.core import PluginManager, PluginMetadata
+from marty_msf.framework.plugins.discovery import DirectoryPluginDiscoverer
+from marty_msf.framework.plugins.services import ServiceDefinition, ServiceRegistry
 
 framework_path = Path(__file__).parent.parent.parent / "src"
 sys.path.insert(0, str(framework_path))
@@ -46,7 +54,6 @@ class TestFullPluginLifecycle:
             "optional_dependencies": [],
         }
 
-        import json
 
         (test_plugin_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
 
@@ -82,7 +89,6 @@ def create_plugin():
 
         # Test plugin discovery
         try:
-            from marty_msf.framework.plugins.discovery import DirectoryPluginDiscoverer
 
             discoverer = DirectoryPluginDiscoverer(plugin_dir)
             plugins = discoverer.discover()
@@ -98,9 +104,7 @@ def create_plugin():
     async def test_plugin_manager_integration(self, mock_context):
         """Test plugin manager with full integration."""
         try:
-            from conftest import TestPlugin
 
-            from marty_msf.framework.plugins.core import PluginManager, PluginMetadata
 
             manager = PluginManager(mock_context)
 
@@ -136,12 +140,7 @@ class TestServiceRegistrationIntegration:
     async def test_service_registry_integration(self, mock_context):
         """Test service registry with full integration."""
         try:
-            from conftest import TestPlugin
 
-            from marty_msf.framework.plugins.services import (
-                ServiceDefinition,
-                ServiceRegistry,
-            )
 
             registry = ServiceRegistry(mock_context)
 
@@ -191,10 +190,6 @@ class TestServiceRegistrationIntegration:
     async def test_route_mounting_integration(self, mock_context):
         """Test route mounting and request handling."""
         try:
-            from marty_msf.framework.plugins.services import (
-                ServiceDefinition,
-                ServiceRegistry,
-            )
 
             registry = ServiceRegistry(mock_context)
 
@@ -440,7 +435,6 @@ class TestConfigurationIntegration:
             },
         }
 
-        import json
 
         for filename, config_data in plugin_configs.items():
             config_file = config_dir / filename
@@ -449,9 +443,6 @@ class TestConfigurationIntegration:
 
         # Test configuration loading (mocked)
         try:
-            from marty_msf.framework.config.plugin_config import (
-                create_plugin_config_manager,
-            )
 
             config_manager = create_plugin_config_manager(config_dir)
             assert config_manager is not None
@@ -481,7 +472,6 @@ class TestConfigurationIntegration:
             },
         }
 
-        import json
 
         for filename, config_data in configs.items():
             config_file = config_dir / filename
@@ -582,9 +572,7 @@ class TestPerformanceIntegration:
     @pytest.mark.asyncio
     async def test_plugin_startup_performance(self, mock_context):
         """Test startup performance with multiple plugins."""
-        import time
 
-        from conftest import TestPlugin
 
         plugins = []
         for _i in range(5):  # Create 5 test plugins
@@ -618,7 +606,6 @@ class TestPerformanceIntegration:
     @pytest.mark.asyncio
     async def test_concurrent_plugin_operations(self, mock_context):
         """Test concurrent plugin operations."""
-        from conftest import TestPlugin
 
         plugins = [TestPlugin() for _ in range(3)]
 

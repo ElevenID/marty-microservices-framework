@@ -21,8 +21,6 @@ Author: Marty Framework Team
 Version: 1.0.0
 """
 
-__version__ = "1.0.0"
-
 import asyncio
 import builtins
 import hashlib
@@ -68,6 +66,10 @@ from prometheus_client import (
 )
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
+
+__version__ = "1.0.0"
+
+
 
 # Configure structured logging
 structlog.configure(

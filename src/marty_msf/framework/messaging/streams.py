@@ -593,17 +593,19 @@ _event_manager: EventStreamManager | None = None
 
 
 def get_event_manager() -> EventStreamManager | None:
-    """Get global event manager."""
-    return _event_manager
+    """Get event manager (not supported - use DI container instead)."""
+    raise NotImplementedError(
+        "get_event_manager is not supported. Use the DI container to access EventStreamManagerService instead."
+    )
 
 
 def create_event_manager(
     event_store: EventStore | None = None,
 ) -> EventStreamManager:
-    """Create and set global event manager."""
-    global _event_manager
-    _event_manager = EventStreamManager(event_store)
-    return _event_manager
+    """Create and set event manager (not supported - use DI container instead)."""
+    raise NotImplementedError(
+        "create_event_manager is not supported. Use the DI container to register EventStreamManagerService instead."
+    )
 
 
 @asynccontextmanager

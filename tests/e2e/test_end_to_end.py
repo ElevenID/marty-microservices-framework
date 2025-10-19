@@ -101,7 +101,6 @@ class TestEndToEnd:
             await asyncio.sleep(5)
 
             # Step 5: Test service health
-            import httpx
 
             async with httpx.AsyncClient() as client:
                 health_response = await client.get("http://localhost:8080/health")
@@ -250,7 +249,6 @@ class TestEndToEnd:
             # Wait for services to start
             await asyncio.sleep(10)
 
-            import httpx
 
             # Test user service
             async with httpx.AsyncClient() as client:
@@ -538,7 +536,6 @@ class TestEndToEnd:
         try:
             await asyncio.sleep(5)
 
-            import httpx
 
             # Generate some traffic for metrics
             async with httpx.AsyncClient() as client:
@@ -793,9 +790,7 @@ class TestEndToEnd:
             await asyncio.sleep(5)
 
             # Performance test using concurrent requests
-            import time
 
-            import httpx
 
             async def make_request(client, url):
                 start_time = time.time()
@@ -835,7 +830,6 @@ class TestEndToEnd:
                 # Verify metrics show the load
                 assert "http_requests_total" in metrics_text
                 # Should have at least 100 requests recorded
-                import re
 
                 requests_match = re.search(r"http_requests_total\{.*\} (\d+)", metrics_text)
                 if requests_match:

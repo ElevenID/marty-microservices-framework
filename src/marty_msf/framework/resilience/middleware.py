@@ -18,11 +18,14 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from marty_msf.core.enhanced_di import get_service
+
 from .bulkhead import BulkheadConfig, BulkheadError, SemaphoreBulkhead
 from .circuit_breaker import CircuitBreaker, CircuitBreakerConfig, CircuitBreakerError
 from .connection_pools.http_pool import HTTPConnectionPool
 from .connection_pools.manager import ConnectionPoolManager, get_pool_manager
 from .connection_pools.redis_pool import RedisConnectionPool
+from .resilience_manager_service import ResilienceManagerService
 
 logger = logging.getLogger(__name__)
 
@@ -312,68 +315,37 @@ def resilient(
     _retry_delay: float = 1.0
 ):
     """
-    Decorator to apply resilience patterns to functions.
+    Decorator to apply resilience patterns to functions (not supported).
 
-    DEPRECATED: Use ConsolidatedResilienceManager.resilient_call() instead.
-    This decorator is being phased out in favor of the unified resilience manager.
+    This decorator is not supported. Use ConsolidatedResilienceManager.resilient_call() instead.
     """
 
     def decorator(func: Callable):
-        logger.warning(
-            "The resilient decorator is deprecated. "
+        raise NotImplementedError(
+            "The resilient decorator is not supported. "
             "Use ConsolidatedResilienceManager.resilient_call() instead."
         )
-
-        # Import here to avoid circular imports
-        from .consolidated_manager import ResilienceStrategy, get_resilience_manager
-
-        manager = get_resilience_manager()
-
-        # Convert legacy configs to new format
-        name = f"{func.__module__}.{func.__name__}"
-        strategy = ResilienceStrategy.CUSTOM
-
-        if asyncio.iscoroutinefunction(func):
-            @wraps(func)
-            async def async_wrapper(*args, **kwargs):
-                return await manager.execute_resilient(
-                    func, *args,
-                    name=name,
-                    strategy=strategy,
-                    **kwargs
-                )
-            return async_wrapper
-        else:
-            @wraps(func)
-            def sync_wrapper(*args, **kwargs):
-                return manager.execute_resilient_sync(
-                    func, *args,
-                    name=name,
-                    strategy=strategy,
-                    **kwargs
-                )
-            return sync_wrapper
 
     return decorator
 
 
-# Global resilience service instance
-_resilience_service: ResilienceService | None = None
+# Service-based resilience service access
+
 
 
 async def get_resilience_service() -> ResilienceService:
-    """Get the global resilience service instance"""
-    global _resilience_service
-    if _resilience_service is None:
-        config = ResilienceConfig()  # Use default config
-        _resilience_service = ResilienceService(config)
-        await _resilience_service.initialize()
-    return _resilience_service
+    """Get the resilience service instance from the DI container."""
+    get_service(ResilienceManagerService)  # Ensure service is registered
+    # For middleware compatibility, we create a ResilienceService
+    # that delegates to the DI-managed resilience manager
+    config = ResilienceConfig()
+    resilience_service = ResilienceService(config)
+    await resilience_service.initialize()
+    return resilience_service
 
 
 async def close_resilience_service():
-    """Close the global resilience service"""
-    global _resilience_service
-    if _resilience_service:
-        await _resilience_service.close()
-        _resilience_service = None
+    """Close the resilience service (not supported - managed by DI container)."""
+    raise NotImplementedError(
+        "close_resilience_service is not supported. Use the DI container lifecycle management instead."
+    )

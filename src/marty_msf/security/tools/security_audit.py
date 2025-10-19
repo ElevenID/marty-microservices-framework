@@ -13,6 +13,7 @@ Performs comprehensive security audits including:
 import argparse
 import json
 import logging
+import re
 import subprocess
 import sys
 from datetime import datetime
@@ -267,7 +268,6 @@ class SecurityAuditTool:
 
     def _find_pattern_in_files(self, pattern: str, description: str) -> list[dict]:
         """Find pattern in Python files"""
-        import re
 
         issues = []
 

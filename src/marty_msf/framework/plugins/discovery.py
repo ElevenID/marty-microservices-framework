@@ -9,11 +9,15 @@ This module provides different strategies for discovering and loading plugins:
 import importlib
 import importlib.util
 import logging
+import pkgutil
 import sys
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from importlib.metadata import entry_points
 from pathlib import Path
 from typing import Any
+
+import pkg_resources
 
 from .core import MMFPlugin
 
@@ -232,12 +236,10 @@ class PackagePluginDiscoverer(PluginDiscoverer):
         try:
             # Try new importlib.metadata first (Python 3.8+)
             try:
-                from importlib.metadata import entry_points
 
                 eps = entry_points(group=self.entry_point_group)
             except ImportError:
                 # Fallback to pkg_resources
-                import pkg_resources
 
                 eps = pkg_resources.iter_entry_points(self.entry_point_group)
 
@@ -286,7 +288,6 @@ class PackagePluginDiscoverer(PluginDiscoverer):
         plugins = []
 
         try:
-            import pkgutil
 
             # Find packages with the specified prefix
             for _importer, modname, _ispkg in pkgutil.iter_modules():

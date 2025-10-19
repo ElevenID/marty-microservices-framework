@@ -2,7 +2,7 @@
 # Ensures code quality, type safety, and framework integrity before commits
 
 repos:
-  # Basic code formatting and linting
+  # Basic code formatting and linting (RUN FIRST - these fix syntax issues)
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
@@ -26,7 +26,7 @@ repos:
         args: ['--maxkb=1000']
         exclude: ^examples/demos/istio-1\.27\.2/bin/istioctl$
 
-  # Import sorting with isort
+  # Import sorting with isort (fixes import organization)
   - repo: https://github.com/pycqa/isort
     rev: 5.12.0
     hooks:
@@ -34,7 +34,7 @@ repos:
         name: Sort Python imports with isort
         args: [--profile=black, --line-length=88]
 
-  # Python linting with Ruff (fast alternative to flake8, pylint)
+  # Python linting with Ruff (fixes many syntax and style issues)
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.8.0
     hooks:
@@ -42,6 +42,29 @@ repos:
         name: Lint Python code with Ruff
         args: [--fix, --exit-non-zero-on-fix]
         exclude: ^(services/.*\.py$|tools/scaffolding/.*\.py$|services/shared/modern_service_template\.py$|.*\.ipynb$)
+
+  # Import placement check (runs after syntax fixers)
+  - repo: local
+    hooks:
+      - id: check-import-order
+        name: Check Import Placement
+        entry: uv run python scripts/check_import_order.py --fix
+        language: system
+        files: \.py$
+        exclude: ^(tests/.*\.py|examples/.*\.py|scripts/detect_globals\.py|.*migration.*\.py|.*legacy.*\.py|tools/scaffolding/.*\.py)$
+        require_serial: true
+        pass_filenames: false
+        stages: [pre-commit]
+
+  # Final syntax validation (after all fixes)
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-ast
+        name: Final Python AST Syntax Check
+        exclude: ^(examples/demos/istio-1\.27\.2/.*\.py|examples/.*\.py|scripts/detect_globals\.py|.*migration.*\.py|.*legacy.*\.py)$
+
+  # Security scanning with Bandit
 
   # Code complexity checks
   # Code Quality Analysis - Comprehensive complexity and length checks
@@ -141,7 +164,7 @@ repos:
         entry: python3 scripts/pre_commit_check_globals.py
         language: system
         files: \.py$
-        exclude: ^(tests/.*_test\.py|examples/.*\.py|scripts/detect_globals\.py|.*migration.*\.py|.*legacy.*\.py|src/marty_msf/core/di_container\.py)$
+        exclude: ^(tests/.*test_.*\.py|examples/demos/.*\.py|scripts/detect_globals\.py|.*migration.*\.py|.*legacy.*\.py|tools/scaffolding/.*\.py|.*_template\.py|tests/.*/conftest\.py|services/shared/modern_service_template\.py)$
         require_serial: true
         pass_filenames: false
         stages: [pre-commit]

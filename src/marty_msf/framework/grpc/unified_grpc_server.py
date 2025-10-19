@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from typing import Any, Protocol
 
 import grpc
+from aiohttp import web, web_runner
 from grpc import aio
 from grpc_health.v1 import health_pb2, health_pb2_grpc
 from grpc_health.v1.health import HealthServicer
@@ -459,7 +460,6 @@ class UnifiedGrpcServer:
             return
 
         try:
-            from aiohttp import web, web_runner
 
             # Create HTTP application for observability endpoints
             app = web.Application()
@@ -489,7 +489,6 @@ class UnifiedGrpcServer:
 
     async def _metrics_handler(self, request):
         """Handle Prometheus metrics requests."""
-        from aiohttp import web
 
         if not self.observability:
             return web.Response(text="# No metrics available", content_type="text/plain")
@@ -514,7 +513,6 @@ class UnifiedGrpcServer:
 
     async def _health_handler(self, request):
         """Handle general health check requests."""
-        from aiohttp import web
 
         health_status = {
             "service": self.service_name,
@@ -537,7 +535,6 @@ class UnifiedGrpcServer:
 
     async def _readiness_handler(self, request):
         """Handle readiness probe requests."""
-        from aiohttp import web
 
         # Check if server is ready to accept traffic
         is_ready = self._running and self.server is not None
@@ -549,7 +546,6 @@ class UnifiedGrpcServer:
 
     async def _liveness_handler(self, request):
         """Handle liveness probe requests."""
-        from aiohttp import web
 
         # Check if server is alive (basic check)
         return web.json_response({"status": "alive"})

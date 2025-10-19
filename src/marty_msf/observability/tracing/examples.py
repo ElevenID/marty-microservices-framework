@@ -6,15 +6,23 @@ FastAPI and gRPC services with best practices and common patterns.
 """
 
 import asyncio
+import builtins
 import logging
 import time
 from typing import Any, dict
 
+import grpc
+from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
+from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+from pydantic import BaseModel
+
+from . import DistributedTracing, setup_distributed_tracing
+
 # FastAPI imports
 try:
-    from fastapi import BackgroundTasks, FastAPI, HTTPException
-    from fastapi.middleware.cors import CORSMiddleware
-    from pydantic import BaseModel
 
     FASTAPI_AVAILABLE = True
 except ImportError:
@@ -22,21 +30,15 @@ except ImportError:
 
 # gRPC imports
 try:
-    import grpc
 
     GRPC_AVAILABLE = True
 except ImportError:
     GRPC_AVAILABLE = False
 
-import builtins
 
 # OpenTelemetry imports
-from opentelemetry import trace
-from opentelemetry.trace import Status, StatusCode
-from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
 # Import our tracing module
-from . import DistributedTracing, setup_distributed_tracing
 
 logger = logging.getLogger(__name__)
 

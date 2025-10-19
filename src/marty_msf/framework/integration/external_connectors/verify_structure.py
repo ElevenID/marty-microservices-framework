@@ -3,9 +3,11 @@ Verify relative imports in external_connectors package
 """
 
 
-# Test the actual files we created
+import ast
+import os
+
+
 def test_files_exist():
-    import os
 
     base_dir = os.path.dirname(__file__)
 
@@ -29,8 +31,6 @@ def test_files_exist():
 
 
 def test_syntax():
-    import ast
-    import os
 
     base_dir = os.path.dirname(__file__)
     python_files = [

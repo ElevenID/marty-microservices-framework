@@ -14,13 +14,9 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Any
 
-try:
-    import nats
-    from nats.aio.client import Client as NATS
-    from nats.js import JetStreamContext
-    NATS_AVAILABLE = True
-except ImportError:
-    NATS_AVAILABLE = False
+import nats
+from nats.aio.client import Client as NATS
+from nats.js import JetStreamContext
 
 from .extended_architecture import (
     DeliveryGuarantee,
@@ -31,6 +27,12 @@ from .extended_architecture import (
     MessagingPatternConfig,
     NATSConfig,
 )
+
+try:
+    NATS_AVAILABLE = True
+except ImportError:
+    NATS_AVAILABLE = False
+
 
 logger = logging.getLogger(__name__)
 

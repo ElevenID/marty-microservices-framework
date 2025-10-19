@@ -20,6 +20,7 @@ from sqlalchemy import (
     Column,
     DateTime,
     Integer,
+    MetaData,
     String,
     Text,
     and_,
@@ -138,7 +139,6 @@ class PetstoreOutboxEventService:
 
     async def _create_tables(self) -> None:
         """Create outbox tables if they don't exist"""
-        from sqlalchemy import MetaData
 
         async with self.engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)

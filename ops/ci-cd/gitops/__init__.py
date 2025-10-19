@@ -19,25 +19,25 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+import git
+import requests
 import yaml
+from kubernetes import client, config
 
 # External dependencies
 try:
-    import git
 
     GIT_AVAILABLE = True
 except ImportError:
     GIT_AVAILABLE = False
 
 try:
-    from kubernetes import client, config
 
     KUBERNETES_AVAILABLE = True
 except ImportError:
     KUBERNETES_AVAILABLE = False
 
 try:
-    import requests
 
     REQUESTS_AVAILABLE = True
 except ImportError:

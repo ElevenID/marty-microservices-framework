@@ -7,6 +7,7 @@ validation, transformation, enrichment, authentication, and custom processing.
 
 import asyncio
 import builtins
+import gzip
 import logging
 import time
 from abc import ABC, abstractmethod
@@ -486,7 +487,6 @@ class CompressionMiddleware(MessageMiddleware):
 
     def _compress(self, data: str | bytes) -> bytes:
         """Compress data."""
-        import gzip
 
         if isinstance(data, str):
             data = data.encode("utf-8")
@@ -495,7 +495,6 @@ class CompressionMiddleware(MessageMiddleware):
 
     def _decompress(self, data: bytes) -> bytes:
         """Decompress data."""
-        import gzip
 
         return gzip.decompress(data)
 

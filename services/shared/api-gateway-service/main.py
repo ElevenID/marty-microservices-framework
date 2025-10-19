@@ -22,11 +22,13 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from marty_msf.core.di_container import get_container
 from marty_msf.framework.config_factory import create_service_config
 from marty_msf.framework.discovery import (
     DiscoveryManagerConfig,
     ServiceDiscoveryManager,
 )
+from marty_msf.framework.discovery.core import ServiceInstance
 from marty_msf.framework.gateway import APIGateway
 from marty_msf.observability.monitoring import MetricsCollector
 
@@ -42,7 +44,8 @@ metrics: MetricsCollector | None = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan management."""
-    global gateway, discovery_manager, metrics
+
+    container = get_container()
 
     try:
         # Load configuration using the new framework
@@ -52,8 +55,8 @@ async def lifespan(app: FastAPI):
         )
         logger.info("Starting API Gateway service...")
 
-        # Initialize metrics
-        metrics = MetricsCollector("api_gateway")
+        # Initialize metrics using DI container
+        metrics = container.get_or_create(MetricsCollector, lambda: MetricsCollector())
 
         # Initialize service discovery
         discovery_config = DiscoveryManagerConfig(
@@ -63,15 +66,14 @@ async def lifespan(app: FastAPI):
             health_check_enabled=True,
             health_check_interval=30,
         )
-        discovery_manager = ServiceDiscoveryManager(discovery_config)
+        discovery_manager = container.get_or_create(ServiceDiscoveryManager, lambda: ServiceDiscoveryManager(discovery_config))
         await discovery_manager.start()
 
-        # Initialize API Gateway
-        gateway = APIGateway()
+        # Initialize API Gateway using DI container
+        gateway = container.get_or_create(APIGateway, lambda: APIGateway())
         await gateway.start()
 
         # Register with service discovery
-        from marty_msf.framework.discovery.core import ServiceInstance
         gateway_instance = ServiceInstance(
             service_name="api-gateway",
             instance_id="gateway-001",
@@ -95,11 +97,21 @@ async def lifespan(app: FastAPI):
         logger.error(f"Failed to start API Gateway: {e}")
         raise
     finally:
-        # Cleanup
-        if gateway:
-            await gateway.stop()
-        if discovery_manager:
-            await discovery_manager.stop()
+        # Cleanup using DI container
+        try:
+            gateway = container.get(APIGateway)
+            if gateway:
+                await gateway.stop()
+        except KeyError:
+            pass  # Service not initialized
+
+        try:
+            discovery_manager = container.get(ServiceDiscoveryManager)
+            if discovery_manager:
+                await discovery_manager.stop()
+        except KeyError:
+            pass  # Service not initialized
+
         logger.info("API Gateway service stopped")
 
 

@@ -12,6 +12,8 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Any, Optional
 
+from marty_msf.core.enhanced_di import LambdaFactory, get_service, register_service
+
 from ..exceptions import (
     PermissionDeniedError,
     PolicyEvaluationError,
@@ -541,22 +543,39 @@ class RBACManager:
         return roles
 
 
-# Global RBAC manager instance
-_rbac_manager: RBACManager | None = None
+# Service-based RBAC manager access
+
+
+class RBACManagerService:
+    """Service wrapper for RBAC manager."""
+
+    def __init__(self):
+        self._manager = RBACManager()
+
+    def get_manager(self) -> RBACManager:
+        """Get the RBAC manager instance."""
+        return self._manager
 
 
 def get_rbac_manager() -> RBACManager:
-    """Get global RBAC manager instance."""
-    global _rbac_manager
-    if _rbac_manager is None:
-        _rbac_manager = RBACManager()
-    return _rbac_manager
+    """Get RBAC manager instance from the DI container."""
+    service = get_service(RBACManagerService)
+    return service.get_manager()
 
 
 def reset_rbac_manager():
-    """Reset global RBAC manager (for testing)."""
-    global _rbac_manager
-    _rbac_manager = None
+    """Reset RBAC manager (not supported - managed by DI container)."""
+    raise NotImplementedError(
+        "reset_rbac_manager is not supported. Use the DI container lifecycle management instead."
+    )
+
+
+# Register the service
+register_service(
+    RBACManagerService,
+    factory=LambdaFactory(RBACManagerService, lambda _: RBACManagerService()),
+    is_singleton=True
+)
 
 
 __all__ = [

@@ -1,3 +1,4 @@
+import uvicorn
 from fastapi import FastAPI
 
 app = FastAPI(title="Demo Service", version="1.0.0")
@@ -11,5 +12,4 @@ async def health():
     return {"status": "healthy"}
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

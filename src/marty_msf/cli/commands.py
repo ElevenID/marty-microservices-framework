@@ -12,15 +12,27 @@ from pathlib import Path
 from typing import Any
 
 import click
+import yaml
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
+from scripts.dev.helm_to_kustomize_converter import HelmToKustomizeConverter
+
+from ..framework.service_mesh import EnhancedServiceMeshManager
+from .generators import ServiceGenerator
+
+# Add project root to Python path for scripts import
+project_root = Path(__file__).parent.parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+
+
 console = Console()
 
 try:
-    from .generators import ServiceGenerator
 
     # Legacy alias for backward compatibility
     MinimalPluginGenerator = ServiceGenerator
@@ -107,7 +119,6 @@ def helm_to_kustomize(
 
         try:
             # Import and use the converter
-            from scripts.helm_to_kustomize_converter import HelmToKustomizeConverter
 
             converter = HelmToKustomizeConverter(
                 str(helm_chart_path), str(output_path), service_name
@@ -425,7 +436,6 @@ def _generate_basic_overlay(
     enable_rate_limiting: bool = False,
 ) -> None:
     """Generate a basic Kustomize overlay."""
-    import yaml
 
     # Determine resources to include
     resources = ["namespace.yaml", "../../base"]
@@ -552,7 +562,6 @@ def _compare_manifests(helm_output: str, kustomize_output: str) -> list[str]:
     differences = []
 
     # Parse both outputs and compare
-    import yaml
 
     try:
         helm_docs = list(yaml.safe_load_all(helm_output))
@@ -880,12 +889,6 @@ def generate(project_name: str, output_dir: Path, domain: str, mesh_type: str, n
     """Generate service mesh deployment scripts and manifests for a project."""
     console.print(f"🚀 Generating service mesh deployment for project: {project_name}", style="bold blue")
 
-    # Import the service mesh manager
-    try:
-        from ..framework.service_mesh import ServiceMeshManager
-    except ImportError:
-        console.print("❌ ServiceMeshManager not available", style="bold red")
-        raise click.ClickException("Service mesh framework not properly installed")
 
     # Use project name as namespace if not specified
     if not namespace:
@@ -893,7 +896,7 @@ def generate(project_name: str, output_dir: Path, domain: str, mesh_type: str, n
 
     try:
         # Create service mesh manager
-        manager = ServiceMeshManager()
+        manager = EnhancedServiceMeshManager()
 
         with Progress(
             SpinnerColumn(),
@@ -904,10 +907,12 @@ def generate(project_name: str, output_dir: Path, domain: str, mesh_type: str, n
             task = progress.add_task("Generating deployment scripts...", total=None)
 
             generated_files = manager.generate_deployment_script(
-                project_name=project_name,
-                output_dir=str(output_dir),
-                domain=domain,
-                mesh_type=mesh_type
+                service_name=project_name,
+                config={
+                    "output_dir": str(output_dir),
+                    "domain": domain,
+                    "mesh_type": mesh_type
+                }
             )
 
             progress.update(task, completed=True)
@@ -1723,7 +1728,6 @@ def service_status(service_name: str):
     console.print(f"\n🏷️  Service type: {service_type}")
 
     # Check for running processes (basic check)
-    import subprocess
     try:
         result = subprocess.run(['pgrep', '-f', f'python.*{service_name}'],
                               capture_output=True, text=True)

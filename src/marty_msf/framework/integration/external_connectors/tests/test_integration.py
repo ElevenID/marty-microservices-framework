@@ -8,6 +8,28 @@ import os
 import sys
 import unittest
 
+from marty_msf.framework.integration.external_connectors.base import (
+    ExternalSystemConnector,
+)
+from marty_msf.framework.integration.external_connectors.config import (
+    DataTransformation,
+    ExternalSystemConfig,
+    IntegrationRequest,
+    IntegrationResponse,
+)
+from marty_msf.framework.integration.external_connectors.connectors.rest_api import (
+    RESTAPIConnector,
+)
+from marty_msf.framework.integration.external_connectors.enums import (
+    ConnectorType,
+    DataFormat,
+    IntegrationPattern,
+    TransformationType,
+)
+from marty_msf.framework.integration.external_connectors.transformation import (
+    DataTransformationEngine,
+)
+
 # Add the project root to path
 project_root = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "..")
 sys.path.insert(0, project_root)
@@ -37,12 +59,6 @@ class TestExternalConnectorsStructure(unittest.TestCase):
     def test_enum_imports(self):
         """Test that enums can be imported correctly."""
         try:
-            from marty_msf.framework.integration.external_connectors.enums import (
-                ConnectorType,
-                DataFormat,
-                IntegrationPattern,
-                TransformationType,
-            )
 
             # Test that enums have expected values
             self.assertEqual(ConnectorType.REST_API.value, "rest_api")
@@ -62,16 +78,6 @@ class TestExternalConnectorsStructure(unittest.TestCase):
     def test_config_dataclasses(self):
         """Test that config dataclasses can be imported and instantiated."""
         try:
-            from marty_msf.framework.integration.external_connectors.config import (
-                DataTransformation,
-                ExternalSystemConfig,
-                IntegrationRequest,
-                IntegrationResponse,
-            )
-            from marty_msf.framework.integration.external_connectors.enums import (
-                ConnectorType,
-                DataFormat,
-            )
 
             # Test ExternalSystemConfig
             config = ExternalSystemConfig(
@@ -102,9 +108,6 @@ class TestExternalConnectorsStructure(unittest.TestCase):
     def test_base_connector(self):
         """Test that base connector can be imported."""
         try:
-            from marty_msf.framework.integration.external_connectors.base import (
-                ExternalSystemConnector,
-            )
 
             # Test that it's an abstract class
             self.assertTrue(hasattr(ExternalSystemConnector, "connect"))
@@ -118,9 +121,6 @@ class TestExternalConnectorsStructure(unittest.TestCase):
     def test_transformation_engine(self):
         """Test that transformation engine can be imported."""
         try:
-            from marty_msf.framework.integration.external_connectors.transformation import (
-                DataTransformationEngine,
-            )
 
             # Test basic functionality
             engine = DataTransformationEngine()
@@ -138,9 +138,6 @@ class TestExternalConnectorsStructure(unittest.TestCase):
     def test_rest_api_connector(self):
         """Test that REST API connector can be imported."""
         try:
-            from marty_msf.framework.integration.external_connectors.connectors.rest_api import (
-                RESTAPIConnector,
-            )
 
             # Test that it has expected methods
             self.assertTrue(hasattr(RESTAPIConnector, "connect"))
@@ -158,9 +155,6 @@ class TestTransformationEngine(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         try:
-            from marty_msf.framework.integration.external_connectors.transformation import (
-                DataTransformationEngine,
-            )
 
             self.engine = DataTransformationEngine()
         except ImportError:

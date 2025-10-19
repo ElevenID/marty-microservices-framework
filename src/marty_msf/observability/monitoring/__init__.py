@@ -18,7 +18,7 @@ Key Features:
 - FastAPI/gRPC middleware integration
 
 Usage:
-    from marty_msf.framework.monitoring import (
+from marty_msf.framework.monitoring import (
         initialize_monitoring,
         setup_fastapi_monitoring,
         MonitoringManager,

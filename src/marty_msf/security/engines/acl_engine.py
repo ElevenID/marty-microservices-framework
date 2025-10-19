@@ -5,6 +5,8 @@ Provides resource-level access control with fine-grained permissions
 for specific resources and resource types.
 """
 
+import asyncio
+import ipaddress
 import json
 import logging
 import re
@@ -112,7 +114,6 @@ class ACLEntry:
 
     def _check_ip_range(self, ip_ranges: list[str], context: SecurityContext) -> bool:
         """Check if client IP is in allowed ranges"""
-        import ipaddress
 
         client_ip = context.metadata.get("client_ip")
         if not client_ip:
@@ -376,7 +377,6 @@ class ACLPolicyEngine(PolicyEngine):
         initial_policies = self.config.get("initial_policies", [])
         if initial_policies:
             # Run async load_policies in sync context
-            import asyncio
             try:
                 loop = asyncio.get_event_loop()
                 loop.run_until_complete(self.load_policies(initial_policies))

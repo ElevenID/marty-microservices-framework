@@ -3,6 +3,7 @@ Base database models and mixins for the enterprise database framework.
 """
 
 import builtins
+import re
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -20,7 +21,6 @@ class BaseModel(DeclarativeBase):
     def __tablename__(cls) -> str:
         """Generate table name from class name."""
         # Convert CamelCase to snake_case
-        import re
 
         name = re.sub(r"(?<!^)(?=[A-Z])", "_", cls.__name__).lower()
         return name

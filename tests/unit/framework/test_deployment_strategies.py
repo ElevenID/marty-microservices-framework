@@ -9,17 +9,25 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
+from marty_msf.framework.deployment.strategies import (
+    Deployment,
+    DeploymentConfig,
+    DeploymentOrchestrator,
+    DeploymentStatus,
+    DeploymentStrategy,
+    DeploymentTarget,
+    ServiceVersion,
+)
+from marty_msf.framework.mesh.discovery.health_checker import HealthChecker
+from marty_msf.framework.mesh.discovery.registry import ServiceRegistry
+from marty_msf.framework.mesh.load_balancing import LoadBalancer
+from marty_msf.framework.mesh.service_mesh import (
+    ServiceDiscoveryConfig,
+    ServiceEndpoint,
+)
+
 # Core deployment imports
 try:
-    from marty_msf.framework.deployment.strategies import (
-        Deployment,
-        DeploymentConfig,
-        DeploymentOrchestrator,
-        DeploymentStatus,
-        DeploymentStrategy,
-        DeploymentTarget,
-        ServiceVersion,
-    )
 
     DEPLOYMENT_AVAILABLE = True
 except ImportError as e:
@@ -28,13 +36,6 @@ except ImportError as e:
 
 # Service discovery and mesh imports
 try:
-    from marty_msf.framework.mesh.discovery.health_checker import HealthChecker
-    from marty_msf.framework.mesh.discovery.registry import ServiceRegistry
-    from marty_msf.framework.mesh.load_balancing import LoadBalancer
-    from marty_msf.framework.mesh.service_mesh import (
-        ServiceDiscoveryConfig,
-        ServiceEndpoint,
-    )
 
     SERVICE_MESH_AVAILABLE = True
 except ImportError as e:

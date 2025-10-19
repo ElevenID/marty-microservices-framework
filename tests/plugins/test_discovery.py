@@ -8,62 +8,22 @@ Tests for plugin discovery mechanisms including:
 - Plugin loading and validation
 """
 
-# Fix import paths
 import sys
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+# Fix import paths
+from marty_msf.framework.plugins.core import PluginMetadata
+from marty_msf.framework.plugins.discovery import (
+    CompositePluginDiscoverer,
+    DirectoryPluginDiscoverer,
+    PackagePluginDiscoverer,
+    PluginInfo,
+)
+
 framework_path = Path(__file__).parent.parent.parent / "src"
 sys.path.insert(0, str(framework_path))
 
-try:
-    from marty_msf.framework.plugins.core import PluginMetadata
-    from marty_msf.framework.plugins.discovery import (
-        CompositePluginDiscoverer,
-        DirectoryPluginDiscoverer,
-        PackagePluginDiscoverer,
-        PluginInfo,
-    )
-except ImportError:
-    # Create mock classes for testing structure
-    class PluginInfo:
-        def __init__(self, name: str, metadata: "PluginMetadata", module_path: str):
-            self.name = name
-            self.metadata = metadata
-            self.module_path = module_path
-
-    class PluginMetadata:
-        def __init__(self, name: str, version: str, **kwargs):
-            self.name = name
-            self.version = version
-            self.description = kwargs.get("description", "")
-            self.author = kwargs.get("author", "")
-            self.dependencies = kwargs.get("dependencies", [])
-            self.optional_dependencies = kwargs.get("optional_dependencies", [])
-
-    class DirectoryPluginDiscoverer:
-        def __init__(self, plugin_dir: Path):
-            self.plugin_dir = plugin_dir
-
-        def discover(self):
-            return []
-
-    class PackagePluginDiscoverer:
-        def __init__(self, package_name: str):
-            self.package_name = package_name
-
-        def discover(self):
-            return []
-
-    class CompositePluginDiscoverer:
-        def __init__(self, discoverers):
-            self.discoverers = discoverers
-
-        def discover(self):
-            plugins = []
-            for discoverer in self.discoverers:
-                plugins.extend(discoverer.discover())
-            return plugins
 
 
 class TestPluginInfo:

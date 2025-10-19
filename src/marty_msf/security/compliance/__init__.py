@@ -21,9 +21,10 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
 
+from prometheus_client import Counter
+
 # External dependencies
 try:
-    from prometheus_client import Counter
 
     ASYNC_AVAILABLE = True
     REDIS_AVAILABLE = True

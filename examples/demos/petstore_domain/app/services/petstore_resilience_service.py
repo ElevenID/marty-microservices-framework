@@ -7,27 +7,29 @@ for all external dependencies in the petstore domain.
 
 import asyncio
 import logging
+import random
 from typing import Any
+
+from marty_msf.framework.resilience import (
+    BulkheadConfig,
+    CircuitBreakerConfig,
+    DependencyType,
+    ExternalDependencyManager,
+    ResilienceConfig,
+    RetryConfig,
+    TimeoutConfig,
+    api_call,
+    cache_call,
+    database_call,
+    get_external_dependency_manager,
+    register_api_dependency,
+    register_cache_dependency,
+    register_database_dependency,
+    resilience_pattern,
+)
 
 # Import the enhanced resilience framework
 try:
-    from marty_msf.framework.resilience import (
-        BulkheadConfig,
-        CircuitBreakerConfig,
-        DependencyType,
-        ExternalDependencyManager,
-        ResilienceConfig,
-        RetryConfig,
-        TimeoutConfig,
-        api_call,
-        cache_call,
-        database_call,
-        get_external_dependency_manager,
-        register_api_dependency,
-        register_cache_dependency,
-        register_database_dependency,
-        resilience_pattern,
-    )
     RESILIENCE_AVAILABLE = True
 except ImportError:
     # Fallback for when resilience framework is not available
@@ -244,7 +246,6 @@ class PetstoreResilientOperations:
         await asyncio.sleep(0.01)
 
         # Simulate cache hit/miss
-        import random
         if random.random() < 0.7:  # 70% cache hit rate
             self.logger.info(f"Cache hit for pet catalog: {category}")
             return {

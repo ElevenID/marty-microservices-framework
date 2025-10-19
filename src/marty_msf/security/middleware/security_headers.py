@@ -14,6 +14,8 @@ Implements comprehensive security headers to protect against common web vulnerab
 
 import builtins
 import logging
+import secrets
+import string
 from dataclasses import dataclass, field
 
 from fastapi import Request, Response
@@ -425,8 +427,6 @@ def create_security_headers_middleware(
 
 
 # Utility functions for CSP nonce generation
-import secrets
-import string
 
 
 def generate_csp_nonce() -> str:

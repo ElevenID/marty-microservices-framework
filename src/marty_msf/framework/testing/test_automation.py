@@ -21,10 +21,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-try:
-    import schedule
-except ImportError:
-    schedule = None
+import schedule
 import yaml
 
 from .core import (

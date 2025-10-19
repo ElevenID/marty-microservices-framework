@@ -23,16 +23,9 @@ from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
 from typing import Any, Optional, Union
 
-logger = logging.getLogger(__name__)
-
-# OpenTelemetry Core
 from opentelemetry import metrics, trace
-
-# OpenTelemetry Exporters
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-
-# OpenTelemetry Instrumentation
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.grpc import (
     GrpcInstrumentorClient,
@@ -51,8 +44,6 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
-
-# Prometheus
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
     REGISTRY,
@@ -64,8 +55,21 @@ from prometheus_client import (
     generate_latest,
 )
 
-# Import the typed service base
+from ..core.di_container import get_service
 from ..core.services import ObservabilityService
+from .factories import register_observability_services
+
+logger = logging.getLogger(__name__)
+
+# OpenTelemetry Core
+
+# OpenTelemetry Exporters
+
+# OpenTelemetry Instrumentation
+
+# Prometheus
+
+# Import the typed service base
 
 
 @dataclass
@@ -468,13 +472,11 @@ def get_observability_service() -> StandardObservabilityService:
     Raises:
         ValueError: If service is not registered in the DI container
     """
-    from ..core.di_container import get_service
 
     try:
         return get_service(StandardObservabilityService)
     except ValueError:
         # Auto-register if not found (for backward compatibility)
-        from .factories import register_observability_services
         register_observability_services()
         return get_service(StandardObservabilityService)
 

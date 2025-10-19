@@ -19,11 +19,12 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, list
 
+import aiohttp
+import redis.asyncio as redis
+from prometheus_client import Counter, Gauge, Histogram
+
 # External dependencies
 try:
-    import aiohttp
-    import redis.asyncio as redis
-    from prometheus_client import Counter, Gauge, Histogram
 
     REDIS_AVAILABLE = True
 

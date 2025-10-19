@@ -23,6 +23,7 @@ from marty_msf.framework.documentation.api_docs import (
     APIDocumentationManager,
     APIEndpoint,
     APIService,
+    APIVersionManager,
     DocumentationConfig,
 )
 
@@ -122,7 +123,6 @@ API requests are rate-limited:
 
     async def register_api_versions(self) -> None:
         """Register API versions for tracking and deprecation management."""
-        from marty_msf.framework.documentation.api_docs import APIVersionManager
 
         logger.info("Registering Petstore API versions...")
 

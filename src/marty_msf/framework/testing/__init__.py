@@ -21,7 +21,7 @@ Plus advanced testing capabilities including:
 
 Basic DRY Patterns Example:
 
-    from marty_msf.framework.testing import (
+from marty_msf.framework.testing import (
         AsyncTestCase,
         ServiceTestMixin,
         TestEventCollector,
@@ -46,7 +46,7 @@ Basic DRY Patterns Example:
             self.event_collector.assert_event_published("something.done")
 
 Advanced Testing Example:
-    from marty.framework.testing import (
+from marty.framework.testing import (
         TestSuite, TestExecutor, TestConfiguration,
         ContractBuilder, ChaosExperimentBuilder,
         create_load_test, IntegrationTestEnvironment,

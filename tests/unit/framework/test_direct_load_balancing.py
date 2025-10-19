@@ -2,15 +2,17 @@
 
 import pytest
 
+from marty_msf.framework.discovery.core import ServiceInstance
+from marty_msf.framework.discovery.load_balancing import (
+    LoadBalancingStrategy,
+    RoundRobinLoadBalancer,
+    WeightedLoadBalancer,
+)
+
 
 def test_direct_import_load_balancing():
     """Test direct import of load balancing without going through __init__.py"""
     try:
-        from marty_msf.framework.discovery.load_balancing import (
-            LoadBalancingStrategy,
-            RoundRobinLoadBalancer,
-            WeightedLoadBalancer,
-        )
 
         assert LoadBalancingStrategy is not None
         assert RoundRobinLoadBalancer is not None
@@ -23,7 +25,6 @@ def test_direct_import_load_balancing():
 def test_direct_import_service_instance():
     """Test direct import of ServiceInstance"""
     try:
-        from marty_msf.framework.discovery.core import ServiceInstance
 
         # Test basic instantiation
         instance = ServiceInstance(service_name="test-service", host="localhost", port=8080)
@@ -39,8 +40,6 @@ def test_direct_import_service_instance():
 async def test_round_robin_basic_functionality():
     """Test basic round robin load balancing functionality."""
     try:
-        from marty_msf.framework.discovery.core import ServiceInstance
-        from marty_msf.framework.discovery.load_balancing import RoundRobinLoadBalancer
 
         # Create balancer
         balancer = RoundRobinLoadBalancer()
@@ -80,8 +79,6 @@ async def test_round_robin_basic_functionality():
 async def test_weighted_basic_functionality():
     """Test basic weighted load balancing functionality."""
     try:
-        from marty_msf.framework.discovery.core import ServiceInstance
-        from marty_msf.framework.discovery.load_balancing import WeightedLoadBalancer
 
         # Create balancer
         balancer = WeightedLoadBalancer()

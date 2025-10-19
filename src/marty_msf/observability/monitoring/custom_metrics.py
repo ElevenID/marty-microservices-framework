@@ -17,6 +17,8 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Any
 
+from ...core.di_container import get_service_optional, register_instance
+
 logger = logging.getLogger(__name__)
 
 
@@ -544,13 +546,11 @@ def get_custom_metrics_manager() -> CustomMetricsManager | None:
     Returns:
         CustomMetricsManager instance or None if not registered
     """
-    from ...core.di_container import get_service_optional
     return get_service_optional(CustomMetricsManager)
 
 
 def initialize_custom_metrics() -> CustomMetricsManager:
     """Initialize the custom metrics manager using dependency injection."""
-    from ...core.di_container import get_service_optional, register_instance
 
     manager = get_service_optional(CustomMetricsManager)
     if manager is None:

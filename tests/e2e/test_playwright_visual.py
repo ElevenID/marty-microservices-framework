@@ -33,7 +33,6 @@ class MockDashboardServer:
         self._create_dashboard_html()
 
         # Create a simple HTTP server (in real scenarios, this would be your actual dashboard)
-        from aiohttp import web
 
         app = web.Application()
         app.router.add_get("/", self._handle_dashboard)

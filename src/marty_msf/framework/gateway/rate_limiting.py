@@ -6,11 +6,13 @@ and sophisticated quota management for API traffic control.
 """
 
 import builtins
+import datetime
 import hashlib
 import io
 import logging
 import math
 import pickle
+import sys
 import threading
 import time
 import warnings
@@ -52,13 +54,11 @@ class RestrictedUnpickler(pickle.Unpickler):
             return getattr(builtins, name)
         # Allow datetime objects which are commonly used in rate limiting
         if module == "datetime" and name in {"datetime", "date", "time", "timedelta"}:
-            import datetime
 
             return getattr(datetime, name)
         # Allow rate limiting state classes
         if module.endswith("rate_limiting") and name in {"RateLimitState"}:
             # Allow our own rate limiting classes
-            import sys
 
             return getattr(sys.modules[module], name)
         # Block everything else
@@ -240,7 +240,6 @@ class RedisRateLimitStorage(RateLimitStorage):
     def set_state(self, key: str, state: RateLimitState, ttl: int | None = None):
         """Set state in Redis."""
         try:
-            import pickle
 
             data = pickle.dumps(state)
             redis_key = self._make_key(key)
@@ -618,7 +617,6 @@ class RateLimitMiddleware:
                 logger.error(f"Error during rate limit cleanup: {e}")
             finally:
                 # Schedule next cleanup
-                import threading
 
                 self._cleanup_timer = threading.Timer(self.config.cleanup_interval, cleanup)
                 self._cleanup_timer.daemon = True
@@ -672,7 +670,6 @@ class RateLimitMiddleware:
 
     def _create_rate_limit_response(self, result: RateLimitResult) -> GatewayResponse:
         """Create rate limit exceeded response."""
-        from .core import GatewayResponse
 
         response = GatewayResponse(
             status_code=429,

@@ -22,6 +22,7 @@ from enum import Enum
 from typing import Any
 
 import psutil
+import redis.asyncio as redis
 from cachetools import LRUCache, TTLCache
 
 
@@ -470,7 +471,6 @@ class IntelligentCaching:
     async def initialize_distributed_cache(self, redis_url: str = "redis://localhost:6379"):
         """Initialize distributed cache (Redis)."""
         try:
-            import redis.asyncio as redis
 
             self.distributed_cache = redis.from_url(redis_url)
         except Exception as e:

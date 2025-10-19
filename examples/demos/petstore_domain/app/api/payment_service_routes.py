@@ -6,6 +6,8 @@ from typing import Any, Dict, List
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from ..services.payment_service_service import PaymentServiceService
+
 router = APIRouter(prefix="/payment-service", tags=["payment-service"])
 
 class RequestModel(BaseModel):
@@ -31,7 +33,6 @@ async def get_health():
 async def process_request(request: RequestModel):
     """Process a service request."""
     # Import service here to avoid circular imports
-    from ..services.payment_service_service import PaymentServiceService
 
     service = PaymentServiceService()
     result = await service.process_request(request.data)

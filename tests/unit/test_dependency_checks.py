@@ -6,10 +6,14 @@ This module converts the legacy check_dependencies.py script into proper automat
 
 import importlib
 import subprocess
+import sys
+import tomllib
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+from scripts.check_dependencies import check_command, check_import
 
 
 class TestDependencyChecks:
@@ -39,14 +43,12 @@ class TestDependencyChecks:
         """Test that optional dependencies are properly documented."""
         try:
             # Try to import the original script to verify it works
-            from scripts.check_dependencies import check_import
             assert callable(check_import)
         except ImportError as e:
             pytest.fail(f"Could not import dependency checker: {e}")
 
     def test_python_version_compatibility(self):
         """Test Python version compatibility checks."""
-        import sys
 
         # Check minimum Python version
         min_version = (3, 10)
@@ -70,7 +72,6 @@ class TestDependencyChecks:
         mock_result.stdout = "version 1.0.0"
         mock_run.return_value = mock_result
 
-        from scripts.check_dependencies import check_command
 
         # Test that the function works
         result = check_command("uv")
@@ -85,7 +86,6 @@ class TestDependencyChecks:
         # Mock command not found
         mock_run.side_effect = FileNotFoundError()
 
-        from scripts.check_dependencies import check_command
 
         result = check_command("nonexistent-command")
         assert result is False
@@ -150,10 +150,7 @@ class TestDependencyChecks:
         if not pyproject_path.exists():
             pytest.skip("pyproject.toml not found")
 
-        try:
-            import tomllib
-        except ImportError:
-            pytest.skip("TOML parser not available")
+
 
         try:
             with open(pyproject_path, "rb") as f:
@@ -177,7 +174,6 @@ class TestDependencyChecks:
 
     def test_virtual_environment_setup(self):
         """Test that we're running in a proper virtual environment."""
-        import sys
 
         # Check if we're in a virtual environment
         in_venv = (

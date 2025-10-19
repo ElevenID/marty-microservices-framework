@@ -19,6 +19,8 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from marty_msf.framework.testing.contract_testing import pact_contract
+
 logger = logging.getLogger(__name__)
 
 
@@ -37,7 +39,6 @@ class PetstoreContractManager:
 
     async def create_frontend_contracts(self):
         """Create contracts for frontend applications consuming the petstore API."""
-        from marty_msf.framework.testing.contract_testing import pact_contract
 
         logger.info("Creating frontend consumer contracts...")
 
@@ -170,7 +171,6 @@ class PetstoreContractManager:
 
     async def create_internal_service_contracts(self):
         """Create contracts for internal service-to-service communication."""
-        from marty_msf.framework.testing.contract_testing import pact_contract
 
         logger.info("Creating internal service contracts...")
 
@@ -249,7 +249,6 @@ class PetstoreContractManager:
 
     async def create_external_integration_contracts(self):
         """Create contracts for external service integrations."""
-        from marty_msf.framework.testing.contract_testing import pact_contract
 
         logger.info("Creating external integration contracts...")
 
@@ -336,7 +335,6 @@ class PetstoreContractManager:
 
     async def create_version_compatibility_contracts(self):
         """Create contracts for API version compatibility testing."""
-        from marty_msf.framework.testing.contract_testing import pact_contract
 
         logger.info("Creating version compatibility contracts...")
 

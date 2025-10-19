@@ -13,6 +13,8 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional, Union
 
+from marty_msf.core.enhanced_di import LambdaFactory, get_service, register_service
+
 from ..exceptions import AuthorizationError, PolicyEvaluationError, SecurityError
 
 logger = logging.getLogger(__name__)
@@ -580,22 +582,39 @@ class ABACManager:
         return results
 
 
-# Global ABAC manager instance
-_abac_manager: ABACManager | None = None
+# Service-based ABAC manager access
+
+
+class ABACManagerService:
+    """Service wrapper for ABAC manager."""
+
+    def __init__(self):
+        self._manager = ABACManager()
+
+    def get_manager(self) -> ABACManager:
+        """Get the ABAC manager instance."""
+        return self._manager
 
 
 def get_abac_manager() -> ABACManager:
-    """Get global ABAC manager instance."""
-    global _abac_manager
-    if _abac_manager is None:
-        _abac_manager = ABACManager()
-    return _abac_manager
+    """Get ABAC manager instance from the DI container."""
+    service = get_service(ABACManagerService)
+    return service.get_manager()
 
 
 def reset_abac_manager():
-    """Reset global ABAC manager (for testing)."""
-    global _abac_manager
-    _abac_manager = None
+    """Reset ABAC manager (not supported - managed by DI container)."""
+    raise NotImplementedError(
+        "reset_abac_manager is not supported. Use the DI container lifecycle management instead."
+    )
+
+
+# Register the service
+register_service(
+    ABACManagerService,
+    factory=LambdaFactory(ABACManagerService, lambda _: ABACManagerService()),
+    is_singleton=True
+)
 
 
 __all__ = [

@@ -14,8 +14,11 @@ from typing import Any, Optional, Union
 
 import aiohttp
 
+from marty_msf.core.enhanced_di import get_service
+
 from ..abac import ABACContext, PolicyEffect
 from ..exceptions import ExternalProviderError, PolicyEvaluationError
+from .opa_service import OPAPolicyServiceWrapper
 
 logger = logging.getLogger(__name__)
 
@@ -257,17 +260,14 @@ class OPAPolicyService:
         }
 
 
-# Global OPA policy service instance
-_opa_policy_service: OPAPolicyService | None = None
+# Service-based OPA policy service access
+
 
 
 def get_policy_service(service_config: dict[str, Any] | None = None) -> OPAPolicyService:
-    """Get global OPA policy service."""
-    global _opa_policy_service  # noqa: PLW0603
-
-    if _opa_policy_service is None:
-        _opa_policy_service = OPAPolicyService(service_config=service_config)
-    return _opa_policy_service
+    """Get OPA policy service from the DI container."""
+    service = get_service(OPAPolicyServiceWrapper)
+    return service.get_policy_service()
 
 
 def configure_opa_service(
@@ -275,18 +275,10 @@ def configure_opa_service(
     policy_path: str = "v1/data/authz/allow",
     timeout: float = 5.0
 ) -> OPAPolicyService:
-    """Configure global OPA policy service."""
-    global _opa_policy_service  # noqa: PLW0603
-
-    config = {
-        "url": url,
-        "policy_path": policy_path,
-        "timeout": timeout
-    }
-
-    _opa_policy_service = OPAPolicyService(config)
-    logger.info("Configured OPA Policy Service: %s", url)
-    return _opa_policy_service
+    """Configure OPA policy service (not supported - use DI container instead)."""
+    raise NotImplementedError(
+        "configure_opa_service is not supported. Use the DI container to register OPAPolicyServiceWrapper instead."
+    )
 
 
 def create_policy_service_from_service_config(service_config: dict[str, Any]) -> OPAPolicyService:
@@ -295,14 +287,10 @@ def create_policy_service_from_service_config(service_config: dict[str, Any]) ->
 
 
 def configure_policy_service(service_config: dict[str, Any]) -> OPAPolicyService:
-    """Configure the global policy service with service configuration."""
-    global _opa_policy_service
-    _opa_policy_service = OPAPolicyService(service_config=service_config)
-
-    opa_config = service_config.get("security", {}).get("opa", {})
-    url = opa_config.get("url", "http://localhost:8181")
-    logger.info("Configured OPA Policy Service: %s", url)
-    return _opa_policy_service
+    """Configure the policy service with service configuration (not supported)."""
+    raise NotImplementedError(
+        "configure_policy_service is not supported. Use the DI container to register OPAPolicyServiceWrapper instead."
+    )
 
 
 async def evaluate_policy(

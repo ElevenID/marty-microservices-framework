@@ -2,6 +2,7 @@
 Example load testing scripts for common scenarios
 """
 
+import argparse
 import asyncio
 import os
 import sys
@@ -83,7 +84,6 @@ async def stress_test():
 
 
 if __name__ == "__main__":
-    import argparse
 
     parser = argparse.ArgumentParser(description="Run load tests")
     parser.add_argument(

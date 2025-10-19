@@ -5,12 +5,8 @@ import logging
 import uuid
 from collections import deque
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
 
-from ..models import DeploymentStrategy
-
-if TYPE_CHECKING:
-    from ..models import Deployment
+from ..models import Deployment, DeploymentStrategy
 
 
 class RollbackManager:

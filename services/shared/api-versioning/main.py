@@ -20,8 +20,6 @@ Author: Marty Framework Team
 Version: 1.0.0
 """
 
-__version__ = "1.0.0"
-
 import builtins
 import hashlib
 import json
@@ -33,6 +31,7 @@ from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
+from os import getenv
 from typing import Any, dict, list
 
 import httpx
@@ -49,7 +48,6 @@ from opentelemetry import trace
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, generate_latest
 from pydantic import BaseModel, Field
 
-# Import unified configuration system
 from marty_msf.framework.config import (
     ConfigurationStrategy,
     Environment,
@@ -57,6 +55,13 @@ from marty_msf.framework.config import (
 )
 
 from .config import APIVersioningSettings, get_settings
+
+__version__ = "1.0.0"
+
+
+
+# Import unified configuration system
+
 
 # Configure structured logging
 structlog.configure(
@@ -1043,7 +1048,6 @@ def create_versioned_app(
 
         # Initialize unified configuration
         try:
-            from os import getenv
             env_name = getenv("ENVIRONMENT", "development")
             config_manager = create_unified_config_manager(
                 service_name="api-versioning-service",

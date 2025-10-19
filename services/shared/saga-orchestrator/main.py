@@ -18,8 +18,6 @@ Author: Marty Framework Team
 Version: 1.0.0
 """
 
-__version__ = "1.0.0"
-
 import asyncio
 import builtins
 import json
@@ -51,6 +49,10 @@ from prometheus_client import (
     generate_latest,
 )
 from pydantic import BaseModel, Field
+
+__version__ = "1.0.0"
+
+
 
 # Configure structured logging
 structlog.configure(

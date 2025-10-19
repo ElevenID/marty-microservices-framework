@@ -6,6 +6,7 @@ to replace fragmented resilience implementations with a unified approach.
 
 import asyncio
 import logging
+import random
 from typing import Any
 
 # Import the new consolidated resilience manager
@@ -113,7 +114,6 @@ async def example_custom_resilience():
     # Example function that might fail
     async def unreliable_external_call(data: str) -> str:
         # Simulate potential failure
-        import random
         if random.random() < 0.3:
             raise Exception("Simulated external service failure")
         await asyncio.sleep(0.1)

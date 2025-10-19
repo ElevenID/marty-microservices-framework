@@ -9,6 +9,7 @@ using the modern framework testing components.
 import asyncio
 import builtins
 import os
+import platform
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -16,12 +17,24 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import asyncpg
 import psutil
 import pytest
 import pytest_asyncio
+import redis.asyncio as redis
 from observability import ServiceMonitor
+from testcontainers.postgres import PostgresContainer
+from testcontainers.redis import RedisContainer
 
+from marty_msf.framework.events.enhanced_event_bus import (
+    EnhancedEventBus as InMemoryEventBus,
+)
 from marty_msf.framework.testing import PerformanceTestCase, TestEventCollector
+from marty_msf.framework.testing.performance_testing import (
+    LoadConfiguration,
+    LoadPattern,
+    RequestSpec,
+)
 from marty_msf.observability.monitoring import MetricsCollector
 
 
@@ -306,11 +319,6 @@ async def test_event_collector():
 @pytest_asyncio.fixture
 async def performance_test_case():
     """Create performance test case for testing."""
-    from marty_msf.framework.testing.performance_testing import (
-        LoadConfiguration,
-        LoadPattern,
-        RequestSpec,
-    )
 
     request_spec = RequestSpec(method="GET", url="http://localhost:8000/health")
     load_config = LoadConfiguration(pattern=LoadPattern.CONSTANT, max_users=10, duration=30)
@@ -404,7 +412,6 @@ def timeout_monitor():
 # Configure Docker client for testcontainers
 def configure_docker_client():
     """Configure Docker client for testcontainers on macOS Docker Desktop."""
-    import platform
 
     if platform.system() == "Darwin":  # macOS
         # Set Docker socket path for Docker Desktop
@@ -418,7 +425,6 @@ def configure_docker_client():
 @pytest.fixture(scope="session")
 async def postgres_container():
     """Provide a PostgreSQL container for E2E tests."""
-    from testcontainers.postgres import PostgresContainer
 
     # Configure Docker client before creating container
     configure_docker_client()
@@ -431,7 +437,6 @@ async def postgres_container():
 @pytest.fixture(scope="session")
 async def redis_container():
     """Provide a Redis container for E2E tests."""
-    from testcontainers.redis import RedisContainer
 
     # Configure Docker client before creating container
     configure_docker_client()
@@ -444,7 +449,6 @@ async def redis_container():
 @pytest.fixture
 async def real_database_connection(postgres_container):
     """Provide a real database connection for E2E tests."""
-    import asyncpg
 
     connection_url = postgres_container.get_connection_url()
     # Convert psycopg2 URL to asyncpg format
@@ -493,7 +497,6 @@ async def real_database_connection(postgres_container):
 @pytest.fixture
 async def real_redis_client(redis_container):
     """Provide a real Redis client for E2E tests."""
-    import redis.asyncio as redis
 
     redis_url = f"redis://localhost:{redis_container.get_exposed_port(6379)}/0"
     client = redis.from_url(redis_url)
@@ -508,9 +511,6 @@ async def real_redis_client(redis_container):
 @pytest.fixture
 async def real_event_bus(test_service_name: str):
     """Provide a real event bus for E2E tests."""
-    from marty_msf.framework.events.enhanced_event_bus import (
-        EnhancedEventBus as InMemoryEventBus,
-    )
 
     # Create in-memory event bus for E2E tests
     event_bus = InMemoryEventBus()

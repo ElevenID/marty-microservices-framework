@@ -6,6 +6,7 @@ for various formats including JSON, Pickle, Protocol Buffers, and Avro.
 """
 
 import builtins
+import datetime
 import gzip
 import io
 import json
@@ -17,6 +18,10 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
+
+import avro.io
+import avro.schema
+import msgpack
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +53,6 @@ class RestrictedUnpickler(pickle.Unpickler):
             return getattr(builtins, name)
         # Allow datetime objects which are commonly serialized in messages
         if module == "datetime" and name in {"datetime", "date", "time", "timedelta"}:
-            import datetime
 
             return getattr(datetime, name)
         # Block everything else
@@ -290,8 +294,6 @@ class AvroSerializer(MessageSerializer):
 
         self.schema = schema
 
-        import avro.io
-        import avro.schema
 
         self._avro_schema = avro.schema
         self._avro_io = avro.io
@@ -303,7 +305,6 @@ class AvroSerializer(MessageSerializer):
             raise SerializationError("Avro schema must be specified", "avro")
 
         try:
-            import io
 
             schema = self._avro_schema.parse(json.dumps(self.schema))
             bytes_writer = io.BytesIO()
@@ -323,7 +324,6 @@ class AvroSerializer(MessageSerializer):
             raise SerializationError("Avro schema must be specified", "avro")
 
         try:
-            import io
 
             decompressed = self.decompress(data)
             schema = self._avro_schema.parse(json.dumps(self.schema))
@@ -345,7 +345,6 @@ class MessagePackSerializer(MessageSerializer):
         if self.config.format != SerializationFormat.MSGPACK:
             self.config.format = SerializationFormat.MSGPACK
 
-        import msgpack
         self._msgpack = msgpack
 
     def serialize(self, data: Any) -> bytes:

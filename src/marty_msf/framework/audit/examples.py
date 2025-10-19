@@ -6,32 +6,17 @@ for implementing audit logging in microservices.
 """
 
 import asyncio
+import builtins
 import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-# FastAPI example
-try:
-    from fastapi import Depends, FastAPI, HTTPException
-    from fastapi.security import HTTPBearer
+from fastapi import Depends, FastAPI, HTTPException
+from fastapi.security import HTTPBearer
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-    FASTAPI_AVAILABLE = True
-except ImportError:
-    FASTAPI_AVAILABLE = False
-
-# Database example
-try:
-    from sqlalchemy import create_engine
-    from sqlalchemy.orm import sessionmaker
-
-    SQLALCHEMY_AVAILABLE = True
-except ImportError:
-    SQLALCHEMY_AVAILABLE = False
-
-import builtins
-
-# Framework imports
 from marty_msf.framework.audit import (
     AuditConfig,
     AuditContext,
@@ -42,6 +27,23 @@ from marty_msf.framework.audit import (
     audit_context,
     setup_fastapi_audit_middleware,
 )
+
+# FastAPI example
+try:
+
+    FASTAPI_AVAILABLE = True
+except ImportError:
+    FASTAPI_AVAILABLE = False
+
+# Database example
+try:
+
+    SQLALCHEMY_AVAILABLE = True
+except ImportError:
+    SQLALCHEMY_AVAILABLE = False
+
+
+# Framework imports
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)

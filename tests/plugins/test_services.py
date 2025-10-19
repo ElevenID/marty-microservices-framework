@@ -17,15 +17,16 @@ from typing import Any
 
 import pytest
 
-framework_path = Path(__file__).parent.parent.parent / "src"
-sys.path.insert(0, str(framework_path))
-
 from marty_msf.framework.plugins.core import PluginContext
 from marty_msf.framework.plugins.services import (
     PluginService,
     ServiceDefinition,
     ServiceRegistry,
 )
+
+framework_path = Path(__file__).parent.parent.parent / "src"
+sys.path.insert(0, str(framework_path))
+
 
 
 class TestService(PluginService):

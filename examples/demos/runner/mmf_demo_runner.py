@@ -64,7 +64,6 @@ class LoadTester:
 
     def __init__(self, base_url: str = None):
         # Auto-detect if running in Docker
-        import os
         if base_url is None:
             if os.getenv('DOCKER_ENV') == 'true':
                 self.base_url = "http://order-service"

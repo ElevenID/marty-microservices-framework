@@ -8,6 +8,7 @@ with proper error handling, metrics, and real implementations.
 import asyncio
 import logging
 import os
+import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Any, Dict, Optional
@@ -313,7 +314,6 @@ async def create_item(
     config: FastAPIServiceConfig = Depends(get_config)
 ):
     """Create a new item."""
-    import uuid
 
     # Simulate some business logic
     item_id = str(uuid.uuid4())
@@ -422,7 +422,6 @@ if __name__ == "__main__":
     # Load configuration for running the service
     try:
         # For development, we can load config synchronously
-        import asyncio
 
         async def load_config():
             temp_config_manager = create_unified_config_manager(

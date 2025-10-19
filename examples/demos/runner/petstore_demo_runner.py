@@ -37,7 +37,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import aiohttp
 import click
+import psycopg2
+import redis
+import requests
+from playwright.async_api import async_playwright
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import (
@@ -51,10 +56,6 @@ from rich.table import Table
 
 # Import production dependencies
 try:
-    import aiohttp
-    import psycopg2
-    import redis
-    import requests
     PRODUCTION_DEPS_AVAILABLE = True
 except ImportError as e:
     PRODUCTION_DEPS_AVAILABLE = False
@@ -63,7 +64,6 @@ except ImportError as e:
 
 # Import Playwright for screenshots
 try:
-    from playwright.async_api import async_playwright
     PLAYWRIGHT_AVAILABLE = True
 except ImportError:
     async_playwright = None
@@ -280,7 +280,6 @@ class ProductionMMFDemoRunner:
         """Start kubectl port-forward for a service"""
         try:
             # First check if port forwarding is already working
-            import requests
             try:
                 response = requests.get(f"http://localhost:{local_port}/health", timeout=2)
                 if response.status_code == 200:

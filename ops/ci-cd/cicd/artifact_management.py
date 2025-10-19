@@ -11,7 +11,10 @@ Provides comprehensive artifact lifecycle management including:
 """
 
 import asyncio
+import builtins
+import gzip
 import hashlib
+import importlib.util
 import json
 import mimetypes
 import os
@@ -23,9 +26,12 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, dict, list
 
+import boto3
+
+from . import ArtifactType
+
 # External dependencies
 try:
-    import boto3
 
     AWS_AVAILABLE = True
 except ImportError:
@@ -33,7 +39,6 @@ except ImportError:
 
 try:
     # Storage backend availability checks
-    import importlib.util
 
     GCS_AVAILABLE = importlib.util.find_spec("google.cloud.storage") is not None
 except ImportError:
@@ -51,10 +56,8 @@ try:
 except ImportError:
     DOCKER_AVAILABLE = False
 
-import builtins
 
 # Local imports
-from . import ArtifactType
 
 
 class StorageBackend(Enum):
@@ -413,7 +416,6 @@ class LocalStorageBackend(ArtifactStorageBackend):
 
     async def _compress_file(self, source_path: Path, destination_path: Path):
         """Compress file using gzip"""
-        import gzip
 
         with open(source_path, "rb") as f_in:
             with gzip.open(destination_path, "wb") as f_out:
@@ -421,7 +423,6 @@ class LocalStorageBackend(ArtifactStorageBackend):
 
     async def _decompress_file(self, source_path: Path, destination_path: Path):
         """Decompress gzip file"""
-        import gzip
 
         with gzip.open(source_path, "rb") as f_in:
             with open(destination_path, "wb") as f_out:

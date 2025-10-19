@@ -427,7 +427,6 @@ async def main():
 async def create_unified_security_framework(config):
     """Create unified security framework with error handling"""
     try:
-        from marty_msf.security.unified_framework import UnifiedSecurityFramework
         framework = UnifiedSecurityFramework(config)
         if await framework.initialize():
             return framework

@@ -12,6 +12,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 import yaml
 
+from marty_msf.framework.logging import UnifiedServiceLogger
+from marty_msf.framework.monitoring.core import MetricsCollector
+from marty_msf.observability.kafka import EventBus, KafkaConfig
+from scripts import validate_observability
+from scripts.validate_observability import validate_kafka_configs
+
 
 class TestObservabilityValidation:
     """Test suite for observability component validation."""
@@ -43,7 +49,6 @@ class TestObservabilityValidation:
         """Test that Kafka modules can be imported and instantiated."""
         try:
             sys.path.insert(0, str(Path.cwd()))
-            from marty_msf.observability.kafka import EventBus, KafkaConfig
 
             # Basic instantiation test
             config = KafkaConfig()
@@ -163,7 +168,6 @@ class TestObservabilityValidation:
     def test_metrics_collection_components(self):
         """Test metrics collection components."""
         try:
-            from marty_msf.framework.monitoring.core import MetricsCollector
 
             # Basic instantiation test
             collector = MetricsCollector()
@@ -179,7 +183,6 @@ class TestObservabilityValidation:
     def test_logging_configuration(self):
         """Test logging configuration validation."""
         try:
-            from marty_msf.framework.logging import UnifiedServiceLogger
 
             # Test logger instantiation
             logger = UnifiedServiceLogger("test-service")
@@ -231,7 +234,6 @@ class TestObservabilityValidation:
 
         # Import and test the original validation function
         try:
-            from scripts.validate_observability import validate_kafka_configs
 
             errors = validate_kafka_configs()
 
@@ -322,7 +324,6 @@ class TestObservabilityValidation:
     def test_import_original_validation_script(self):
         """Test that the original validation script can be imported."""
         try:
-            from scripts import validate_observability
 
             # Check that main validation functions exist
             assert hasattr(validate_observability, 'validate_kafka_configs')

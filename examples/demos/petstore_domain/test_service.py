@@ -6,6 +6,7 @@ Add your specific test cases while maintaining proper test structure and coverag
 """
 import asyncio
 import json
+import time
 from datetime import datetime
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -260,7 +261,6 @@ class TestPerformance:
 
     def test_health_endpoint_performance(self, client):
         """Test health endpoint response time"""
-        import time
 
         start_time = time.time()
         response = client.get("/health")

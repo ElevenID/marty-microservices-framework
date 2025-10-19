@@ -22,33 +22,33 @@ from email.mime.text import MimeText
 from enum import Enum
 from typing import Any, dict, list
 
+import pymsteams
 import requests
+from prometheus_client import (
+    CollectorRegistry,
+    Counter,
+    Gauge,
+    Histogram,
+    push_to_gateway,
+)
+from slack_sdk import WebClient
 
 # Local imports
 from . import PipelineExecution, PipelineStatus
 
 try:
-    from slack_sdk import WebClient
 
     SLACK_AVAILABLE = True
 except ImportError:
     SLACK_AVAILABLE = False
 
 try:
-    import pymsteams
 
     TEAMS_AVAILABLE = True
 except ImportError:
     TEAMS_AVAILABLE = False
 
 try:
-    from prometheus_client import (
-        CollectorRegistry,
-        Counter,
-        Gauge,
-        Histogram,
-        push_to_gateway,
-    )
 
     PROMETHEUS_AVAILABLE = True
 except ImportError:

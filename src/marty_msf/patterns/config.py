@@ -9,6 +9,7 @@ This module provides unified configuration and integration for all data consiste
 - Cross-pattern integration settings
 """
 
+import json
 import os
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -16,7 +17,10 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
 
+import yaml
+
 from ..core.services import ConfigService
+from ..framework.config.injection import container
 from .cqrs.enhanced_cqrs import QueryExecutionMode
 from .outbox.enhanced_outbox import (
     BatchConfig,
@@ -261,9 +265,7 @@ class DataConsistencyConfig:
     @classmethod
     def from_file(cls, config_path: str | Path) -> "DataConsistencyConfig":
         """Load configuration from YAML or JSON file."""
-        import json
 
-        import yaml
 
         config_path = Path(config_path)
 
@@ -397,9 +399,7 @@ class DataConsistencyConfig:
 
     def save_to_file(self, config_path: str | Path, format: str = "yaml") -> None:
         """Save configuration to file."""
-        import json
 
-        import yaml
 
         config_path = Path(config_path)
         config_data = self.to_dict()
@@ -576,16 +576,12 @@ class DataConsistencyConfigService(ConfigService):
         self._mark_loaded()
 
 
-# Service instance - registered in the dependency injection container
-_config_service: DataConsistencyConfigService | None = None
-
-
 def get_config_service() -> DataConsistencyConfigService:
-    """Get the configuration service instance."""
-    global _config_service
-    if _config_service is None:
-        _config_service = DataConsistencyConfigService()
-    return _config_service
+    """Get the configuration service instance from DI container."""
+    return container.get_or_create(
+        "data_consistency_config_service",
+        lambda: DataConsistencyConfigService()
+    )
 
 
 def get_config() -> DataConsistencyConfig:
