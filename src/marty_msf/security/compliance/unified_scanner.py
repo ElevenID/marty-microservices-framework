@@ -9,9 +9,8 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Optional, Protocol, runtime_checkable
 
-from ..compliance import ComplianceFramework as ExistingFramework
 from ..compliance import ComplianceManager
-from ..unified_framework import ComplianceFramework, ComplianceScanner
+from ..interfaces import ComplianceFramework, ComplianceScanner
 
 logger = logging.getLogger(__name__)
 
@@ -26,14 +25,8 @@ class UnifiedComplianceScanner(ComplianceScanner):
         # Import existing compliance infrastructure
         try:
             self.compliance_manager = ComplianceManager()
-            self.existing_framework_mapping = {
-                ComplianceFramework.GDPR: ExistingFramework.GDPR,
-                ComplianceFramework.HIPAA: ExistingFramework.HIPAA,
-                ComplianceFramework.SOX: ExistingFramework.SOX,
-                ComplianceFramework.PCI_DSS: ExistingFramework.PCI_DSS,
-                ComplianceFramework.ISO27001: ExistingFramework.ISO27001,
-                ComplianceFramework.NIST: ExistingFramework.NIST,
-            }
+            # Since we're now using the unified ComplianceFramework, no mapping needed
+            self.existing_framework_mapping = {}
         except ImportError:
             logger.warning("Existing compliance infrastructure not available")
             self.compliance_manager = None

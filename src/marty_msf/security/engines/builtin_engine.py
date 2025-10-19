@@ -11,7 +11,7 @@ import re
 from datetime import datetime, timezone
 from typing import Any, Optional, Union
 
-from ..unified_framework import PolicyEngine, SecurityContext, SecurityDecision
+from ..interfaces import PolicyEngine, SecurityContext, SecurityDecision
 
 logger = logging.getLogger(__name__)
 

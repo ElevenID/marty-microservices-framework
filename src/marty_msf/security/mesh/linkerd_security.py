@@ -2,7 +2,7 @@
 
 from typing import Any, Optional
 
-from ..unified_framework import ServiceMeshSecurityManager
+from ..interfaces import ServiceMeshSecurityManager
 
 
 class LinkerdSecurityManager(ServiceMeshSecurityManager):

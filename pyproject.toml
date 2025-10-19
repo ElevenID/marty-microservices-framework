@@ -47,68 +47,38 @@ dependencies = [
     "playwright>=1.55.0",
     "aiokafka>=0.12.0",
     "jsonschema>=4.20.0",
-]
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/marty_msf"]
-
-# Optional dependency groups
-[project.optional-dependencies]
-# CLI and project generation tools
-cli = [
+    "pika>=1.3.2",
+    "pymongo>=4.15.3",
+    "redis>=6.4.0",
+    "psycopg2-binary>=2.9.11",
+    "grpcio-health-checking>=1.75.1",
+    "grpcio-reflection>=1.75.1",
+    "boto3>=1.40.48",
+    "azure-identity>=1.25.1",
+    "azure-keyvault-secrets>=4.10.0",
+    "google-cloud-secret-manager>=2.25.0",
+    "hvac>=2.3.0",
+    # CLI and project generation tools
     "cookiecutter>=2.5.0",
     "gitpython>=3.1.40",
-]
-
-# Messaging and event streaming
-messaging = [
-    "aiokafka>=0.12.0",
-    "kafka-python>=2.2.15",
-]
-
-# gRPC support
-grpc = [
+    # gRPC support
     "grpcio>=1.75.1",
     "grpcio-tools>=1.75.1",
-    "grpcio-reflection>=1.59.0",
-    "grpcio-health-checking>=1.59.0",
-]
-
-# Database integration
-database = [
+    # Database integration
     "sqlalchemy>=2.0.44",
-]
-
-# Testing and development
-testing = [
+    # Testing and development
     "docker>=7.1.0",
-]
-
-# Monitoring and metrics
-monitoring = [
-    "psutil>=7.1.0",
-]
-
-# Security features
-security = [
+    # Security features
     "bandit[toml]>=1.8.0",
     "defusedxml>=0.7.1",
-    "pyjwt>=2.10.1",
-    "cryptography>=46.0.2",
-    "bcrypt>=5.0.0",
-    "passlib>=1.7.4",
-]
-
-# Analytics and visualization dependencies (for performance testing, ML features)
-analytics = [
+    # Analytics and visualization dependencies
     "matplotlib>=3.9.4",
     "seaborn>=0.13.2",
     "numpy>=2.0.2",
     "scipy>=1.11.0",
     "locust>=2.34.0",
-]
-
-microservices = [
+    "schedule>=1.2.0",
+    # Microservices
     "aioredis>=2.0.1",
     "asyncpg>=0.29.0",
     "celery>=5.3.0",
@@ -116,19 +86,10 @@ microservices = [
     "structlog>=23.2.0",
     "tenacity>=8.2.0",
     "httpx>=0.25.0",
-]
-
-# Cloud providers support
-cloud = [
+    # Cloud providers support
     "kubernetes>=28.1.0",
-    "boto3>=1.34.0",
-    "azure-identity>=1.15.0",
     "google-cloud-core>=2.4.0",
-]
-
-# Observability and monitoring
-observability = [
-    "prometheus-client>=0.23.1",
+    # Observability and monitoring
     "opentelemetry-api>=1.37.0",
     "opentelemetry-sdk>=1.37.0",
     "opentelemetry-exporter-otlp-proto-grpc>=1.37.0",
@@ -143,16 +104,10 @@ observability = [
     "opentelemetry-instrumentation-urllib3>=0.48b0",
     "opentelemetry-propagator-b3>=1.37.0",
     "opentelemetry-exporter-jaeger",
-    # Core dependencies for instrumentation
-    "sqlalchemy>=2.0.0",
-    "redis>=4.0.0",
-    "psycopg2-binary>=2.9.0",
 ]
 
-# Complete installation (all features)
-all = [
-    "marty-msf[cli,messaging,grpc,database,testing,monitoring,security,analytics,microservices,cloud,observability]"
-]
+[tool.hatch.build.targets.wheel]
+packages = ["src/marty_msf"]
 
 [project.urls]
 Homepage = "https://github.com/marty-framework/marty-microservices-framework"
@@ -187,6 +142,7 @@ dev = [
     # Testing infrastructure and automation
     "playwright>=1.55.0",
     "testcontainers>=3.7.0",
+    "pika>=1.3.0",
     # Cloud and container tools
     "docker>=7.1.0",
     "kubernetes>=34.1.0",
@@ -196,6 +152,7 @@ dev = [
     # Database tools
     "psycopg2-binary>=2.9.0",
     "redis>=4.5.0",
+    "pymongo>=4.0.0",
     # Logging and utilities
     "python-json-logger>=2.0.0",
     # Build and publishing tools

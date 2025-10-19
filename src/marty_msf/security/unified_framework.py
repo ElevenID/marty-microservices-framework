@@ -41,6 +41,17 @@ from .engines.acl_engine import ACLPolicyEngine
 from .engines.builtin_engine import BuiltinPolicyEngine
 from .engines.opa_engine import OPAPolicyEngine
 from .engines.oso_engine import OsoPolicyEngine
+from .interfaces import (
+    ComplianceFramework,
+    ComplianceScanner,
+    IdentityProvider,
+    IdentityProviderType,
+    PolicyEngine,
+    SecurityContext,
+    SecurityDecision,
+    SecurityPrincipal,
+    ServiceMeshSecurityManager,
+)
 from .mesh.istio_security import IstioSecurityManager
 from .mesh.linkerd_security import LinkerdSecurityManager
 from .providers.local_provider import LocalProvider
@@ -62,87 +73,7 @@ class SecurityPolicyType(Enum):
     CUSTOM = "custom"
 
 
-class IdentityProviderType(Enum):
-    """Supported identity provider types"""
-    OIDC = "oidc"
-    OAUTH2 = "oauth2"
-    SAML = "saml"
-    LDAP = "ldap"
-    LOCAL = "local"
 
-
-class ComplianceFramework(Enum):
-    """Supported compliance frameworks"""
-    GDPR = "gdpr"
-    HIPAA = "hipaa"
-    SOX = "sox"
-    PCI_DSS = "pci_dss"
-    ISO27001 = "iso27001"
-    NIST = "nist"
-
-
-@dataclass
-class SecurityPrincipal:
-    """Represents a security principal (user, service, device)"""
-    id: str
-    type: str  # user, service, device
-    roles: set[str] = field(default_factory=set)
-    attributes: dict[str, Any] = field(default_factory=dict)
-    permissions: set[str] = field(default_factory=set)
-    identity_provider: str | None = None
-    session_id: str | None = None
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    expires_at: datetime | None = None
-
-    def get_effective_roles(self, role_hierarchy: dict[str, set[str]]) -> set[str]:
-        """Get effective roles including inherited roles from hierarchy"""
-        effective_roles = set(self.roles)
-
-        def add_inherited_roles(role: str):
-            if role in role_hierarchy:
-                for inherited_role in role_hierarchy[role]:
-                    if inherited_role not in effective_roles:
-                        effective_roles.add(inherited_role)
-                        add_inherited_roles(inherited_role)  # Recursive inheritance
-
-        for role in self.roles:
-            add_inherited_roles(role)
-
-        return effective_roles
-
-    def get_effective_permissions(self, role_hierarchy: dict[str, set[str]], role_permissions: dict[str, set[str]]) -> set[str]:
-        """Get effective permissions from roles and hierarchy"""
-        effective_permissions = set(self.permissions)  # Direct permissions
-        effective_roles = self.get_effective_roles(role_hierarchy)
-
-        # Add permissions from all effective roles
-        for role in effective_roles:
-            if role in role_permissions:
-                effective_permissions.update(role_permissions[role])
-
-        return effective_permissions
-
-
-@dataclass
-class SecurityContext:
-    """Security context for policy evaluation"""
-    principal: SecurityPrincipal
-    resource: str
-    action: str
-    environment: dict[str, Any] = field(default_factory=dict)
-    request_metadata: dict[str, Any] = field(default_factory=dict)
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-
-
-@dataclass
-class SecurityDecision:
-    """Result of security policy evaluation"""
-    allowed: bool
-    reason: str
-    policies_evaluated: list[str] = field(default_factory=list)
-    required_attributes: dict[str, Any] = field(default_factory=dict)
-    metadata: dict[str, Any] = field(default_factory=dict)
-    evaluation_time_ms: float = 0.0
 
 
 @dataclass
@@ -476,89 +407,6 @@ class SecurityCacheManager:
             "identity_cache": self.identity_cache.get_metrics(),
             "permission_cache": self.permission_cache.get_metrics()
         }
-
-
-class IdentityProvider(ABC):
-    """Abstract base class for identity providers"""
-
-    @abstractmethod
-    async def authenticate(self, credentials: dict[str, Any]) -> SecurityPrincipal | None:
-        """Authenticate user and return security principal"""
-        pass
-
-    @abstractmethod
-    async def validate_token(self, token: str) -> SecurityPrincipal | None:
-        """Validate token and return security principal"""
-        pass
-
-    @abstractmethod
-    async def refresh_token(self, refresh_token: str) -> str | None:
-        """Refresh access token"""
-        pass
-
-    @abstractmethod
-    async def get_user_attributes(self, principal_id: str) -> dict[str, Any]:
-        """Get additional user attributes"""
-        pass
-
-
-class PolicyEngine(ABC):
-    """Abstract base class for policy engines"""
-
-    @abstractmethod
-    async def evaluate_policy(self, context: SecurityContext) -> SecurityDecision:
-        """Evaluate security policy against context"""
-        pass
-
-    @abstractmethod
-    async def load_policies(self, policies: list[dict[str, Any]]) -> bool:
-        """Load security policies"""
-        pass
-
-    @abstractmethod
-    async def validate_policies(self) -> list[str]:
-        """Validate loaded policies and return any errors"""
-        pass
-
-
-class ServiceMeshSecurityManager(ABC):
-    """Abstract base class for service mesh security integration"""
-
-    @abstractmethod
-    async def apply_traffic_policies(self, policies: list[dict[str, Any]]) -> bool:
-        """Apply security policies to service mesh traffic"""
-        pass
-
-    @abstractmethod
-    async def get_mesh_status(self) -> dict[str, Any]:
-        """Get current service mesh security status"""
-        pass
-
-    @abstractmethod
-    async def enforce_mTLS(self, services: list[str]) -> bool:
-        """Enforce mutual TLS for specified services"""
-        pass
-
-
-class ComplianceScanner(ABC):
-    """Abstract base class for compliance scanning"""
-
-    @abstractmethod
-    async def scan_compliance(
-        self,
-        framework: ComplianceFramework,
-        scope: dict[str, Any]
-    ) -> dict[str, Any]:
-        """Scan for compliance violations"""
-        pass
-
-    @abstractmethod
-    async def generate_compliance_report(
-        self,
-        scan_results: list[dict[str, Any]]
-    ) -> dict[str, Any]:
-        """Generate compliance report"""
-        pass
 
 
 class UnifiedSecurityFramework:

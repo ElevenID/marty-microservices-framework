@@ -12,7 +12,7 @@ from uuid import uuid4
 
 import bcrypt
 
-from ..unified_framework import IdentityProvider, SecurityPrincipal
+from ..interfaces import IdentityProvider, SecurityPrincipal
 
 logger = logging.getLogger(__name__)
 

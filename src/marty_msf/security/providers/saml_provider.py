@@ -2,7 +2,7 @@
 
 from typing import Any, Optional
 
-from ..unified_framework import IdentityProvider, SecurityPrincipal
+from ..interfaces import IdentityProvider, SecurityPrincipal
 
 
 class SAMLProvider(IdentityProvider):

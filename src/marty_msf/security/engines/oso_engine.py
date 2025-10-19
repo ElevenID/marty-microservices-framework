@@ -1,8 +1,8 @@
 """Oso Policy Engine Implementation (Stub)"""
 
-from typing import Any, Optional
+from typing import Any
 
-from ..unified_framework import PolicyEngine, SecurityContext, SecurityDecision
+from ..interfaces import PolicyEngine, SecurityContext, SecurityDecision
 
 
 class OsoPolicyEngine(PolicyEngine):

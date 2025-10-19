@@ -16,7 +16,7 @@ from typing import Any, Optional
 
 import yaml
 
-from ..unified_framework import ServiceMeshSecurityManager
+from ..interfaces import ServiceMeshSecurityManager
 
 logger = logging.getLogger(__name__)
 

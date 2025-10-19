@@ -20,21 +20,6 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-try:
-    DOCKER_AVAILABLE = True
-except ImportError:
-    DOCKER_AVAILABLE = False
-
-try:
-    KUBERNETES_AVAILABLE = True
-except ImportError:
-    KUBERNETES_AVAILABLE = False
-
-try:
-    METRICS_AVAILABLE = True
-except ImportError:
-    METRICS_AVAILABLE = False
-
 
 class PipelineStage(Enum):
     """CI/CD pipeline stage types"""

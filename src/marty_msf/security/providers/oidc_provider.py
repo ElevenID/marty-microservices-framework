@@ -23,7 +23,7 @@ from urllib.parse import urlencode
 import aiohttp
 import jwt
 
-from ..unified_framework import IdentityProvider, SecurityPrincipal
+from ..interfaces import IdentityProvider, SecurityPrincipal
 
 logger = logging.getLogger(__name__)
 

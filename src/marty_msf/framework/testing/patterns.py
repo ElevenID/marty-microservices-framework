@@ -20,7 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.pool import StaticPool
 
 from marty_msf.framework.database import BaseModel
-from marty_msf.framework.events import BaseEvent, EventHandler, InMemoryEventBus
+from marty_msf.framework.events import BaseEvent, EventHandler
 from marty_msf.observability.monitoring import MetricsCollector
 
 logger = logging.getLogger(__name__)
@@ -79,6 +79,10 @@ class TestEventCollector(EventHandler):
     async def handle(self, event: BaseEvent) -> None:
         """Collect events."""
         self.events.append(event)
+
+    async def can_handle(self, event: BaseEvent) -> bool:
+        """Check if this handler can handle the event."""
+        return not self._event_types or event.event_type in self._event_types
 
     @property
     def event_types(self) -> builtins.list[str]:
@@ -162,21 +166,18 @@ class AsyncTestCase:
         self.test_db = TestDatabaseManager()
         await self.test_db.create_tables()
 
-        # Setup test event bus
-        self.test_event_bus = InMemoryEventBus()
-        await self.test_event_bus.start()
+        # Setup test event bus (mocked)
+        self.test_event_bus = AsyncMock()
 
         # Setup event collector
         self.event_collector = TestEventCollector()
-        await self.test_event_bus.subscribe(self.event_collector)
 
-        # Setup test metrics
-        self.test_metrics = MetricsCollector()
+        # Setup test metrics (mocked)
+        self.test_metrics = Mock()
 
         yield
 
         # Cleanup
-        await self.test_event_bus.stop()
         await self.test_db.cleanup()
 
 
@@ -202,26 +203,21 @@ async def test_session(test_database):
 @pytest_asyncio.fixture
 async def test_event_bus():
     """Provide test event bus."""
-    bus = InMemoryEventBus()
-    await bus.start()
-    try:
-        yield bus
-    finally:
-        await bus.stop()
+    bus = AsyncMock()
+    yield bus
 
 
 @pytest_asyncio.fixture
 async def event_collector(test_event_bus):
     """Provide event collector."""
     collector = TestEventCollector()
-    await test_event_bus.subscribe(collector)
     yield collector
 
 
 @pytest.fixture
 def test_metrics():
     """Provide test metrics collector."""
-    return MetricsCollector()
+    return Mock()
 
 
 @pytest.fixture

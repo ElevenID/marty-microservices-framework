@@ -2130,11 +2130,7 @@ scrape_configs:
 
 
 # Add API documentation and contract testing commands
-try:
-    add_api_commands(cli)
-except ImportError:
-    # API commands not available
-    pass
+add_api_commands(cli)
 
 
 if __name__ == "__main__":

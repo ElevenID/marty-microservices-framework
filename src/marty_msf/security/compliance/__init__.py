@@ -23,6 +23,8 @@ from typing import Any
 
 from prometheus_client import Counter
 
+from ..interfaces import ComplianceFramework
+
 # External dependencies
 try:
 
@@ -33,17 +35,7 @@ except ImportError:
     REDIS_AVAILABLE = False
 
 
-class ComplianceFramework(Enum):
-    """Supported compliance frameworks"""
-
-    SOX = "sox"  # Sarbanes-Oxley Act
-    GDPR = "gdpr"  # General Data Protection Regulation
-    HIPAA = "hipaa"  # Health Insurance Portability and Accountability Act
-    PCI_DSS = "pci_dss"  # Payment Card Industry Data Security Standard
-    ISO_27001 = "iso_27001"  # Information Security Management
-    NIST = "nist"  # National Institute of Standards and Technology
-    FedRAMP = "fedramp"  # Federal Risk and Authorization Management Program
-    CCPA = "ccpa"  # California Consumer Privacy Act
+# Import the unified ComplianceFramework from interfaces
 
 
 class ComplianceStatus(Enum):

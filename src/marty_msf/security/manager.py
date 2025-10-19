@@ -48,7 +48,9 @@ from .exceptions import (
     TokenMalformedError,
     handle_security_exception,
 )
-from .factories import register_security_services
+from .registry import register_security_services
+
+# Removed import to break circular dependency - registration should be done at app startup
 from .unified_framework import SecurityPrincipal, UnifiedSecurityFramework
 
 logger = logging.getLogger(__name__)
@@ -564,9 +566,8 @@ def get_security_manager_service() -> ConsolidatedSecurityManagerService:
     try:
         return get_service(ConsolidatedSecurityManagerService)
     except ValueError:
-        # Auto-register if not found (for backward compatibility)
-        register_security_services()
-        return get_service(ConsolidatedSecurityManagerService)
+        # Service must be registered at application startup
+        raise ValueError("ConsolidatedSecurityManagerService not registered. Register it at app startup.")
 
 
 def get_security_manager() -> ConsolidatedSecurityManager:
@@ -579,8 +580,8 @@ def get_security_manager() -> ConsolidatedSecurityManager:
     try:
         return get_service(ConsolidatedSecurityManager)
     except ValueError:
-        # Auto-register if not found (for backward compatibility)
-        register_security_services()
+        # Auto-register security services if not already registered
+        register_security_services("default")
         return get_service(ConsolidatedSecurityManager)
 
 
@@ -599,7 +600,8 @@ def configure_security_manager(config: dict[str, Any]) -> ConsolidatedSecurityMa
     try:
         get_service(ConsolidatedSecurityManagerService)
     except ValueError:
-        register_security_services()
+        # Service must be registered at application startup
+        raise ValueError("ConsolidatedSecurityManagerService not registered. Register it at app startup.")
 
     # Configure the service
     configure_service(ConsolidatedSecurityManagerService, config)

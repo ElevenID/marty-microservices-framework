@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, ClassVar, Optional, Protocol, Union, runtime_checkable
 
-from ..unified_framework import PolicyEngine, SecurityContext, SecurityDecision
+from ..interfaces import PolicyEngine, SecurityContext, SecurityDecision
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +115,7 @@ class ACLEntry:
     def _check_ip_range(self, ip_ranges: list[str], context: SecurityContext) -> bool:
         """Check if client IP is in allowed ranges"""
 
-        client_ip = context.metadata.get("client_ip")
+        client_ip = context.request_metadata.get("client_ip")
         if not client_ip:
             return False
 
@@ -131,12 +131,12 @@ class ACLEntry:
 
     def _check_request_method(self, allowed_methods: list[str], context: SecurityContext) -> bool:
         """Check if request method is allowed"""
-        request_method = context.metadata.get("request_method", "").upper()
+        request_method = context.request_metadata.get("request_method", "").upper()
         return request_method in [method.upper() for method in allowed_methods]
 
     def _check_resource_attributes(self, required_attrs: dict[str, Any], context: SecurityContext) -> bool:
         """Check if resource has required attributes"""
-        resource_attrs = context.metadata.get("resource_attributes", {})
+        resource_attrs = context.request_metadata.get("resource_attributes", {})
 
         for attr_name, expected_value in required_attrs.items():
             if attr_name not in resource_attrs:
@@ -177,8 +177,7 @@ class ACLPolicyEngine(PolicyEngine):
                 return SecurityDecision(
                     allowed=False,
                     reason="No principal provided",
-                    engine="acl",
-                    confidence=1.0
+                    metadata={"engine": "acl", "confidence": 1.0}
                 )
 
             # Get principal's roles and groups
@@ -189,7 +188,7 @@ class ACLPolicyEngine(PolicyEngine):
             applicable_entries = []
             for entry in self.acl_entries:
                 if (entry.matches_resource(resource) and
-                    entry.matches_principal(principal.user_id, principal_roles, principal_groups) and
+                    entry.matches_principal(principal.id, principal_roles, principal_groups) and
                     action in entry.permissions and
                     entry.evaluate_conditions(context)):
                     applicable_entries.append(entry)
@@ -213,15 +212,13 @@ class ACLPolicyEngine(PolicyEngine):
                 decision = SecurityDecision(
                     allowed=False,
                     reason=f"Access denied: {', '.join(deny_reasons)}",
-                    engine="acl",
-                    confidence=1.0
+                    metadata={"engine": "acl", "confidence": 1.0}
                 )
             elif has_allow:
                 decision = SecurityDecision(
                     allowed=True,
                     reason=f"Access granted: {', '.join(allow_reasons)}",
-                    engine="acl",
-                    confidence=1.0
+                    metadata={"engine": "acl", "confidence": 1.0}
                 )
             else:
                 # Check default permissions
@@ -229,8 +226,7 @@ class ACLPolicyEngine(PolicyEngine):
                 decision = SecurityDecision(
                     allowed=default_allowed,
                     reason="No explicit ACL rules found, using default permissions" if default_allowed else "No ACL rules grant access",
-                    engine="acl",
-                    confidence=0.8 if default_allowed else 1.0
+                    metadata={"engine": "acl", "confidence": 0.8 if default_allowed else 1.0}
                 )
 
             # Add evaluation metadata
@@ -252,8 +248,7 @@ class ACLPolicyEngine(PolicyEngine):
             return SecurityDecision(
                 allowed=False,
                 reason=f"ACL evaluation error: {str(e)}",
-                engine="acl",
-                confidence=1.0
+                metadata={"engine": "acl", "confidence": 1.0}
             )
 
     async def load_policies(self, policies: list[dict[str, Any]]) -> bool:

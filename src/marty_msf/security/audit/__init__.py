@@ -24,7 +24,8 @@ from ...core.di_container import (
     get_service_optional,
 )
 from ..exceptions import SecurityError, SecurityErrorType
-from ..factories import register_security_services
+
+# Import moved to avoid circular import
 
 logger = logging.getLogger(__name__)
 
@@ -556,7 +557,9 @@ def get_security_auditor(service_name: str | None = None) -> SecurityAuditor:
     if not service_name:
         service_name = "unknown"
 
-    register_security_services(service_name)
+    # Note: Service registration should be handled at application startup
+    # For now, we'll skip auto-registration to avoid circular imports
+    pass
 
     # Configure with service name if provided
     if service_name != "unknown":

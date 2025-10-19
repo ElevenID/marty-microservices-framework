@@ -15,7 +15,7 @@ Core Components:
 - Enhanced middleware for FastAPI and gRPC services
 """
 
-import logging
+import logging as _logging
 
 from .correlation import (
     CorrelationContext,
@@ -39,7 +39,7 @@ from .correlation_middleware import (
 )
 from .unified import ObservabilityConfig, UnifiedObservability
 
-logger = logging.getLogger(__name__)
+logger = _logging.getLogger(__name__)
 
 
 # Legacy middleware exports (maintained for backward compatibility)
