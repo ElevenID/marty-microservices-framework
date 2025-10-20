@@ -57,7 +57,10 @@ from prometheus_client import (
 
 from ..core.di_container import get_service
 from ..core.services import ObservabilityService
-from .factories import register_observability_services
+from .factories import (
+    register_observability_services,
+    set_standard_observability_classes,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -460,6 +463,9 @@ class StandardObservabilityService(ObservabilityService):
         if self._observability is None:
             raise RuntimeError("Observability service not initialized")
         return self._observability
+
+
+set_standard_observability_classes(StandardObservabilityService, StandardObservability)
 
 
 def get_observability_service() -> StandardObservabilityService:

@@ -486,7 +486,12 @@ class UnifiedSecurityFramework:
         credentials: dict[str, Any],
         provider: str | None = None
     ) -> SecurityPrincipal | None:
-        """Authenticate user with specified or default identity provider"""
+        """
+        Authenticate user with specified or default identity provider.
+
+        Note: This method implements provider-specific logic.
+        For the canonical authentication entry point, use ConsolidatedSecurityManager.authenticate()
+        """
         self.metrics["authentication_attempts"] += 1
 
         try:

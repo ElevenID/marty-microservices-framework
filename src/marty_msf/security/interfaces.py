@@ -13,17 +13,36 @@ from enum import Enum
 from typing import Any, Protocol
 
 
-# --- Type stubs for DI factories ---
-# TODO: Replace with actual implementations or import from appropriate modules
-class ConsolidatedSecurityManager:
-    """Type stub for consolidated security manager."""
-    pass
+# --- Abstract base classes for DI factories ---
+class ConsolidatedSecurityManager(ABC):
+    """Abstract base class for consolidated security manager."""
 
-class ConsolidatedSecurityManagerService:
-    """Type stub for consolidated security manager service."""
-    def configure(self, config):
+    @abstractmethod
+    async def authenticate(self, credentials: dict[str, Any]) -> 'SecurityPrincipal | None':
+        """Authenticate user with credentials."""
         pass
-    def get_security_manager(self):
+
+    @abstractmethod
+    async def authorize(self, principal: 'SecurityPrincipal', resource: str, action: str) -> bool:
+        """Authorize principal for resource and action."""
+        pass
+
+    @abstractmethod
+    def audit(self, event: dict[str, Any]) -> None:
+        """Audit security event."""
+        pass
+
+class ConsolidatedSecurityManagerService(ABC):
+    """Abstract base class for consolidated security manager service."""
+
+    @abstractmethod
+    def configure(self, config: dict[str, Any]) -> None:
+        """Configure the security manager service."""
+        pass
+
+    @abstractmethod
+    def get_security_manager(self) -> ConsolidatedSecurityManager:
+        """Get the security manager instance."""
         pass
 
 class ComplianceFramework(Enum):

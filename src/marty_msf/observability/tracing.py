@@ -27,7 +27,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExport
 
 from ..core.di_container import get_service
 from ..core.services import ObservabilityService
-from .factories import register_observability_services
+from .factories import register_observability_services, set_tracing_service_class
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +113,9 @@ class TracingService(ObservabilityService):
     def is_instrumented(self) -> bool:
         """Check if instrumentation is active."""
         return self._instrumented
+
+
+set_tracing_service_class(TracingService)
 
 
 def get_tracing_service() -> TracingService:

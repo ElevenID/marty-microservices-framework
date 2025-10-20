@@ -12,7 +12,7 @@ import logging
 from prometheus_client import Counter, Gauge, Histogram, Info
 
 from ..core.di_container import configure_service, get_service, get_service_optional
-from .factories import register_observability_services
+from .factories import register_observability_services, set_framework_metrics_class
 
 logger = logging.getLogger(__name__)
 
@@ -246,3 +246,6 @@ def get_framework_metrics(service_name: str) -> FrameworkMetrics:
     configure_service(FrameworkMetrics, {"service_name": service_name})
 
     return get_service(FrameworkMetrics)
+
+
+set_framework_metrics_class(FrameworkMetrics)

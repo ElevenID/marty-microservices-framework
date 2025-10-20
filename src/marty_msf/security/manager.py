@@ -48,9 +48,14 @@ from .exceptions import (
     TokenMalformedError,
     handle_security_exception,
 )
+from .factories import set_security_manager_service_class
+from .interfaces import (
+    ConsolidatedSecurityManager as ConsolidatedSecurityManagerInterface,
+)
+from .interfaces import (
+    ConsolidatedSecurityManagerService as ConsolidatedSecurityManagerServiceInterface,
+)
 from .registry import register_security_services
-
-# Removed import to break circular dependency - registration should be done at app startup
 from .unified_framework import SecurityPrincipal, UnifiedSecurityFramework
 
 logger = logging.getLogger(__name__)
@@ -134,7 +139,7 @@ class SecurityContext:
             return False
 
 
-class ConsolidatedSecurityManager:
+class ConsolidatedSecurityManager(ConsolidatedSecurityManagerInterface):
     """
     Consolidated security manager that unifies all security operations.
 
@@ -513,8 +518,257 @@ class ConsolidatedSecurityManager:
             )
             return False
 
+    # Implement abstract methods from ConsolidatedSecurityManagerInterface
+    async def authenticate(self, credentials: dict[str, Any]) -> SecurityPrincipal | None:
+        """
+        Authenticate user with credentials.
 
-class ConsolidatedSecurityManagerService(SecurityService):
+        This is the single source of truth for authentication logic.
+        All other modules should import and use this implementation.
+
+        Args:
+            credentials: Dictionary containing authentication credentials
+                Expected keys depend on auth method:
+                - username/password for basic auth
+                - token for token auth
+                - api_key for API key auth
+
+        Returns:
+            SecurityPrincipal if authentication succeeds, None otherwise
+        """
+        await self.ensure_initialized()
+
+        if not self.security_framework:
+            logger.error("Security framework not initialized")
+            return None
+
+        try:
+            # Determine authentication method from credentials
+            if "token" in credentials:
+                # Token-based authentication
+                token = credentials["token"]
+                claims = self.validate_jwt_token(token)
+
+                # Create SecurityPrincipal from token claims
+                principal = SecurityPrincipal(
+                    id=claims.get("sub", ""),
+                    type=claims.get("type", "user"),
+                    roles=set(claims.get("roles", [])),
+                    attributes=claims.get("attributes", {}),
+                    permissions=set(claims.get("permissions", [])),
+                    identity_provider=claims.get("idp", "local"),
+                    session_id=claims.get("sid"),
+                    expires_at=datetime.fromtimestamp(claims.get("exp", 0), tz=timezone.utc) if "exp" in claims else None
+                )
+
+                # Audit successful authentication
+                self.audit({
+                    "event_type": "authentication",
+                    "principal_id": principal.id,
+                    "method": "token",
+                    "success": True,
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                })
+
+                return principal
+
+            elif "username" in credentials and "password" in credentials:
+                # Username/password authentication
+                # Delegate to unified framework
+                principal = await self.security_framework.authenticate(credentials)
+
+                if principal:
+                    self.audit({
+                        "event_type": "authentication",
+                        "principal_id": principal.id,
+                        "method": "password",
+                        "success": True,
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                    })
+                else:
+                    self.audit({
+                        "event_type": "authentication",
+                        "method": "password",
+                        "success": False,
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                    })
+
+                return principal
+
+            elif "api_key" in credentials:
+                # API key authentication
+                # Delegate to unified framework
+                principal = await self.security_framework.authenticate(credentials)
+
+                if principal:
+                    self.audit({
+                        "event_type": "authentication",
+                        "principal_id": principal.id,
+                        "method": "api_key",
+                        "success": True,
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                    })
+
+                return principal
+
+            else:
+                logger.warning("No valid authentication method found in credentials")
+                self.audit({
+                    "event_type": "authentication",
+                    "method": "unknown",
+                    "success": False,
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                })
+                return None
+
+        except TokenExpiredError as e:
+            logger.warning(f"Token expired: {e}")
+            self.audit({
+                "event_type": "authentication",
+                "method": "token",
+                "success": False,
+                "error": "token_expired",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+            return None
+        except TokenInvalidError as e:
+            logger.warning(f"Invalid token: {e}")
+            self.audit({
+                "event_type": "authentication",
+                "method": "token",
+                "success": False,
+                "error": "token_invalid",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+            return None
+        except Exception as e:
+            logger.error(f"Authentication error: {e}")
+            self.audit({
+                "event_type": "authentication",
+                "success": False,
+                "error": str(e),
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+            return None
+
+    async def authorize(self, principal: SecurityPrincipal, resource: str, action: str) -> bool:
+        """
+        Authorize principal for resource and action.
+
+        This is the single source of truth for authorization logic.
+        All other modules should import and use this implementation.
+
+        Args:
+            principal: Security principal to authorize
+            resource: Resource being accessed
+            action: Action being performed
+
+        Returns:
+            True if authorized, False otherwise
+        """
+        await self.ensure_initialized()
+
+        if not self.security_framework:
+            logger.error("Security framework not initialized")
+            return False
+
+        try:
+            # Check if principal is valid and not expired
+            if principal.expires_at and principal.expires_at < datetime.now(timezone.utc):
+                logger.warning(f"Principal {principal.id} session expired")
+                self.audit({
+                    "event_type": "authorization",
+                    "principal_id": principal.id,
+                    "resource": resource,
+                    "action": action,
+                    "success": False,
+                    "reason": "session_expired",
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                })
+                return False
+
+            # Delegate to unified framework for actual authorization
+            decision = await self.security_framework.authorize(principal, resource, action, {})
+            authorized = bool(decision.allowed) if hasattr(decision, 'allowed') else bool(decision)
+
+            # Audit authorization attempt
+            self.audit({
+                "event_type": "authorization",
+                "principal_id": principal.id,
+                "resource": resource,
+                "action": action,
+                "success": authorized,
+                "roles": list(principal.roles),
+                "permissions": list(principal.permissions),
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+
+            return authorized
+
+        except Exception as e:
+            logger.error(f"Authorization error: {e}")
+            self.audit({
+                "event_type": "authorization",
+                "principal_id": principal.id,
+                "resource": resource,
+                "action": action,
+                "success": False,
+                "error": str(e),
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+            return False
+
+    def audit(self, event: dict[str, Any]) -> None:
+        """
+        Audit security event.
+
+        This is the single source of truth for audit logging.
+        All other modules should import and use this implementation.
+
+        Args:
+            event: Event dictionary to audit
+        """
+        # Ensure required fields
+        if "timestamp" not in event:
+            event["timestamp"] = datetime.now(timezone.utc).isoformat()
+        if "service" not in event:
+            event["service"] = "consolidated_security_manager"
+
+        # Use the auditor if available
+        if self.auditor:
+            try:
+                # Convert to SecurityEventType if possible
+                event_type_str = event.get("event_type", "unknown")
+                if isinstance(event_type_str, str):
+                    # Map common event types
+                    event_type_mapping = {
+                        "authentication": SecurityEventType.AUTHENTICATION_SUCCESS if event.get("success", False) else SecurityEventType.AUTHENTICATION_FAILURE,
+                        "authorization": SecurityEventType.AUTHORIZATION_GRANTED if event.get("success", False) else SecurityEventType.AUTHORIZATION_DENIED,
+                        "audit": SecurityEventType.SYSTEM_ERROR,
+                        "system": SecurityEventType.SYSTEM_ERROR
+                    }
+                    event_type = event_type_mapping.get(event_type_str, SecurityEventType.SYSTEM_ERROR)
+                else:
+                    event_type = event_type_str
+
+                # Use auditor's audit method
+                self.auditor.audit(
+                    event_type,
+                    principal_id=event.get("principal_id", "unknown"),
+                    resource=event.get("resource", ""),
+                    action=event.get("action", ""),
+                    result=event.get("result", "success" if event.get("success", False) else "failure"),
+                    **{k: v for k, v in event.items() if k not in ["event_type", "principal_id", "resource", "action", "result"]}
+                )
+            except Exception as e:
+                logger.error(f"Failed to log audit event: {e}")
+                logger.info(f"Security audit (fallback): {event}")
+        else:
+            # Fall back to standard logging
+            logger.info(f"Security audit: {event}")
+
+
+class ConsolidatedSecurityManagerService(SecurityService, ConsolidatedSecurityManagerServiceInterface):
     """
     Typed service for consolidated security manager.
 
@@ -545,12 +799,16 @@ class ConsolidatedSecurityManagerService(SecurityService):
         return True  # Placeholder
 
     def get_security_manager(self) -> ConsolidatedSecurityManager:
-        """Get the security manager instance."""
+        """Get the security manager instance (interface implementation)."""
         if self._security_manager is None:
             # Create with default configuration
             self._security_manager = ConsolidatedSecurityManager()
             self._mark_configured()
         return self._security_manager
+
+
+
+set_security_manager_service_class(ConsolidatedSecurityManagerService)
 
 
 def get_security_manager_service() -> ConsolidatedSecurityManagerService:
@@ -564,7 +822,8 @@ def get_security_manager_service() -> ConsolidatedSecurityManagerService:
         ValueError: If service is not registered in the DI container
     """
     try:
-        return get_service(ConsolidatedSecurityManagerService)
+        service = get_service(ConsolidatedSecurityManagerServiceInterface)
+        return cast(ConsolidatedSecurityManagerService, service)
     except ValueError:
         # Service must be registered at application startup
         raise ValueError("ConsolidatedSecurityManagerService not registered. Register it at app startup.")
@@ -578,11 +837,12 @@ def get_security_manager() -> ConsolidatedSecurityManager:
         ConsolidatedSecurityManager instance
     """
     try:
-        return get_service(ConsolidatedSecurityManager)
+        manager = get_service(ConsolidatedSecurityManagerInterface)
+        return cast(ConsolidatedSecurityManager, manager)
     except ValueError:
-        # Auto-register security services if not already registered
         register_security_services("default")
-        return get_service(ConsolidatedSecurityManager)
+        manager = get_service(ConsolidatedSecurityManagerInterface)
+        return cast(ConsolidatedSecurityManager, manager)
 
 
 def configure_security_manager(config: dict[str, Any]) -> ConsolidatedSecurityManager:
@@ -598,11 +858,75 @@ def configure_security_manager(config: dict[str, Any]) -> ConsolidatedSecurityMa
 
     # Ensure services are registered
     try:
-        get_service(ConsolidatedSecurityManagerService)
+        get_service(ConsolidatedSecurityManagerServiceInterface)
     except ValueError:
-        # Service must be registered at application startup
-        raise ValueError("ConsolidatedSecurityManagerService not registered. Register it at app startup.")
+        register_security_services("default")
 
     # Configure the service
-    configure_service(ConsolidatedSecurityManagerService, config)
-    return get_service(ConsolidatedSecurityManager)
+    configure_service(ConsolidatedSecurityManagerServiceInterface, config)
+
+    # Return the security manager
+    service = get_service(ConsolidatedSecurityManagerService)
+    return service.get_security_manager()
+
+
+# Convenience functions for other modules to avoid circular dependencies
+async def authenticate_credentials(credentials: dict[str, Any]) -> SecurityPrincipal | None:
+    """
+    Canonical authentication function for use by other modules.
+
+    This is the single source of truth for authentication logic.
+    All modules should use this function instead of implementing their own.
+
+    Args:
+        credentials: Authentication credentials dictionary
+
+    Returns:
+        SecurityPrincipal if authentication succeeds, None otherwise
+    """
+    try:
+        manager = get_security_manager()
+        return await manager.authenticate(credentials)
+    except Exception as e:
+        logger.error(f"Authentication failed: {e}")
+        return None
+
+
+async def authorize_principal(principal: SecurityPrincipal, resource: str, action: str) -> bool:
+    """
+    Canonical authorization function for use by other modules.
+
+    This is the single source of truth for authorization logic.
+    All modules should use this function instead of implementing their own.
+
+    Args:
+        principal: Security principal to authorize
+        resource: Resource being accessed
+        action: Action being performed
+
+    Returns:
+        True if authorized, False otherwise
+    """
+    try:
+        manager = get_security_manager()
+        return await manager.authorize(principal, resource, action)
+    except Exception as e:
+        logger.error(f"Authorization failed: {e}")
+        return False
+
+
+def audit_security_event(event: dict[str, Any]) -> None:
+    """
+    Canonical audit function for use by other modules.
+
+    This is the single source of truth for audit logging.
+    All modules should use this function instead of implementing their own.
+
+    Args:
+        event: Event dictionary to audit
+    """
+    try:
+        manager = get_security_manager()
+        manager.audit(event)
+    except Exception as e:
+        logger.error(f"Audit failed: {e}")

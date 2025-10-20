@@ -8,19 +8,54 @@ circular dependencies.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ..core.di_container import ServiceFactory, get_service
+from ..core.di_container import (
+    ServiceFactory,
+    get_service,
+    get_service_optional,
+    register_instance,
+)
 from .audit import SecurityAuditor
+from .config import RateLimitConfig
 from .interfaces import ConsolidatedSecurityManager, ConsolidatedSecurityManagerService
+from .rate_limiting import RateLimiter
+
+
+# Use DI container to store class references instead of globals
+class _SecurityManagerServiceClassRegistry:
+    """Registry for security manager service class."""
+    pass
+
+
+def set_security_manager_service_class(
+    service_cls: type[ConsolidatedSecurityManagerService],
+) -> None:
+    """Set the concrete class used to create security manager services."""
+    register_instance(_SecurityManagerServiceClassRegistry, service_cls)
+
+
+def get_security_manager_service_class() -> type[ConsolidatedSecurityManagerService]:
+    """Return the configured security manager service class."""
+    service_cls = get_service_optional(_SecurityManagerServiceClassRegistry)
+    if service_cls is None:
+        raise RuntimeError("Security manager service class not registered")
+    return service_cls  # type: ignore[return-value]
 
 
 class SecurityManagerServiceFactory(ServiceFactory):
     """Factory for creating ConsolidatedSecurityManagerService instances."""
 
+    def __init__(
+        self, service_cls: type[ConsolidatedSecurityManagerService] | None = None
+    ):
+        self._service_cls = service_cls
+
     def create(self, config: dict[str, Any] | None = None):
         """Create a new ConsolidatedSecurityManagerService instance."""
-        service = ConsolidatedSecurityManagerService()
+
+        service_cls = self._service_cls or get_security_manager_service_class()
+        service = service_cls()
         if config:
             service.configure(config)
         return service
@@ -35,6 +70,7 @@ class SecurityManagerFactory(ServiceFactory):
 
     def create(self, config: dict[str, Any] | None = None):
         """Create a new ConsolidatedSecurityManager instance."""
+
         service = get_service(ConsolidatedSecurityManagerService)
         if config:
             service.configure(config)
@@ -69,3 +105,22 @@ class SecurityAuditorFactory(ServiceFactory):
         """Get the service type this factory creates."""
 
         return SecurityAuditor
+
+
+class RateLimiterFactory(ServiceFactory):
+    """Factory for creating RateLimiter instances."""
+
+    def create(self, config: dict[str, Any] | None = None):
+        """Create a new RateLimiter instance."""
+
+        # Use provided config or create default one
+        if config:
+            rate_limit_config = RateLimitConfig(**config)
+        else:
+            rate_limit_config = RateLimitConfig()
+
+        return RateLimiter(rate_limit_config)
+
+    def get_service_type(self):
+        """Get the service type this factory creates."""
+        return RateLimiter

@@ -22,34 +22,34 @@ DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
     b'\n\rgreeter.proto\x12\x18microservice.template.v1"\x1c\n\x0cHelloRequest\x12\x0c\n\x04name\x18\x01 \x01(\t"2\n\rHelloResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\x12\x10\n\x08trace_id\x18\x02 \x01(\t"\x14\n\x12HealthCheckRequest"F\n\x13HealthCheckResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\x12\x0f\n\x07version\x18\x02 \x01(\t\x12\x0e\n\x06uptime\x18\x03 \x01(\t"4\n\x11SampleDataRequest\x12\x11\n\tn_samples\x18\x01 \x01(\x05\x12\x0c\n\x04seed\x18\x02 \x01(\x05"7\n\x12SampleDataResponse\x12\x10\n\x08\x64\x61ta_csv\x18\x01 \x01(\t\x12\x0f\n\x07message\x18\x02 \x01(\t"&\n\x12\x43orrelationRequest\x12\x10\n\x08\x64\x61ta_csv\x18\x01 \x01(\t"9\n\x11\x43lusteringRequest\x12\x10\n\x08\x64\x61ta_csv\x18\x01 \x01(\t\x12\x12\n\nn_clusters\x18\x02 \x01(\x05":\n\x13\x44istributionRequest\x12\x0e\n\x06values\x18\x01 \x03(\x01\x12\x13\n\x0b\x63olumn_name\x18\x02 \x01(\t"_\n\x10\x41nalysisResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x14\n\x0cresults_json\x18\x03 \x01(\t\x12\x13\n\x0bplot_base64\x18\x04 \x01(\t2\x9a\x05\n\x0eGreeterService\x12[\n\x08SayHello\x12&.microservice.template.v1.HelloRequest\x1a\'.microservice.template.v1.HelloResponse\x12j\n\x0bHealthCheck\x12,.microservice.template.v1.HealthCheckRequest\x1a-.microservice.template.v1.HealthCheckResponse\x12o\n\x12GenerateSampleData\x12+.microservice.template.v1.SampleDataRequest\x1a,.microservice.template.v1.SampleDataResponse\x12n\n\x12\x41nalyzeCorrelation\x12,.microservice.template.v1.CorrelationRequest\x1a*.microservice.template.v1.AnalysisResponse\x12l\n\x11\x41nalyzeClustering\x12+.microservice.template.v1.ClusteringRequest\x1a*.microservice.template.v1.AnalysisResponse\x12p\n\x13\x41nalyzeDistribution\x12-.microservice.template.v1.DistributionRequest\x1a*.microservice.template.v1.AnalysisResponseB}\n$com.example.microservice.template.v1P\x01Z2github.com/example/microservice-template/gen/proto\xa2\x02\x03MST\xaa\x02\x18Microservice.Template.V1b\x06proto3'
 )
 
-_globals = globals()
-_builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
-_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, "greeter_pb2", _globals)
+_module_symbols = {}
+_builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _module_symbols)
+_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, "greeter_pb2", _module_symbols)
 if not _descriptor._USE_C_DESCRIPTORS:
-    _globals["DESCRIPTOR"]._loaded_options = None
-    _globals[
+    _module_symbols["DESCRIPTOR"]._loaded_options = None
+    _module_symbols[
         "DESCRIPTOR"
     ]._serialized_options = b"\n$com.example.microservice.template.v1P\001Z2github.com/example/microservice-template/gen/proto\242\002\003MST\252\002\030Microservice.Template.V1"
-    _globals["_HELLOREQUEST"]._serialized_start = 43
-    _globals["_HELLOREQUEST"]._serialized_end = 71
-    _globals["_HELLORESPONSE"]._serialized_start = 73
-    _globals["_HELLORESPONSE"]._serialized_end = 123
-    _globals["_HEALTHCHECKREQUEST"]._serialized_start = 125
-    _globals["_HEALTHCHECKREQUEST"]._serialized_end = 145
-    _globals["_HEALTHCHECKRESPONSE"]._serialized_start = 147
-    _globals["_HEALTHCHECKRESPONSE"]._serialized_end = 217
-    _globals["_SAMPLEDATAREQUEST"]._serialized_start = 219
-    _globals["_SAMPLEDATAREQUEST"]._serialized_end = 271
-    _globals["_SAMPLEDATARESPONSE"]._serialized_start = 273
-    _globals["_SAMPLEDATARESPONSE"]._serialized_end = 328
-    _globals["_CORRELATIONREQUEST"]._serialized_start = 330
-    _globals["_CORRELATIONREQUEST"]._serialized_end = 368
-    _globals["_CLUSTERINGREQUEST"]._serialized_start = 370
-    _globals["_CLUSTERINGREQUEST"]._serialized_end = 427
-    _globals["_DISTRIBUTIONREQUEST"]._serialized_start = 429
-    _globals["_DISTRIBUTIONREQUEST"]._serialized_end = 487
-    _globals["_ANALYSISRESPONSE"]._serialized_start = 489
-    _globals["_ANALYSISRESPONSE"]._serialized_end = 584
-    _globals["_GREETERSERVICE"]._serialized_start = 587
-    _globals["_GREETERSERVICE"]._serialized_end = 1253
+    _module_symbols["_HELLOREQUEST"]._serialized_start = 43
+    _module_symbols["_HELLOREQUEST"]._serialized_end = 71
+    _module_symbols["_HELLORESPONSE"]._serialized_start = 73
+    _module_symbols["_HELLORESPONSE"]._serialized_end = 123
+    _module_symbols["_HEALTHCHECKREQUEST"]._serialized_start = 125
+    _module_symbols["_HEALTHCHECKREQUEST"]._serialized_end = 145
+    _module_symbols["_HEALTHCHECKRESPONSE"]._serialized_start = 147
+    _module_symbols["_HEALTHCHECKRESPONSE"]._serialized_end = 217
+    _module_symbols["_SAMPLEDATAREQUEST"]._serialized_start = 219
+    _module_symbols["_SAMPLEDATAREQUEST"]._serialized_end = 271
+    _module_symbols["_SAMPLEDATARESPONSE"]._serialized_start = 273
+    _module_symbols["_SAMPLEDATARESPONSE"]._serialized_end = 328
+    _module_symbols["_CORRELATIONREQUEST"]._serialized_start = 330
+    _module_symbols["_CORRELATIONREQUEST"]._serialized_end = 368
+    _module_symbols["_CLUSTERINGREQUEST"]._serialized_start = 370
+    _module_symbols["_CLUSTERINGREQUEST"]._serialized_end = 427
+    _module_symbols["_DISTRIBUTIONREQUEST"]._serialized_start = 429
+    _module_symbols["_DISTRIBUTIONREQUEST"]._serialized_end = 487
+    _module_symbols["_ANALYSISRESPONSE"]._serialized_start = 489
+    _module_symbols["_ANALYSISRESPONSE"]._serialized_end = 584
+    _module_symbols["_GREETERSERVICE"]._serialized_start = 587
+    _module_symbols["_GREETERSERVICE"]._serialized_end = 1253
 # @@protoc_insertion_point(module_scope)

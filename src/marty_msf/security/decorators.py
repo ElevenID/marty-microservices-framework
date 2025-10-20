@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Enhanced Security Decorators with RBAC/ABAC Integration
 
@@ -17,7 +19,7 @@ import inspect
 import logging
 from collections.abc import Callable
 from datetime import datetime, timezone
-from typing import Any, Optional, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union, cast
 
 import jwt
 from fastapi import Depends, HTTPException, Request
@@ -35,7 +37,7 @@ from .exceptions import (
     TokenMalformedError,
     handle_security_exception,
 )
-from .manager import SecurityContext, get_security_manager
+from .manager import ConsolidatedSecurityManager, SecurityContext, get_security_manager
 
 logger = logging.getLogger(__name__)
 
@@ -45,8 +47,25 @@ F = TypeVar('F', bound=Callable[..., Any])
 # Security bearer scheme for FastAPI
 security_bearer = HTTPBearer(auto_error=False)
 
-# Get the global consolidated security manager
-security_manager = get_security_manager()
+
+
+class _SecurityManagerProxy:
+    """Lazy proxy to access the consolidated security manager when needed."""
+
+    def __init__(self) -> None:
+        self._instance: ConsolidatedSecurityManager | None = None
+
+    def _resolve(self) -> ConsolidatedSecurityManager:
+        manager = get_security_manager()
+        self._instance = manager
+        return manager
+
+    def __getattr__(self, item):
+        manager = self._instance or self._resolve()
+        return getattr(manager, item)
+
+
+security_manager = _SecurityManagerProxy()
 
 
 async def get_current_user(

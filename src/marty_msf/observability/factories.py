@@ -9,36 +9,107 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from ..core.di_container import ServiceFactory, get_service, register_factory
-from .framework_metrics import FrameworkMetrics
-from .standard import StandardObservability, StandardObservabilityService
-from .tracing import TracingService
+from ..core.di_container import (
+    ServiceFactory,
+    get_service,
+    get_service_optional,
+    register_factory,
+    register_instance,
+)
 
 
-class StandardObservabilityServiceFactory(ServiceFactory[StandardObservabilityService]):
+# Use DI container to store class references instead of globals
+class _StandardObservabilityServiceClassRegistry:
+    """Registry for standard observability service class."""
+    pass
+
+
+class _StandardObservabilityClassRegistry:
+    """Registry for standard observability class."""
+    pass
+
+
+class _TracingServiceClassRegistry:
+    """Registry for tracing service class."""
+    pass
+
+
+class _FrameworkMetricsClassRegistry:
+    """Registry for framework metrics class."""
+    pass
+
+
+def set_standard_observability_classes(
+    service_cls: type[Any], observability_cls: type[Any]
+) -> None:
+    """Register the concrete observability service and implementation classes."""
+    register_instance(_StandardObservabilityServiceClassRegistry, service_cls)
+    register_instance(_StandardObservabilityClassRegistry, observability_cls)
+
+
+def get_standard_observability_service_class() -> type[Any]:
+    service_cls = get_service_optional(_StandardObservabilityServiceClassRegistry)
+    if service_cls is None:
+        raise RuntimeError("StandardObservabilityService class not registered")
+    return service_cls  # type: ignore[return-value]
+
+
+def get_standard_observability_class() -> type[Any]:
+    observability_cls = get_service_optional(_StandardObservabilityClassRegistry)
+    if observability_cls is None:
+        raise RuntimeError("StandardObservability class not registered")
+    return observability_cls  # type: ignore[return-value]
+
+
+def set_tracing_service_class(service_cls: type[Any]) -> None:
+    """Register the concrete tracing service class."""
+    register_instance(_TracingServiceClassRegistry, service_cls)
+
+
+def get_tracing_service_class() -> type[Any]:
+    service_cls = get_service_optional(_TracingServiceClassRegistry)
+    if service_cls is None:
+        raise RuntimeError("TracingService class not registered")
+    return service_cls  # type: ignore[return-value]
+
+
+def set_framework_metrics_class(metrics_cls: type[Any]) -> None:
+    """Register the concrete framework metrics class."""
+    register_instance(_FrameworkMetricsClassRegistry, metrics_cls)
+
+
+def get_framework_metrics_class() -> type[Any]:
+    metrics_cls = get_service_optional(_FrameworkMetricsClassRegistry)
+    if metrics_cls is None:
+        raise RuntimeError("FrameworkMetrics class not registered")
+    return metrics_cls  # type: ignore[return-value]
+
+
+class StandardObservabilityServiceFactory(ServiceFactory):
     """Factory for creating StandardObservabilityService instances."""
 
-    def create(self, config: dict[str, Any] | None = None) -> StandardObservabilityService:
+    def create(self, config: dict[str, Any] | None = None) -> Any:
         """Create a new StandardObservabilityService instance."""
-        service = StandardObservabilityService()
+        service_cls = get_standard_observability_service_class()
+        service = service_cls()
         if config:
             service_name = config.get("service_name", "unknown")
             service.initialize(service_name, config)
         return service
 
-    def get_service_type(self) -> type[StandardObservabilityService]:
+    def get_service_type(self) -> type[Any]:
         """Get the service type this factory creates."""
-        return StandardObservabilityService
+        return get_standard_observability_service_class()
 
 
-class StandardObservabilityFactory(ServiceFactory[StandardObservability]):
+class StandardObservabilityFactory(ServiceFactory):
     """Factory for creating StandardObservability instances."""
 
-    def create(self, config: dict[str, Any] | None = None) -> StandardObservability:
+    def create(self, config: dict[str, Any] | None = None) -> Any:
         """Create a new StandardObservability instance."""
 
         # Get or create the service instance
-        service = get_service(StandardObservabilityService)
+        service = get_service(get_standard_observability_service_class())
         if config and not service.is_initialized():
             service_name = config.get("service_name", "unknown")
             service.initialize(service_name, config)
@@ -48,53 +119,63 @@ class StandardObservabilityFactory(ServiceFactory[StandardObservability]):
             raise ValueError("Failed to create StandardObservability instance")
         return observability
 
-    def get_service_type(self) -> type[StandardObservability]:
+    def get_service_type(self) -> type[Any]:
         """Get the service type this factory creates."""
-        return StandardObservability
+        return get_standard_observability_class()
 
 
-class TracingServiceFactory(ServiceFactory[TracingService]):
+class TracingServiceFactory(ServiceFactory):
     """Factory for creating TracingService instances."""
 
-    def create(self, config: dict[str, Any] | None = None) -> TracingService:
+    def create(self, config: dict[str, Any] | None = None) -> Any:
         """Create a new TracingService instance."""
-        service = TracingService()
+        service_cls = get_tracing_service_class()
+        service = service_cls()
         if config:
             service_name = config.get("service_name", "unknown")
             service.initialize(service_name, config)
         return service
 
-    def get_service_type(self) -> type[TracingService]:
+    def get_service_type(self) -> type[Any]:
         """Get the service type this factory creates."""
-        return TracingService
+        return get_tracing_service_class()
 
 
-class FrameworkMetricsFactory(ServiceFactory[FrameworkMetrics]):
+class FrameworkMetricsFactory(ServiceFactory):
     """Factory for creating FrameworkMetrics instances."""
 
     def __init__(self, service_name: str = "unknown") -> None:
         """Initialize the factory with a default service name."""
         self._service_name = service_name
 
-    def create(self, config: dict[str, Any] | None = None) -> FrameworkMetrics:
+    def create(self, config: dict[str, Any] | None = None) -> Any:
         """Create a new FrameworkMetrics instance."""
         service_name = self._service_name
         if config and "service_name" in config:
             service_name = config["service_name"]
 
-        metrics = FrameworkMetrics(service_name)
+        metrics_cls = get_framework_metrics_class()
+        metrics = metrics_cls(service_name)
         return metrics
 
-    def get_service_type(self) -> type[FrameworkMetrics]:
+    def get_service_type(self) -> type[Any]:
         """Get the service type this factory creates."""
-        return FrameworkMetrics
+        return get_framework_metrics_class()
 
 
 # Convenience functions for registering observability services
 def register_observability_services(service_name: str = "unknown") -> None:
     """Register all observability services with the DI container."""
 
-    register_factory(StandardObservabilityService, StandardObservabilityServiceFactory())
-    register_factory(StandardObservability, StandardObservabilityFactory())
-    register_factory(TracingService, TracingServiceFactory())
-    register_factory(FrameworkMetrics, FrameworkMetricsFactory(service_name))
+    register_factory(
+        get_standard_observability_service_class(),
+        StandardObservabilityServiceFactory(),
+    )
+    register_factory(
+        get_standard_observability_class(),
+        StandardObservabilityFactory(),
+    )
+    register_factory(get_tracing_service_class(), TracingServiceFactory())
+    register_factory(
+        get_framework_metrics_class(), FrameworkMetricsFactory(service_name)
+    )

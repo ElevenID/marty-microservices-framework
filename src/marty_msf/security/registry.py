@@ -17,8 +17,13 @@ from .factories import (
     SecurityManagerFactory,
     SecurityManagerServiceFactory,
 )
+from .interfaces import (
+    ConsolidatedSecurityManager as ConsolidatedSecurityManagerInterface,
+)
+from .interfaces import (
+    ConsolidatedSecurityManagerService as ConsolidatedSecurityManagerServiceInterface,
+)
 from .interfaces import UnifiedSecurityFramework
-from .manager import ConsolidatedSecurityManager, ConsolidatedSecurityManagerService
 
 
 def register_security_services(service_name: str = "unknown") -> None:
@@ -27,7 +32,14 @@ def register_security_services(service_name: str = "unknown") -> None:
 
     This function uses lazy imports to avoid circular dependencies.
     """
+    # Import concrete classes here to avoid circular dependency
 
-    register_factory(ConsolidatedSecurityManagerService, SecurityManagerServiceFactory())
-    register_factory(ConsolidatedSecurityManager, SecurityManagerFactory())
+    register_factory(
+        ConsolidatedSecurityManagerServiceInterface,
+        SecurityManagerServiceFactory(),
+    )
+    register_factory(
+        ConsolidatedSecurityManagerInterface,
+        SecurityManagerFactory(),
+    )
     register_factory(SecurityAuditor, SecurityAuditorFactory(service_name))

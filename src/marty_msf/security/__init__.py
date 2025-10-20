@@ -73,7 +73,13 @@ from .exceptions import (
     require_permission,
     require_role,
 )
-from .manager import configure_security_manager, get_security_manager
+from .manager import (  # Canonical functions - single source of truth for these operations
+    audit_security_event,
+    authenticate_credentials,
+    authorize_principal,
+    configure_security_manager,
+    get_security_manager,
+)
 from .policy_engines import (
     PolicyEvaluationRequest,
     PolicyEvaluationResponse,
@@ -92,6 +98,10 @@ __all__ = [
     # Authentication
     "get_security_manager",
     "configure_security_manager",
+    # Canonical functions - single source of truth
+    "authenticate_credentials",
+    "authorize_principal",
+    "audit_security_event",
     "SecurityContext",
     "requires_auth",
     "requires_role",

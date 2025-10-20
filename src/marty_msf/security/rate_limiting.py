@@ -13,6 +13,7 @@ from functools import wraps
 
 import redis.asyncio as redis
 
+from ..core.di_container import get_service_optional, register_instance
 from .config import RateLimitConfig
 from .errors import RateLimitExceededError
 
@@ -270,19 +271,16 @@ class RateLimiter:
         await self.backend.reset(key)
 
 
-# Global rate limiter instance
-_rate_limiter_instance: RateLimiter | None = None
-
-
 def get_rate_limiter() -> RateLimiter | None:
-    """Get the global rate limiter instance."""
-    return _rate_limiter_instance
+    """Get the rate limiter instance from DI container."""
+    return get_service_optional(RateLimiter)
 
 
 def initialize_rate_limiter(config: RateLimitConfig) -> None:
-    """Initialize the global rate limiter."""
-    # Using module-level variable
-    globals()["_rate_limiter_instance"] = RateLimiter(config)
+    """Initialize the rate limiter using DI container."""
+
+    limiter = RateLimiter(config)
+    register_instance(RateLimiter, limiter)
 
 
 def rate_limit(
