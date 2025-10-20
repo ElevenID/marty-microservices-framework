@@ -12,11 +12,12 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 import asyncio
 import logging
 
+from marty_msf.security.bridge import (
+    UnifiedSecurityFrameworkBridge as UnifiedSecurityFramework,
+)
+from marty_msf.security.interfaces import SecurityContext, SecurityPrincipal
 from marty_msf.security.unified_framework import (
-    SecurityContext,
     SecurityPolicyType,
-    SecurityPrincipal,
-    UnifiedSecurityFramework,
     create_unified_security_framework,
 )
 

@@ -9,7 +9,13 @@ import logging
 from typing import Any, Dict, List
 
 from marty_msf.framework.service_mesh import create_enhanced_service_mesh_manager
+from marty_msf.security.bridge import (
+    UnifiedSecurityFrameworkBridge as UnifiedSecurityFramework,
+)
 from marty_msf.security.unified_framework import (
+    BuiltinPolicyEngine,
+    SecurityPolicyType,
+    SecurityPrincipal,
     create_unified_security_framework,
     get_default_security_config,
 )
