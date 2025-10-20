@@ -1,19 +1,14 @@
 """
-Consolidated Security Manager for Marty Microservices Framework
+⚠️  DEPRECATED: Consolidated Security Manager
 
-This module provides a single, unified security manager that consolidates all
-authentication, authorization, and policy management capabilities. It replaces
-the multiple duplicate SecurityManager implementations with a single, comprehensive
-solution.
+This module is DEPRECATED and will be removed in a future version.
 
-Key Features:
-- Unified security operations through UnifiedSecurityFramework
-- Robust error handling for all security operations
-- Comprehensive audit logging
-- RBAC and ABAC policy enforcement
-- OPA policy engine integration
-- External identity provider support
-- Zero-trust security model
+New applications should use:
+- marty_msf.security.bootstrap.SecurityBootstrap for initialization
+- marty_msf.security.api for interfaces
+- Direct component usage instead of consolidated managers
+
+This module is kept for backwards compatibility only during the migration period.
 """
 
 import asyncio
@@ -37,8 +32,8 @@ from .audit import (
     get_security_auditor,
 )
 
-# Using bridge during migration period
-from .bridge import UnifiedSecurityFrameworkBridge as UnifiedSecurityFramework
+# Using new modular architecture
+from .bootstrap import SecurityBootstrap
 from .exceptions import (
     AuthenticationError,
     AuthorizationError,
@@ -59,7 +54,8 @@ from .interfaces import (
     ConsolidatedSecurityManagerService as ConsolidatedSecurityManagerServiceInterface,
 )
 from .interfaces import SecurityPrincipal
-from .registry import register_security_services
+
+# from .registry import register_security_services  # Removed - registry deprecated
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +78,7 @@ class SecurityContext:
         token_claims: dict[str, Any],
         session_id: str | None = None,
         correlation_id: str | None = None,
-        security_framework: UnifiedSecurityFramework | None = None
+        security_bootstrap: SecurityBootstrap | None = None
     ):
         self.principal_id = principal_id
         self.principal = principal
@@ -91,7 +87,7 @@ class SecurityContext:
         self.token_claims = token_claims
         self.session_id = session_id
         self.correlation_id = correlation_id
-        self.security_framework = security_framework
+        self.security_bootstrap = security_bootstrap
         self.authenticated_at = datetime.now(timezone.utc)
 
     def has_role(self, role: str) -> bool:
@@ -147,13 +143,13 @@ class ConsolidatedSecurityManager(ConsolidatedSecurityManagerInterface):
     Consolidated security manager that unifies all security operations.
 
     This class replaces the multiple SecurityManager implementations with a single,
-    comprehensive solution based on the UnifiedSecurityFramework.
+    comprehensive solution based on the SecurityBootstrap.
     """
 
     def __init__(self, config: dict[str, Any] | None = None):
         """Initialize the consolidated security manager."""
         self.config = config or self._get_default_config()
-        self.security_framework: UnifiedSecurityFramework | None = None
+        self.security_bootstrap: SecurityBootstrap | None = None
         self.auditor = get_security_auditor()
         self._initialized = False
 
@@ -211,7 +207,7 @@ class ConsolidatedSecurityManager(ConsolidatedSecurityManagerInterface):
             return True
 
         try:
-            self.security_framework = UnifiedSecurityFramework(self.config)
+            self.security_bootstrap = SecurityBootstrap(self.config)
             success = await self.security_framework.initialize()
 
             if success:
@@ -843,9 +839,9 @@ def get_security_manager() -> ConsolidatedSecurityManager:
         manager = get_service(ConsolidatedSecurityManagerInterface)
         return cast(ConsolidatedSecurityManager, manager)
     except ValueError:
-        register_security_services("default")
-        manager = get_service(ConsolidatedSecurityManagerInterface)
-        return cast(ConsolidatedSecurityManager, manager)
+        # register_security_services("default")  # Removed - registry deprecated
+        # Create a simple manager as fallback
+        return ConsolidatedSecurityManager()
 
 
 def configure_security_manager(config: dict[str, Any]) -> ConsolidatedSecurityManager:
@@ -863,7 +859,8 @@ def configure_security_manager(config: dict[str, Any]) -> ConsolidatedSecurityMa
     try:
         get_service(ConsolidatedSecurityManagerServiceInterface)
     except ValueError:
-        register_security_services("default")
+        # register_security_services("default")  # Removed - registry deprecated
+        pass
 
     # Configure the service
     configure_service(ConsolidatedSecurityManagerServiceInterface, config)

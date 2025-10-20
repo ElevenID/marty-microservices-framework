@@ -19,7 +19,7 @@ New Modular Components:
 Legacy Components (maintained for backward compatibility):
 - Existing RBAC, ABAC, audit, and policy engine components
 - Original decorators and authentication managers
-- UnifiedSecurityFramework (being phased out in favor of modular approach)
+- Modular security architecture with clean separation of concerns
 
 Migration Path:
 - New applications should use the bootstrap module and interfaces
@@ -116,13 +116,6 @@ from .bootstrap import (
     get_security_components_from_container,
 )
 
-# Compatibility bridge
-from .bridge import (
-    SecurityPolicyType,
-    UnifiedSecurityFrameworkBridge,
-    create_unified_security_framework,
-)
-
 # Caching implementations
 from .caching import AdvancedCache, InMemoryCacheManager, SecurityCacheManager
 from .exceptions import (
@@ -171,6 +164,11 @@ from .secrets_impl import (
 
 # Session management implementations
 from .sessions import InMemorySessionManager, NoOpSessionManager
+
+# SecurityPolicyType moved to api module - import from there if needed
+
+
+
 
 logger = logging.getLogger(__name__)
 
