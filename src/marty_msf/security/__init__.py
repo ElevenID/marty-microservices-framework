@@ -117,7 +117,11 @@ from .bootstrap import (
 )
 
 # Compatibility bridge
-from .bridge import UnifiedSecurityFrameworkBridge
+from .bridge import (
+    SecurityPolicyType,
+    UnifiedSecurityFrameworkBridge,
+    create_unified_security_framework,
+)
 
 # Caching implementations
 from .caching import AdvancedCache, InMemoryCacheManager, SecurityCacheManager

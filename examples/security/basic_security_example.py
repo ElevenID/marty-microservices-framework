@@ -12,19 +12,20 @@ from typing import Any, Dict
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import HTTPBearer
 
-# Import Marty MSF unified security framework
-from marty_msf.security.bridge import (
-    UnifiedSecurityFrameworkBridge as UnifiedSecurityFramework,
-)
-from marty_msf.security.interfaces import SecurityDecision, SecurityPrincipal
-from marty_msf.security.unified_framework import (
-    BuiltinPolicyEngine,
+from marty_msf.security.api import (
     ComplianceFramework,
     IdentityProviderType,
     PolicyEngineType,
-    SecurityPolicyType,
-    create_unified_security_framework,
 )
+
+# Import Marty MSF unified security framework
+from marty_msf.security.bridge import SecurityPolicyType
+from marty_msf.security.bridge import (
+    UnifiedSecurityFrameworkBridge as UnifiedSecurityFramework,
+)
+from marty_msf.security.bridge import create_unified_security_framework
+from marty_msf.security.engines.builtin_engine import BuiltinPolicyEngine
+from marty_msf.security.interfaces import SecurityDecision, SecurityPrincipal
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)

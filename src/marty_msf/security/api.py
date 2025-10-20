@@ -361,6 +361,14 @@ class IdentityProviderType(Enum):
     LOCAL = "local"
 
 
+class SecurityPolicyType(Enum):
+    """Types of security policies."""
+    RBAC = "rbac"
+    ABAC = "abac"
+    ACL = "acl"
+    CUSTOM = "custom"
+
+
 # --- Additional Interfaces ---
 
 @runtime_checkable

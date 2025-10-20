@@ -36,6 +36,7 @@ from .api import (
     ISessionManager,
     SecurityContext,
     SecurityDecision,
+    SecurityPolicyType,
     SecurityPrincipal,
     User,
 )
@@ -308,14 +309,35 @@ class UnifiedSecurityFrameworkBridge:
         }
 
 
+# Compatibility functions for legacy code
+async def create_unified_security_framework(config: dict[str, Any]) -> UnifiedSecurityFrameworkBridge:
+    """
+    Create a unified security framework (compatibility function).
+
+    This function provides backward compatibility for existing code.
+    New code should use SecurityBootstrap directly.
+
+    Args:
+        config: Security framework configuration
+
+    Returns:
+        UnifiedSecurityFrameworkBridge instance
+    """
+    bridge = UnifiedSecurityFrameworkBridge(config)
+    await bridge.initialize()
+    return bridge
+
+
 # Compatibility exports for easier migration
 __all__ = [
     'UnifiedSecurityFrameworkBridge',
     'SecurityPrincipal',
     'SecurityContext',
     'SecurityDecision',
+    'SecurityPolicyType',
     'User',
     'AuthenticationResult',
     'AuthorizationContext',
     'AuthorizationResult',
+    'create_unified_security_framework',
 ]
