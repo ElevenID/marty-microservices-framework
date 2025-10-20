@@ -20,13 +20,16 @@ from typing import Any
 import grpc
 import jwt as pyjwt
 
-from marty_msf.security.secrets import SecretManager
-from marty_msf.security.unified_framework import (
+# TODO: Migrate UnifiedSecurityFramework usage to new modular architecture
+from marty_msf.security.bridge import (
+    UnifiedSecurityFrameworkBridge as UnifiedSecurityFramework,
+)
+from marty_msf.security.interfaces import (
     SecurityContext,
     SecurityDecision,
     SecurityPrincipal,
-    UnifiedSecurityFramework,
 )
+from marty_msf.security.secrets import SecretManager
 
 
 # Simple PolicyContext for internal use

@@ -11,12 +11,13 @@ from typing import Any
 
 from app.core.config import PetstoreDomainConfig
 
-# Import Marty MSF unified security framework
+# Import Marty MSF unified security framework (using bridge during migration)
+from marty_msf.security.bridge import (
+    UnifiedSecurityFrameworkBridge as UnifiedSecurityFramework,
+)
+from marty_msf.security.interfaces import SecurityContext, SecurityPrincipal
 from marty_msf.security.unified_framework import (
-    SecurityContext,
     SecurityPolicyType,
-    SecurityPrincipal,
-    UnifiedSecurityFramework,
     create_unified_security_framework,
 )
 

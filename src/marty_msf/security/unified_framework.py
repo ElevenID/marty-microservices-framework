@@ -1,6 +1,17 @@
 """
 Unified Security Framework for Marty Microservices Framework
 
+⚠️  DEPRECATED: This module is being phased out in favor of the new modular architecture.
+
+New applications should use:
+- marty_msf.security.bootstrap.SecurityBootstrap for initialization
+- marty_msf.security.api for interfaces
+- marty_msf.security.auth_impl for authentication
+- marty_msf.security.authz_impl for authorization
+- marty_msf.security.secrets_impl for secret management
+
+For migration, use marty_msf.security.bridge.UnifiedSecurityFrameworkBridge as a drop-in replacement.
+
 This module consolidates all authorization, authentication, and access control capabilities
 into a single, pluggable security framework that supports:
 
@@ -24,6 +35,7 @@ import ipaddress
 import logging
 import re
 import time
+import warnings
 import weakref
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -423,6 +435,13 @@ class UnifiedSecurityFramework:
     """
 
     def __init__(self, config: dict[str, Any]):
+        warnings.warn(
+            "UnifiedSecurityFramework is deprecated. Use marty_msf.security.bootstrap.SecurityBootstrap "
+            "for new applications, or marty_msf.security.bridge.UnifiedSecurityFrameworkBridge "
+            "for compatibility during migration.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         self.config = config
         self.identity_providers: dict[str, IdentityProvider] = {}
         self.policy_engines: dict[str, PolicyEngine] = {}

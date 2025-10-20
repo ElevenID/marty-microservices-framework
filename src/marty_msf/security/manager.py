@@ -36,6 +36,9 @@ from .audit import (
     SecurityEventType,
     get_security_auditor,
 )
+
+# Using bridge during migration period
+from .bridge import UnifiedSecurityFrameworkBridge as UnifiedSecurityFramework
 from .exceptions import (
     AuthenticationError,
     AuthorizationError,
@@ -55,8 +58,8 @@ from .interfaces import (
 from .interfaces import (
     ConsolidatedSecurityManagerService as ConsolidatedSecurityManagerServiceInterface,
 )
+from .interfaces import SecurityPrincipal
 from .registry import register_security_services
-from .unified_framework import SecurityPrincipal, UnifiedSecurityFramework
 
 logger = logging.getLogger(__name__)
 

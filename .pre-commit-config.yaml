@@ -79,6 +79,14 @@ repos:
         require_serial: true
         pass_filenames: false
 
+      # Import Linter - Enforces Level Contract Architecture
+      - id: import-linter
+        name: Import Linter (Level Contract Architecture)
+        entry: uv run lint-imports
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
   # Security checks with bandit (using development version of rich for Python 3.13 compatibility)
   - repo: https://github.com/PyCQA/bandit
     rev: 1.8.0

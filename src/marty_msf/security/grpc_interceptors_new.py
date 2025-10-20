@@ -9,8 +9,11 @@ from typing import Any
 
 import grpc
 
+# TODO: Migrate UnifiedSecurityFramework usage to new modular architecture
+from marty_msf.security.bridge import (
+    UnifiedSecurityFrameworkBridge as UnifiedSecurityFramework,
+)
 from marty_msf.security.secrets import SecretManager
-from marty_msf.security.unified_framework import UnifiedSecurityFramework
 
 logger = logging.getLogger(__name__)
 

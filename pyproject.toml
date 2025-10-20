@@ -139,6 +139,7 @@ dev = [
     "ruff>=0.14.0",
     "bandit>=1.8.6",
     "pre-commit>=4.3.0",
+    "import-linter>=2.0.0",
     # Testing infrastructure and automation
     "playwright>=1.55.0",
     "testcontainers>=3.7.0",
@@ -160,6 +161,7 @@ dev = [
     "twine>=6.2.0",
     "radon>=6.0.1",
     "marty-msf[cli,microservices,observability]",
+    "pipdeptree>=2.29.0",
 ]
 
 # Ruff configuration
@@ -329,3 +331,31 @@ directory = "htmlcov"
 
 [tool.coverage.xml]
 output = "coverage.xml"
+
+# Import Linter Configuration - Enforces Level Contract Architecture
+[tool.importlinter]
+root_package = "marty_msf"
+
+[[tool.importlinter.contracts]]
+name = "Security API layer has no internal dependencies"
+type = "forbidden"
+source_modules = ["marty_msf.security.api"]
+forbidden_modules = [
+    "marty_msf.security.auth_impl",
+    "marty_msf.security.authz_impl",
+    "marty_msf.security.secrets_impl",
+    "marty_msf.security.bootstrap",
+    "marty_msf.security.unified_framework"
+]
+
+[[tool.importlinter.contracts]]
+name = "Implementation modules follow level contract"
+type = "forbidden"
+source_modules = [
+    "marty_msf.security.auth_impl",
+    "marty_msf.security.authz_impl",
+    "marty_msf.security.secrets_impl"
+]
+forbidden_modules = [
+    "marty_msf.security.unified_framework"
+]
