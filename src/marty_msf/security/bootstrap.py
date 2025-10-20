@@ -318,7 +318,7 @@ def create_default_security_system() -> tuple[IAuthenticator, IAuthorizer, ISecr
         Tuple of (authenticator, authorizer, secret_manager)
     """
     bootstrap = SecurityBootstrap()
-    return bootstrap.initialize_security_system()
+    return bootstrap.initialize_core_security_system()
 
 
 def create_development_security_system() -> tuple[IAuthenticator, IAuthorizer, ISecretManager]:
@@ -339,7 +339,7 @@ def create_development_security_system() -> tuple[IAuthenticator, IAuthorizer, I
     }
 
     bootstrap = SecurityBootstrap(config)
-    return bootstrap.initialize_security_system()
+    return bootstrap.initialize_core_security_system()
 
 
 def create_testing_security_system() -> tuple[IAuthenticator, IAuthorizer, ISecretManager]:
@@ -356,7 +356,7 @@ def create_testing_security_system() -> tuple[IAuthenticator, IAuthorizer, ISecr
     }
 
     bootstrap = SecurityBootstrap(config)
-    return bootstrap.initialize_security_system()
+    return bootstrap.initialize_core_security_system()
 
 
 def create_production_security_system() -> tuple[IAuthenticator, IAuthorizer, ISecretManager]:
@@ -373,7 +373,7 @@ def create_production_security_system() -> tuple[IAuthenticator, IAuthorizer, IS
     }
 
     bootstrap = SecurityBootstrap(config)
-    return bootstrap.initialize_security_system()
+    return bootstrap.initialize_core_security_system()
 
 
 def configure_security_in_container(config: dict[str, Any]) -> None:

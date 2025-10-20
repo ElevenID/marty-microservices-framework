@@ -11,7 +11,7 @@ This package provides cloud-agnostic configuration management including:
 - Plugin configuration management
 """
 
-from .manager import Environment  # Keep only Environment enum for compatibility
+from .manager import BaseServiceConfig, Environment  # Keep for compatibility
 from .plugin_config import (
     PluginConfig,
     PluginConfigManager,
@@ -43,6 +43,7 @@ __all__ = [
     "get_unified_config",
     # Enums and configuration
     "Environment",
+    "BaseServiceConfig",
     "SecretBackend",
     "HostingEnvironment",
     "ConfigurationStrategy",

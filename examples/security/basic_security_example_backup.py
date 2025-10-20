@@ -52,8 +52,6 @@ class BasicSecurityExample:
         test_user_hash = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"  # "password"
         self.secret_manager.store_secret("user.test_user.password_hash", test_user_hash)
 
-        logger.info("Test user 'test_user' configured with password 'password'")
-
     def setup_routes(self) -> None:
         """Setup API routes with security enforcement"""
 
