@@ -12,38 +12,9 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Protocol
 
-
-# --- Abstract base classes for DI factories ---
-class ConsolidatedSecurityManager(ABC):
-    """Abstract base class for consolidated security manager."""
-
-    @abstractmethod
-    async def authenticate(self, credentials: dict[str, Any]) -> 'SecurityPrincipal | None':
-        """Authenticate user with credentials."""
-        pass
-
-    @abstractmethod
-    async def authorize(self, principal: 'SecurityPrincipal', resource: str, action: str) -> bool:
-        """Authorize principal for resource and action."""
-        pass
-
-    @abstractmethod
-    def audit(self, event: dict[str, Any]) -> None:
-        """Audit security event."""
-        pass
-
-class ConsolidatedSecurityManagerService(ABC):
-    """Abstract base class for consolidated security manager service."""
-
-    @abstractmethod
-    def configure(self, config: dict[str, Any]) -> None:
-        """Configure the security manager service."""
-        pass
-
-    @abstractmethod
-    def get_security_manager(self) -> ConsolidatedSecurityManager:
-        """Get the security manager instance."""
-        pass
+# --- Deprecated interfaces removed ---
+# The ConsolidatedSecurityManager and ConsolidatedSecurityManagerService
+# interfaces have been removed in favor of the new modular bootstrap system.
 
 class ComplianceFramework(Enum):
     """Enumeration of supported compliance frameworks."""

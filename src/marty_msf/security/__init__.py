@@ -85,18 +85,7 @@ from .audit_impl import (
 
 # Authentication implementations
 from .auth_impl import BasicAuthenticator, EnvironmentAuthenticator, JwtAuthenticator
-from .authentication import (
-    AuthenticationManager,
-    SecurityContext,
-    get_current_user,
-    requires_abac,
-    requires_any_role,
-    requires_auth,
-    requires_permission,
-    requires_rbac,
-    requires_role,
-    verify_jwt_token,
-)
+from .authentication import AuthenticationManager
 
 # Authorization implementations
 from .authz_impl import (
@@ -118,6 +107,14 @@ from .bootstrap import (
 
 # Caching implementations
 from .caching import AdvancedCache, InMemoryCacheManager, SecurityCacheManager
+
+# Import canonical functions from new implementation
+from .canonical import (
+    audit_security_event,
+    authenticate_credentials,
+    authorize_principal,
+)
+from .canonical import configure_security_system as configure_security_manager
 from .exceptions import (
     AccountLockedError,
     ClaimsVerificationError,
@@ -136,12 +133,18 @@ from .exceptions import (
     require_permission,
     require_role,
 )
-from .manager import (  # Canonical functions - single source of truth for these operations
-    audit_security_event,
-    authenticate_credentials,
-    authorize_principal,
-    configure_security_manager,
-    get_security_manager,
+
+# Import new decorator implementations
+from .new_decorators import (
+    SecurityContext,
+    get_current_user,
+    requires_abac,
+    requires_any_role,
+    requires_auth,
+    requires_permission,
+    requires_rbac,
+    requires_role,
+    verify_jwt_token,
 )
 from .policy_engines import (
     PolicyEvaluationRequest,
@@ -222,7 +225,6 @@ __all__ = [
 
     # Legacy components (maintained for backward compatibility)
     # Authentication
-    "get_security_manager",
     "configure_security_manager",
     # Canonical functions - single source of truth
     "authenticate_credentials",
