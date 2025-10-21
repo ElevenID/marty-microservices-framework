@@ -166,7 +166,7 @@ class SecurityBootstrap:
 
     def initialize_core_security_system(self) -> tuple[IAuthenticator, IAuthorizer, ISecretManager]:
         """
-        Initialize and return core security components (backward compatibility).
+        Initialize and return core security components.
 
         Returns:
             Tuple of (authenticator, authorizer, secret_manager)

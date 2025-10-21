@@ -553,16 +553,8 @@ def get_security_auditor(service_name: str | None = None) -> SecurityAuditor:
     if auditor is not None:
         return auditor
 
-    # Auto-register if not found (for backward compatibility)
-    if not service_name:
-        service_name = "unknown"
-
-    # Note: Service registration should be handled at application startup
-    # For now, we'll skip auto-registration to avoid circular imports
-    pass
-
     # Configure with service name if provided
-    if service_name != "unknown":
+    if service_name:
         configure_service(SecurityAuditor, {"service_name": service_name})
 
     return get_service(SecurityAuditor)

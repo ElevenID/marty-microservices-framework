@@ -123,19 +123,18 @@ def configure_security_system(config: dict[str, Any]) -> SecurityBootstrap:
     """
     Configure and return a security bootstrap instance.
 
-    This replaces the deprecated configure_security_manager function.
-
     Args:
         config: Security configuration dictionary
 
     Returns:
         Configured SecurityBootstrap instance
     """
-
     bootstrap = SecurityBootstrap(config)
     bootstrap.initialize_security_system()
 
     # Register in service container for global access
     register_instance(SecurityBootstrap, bootstrap)
+
+    return bootstrap
 
     return bootstrap

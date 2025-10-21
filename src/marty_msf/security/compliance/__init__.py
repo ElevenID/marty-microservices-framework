@@ -35,9 +35,6 @@ except ImportError:
     REDIS_AVAILABLE = False
 
 
-# Import the unified ComplianceFramework from interfaces
-
-
 class ComplianceStatus(Enum):
     """Compliance status levels"""
 
