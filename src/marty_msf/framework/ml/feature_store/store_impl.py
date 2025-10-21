@@ -2,7 +2,6 @@
 Feature store for ML feature management.
 """
 
-import builtins
 import logging
 import threading
 from collections import defaultdict
@@ -13,23 +12,23 @@ import numpy as np
 
 from marty_msf.framework.ml.models import Feature, FeatureGroup, FeatureType
 
+from .interface import FeatureStoreInterface
 
-class FeatureStore:
+
+class FeatureStore(FeatureStoreInterface):
     """Feature store for ML feature management."""
 
     def __init__(self):
         """Initialize feature store."""
-        self.features: builtins.dict[str, Feature] = {}
-        self.feature_groups: builtins.dict[str, FeatureGroup] = {}
+        self.features: dict[str, Feature] = {}
+        self.feature_groups: dict[str, FeatureGroup] = {}
 
         # Feature data storage (in-memory for demo)
-        self.online_store: builtins.dict[str, builtins.dict[str, Any]] = {}  # entity_id -> features
-        self.offline_store: builtins.dict[str, builtins.list[builtins.dict[str, Any]]] = (
-            defaultdict(list)
-        )
+        self.online_store: dict[str, dict[str, Any]] = {}  # entity_id -> features
+        self.offline_store: dict[str, list[dict[str, Any]]] = defaultdict(list)
 
         # Feature statistics
-        self.feature_stats: builtins.dict[str, builtins.dict[str, Any]] = {}
+        self.feature_stats: dict[str, dict[str, Any]] = {}
 
         # Thread safety
         self._lock = threading.RLock()
@@ -59,8 +58,8 @@ class FeatureStore:
             return False
 
     def get_online_features(
-        self, entity_id: str, feature_names: builtins.list[str]
-    ) -> builtins.dict[str, Any]:
+        self, entity_id: str, feature_names: list[str]
+    ) -> dict[str, Any]:
         """Get online features for an entity."""
         with self._lock:
             entity_features = self.online_store.get(entity_id, {})
@@ -71,7 +70,7 @@ class FeatureStore:
 
             return result
 
-    def set_online_features(self, entity_id: str, features: builtins.dict[str, Any]) -> bool:
+    def set_online_features(self, entity_id: str, features: dict[str, Any]) -> bool:
         """Set online features for an entity."""
         try:
             with self._lock:
@@ -87,10 +86,10 @@ class FeatureStore:
 
     def get_offline_features(
         self,
-        feature_names: builtins.list[str],
+        feature_names: list[str],
         start_time: datetime | None = None,
         end_time: datetime | None = None,
-    ) -> builtins.list[builtins.dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get offline features for training."""
         with self._lock:
             result = []
@@ -114,7 +113,7 @@ class FeatureStore:
 
             return result
 
-    def add_offline_features(self, entity_id: str, features: builtins.dict[str, Any]) -> bool:
+    def add_offline_features(self, entity_id: str, features: dict[str, Any]) -> bool:
         """Add offline features for an entity."""
         try:
             with self._lock:
@@ -126,7 +125,7 @@ class FeatureStore:
             logging.exception("Failed to add offline features: %s", e)
             return False
 
-    def compute_feature_statistics(self, feature_name: str) -> builtins.dict[str, Any]:
+    def compute_feature_statistics(self, feature_name: str) -> dict[str, Any]:
         """Compute statistics for a feature."""
         with self._lock:
             values = []
@@ -174,8 +173,8 @@ class FeatureStore:
             return stats
 
     def validate_features(
-        self, entity_id: str, features: builtins.dict[str, Any]
-    ) -> builtins.dict[str, builtins.list[str]]:
+        self, entity_id: str, features: dict[str, Any]
+    ) -> dict[str, list[str]]:
         """Validate features against registered schema."""
         validation_errors = defaultdict(list)
 

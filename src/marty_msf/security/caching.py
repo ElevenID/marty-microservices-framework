@@ -308,6 +308,7 @@ class SecurityCacheManager:
     - Separate caches for different security domains
     - Unified metrics and management
     - Coordinated invalidation strategies
+    - Implements ICacheManager protocol for general cache operations
     """
 
     def __init__(self, config: dict[str, Any]):
@@ -319,6 +320,12 @@ class SecurityCacheManager:
         """
         self.config = config
         cache_config = config.get("cache", {})
+
+        # General cache for ICacheManager protocol implementation
+        self.general_cache = AdvancedCache(
+            max_size=cache_config.get("general_max_size", 1000),
+            default_ttl=cache_config.get("general_ttl", 300.0)
+        )
 
         # Create specialized caches
         self.policy_cache = AdvancedCache(
@@ -341,6 +348,71 @@ class SecurityCacheManager:
             default_ttl=cache_config.get("permission_ttl", 300.0)
         )
 
+    # ICacheManager protocol implementation methods
+    def get(self, key: str) -> Any | None:
+        """
+        Retrieve a value from the general cache.
+
+        Args:
+            key: Cache key
+
+        Returns:
+            Cached value or None if not found
+        """
+        return self.general_cache.get(key)
+
+    def set(self, key: str, value: Any, ttl: float | None = None, tags: set[str] | None = None) -> bool:
+        """
+        Store a value in the general cache.
+
+        Args:
+            key: Cache key
+            value: Value to cache
+            ttl: Time to live in seconds
+            tags: Tags for cache invalidation
+
+        Returns:
+            True if successfully cached
+        """
+        return self.general_cache.set(key, value, ttl, tags)
+
+    def delete(self, key: str) -> bool:
+        """
+        Delete a value from the general cache.
+
+        Args:
+            key: Cache key
+
+        Returns:
+            True if successfully deleted
+        """
+        return self.general_cache.delete(key)
+
+    def invalidate_by_tags(self, tags: set[str]) -> int:
+        """
+        Invalidate cache entries by tags across all caches.
+
+        Args:
+            tags: Tags to invalidate
+
+        Returns:
+            Number of entries invalidated
+        """
+        total_invalidated = 0
+        for cache in [self.general_cache, self.policy_cache, self.role_cache,
+                      self.identity_cache, self.permission_cache]:
+            total_invalidated += cache.invalidate_by_tags(tags)
+        return total_invalidated
+
+    def clear(self) -> None:
+        """Clear the general cache."""
+        self.general_cache.clear()
+
+    def size(self) -> int:
+        """Get the current number of entries in the general cache."""
+        return self.general_cache.size()
+
+    # Specialized cache methods
     def get_policy_decision(self, cache_key: str) -> Any | None:
         """Get a cached policy decision."""
         return self.policy_cache.get(cache_key)
@@ -429,6 +501,7 @@ class SecurityCacheManager:
 
     def clear_all_caches(self) -> None:
         """Clear all caches."""
+        self.general_cache.clear()
         self.policy_cache.clear()
         self.role_cache.clear()
         self.identity_cache.clear()
@@ -437,6 +510,7 @@ class SecurityCacheManager:
     def get_cache_metrics(self) -> dict[str, dict[str, Any]]:
         """Get metrics for all caches."""
         return {
+            "general_cache": self.general_cache.get_metrics(),
             "policy_cache": self.policy_cache.get_metrics(),
             "role_cache": self.role_cache.get_metrics(),
             "identity_cache": self.identity_cache.get_metrics(),

@@ -13,8 +13,9 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
+from .config import ServiceQuery
 from .core import ServiceEndpoint, ServiceInstance
-from .discovery import DiscoveryResult, ServiceQuery
+from .results import DiscoveryResult
 
 logger = logging.getLogger(__name__)
 

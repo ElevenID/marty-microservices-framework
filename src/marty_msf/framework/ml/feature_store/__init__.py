@@ -2,6 +2,7 @@
 Feature store package.
 """
 
-from .feature_store import FeatureStore
+from .interface import FeatureStoreInterface
+from .store_impl import FeatureStore
 
-__all__ = ["FeatureStore"]
+__all__ = ["FeatureStoreInterface", "FeatureStore"]

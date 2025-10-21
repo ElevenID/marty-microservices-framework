@@ -15,8 +15,8 @@ Key Components:
 - Metrics & Monitoring: Comprehensive observability and performance tracking
 
 Usage:
-from marty_msf.framework.discovery import ServiceRegistry, LoadBalancer, ServiceDiscovery
-from marty_msf.framework.discovery import ServiceInstance, HealthCheck, LoadBalancingStrategy
+    from marty_msf.framework.discovery import ServiceRegistry, LoadBalancer
+    from marty_msf.framework.discovery import ServiceInstance, HealthCheck, LoadBalancingStrategy
 
     # Create service registry
     registry = ServiceRegistry()
@@ -35,10 +35,6 @@ from marty_msf.framework.discovery import ServiceInstance, HealthCheck, LoadBala
         strategy=LoadBalancingStrategy.ROUND_ROBIN,
         health_check_enabled=True
     )
-
-    # Discover and route to services
-    discovery = ServiceDiscovery(registry, load_balancer)
-    target = await discovery.discover("user-service")
 """
 
 # Circuit breaker integration
@@ -49,6 +45,12 @@ from .circuit_breaker import (
     CircuitBreakerState,
 )
 
+# Service discovery patterns
+from .clients.base import ServiceDiscoveryClient
+from .clients.client_side import ClientSideDiscovery
+from .clients.server_side import ServerSideDiscovery
+from .config import DiscoveryConfig, DiscoveryPattern
+
 # Core service discovery components
 from .core import (
     HealthCheck,
@@ -56,15 +58,6 @@ from .core import (
     ServiceInstance,
     ServiceMetadata,
     ServiceRegistryConfig,
-)
-
-# Service discovery patterns
-from .discovery import (
-    ClientSideDiscovery,
-    DiscoveryConfig,
-    DiscoveryPattern,
-    ServerSideDiscovery,
-    ServiceDiscoveryClient,
 )
 
 # Health monitoring and checks

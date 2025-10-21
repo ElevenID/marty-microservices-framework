@@ -39,11 +39,11 @@ class InMemoryServiceRegistry(ServiceRegistry):
 
     def __init__(self, config: ServiceRegistryConfig):
         self.config = config
-        self._services: builtins.dict[
-            str, builtins.dict[str, ServiceInstance]
+        self._services: dict[
+            str, dict[str, ServiceInstance]
         ] = {}  # service_name -> {instance_id -> instance}
-        self._watchers: builtins.list[ServiceWatcher] = []
-        self._event_queue: builtins.list[ServiceEvent] = []
+        self._watchers: list[ServiceWatcher] = []
+        self._event_queue: list[ServiceEvent] = []
 
         # Background tasks
         self._cleanup_task: asyncio.Task | None = None
@@ -161,7 +161,7 @@ class InMemoryServiceRegistry(ServiceRegistry):
             logger.error("Failed to deregister instance %s[%s]: %s", service_name, instance_id, e)
             return False
 
-    async def discover(self, service_name: str) -> builtins.list[ServiceInstance]:
+    async def discover(self, service_name: str) -> list[ServiceInstance]:
         """Discover all instances of a service."""
         if service_name not in self._services:
             return []
@@ -200,11 +200,11 @@ class InMemoryServiceRegistry(ServiceRegistry):
         logger.debug("Updated service instance: %s", instance)
         return True
 
-    async def list_services(self) -> builtins.list[str]:
+    async def list_services(self) -> list[str]:
         """List all registered services."""
         return list(self._services.keys())
 
-    async def get_healthy_instances(self, service_name: str) -> builtins.list[ServiceInstance]:
+    async def get_healthy_instances(self, service_name: str) -> list[ServiceInstance]:
         """Get healthy instances of a service."""
         instances = await self.discover(service_name)
         return [instance for instance in instances if instance.is_healthy()]
@@ -396,7 +396,7 @@ class InMemoryServiceRegistry(ServiceRegistry):
             len(instances) for instances in self._services.values()
         )
 
-    def get_stats(self) -> builtins.dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get registry statistics."""
         return {
             **self._stats,
@@ -411,7 +411,7 @@ class ConsulServiceRegistry(ServiceRegistry):
     def __init__(
         self,
         config: ServiceRegistryConfig,
-        consul_config: builtins.dict[str, Any] = None,
+        consul_config: dict[str, Any] | None = None,
     ):
         self.config = config
         self.consul_config = consul_config or {}
@@ -421,24 +421,19 @@ class ConsulServiceRegistry(ServiceRegistry):
     async def _get_consul_client(self):
         """Get Consul client."""
         if self._consul is None:
-            try:
+            self._consul = consul.aio.Consul(
+                host=self.consul_config.get("host", "localhost"),
+                port=self.consul_config.get("port", 8500),
+                token=self.consul_config.get("token"),
+                scheme=self.consul_config.get("scheme", "http"),
+                verify=self.consul_config.get("verify", True),
+            )
 
-                self._consul = consul.aio.Consul(
-                    host=self.consul_config.get("host", "localhost"),
-                    port=self.consul_config.get("port", 8500),
-                    token=self.consul_config.get("token"),
-                    scheme=self.consul_config.get("scheme", "http"),
-                    verify=self.consul_config.get("verify", True),
+            # Create session for TTL
+            if self.config.instance_ttl > 0:
+                self._session_id = await self._consul.session.create(
+                    ttl=int(self.config.instance_ttl)
                 )
-
-                # Create session for TTL
-                if self.config.instance_ttl > 0:
-                    self._session_id = await self._consul.session.create(
-                        ttl=int(self.config.instance_ttl)
-                    )
-
-            except ImportError:
-                raise RuntimeError("python-consul package required for ConsulServiceRegistry")
 
         return self._consul
 
@@ -521,7 +516,7 @@ class ConsulServiceRegistry(ServiceRegistry):
             logger.error("Error deregistering service from Consul: %s", e)
             return False
 
-    async def discover(self, service_name: str) -> builtins.list[ServiceInstance]:
+    async def discover(self, service_name: str) -> list[ServiceInstance]:
         """Discover all instances of a service from Consul."""
         try:
             consul = await self._get_consul_client()
@@ -554,7 +549,7 @@ class ConsulServiceRegistry(ServiceRegistry):
         # Consul updates are typically done by re-registering
         return await self.register(instance)
 
-    async def list_services(self) -> builtins.list[str]:
+    async def list_services(self) -> list[str]:
         """List all registered services from Consul."""
         try:
             consul = await self._get_consul_client()
@@ -570,7 +565,7 @@ class ConsulServiceRegistry(ServiceRegistry):
             logger.error("Error listing services from Consul: %s", e)
             return []
 
-    async def get_healthy_instances(self, service_name: str) -> builtins.list[ServiceInstance]:
+    async def get_healthy_instances(self, service_name: str) -> list[ServiceInstance]:
         """Get healthy instances of a service from Consul."""
         try:
             consul = await self._get_consul_client()
@@ -603,7 +598,7 @@ class ConsulServiceRegistry(ServiceRegistry):
         return True
 
     def _consul_service_to_instance(
-        self, service_data: builtins.dict[str, Any]
+        self, service_data: dict[str, Any]
     ) -> ServiceInstance | None:
         """Convert Consul service data to ServiceInstance."""
         try:
@@ -661,7 +656,7 @@ class ConsulServiceRegistry(ServiceRegistry):
 class EtcdServiceRegistry(ServiceRegistry):
     """etcd-based service registry implementation."""
 
-    def __init__(self, config: ServiceRegistryConfig, etcd_config: builtins.dict[str, Any] = None):
+    def __init__(self, config: ServiceRegistryConfig, etcd_config: dict[str, Any] | None = None):
         self.config = config
         self.etcd_config = etcd_config or {}
         self._etcd = None
@@ -670,19 +665,15 @@ class EtcdServiceRegistry(ServiceRegistry):
     async def _get_etcd_client(self):
         """Get etcd client."""
         if self._etcd is None:
-            try:
-
-                self._etcd = etcd3.client(
-                    host=self.etcd_config.get("host", "localhost"),
-                    port=self.etcd_config.get("port", 2379),
-                    user=self.etcd_config.get("user"),
-                    password=self.etcd_config.get("password"),
-                    ca_cert=self.etcd_config.get("ca_cert"),
-                    cert_key=self.etcd_config.get("cert_key"),
-                    cert_cert=self.etcd_config.get("cert_cert"),
-                )
-            except ImportError:
-                raise RuntimeError("etcd3 package required for EtcdServiceRegistry")
+            self._etcd = etcd3.client(
+                host=self.etcd_config.get("host", "localhost"),
+                port=self.etcd_config.get("port", 2379),
+                user=self.etcd_config.get("user"),
+                password=self.etcd_config.get("password"),
+                ca_cert=self.etcd_config.get("ca_cert"),
+                cert_key=self.etcd_config.get("cert_key"),
+                cert_cert=self.etcd_config.get("cert_cert"),
+            )
 
         return self._etcd
 
@@ -726,7 +717,7 @@ class EtcdServiceRegistry(ServiceRegistry):
             logger.error("Error deregistering service from etcd: %s", e)
             return False
 
-    async def discover(self, service_name: str) -> builtins.list[ServiceInstance]:
+    async def discover(self, service_name: str) -> list[ServiceInstance]:
         """Discover all instances of a service from etcd."""
         try:
             etcd = await self._get_etcd_client()
@@ -769,7 +760,7 @@ class EtcdServiceRegistry(ServiceRegistry):
         """Update a service instance in etcd."""
         return await self.register(instance)
 
-    async def list_services(self) -> builtins.list[str]:
+    async def list_services(self) -> list[str]:
         """List all registered services from etcd."""
         try:
             etcd = await self._get_etcd_client()
@@ -789,7 +780,7 @@ class EtcdServiceRegistry(ServiceRegistry):
             logger.error("Error listing services from etcd: %s", e)
             return []
 
-    async def get_healthy_instances(self, service_name: str) -> builtins.list[ServiceInstance]:
+    async def get_healthy_instances(self, service_name: str) -> list[ServiceInstance]:
         """Get healthy instances of a service from etcd."""
         instances = await self.discover(service_name)
         return [instance for instance in instances if instance.is_healthy()]
@@ -804,7 +795,7 @@ class EtcdServiceRegistry(ServiceRegistry):
             return await self.update_instance(instance)
         return False
 
-    def _dict_to_instance(self, data: builtins.dict[str, Any]) -> ServiceInstance | None:
+    def _dict_to_instance(self, data: dict[str, Any]) -> ServiceInstance | None:
         """Convert dictionary data to ServiceInstance."""
         try:
 
@@ -862,7 +853,7 @@ class EtcdServiceRegistry(ServiceRegistry):
 class KubernetesServiceRegistry(ServiceRegistry):
     """Kubernetes-based service registry implementation."""
 
-    def __init__(self, config: ServiceRegistryConfig, k8s_config: builtins.dict[str, Any] = None):
+    def __init__(self, config: ServiceRegistryConfig, k8s_config: dict[str, Any] | None = None):
         self.config = config
         self.k8s_config = k8s_config or {}
         self._k8s_client = None
@@ -871,16 +862,12 @@ class KubernetesServiceRegistry(ServiceRegistry):
     async def _get_k8s_client(self):
         """Get Kubernetes client."""
         if self._k8s_client is None:
-            try:
+            if self.k8s_config.get("in_cluster", False):
+                k8s_config.load_incluster_config()
+            else:
+                k8s_config.load_kube_config(config_file=self.k8s_config.get("config_file"))
 
-                if self.k8s_config.get("in_cluster", False):
-                    k8s_config.load_incluster_config()
-                else:
-                    k8s_config.load_kube_config(config_file=self.k8s_config.get("config_file"))
-
-                self._k8s_client = client.CoreV1Api()
-            except ImportError:
-                raise RuntimeError("kubernetes package required for KubernetesServiceRegistry")
+            self._k8s_client = client.CoreV1Api()
 
         return self._k8s_client
 
@@ -896,7 +883,7 @@ class KubernetesServiceRegistry(ServiceRegistry):
         logger.info("Kubernetes service deregistration handled by controller")
         return True
 
-    async def discover(self, service_name: str) -> builtins.list[ServiceInstance]:
+    async def discover(self, service_name: str) -> list[ServiceInstance]:
         """Discover all instances of a service from Kubernetes."""
         try:
             k8s = await self._get_k8s_client()
@@ -934,7 +921,7 @@ class KubernetesServiceRegistry(ServiceRegistry):
         logger.info("Kubernetes instance updates handled by controller")
         return True
 
-    async def list_services(self) -> builtins.list[str]:
+    async def list_services(self) -> list[str]:
         """List all registered services from Kubernetes."""
         try:
             k8s = await self._get_k8s_client()
@@ -951,7 +938,7 @@ class KubernetesServiceRegistry(ServiceRegistry):
             logger.error("Error listing services from Kubernetes: %s", e)
             return []
 
-    async def get_healthy_instances(self, service_name: str) -> builtins.list[ServiceInstance]:
+    async def get_healthy_instances(self, service_name: str) -> list[ServiceInstance]:
         """Get healthy instances of a service from Kubernetes."""
         instances = await self.discover(service_name)
         # In Kubernetes, endpoints are typically only included if healthy

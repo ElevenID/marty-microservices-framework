@@ -15,13 +15,10 @@ from enum import Enum
 from typing import Any
 
 from .circuit_breaker import CircuitBreakerConfig, CircuitBreakerManager
+from .clients.base import ServiceDiscoveryClient
+from .clients.client_side import ClientSideDiscovery
+from .config import DiscoveryConfig, ServiceQuery
 from .core import ServiceInstance, ServiceRegistry, ServiceWatcher
-from .discovery import (
-    ClientSideDiscovery,
-    DiscoveryConfig,
-    ServiceDiscoveryClient,
-    ServiceQuery,
-)
 from .health import HealthCheckConfig, HealthMonitor, create_health_checker
 from .load_balancing import (
     LoadBalancer,
