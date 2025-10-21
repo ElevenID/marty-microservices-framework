@@ -9,13 +9,13 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Optional, Protocol, runtime_checkable
 
+from ..api import ComplianceFramework, IComplianceScanner
 from ..compliance import ComplianceManager
-from ..interfaces import ComplianceFramework, ComplianceScanner
 
 logger = logging.getLogger(__name__)
 
 
-class UnifiedComplianceScanner(ComplianceScanner):
+class UnifiedComplianceScanner(IComplianceScanner):
     """Unified compliance scanner that integrates existing compliance infrastructure"""
 
     def __init__(self, config: dict[str, Any]):

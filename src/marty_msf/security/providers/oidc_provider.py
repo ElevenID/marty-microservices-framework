@@ -23,12 +23,12 @@ from urllib.parse import urlencode
 import aiohttp
 import jwt
 
-from ..interfaces import IdentityProvider, SecurityPrincipal
+from ..api import IIdentityProvider, SecurityPrincipal
 
 logger = logging.getLogger(__name__)
 
 
-class OIDCProvider(IdentityProvider):
+class OIDCProvider(IIdentityProvider):
     """OpenID Connect identity provider implementation"""
 
     def __init__(self, config: dict[str, Any]):

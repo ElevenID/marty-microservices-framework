@@ -115,6 +115,19 @@ from .canonical import (
     authorize_principal,
 )
 from .canonical import configure_security_system as configure_security_manager
+
+# Import decorator implementations
+from .decorators import (
+    SecurityContext,
+    get_current_user,
+    requires_abac,
+    requires_any_role,
+    requires_auth,
+    requires_permission,
+    requires_rbac,
+    requires_role,
+    verify_jwt_token,
+)
 from .exceptions import (
     AccountLockedError,
     ClaimsVerificationError,
@@ -132,19 +145,6 @@ from .exceptions import (
     require_authentication,
     require_permission,
     require_role,
-)
-
-# Import new decorator implementations
-from .new_decorators import (
-    SecurityContext,
-    get_current_user,
-    requires_abac,
-    requires_any_role,
-    requires_auth,
-    requires_permission,
-    requires_rbac,
-    requires_role,
-    verify_jwt_token,
 )
 from .policy_engines import (
     PolicyEvaluationRequest,

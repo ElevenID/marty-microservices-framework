@@ -2,31 +2,20 @@
 
 from typing import Any, Optional
 
-from ..interfaces import IdentityProvider, SecurityPrincipal
+from ..api import IdentityProviderType, IIdentityProvider, SecurityPrincipal
 
 
-class SAMLProvider(IdentityProvider):
+class SAMLProvider(IIdentityProvider):
     """SAML identity provider implementation"""
 
     def __init__(self, config: dict[str, Any]):
         self.config = config
 
-    async def authenticate(self, credentials: dict[str, Any]) -> SecurityPrincipal | None:
-        """Authenticate user with SAML provider"""
-        # Placeholder implementation
+    def authenticate(self, credentials: dict[str, Any]) -> SecurityPrincipal | None:
+        """Authenticate user with SAML provider."""
+        # TODO: Implement SAML authentication
         return None
 
-    async def validate_token(self, token: str) -> SecurityPrincipal | None:
-        """Validate SAML token"""
-        # Placeholder implementation
-        return None
-
-    async def refresh_token(self, refresh_token: str) -> str | None:
-        """Refresh SAML token"""
-        # Placeholder implementation
-        return None
-
-    async def get_user_attributes(self, principal_id: str) -> dict[str, Any]:
-        """Get additional user attributes"""
-        # Placeholder implementation
-        return {}
+    def get_provider_type(self) -> IdentityProviderType:
+        """Get the provider type."""
+        return IdentityProviderType.SAML
