@@ -23,7 +23,7 @@ from typing import Any
 
 from prometheus_client import Counter
 
-from ..interfaces import ComplianceFramework
+from ..api import ComplianceFramework
 
 # External dependencies
 try:

@@ -260,6 +260,38 @@ class AbstractSecretManager(ABC):
         """Delete a secret."""
 
 
+class AbstractPolicyEngine(ABC):
+    """Abstract base class for policy engines."""
+
+    @abstractmethod
+    async def evaluate_policy(self, context: SecurityContext) -> SecurityDecision:
+        """Evaluate security policy against context."""
+
+    @abstractmethod
+    async def load_policies(self, policies: list[dict[str, Any]]) -> bool:
+        """Load security policies."""
+
+    @abstractmethod
+    async def validate_policies(self) -> list[str]:
+        """Validate loaded policies and return any errors."""
+
+
+class AbstractServiceMeshSecurityManager(ABC):
+    """Abstract base class for service mesh security integration."""
+
+    @abstractmethod
+    async def apply_traffic_policies(self, policies: list[dict[str, Any]]) -> bool:
+        """Apply security policies to service mesh traffic."""
+
+    @abstractmethod
+    async def get_mesh_status(self) -> dict[str, Any]:
+        """Get current service mesh security status."""
+
+    @abstractmethod
+    async def enforce_mTLS(self, services: list[str]) -> bool:
+        """Enforce mutual TLS for specified services."""
+
+
 # --- Additional Core Data Models ---
 
 @dataclass
@@ -284,6 +316,7 @@ class SecurityContext:
     resource: str
     action: str
     environment: dict[str, Any] = field(default_factory=dict)
+    request_metadata: dict[str, Any] = field(default_factory=dict)
     request_id: str | None = None
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -294,7 +327,9 @@ class SecurityDecision:
     allowed: bool
     reason: str
     policies_evaluated: list[str] = field(default_factory=list)
+    required_attributes: dict[str, Any] = field(default_factory=dict)
     metadata: dict[str, Any] = field(default_factory=dict)
+    evaluation_time_ms: float = 0.0
     cache_key: str | None = None
 
 

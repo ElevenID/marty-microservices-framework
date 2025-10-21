@@ -2,10 +2,10 @@
 
 from typing import Any
 
-from ..interfaces import PolicyEngine, SecurityContext, SecurityDecision
+from ..api import AbstractPolicyEngine, SecurityContext, SecurityDecision
 
 
-class OsoPolicyEngine(PolicyEngine):
+class OsoPolicyEngine(AbstractPolicyEngine):
     """Oso policy engine integration"""
 
     def __init__(self, config: dict[str, Any]):

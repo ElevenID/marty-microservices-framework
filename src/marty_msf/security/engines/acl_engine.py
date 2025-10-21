@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, ClassVar, Optional, Protocol, Union, runtime_checkable
 
-from ..interfaces import PolicyEngine, SecurityContext, SecurityDecision
+from ..api import AbstractPolicyEngine, SecurityContext, SecurityDecision
 
 logger = logging.getLogger(__name__)
 
@@ -152,7 +152,7 @@ class ACLEntry:
         return True
 
 
-class ACLPolicyEngine(PolicyEngine):
+class ACLPolicyEngine(AbstractPolicyEngine):
     """ACL-based policy engine for fine-grained resource access control"""
 
     def __init__(self, config: dict[str, Any]):

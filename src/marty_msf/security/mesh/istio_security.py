@@ -16,12 +16,12 @@ from typing import Any, Optional
 
 import yaml
 
-from ..interfaces import ServiceMeshSecurityManager
+from ..api import AbstractServiceMeshSecurityManager
 
 logger = logging.getLogger(__name__)
 
 
-class IstioSecurityManager(ServiceMeshSecurityManager):
+class IstioSecurityManager(AbstractServiceMeshSecurityManager):
     """Istio service mesh security manager"""
 
     def __init__(self, config: dict[str, Any]):

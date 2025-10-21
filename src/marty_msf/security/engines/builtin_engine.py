@@ -11,12 +11,12 @@ import re
 from datetime import datetime, timezone
 from typing import Any, Optional, Union
 
-from ..interfaces import PolicyEngine, SecurityContext, SecurityDecision
+from ..api import AbstractPolicyEngine, SecurityContext, SecurityDecision
 
 logger = logging.getLogger(__name__)
 
 
-class BuiltinPolicyEngine(PolicyEngine):
+class BuiltinPolicyEngine(AbstractPolicyEngine):
     """Built-in policy engine with JSON-based policy definitions"""
 
     def __init__(self, config: dict[str, Any]):

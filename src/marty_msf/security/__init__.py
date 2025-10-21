@@ -1,5 +1,5 @@
 """
-Enhanced Security Framework for Marty Microservices Framework
+Security Framework for Marty Microservices Framework
 
 Provides comprehensive security features following a clean level contract architecture:
 
@@ -9,22 +9,22 @@ Core Architecture:
 - No circular dependencies by design
 - Pluggable authentication, authorization, and secret management
 
-New Modular Components:
+Modular Components:
 - security.api: Core interfaces and contracts (foundation layer)
 - security.auth_impl: Authentication implementations (BasicAuthenticator, JwtAuthenticator, etc.)
 - security.authz_impl: Authorization implementations (RoleBasedAuthorizer, PermissionBasedAuthorizer, etc.)
 - security.secrets_impl: Secret management implementations (EnvironmentSecretManager, FileSecretManager, etc.)
 - security.bootstrap: Composition root for wiring components together
 
-Legacy Components (maintained for backward compatibility):
-- Existing RBAC, ABAC, audit, and policy engine components
-- Original decorators and authentication managers
-- Modular security architecture with clean separation of concerns
+Additional Components:
+- RBAC, ABAC, audit, and policy engine components
+- Decorators and middleware for easy integration
+- Compliance scanning and reporting
+- Service mesh security integration
 
-Migration Path:
+Usage:
 - New applications should use the bootstrap module and interfaces
-- Existing applications can continue using legacy components during transition
-- Gradual migration path available through compatibility layer
+- Import components directly from this module for quick access
 """
 
 import logging
@@ -32,7 +32,7 @@ import logging
 # New modular security architecture
 from . import policy_engines
 
-# Legacy components (maintained for backward compatibility)
+# Core components
 from .abac import (
     ABACContext,
     ABACManager,
@@ -46,20 +46,29 @@ from .abac import (
 from .api import (  # Core interfaces; Data models; Enums; Exceptions; Abstract base classes
     AbstractAuthenticator,
     AbstractAuthorizer,
+    AbstractPolicyEngine,
     AbstractSecretManager,
+    AbstractServiceMeshSecurityManager,
     AuthenticationError,
     AuthenticationMethod,
     AuthenticationResult,
     AuthorizationContext,
     AuthorizationError,
     AuthorizationResult,
+    ComplianceFramework,
     IAuditor,
     IAuthenticator,
     IAuthorizer,
+    IComplianceScanner,
+    IPolicyEngine,
     ISecretManager,
+    ISessionManager,
     PermissionAction,
     SecretManagerError,
+    SecurityContext,
+    SecurityDecision,
     SecurityError,
+    SecurityPrincipal,
     User,
 )
 from .audit import (
@@ -118,7 +127,6 @@ from .canonical import configure_security_system as configure_security_manager
 
 # Import decorator implementations
 from .decorators import (
-    SecurityContext,
     get_current_user,
     requires_abac,
     requires_any_role,
@@ -177,23 +185,30 @@ logger = logging.getLogger(__name__)
 
 
 __all__ = [
-    # New modular architecture - Core interfaces
+    # Core interfaces
     "IAuthenticator",
     "IAuthorizer",
     "ISecretManager",
     "IAuditor",
+    "IPolicyEngine",
+    "IComplianceScanner",
+    "ISessionManager",
 
-    # New modular architecture - Data models
+    # Data models
     "User",
     "AuthenticationResult",
     "AuthorizationContext",
     "AuthorizationResult",
+    "SecurityContext",
+    "SecurityDecision",
+    "SecurityPrincipal",
 
-    # New modular architecture - Enums
+    # Enums
     "AuthenticationMethod",
     "PermissionAction",
+    "ComplianceFramework",
 
-    # New modular architecture - Bootstrap
+    # Bootstrap and composition root
     "SecurityBootstrap",
     "create_default_security_system",
     "create_development_security_system",
@@ -202,28 +217,30 @@ __all__ = [
     "configure_security_in_container",
     "get_security_components_from_container",
 
-    # New modular architecture - Authentication implementations
+    # Authentication implementations
     "BasicAuthenticator",
     "JwtAuthenticator",
     "EnvironmentAuthenticator",
 
-    # New modular architecture - Authorization implementations
+    # Authorization implementations
     "RoleBasedAuthorizer",
     "PermissionBasedAuthorizer",
     "AttributeBasedAuthorizer",
 
-    # New modular architecture - Secret management implementations
+    # Secret management implementations
     "EnvironmentSecretManager",
     "FileSecretManager",
     "InMemorySecretManager",
     "CompositeSecretManager",
 
-    # New modular architecture - Abstract base classes
+    # Abstract base classes
     "AbstractAuthenticator",
     "AbstractAuthorizer",
     "AbstractSecretManager",
+    "AbstractPolicyEngine",
+    "AbstractServiceMeshSecurityManager",
 
-    # Legacy components (maintained for backward compatibility)
+    # Core components
     # Authentication
     "configure_security_manager",
     # Canonical functions - single source of truth

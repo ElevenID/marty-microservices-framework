@@ -2,10 +2,10 @@
 
 from typing import Any, Optional
 
-from ..interfaces import ServiceMeshSecurityManager
+from ..api import AbstractServiceMeshSecurityManager
 
 
-class LinkerdSecurityManager(ServiceMeshSecurityManager):
+class LinkerdSecurityManager(AbstractServiceMeshSecurityManager):
     """Linkerd service mesh security manager"""
 
     def __init__(self, config: dict[str, Any]):

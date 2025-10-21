@@ -79,7 +79,7 @@ async def validate_authorization():
     authorizer = bootstrap.get_authorizer()
 
     # Create test user
-    user = User(user_id="123", username="testuser", roles=["admin"])
+    user = User(id="123", username="testuser", email="test@example.com", roles=["admin"])
 
     # Test authorization
     context = AuthorizationContext(
