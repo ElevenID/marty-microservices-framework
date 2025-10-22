@@ -6,16 +6,20 @@ import ast
 import json
 import os
 import sys
+import time
 from collections import defaultdict, deque
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 
 class ImportAnalyzer:
-    def __init__(self, project_root: str, project_name: str = "marty_msf"):
+    def __init__(self, project_root: str, project_name: str = "marty_msf", real_time: bool = True):
         self.project_root = Path(project_root)
         self.project_name = project_name
         self.src_path = self.project_root / "src" / project_name
+        self.real_time = real_time
+        self.analysis_timestamp = None
 
         # Data structures for analysis
         self.file_imports: dict[str, set[str]] = defaultdict(set)
@@ -23,6 +27,10 @@ class ImportAnalyzer:
         self.reverse_dependencies: dict[str, set[str]] = defaultdict(set)
         self.circular_deps: list[list[str]] = []
         self.import_graph = defaultdict(set)
+
+        # Track analysis metadata
+        self.parse_errors: list[tuple[str, str]] = []
+        self.skipped_files: list[str] = []
 
     def find_python_files(self) -> list[Path]:
         """Find all Python files in the project."""
@@ -83,7 +91,10 @@ class ImportAnalyzer:
                                 imports.add(full_module)
 
         except (SyntaxError, UnicodeDecodeError, FileNotFoundError) as e:
-            print(f"Error parsing {file_path}: {e}")
+            error_msg = f"Error parsing {file_path}: {e}"
+            if self.real_time:
+                print(error_msg)
+            self.parse_errors.append((str(file_path), str(e)))
 
         return imports
 
@@ -259,14 +270,48 @@ class ImportAnalyzer:
         return recommendations
 
 def main():
-    analyzer = ImportAnalyzer(".", "marty_msf")
-    report = analyzer.generate_report()
 
-    # Save detailed report to JSON
-    with open('internal_import_analysis.json', 'w') as f:
-        json.dump(report, f, indent=2)
+    # Check if we should force regeneration or use cached data
+    force_regenerate = '--force' in sys.argv or '--real-time' in sys.argv
+    quiet_mode = '--quiet' in sys.argv
 
-    # Print summary report
+    analyzer = ImportAnalyzer(".", "marty_msf", real_time=True)
+
+    # Check if cached analysis exists and is recent
+    cache_file = Path('internal_import_analysis.json')
+    should_regenerate = force_regenerate
+
+    if not should_regenerate and cache_file.exists():
+        try:
+            cache_age = time.time() - cache_file.stat().st_mtime
+            if cache_age > 300:  # 5 minutes
+                should_regenerate = True
+                if not quiet_mode:
+                    print(f"🔄 Cache is {cache_age:.0f}s old, regenerating...")
+        except (OSError, ValueError):
+            should_regenerate = True
+    else:
+        should_regenerate = True
+
+    if should_regenerate:
+        if not quiet_mode:
+            print("🔍 Analyzing project imports in real-time...")
+        report = analyzer.generate_report()
+        report['metadata'] = {
+            'generated_at': datetime.now().isoformat(),
+            'analysis_type': 'real_time',
+            'parse_errors': analyzer.parse_errors,
+            'skipped_files': analyzer.skipped_files
+        }
+
+        # Save detailed report to JSON
+        with open('internal_import_analysis.json', 'w', encoding='utf-8') as f:
+            json.dump(report, f, indent=2)
+    else:
+        if not quiet_mode:
+            print("📋 Using cached analysis (use --force to regenerate)")
+        with open('internal_import_analysis.json', encoding='utf-8') as f:
+            report = json.load(f)    # Print summary report
     print("="*80)
     print("MARTY MICROSERVICES FRAMEWORK - IMPORT ARCHITECTURE ANALYSIS")
     print("="*80)
@@ -298,6 +343,19 @@ def main():
     print("\n💡 RECOMMENDATIONS:")
     for rec in report['recommendations']:
         print(f"   {rec}")
+
+    # Show analysis metadata if available
+    if 'metadata' in report and not quiet_mode:
+        print("\n📊 ANALYSIS METADATA:")
+        meta = report['metadata']
+        if 'generated_at' in meta:
+            print(f"   Generated: {meta['generated_at']}")
+        if 'parse_errors' in meta and meta['parse_errors']:
+            print(f"   Parse Errors: {len(meta['parse_errors'])} files")
+            for file_path, error in meta['parse_errors'][:3]:  # Show first 3
+                print(f"     - {file_path}: {error}")
+            if len(meta['parse_errors']) > 3:
+                print(f"     ... and {len(meta['parse_errors']) - 3} more")
 
     print("\n📁 DETAILED REPORT: internal_import_analysis.json")
     print("="*80)

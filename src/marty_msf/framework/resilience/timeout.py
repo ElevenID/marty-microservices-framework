@@ -17,17 +17,12 @@ from enum import Enum
 from functools import wraps
 from typing import Any, TypeVar
 
+from .api import ResilienceTimeoutError
+
 T = TypeVar("T")
 logger = logging.getLogger(__name__)
 
-
-class ResilienceTimeoutError(Exception):
-    """Custom timeout exception to avoid conflicts with built-in TimeoutError."""
-
-    def __init__(self, message: str, timeout_seconds: float, operation: str = "operation"):
-        super().__init__(message)
-        self.timeout_seconds = timeout_seconds
-        self.operation = operation
+# Import from api to avoid duplication
 
 
 class TimeoutType(Enum):

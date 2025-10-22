@@ -136,6 +136,9 @@ from .decorators import (
     requires_role,
     verify_jwt_token,
 )
+
+# Enhanced security components (recovered functionality)
+from .events import SecurityEventManager, create_event_manager
 from .exceptions import (
     AccountLockedError,
     ClaimsVerificationError,
@@ -154,6 +157,7 @@ from .exceptions import (
     require_permission,
     require_role,
 )
+from .framework import SecurityHardeningFramework, create_security_framework
 from .policy_engines import (
     PolicyEvaluationRequest,
     PolicyEvaluationResponse,
@@ -175,6 +179,7 @@ from .secrets_impl import (
 
 # Session management implementations
 from .sessions import InMemorySessionManager, NoOpSessionManager
+from .status import SecurityStatusReporter, create_status_reporter
 
 # SecurityPolicyType moved to api module - import from there if needed
 
@@ -291,5 +296,13 @@ __all__ = [
     "evaluate_policy",
     "PolicyEvaluationRequest",
     "PolicyEvaluationResponse",
-    "policy_engines"
+    "policy_engines",
+
+    # Enhanced Security Components (recovered functionality)
+    "SecurityHardeningFramework",
+    "create_security_framework",
+    "SecurityEventManager",
+    "create_event_manager",
+    "SecurityStatusReporter",
+    "create_status_reporter"
 ]

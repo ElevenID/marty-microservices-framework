@@ -431,7 +431,7 @@ Messaging integration tests for {config["service_name"]}.
 
 import pytest
 import asyncio
-from marty_msf.framework.messaging.queue import MessageQueue
+from marty_msf.framework.messaging import MessageQueue
 
 
 @pytest.mark.integration

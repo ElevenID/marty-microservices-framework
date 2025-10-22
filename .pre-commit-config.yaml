@@ -177,6 +177,17 @@ repos:
         pass_filenames: false
         stages: [pre-commit]
 
+      # Circular dependency check - prevents introduction of circular dependencies
+      - id: check-circular-dependencies
+        name: Check for Circular Dependencies
+        entry: python3 tools/check_circular_deps_fast.py
+        language: system
+        files: ^src/marty_msf/.*\.py$
+        exclude: ^(tests/.*test_.*\.py|examples/.*\.py|tools/.*\.py|scripts/.*\.py)$
+        require_serial: true
+        pass_filenames: false
+        stages: [pre-commit]
+
       # Documentation consistency
       - id: docs-consistency
         name: Check Documentation Consistency

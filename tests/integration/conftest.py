@@ -18,7 +18,7 @@ from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
 
 from marty_msf.framework.events.enhanced_event_bus import EnhancedEventBus as EventBus
-from marty_msf.framework.messaging.core import MessageBus
+from marty_msf.framework.messaging import MessagingManager as MessageBus
 
 
 @pytest.fixture(scope="session")

@@ -12,7 +12,24 @@ Provides enterprise-grade resilience patterns for microservices including:
 - Enhanced Monitoring: Comprehensive metrics and health checks
 - Middleware Integration: FastAPI and other framework integration
 - Consolidated Resilience Manager: Unified resilience patterns (NEW)
+- API & Bootstrap Pattern: Level contract architecture for dependency management
 """
+
+# Import API interfaces and data models
+from .api import (
+    BulkheadRejectedError,
+    CircuitBreakerOpenError,
+    IResilienceManager,
+    IResilienceService,
+    ResilienceConfig,
+    ResilienceMetrics,
+    ResilienceStrategy,
+    ResilienceTimeoutError,
+    RetryExhaustedError,
+)
+
+# Import bootstrap for dependency injection
+from .bootstrap import ResilienceBootstrap
 
 # Import basic resilience patterns
 from .bulkhead import (
@@ -54,15 +71,7 @@ from .connection_pools.manager import (
 from .consolidated_manager import (
     ConsolidatedResilienceConfig,
     ConsolidatedResilienceManager,
-    ResilienceStrategy,
-    configure_resilience_manager,
-    create_resilience_manager_from_service_config,
-    create_resilience_manager_with_defaults,
-    get_resilience_manager,
-    resilient_database_call,
-    resilient_external_call,
-    resilient_internal_call,
-    set_resilience_manager,
+    create_consolidated_resilience_manager,
 )
 
 # Enhanced resilience patterns will be imported when available
@@ -79,7 +88,6 @@ from .fallback import (
     with_fallback,
 )
 from .middleware import (
-    ResilienceConfig,
     ResilienceMiddleware,
     ResilienceService,
     close_resilience_service,
@@ -102,13 +110,7 @@ from .retry import (
     retry_async,
     retry_with_circuit_breaker,
 )
-from .timeout import (
-    ResilienceTimeoutError,
-    TimeoutConfig,
-    TimeoutManager,
-    timeout_async,
-    with_timeout,
-)
+from .timeout import TimeoutConfig, TimeoutManager, timeout_async, with_timeout
 
 __all__ = [
     # Basic resilience patterns
@@ -171,13 +173,10 @@ __all__ = [
     # Consolidated Resilience Manager (NEW)
     "ConsolidatedResilienceConfig",
     "ConsolidatedResilienceManager",
-    "ResilienceStrategy",
-    "create_resilience_manager_with_defaults",
-    "create_resilience_manager_from_service_config",
-    "configure_resilience_manager",
-    "get_resilience_manager",
-    "resilient_database_call",
-    "resilient_external_call",
-    "resilient_internal_call",
-    "set_resilience_manager",
+    "create_consolidated_resilience_manager",
+
+    # API and Bootstrap Pattern (NEW)
+    "IResilienceManager",
+    "IResilienceService",
+    "ResilienceBootstrap",
 ]

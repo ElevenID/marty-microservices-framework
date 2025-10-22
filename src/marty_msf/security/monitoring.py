@@ -25,25 +25,6 @@ import redis
 from elasticsearch import Elasticsearch
 from prometheus_client import CollectorRegistry, Counter, Gauge, Histogram
 
-# External dependencies
-try:
-
-    REDIS_AVAILABLE = True
-except ImportError:
-    REDIS_AVAILABLE = False
-
-try:
-
-    METRICS_AVAILABLE = True
-except ImportError:
-    METRICS_AVAILABLE = False
-
-try:
-
-    ELASTICSEARCH_AVAILABLE = True
-except ImportError:
-    ELASTICSEARCH_AVAILABLE = False
-
 
 class SecurityEventType(Enum):
     """Types of security events"""
@@ -214,18 +195,17 @@ class SecurityEventCollector:
         self.event_hashes: builtins.set[str] = set()
 
         # Metrics
-        if METRICS_AVAILABLE:
-            self.events_collected = Counter(
-                "marty_security_events_collected_total",
-                "Security events collected",
-                ["event_type", "severity", "source"],
-            )
+        self.events_collected = Counter(
+            "marty_security_events_collected_total",
+            "Security events collected",
+            ["event_type", "severity", "source"],
+        )
 
-            self.events_processed = Counter(
-                "marty_security_events_processed_total",
-                "Security events processed",
-                ["status"],
-            )
+        self.events_processed = Counter(
+            "marty_security_events_processed_total",
+            "Security events processed",
+            ["status"],
+        )
 
     def register_event_source(self, source_name: str, source_config: builtins.dict[str, Any]):
         """Register a new event source"""
@@ -285,10 +265,9 @@ class SecurityEventCollector:
         await self.event_queue.put(event)
 
         # Update metrics
-        if METRICS_AVAILABLE:
-            self.events_collected.labels(
-                event_type=event_type.value, severity=severity.value, source=source
-            ).inc()
+        self.events_collected.labels(
+            event_type=event_type.value, severity=severity.value, source=source
+        ).inc()
 
         return event
 
@@ -404,28 +383,25 @@ class SecurityAnalyticsEngine:
         self.behavioral_baselines: builtins.dict[str, builtins.dict[str, Any]] = {}
         self.threat_patterns: builtins.list[builtins.dict[str, Any]] = []
 
-        # Analytics cache
-        if REDIS_AVAILABLE:
-            self.redis_client = redis.Redis(host="localhost", port=6379, db=2)
-        else:
-            self.redis_client = None
+        # todo: use configurable redis connection
+        self.redis_client = redis.Redis(host="localhost", port=6379, db=2)
+
 
         # Initialize built-in correlation rules
         self._initialize_correlation_rules()
 
         # Metrics
-        if METRICS_AVAILABLE:
-            self.correlations_detected = Counter(
-                "marty_security_correlations_detected_total",
-                "Security event correlations detected",
-                ["rule_name"],
-            )
+        self.correlations_detected = Counter(
+            "marty_security_correlations_detected_total",
+            "Security event correlations detected",
+            ["rule_name"],
+        )
 
-            self.anomalies_detected = Counter(
-                "marty_security_anomalies_detected_total",
-                "Security anomalies detected",
-                ["anomaly_type"],
-            )
+        self.anomalies_detected = Counter(
+            "marty_security_anomalies_detected_total",
+            "Security anomalies detected",
+            ["anomaly_type"],
+        )
 
     def _initialize_correlation_rules(self):
         """Initialize built-in correlation rules"""
@@ -538,8 +514,7 @@ class SecurityAnalyticsEngine:
                     alerts.append(alert)
 
                     # Update metrics
-                    if METRICS_AVAILABLE:
-                        self.correlations_detected.labels(rule_name=rule["name"]).inc()
+                    self.correlations_detected.labels(rule_name=rule["name"]).inc()
 
             except Exception as e:
                 print(f"Error evaluating correlation rule {rule['rule_id']}: {e}")
@@ -602,8 +577,7 @@ class SecurityAnalyticsEngine:
                 alerts.append(alert)
 
                 # Update metrics
-                if METRICS_AVAILABLE:
-                    self.anomalies_detected.labels(anomaly_type="volume_anomaly").inc()
+                self.anomalies_detected.labels(anomaly_type="volume_anomaly").inc()
 
         return alerts
 
@@ -676,19 +650,14 @@ class SIEMIntegration:
         self.siem_connections: builtins.dict[str, Any] = {}
         self.log_forwarders: builtins.list[Any] = []
 
-        # Elasticsearch integration for log storage
-        if ELASTICSEARCH_AVAILABLE:
-            self.elasticsearch = Elasticsearch([{"host": "localhost", "port": 9200}])
-        else:
-            self.elasticsearch = None
+        self.elasticsearch = Elasticsearch([{"host": "localhost", "port": 9200}])
 
         # Metrics
-        if METRICS_AVAILABLE:
-            self.logs_forwarded = Counter(
-                "marty_siem_logs_forwarded_total",
-                "Logs forwarded to SIEM",
-                ["destination"],
-            )
+        self.logs_forwarded = Counter(
+            "marty_siem_logs_forwarded_total",
+            "Logs forwarded to SIEM",
+            ["destination"],
+        )
 
     def configure_siem_connection(self, siem_name: str, config: builtins.dict[str, Any]):
         """Configure connection to SIEM platform"""
@@ -715,8 +684,7 @@ class SIEMIntegration:
                 await self._forward_to_qradar(siem_event)
 
             # Update metrics
-            if METRICS_AVAILABLE:
-                self.logs_forwarded.labels(destination=siem_name).inc()
+            self.logs_forwarded.labels(destination=siem_name).inc()
 
         except Exception as e:
             print(f"Error forwarding to SIEM {siem_name}: {e}")
@@ -758,18 +726,19 @@ class SIEMIntegration:
 
     async def _forward_to_elasticsearch(self, event_data: builtins.dict[str, Any]):
         """Forward event to Elasticsearch"""
-        if self.elasticsearch:
-            index_name = f"marty-security-{datetime.now().strftime('%Y.%m.%d')}"
-            await self.elasticsearch.index(index=index_name, document=event_data)
+        index_name = f"marty-security-{datetime.now().strftime('%Y.%m.%d')}"
+        self.elasticsearch.index(index=index_name, document=event_data)
 
     async def _forward_to_splunk(self, event_data: builtins.dict[str, Any]):
         """Forward event to Splunk"""
         # Mock implementation - would use Splunk HEC or Universal Forwarder
+        raise NotImplementedError("Splunk forwarding not implemented")
         print(f"Forwarding to Splunk: {event_data}")
 
     async def _forward_to_qradar(self, event_data: builtins.dict[str, Any]):
         """Forward event to IBM QRadar"""
         # Mock implementation - would use QRadar REST API
+        raise NotImplementedError("QRadar forwarding not implemented")
         print(f"Forwarding to QRadar: {event_data}")
 
 
@@ -785,22 +754,21 @@ class SecurityMonitoringDashboard:
     """
 
     def __init__(self):
-        self.metrics_registry = CollectorRegistry() if METRICS_AVAILABLE else None
+        self.metrics_registry = CollectorRegistry()
         self.active_alerts: builtins.dict[str, SecurityAlert] = {}
 
         # Dashboard metrics
-        if METRICS_AVAILABLE:
-            self.security_score = Gauge(
-                "marty_security_score",
-                "Overall security score",
-                registry=self.metrics_registry,
-            )
+        self.security_score = Gauge(
+            "marty_security_score",
+            "Overall security score",
+            registry=self.metrics_registry,
+        )
 
-            self.threat_level = Gauge(
-                "marty_threat_level",
-                "Current threat level",
-                registry=self.metrics_registry,
-            )
+        self.threat_level = Gauge(
+            "marty_threat_level",
+            "Current threat level",
+            registry=self.metrics_registry,
+        )
 
     def get_security_dashboard(self) -> builtins.dict[str, Any]:
         """Get security dashboard data"""
@@ -1110,7 +1078,7 @@ class SecurityMonitoringSystem:
         while self.monitoring_enabled:
             try:
                 # Update dashboard metrics
-                if METRICS_AVAILABLE and self.dashboard.metrics_registry:
+                if self.dashboard.metrics_registry:
                     security_score = self.dashboard._calculate_security_score()
                     self.dashboard.security_score.set(security_score)
 

@@ -1,24 +1,77 @@
 #!/usr/bin/env python3
 """
 Detailed analysis of circular dependencies with specific recommendations.
+Can work with cached data or perform real-time analysis.
 """
 import ast
 import json
+import subprocess
+import sys
+import time
+from datetime import datetime
 from pathlib import Path
 
 
-def analyze_specific_circular_deps():
-    """Analyze the specific circular dependencies found."""
+def ensure_fresh_analysis(force_refresh: bool = False) -> dict:
+    """Ensure we have fresh analysis data, regenerating if needed."""
+    cache_file = Path('internal_import_analysis.json')
 
-    # Load the detailed analysis
-    with open('internal_import_analysis.json') as f:
-        data = json.load(f)
+    # Check if we need to regenerate
+    needs_refresh = force_refresh or not cache_file.exists()
+
+    if not needs_refresh:
+        try:
+            cache_age = time.time() - cache_file.stat().st_mtime
+            if cache_age > 300:  # 5 minutes
+                needs_refresh = True
+                print(f"🔄 Analysis cache is {cache_age:.0f}s old, refreshing...")
+        except (OSError, ValueError):
+            needs_refresh = True
+
+    if needs_refresh:
+        print("🔍 Running fresh import analysis...")
+        try:
+            subprocess.run(
+                [sys.executable, 'tools/analyze_project_imports.py', '--quiet'],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+        except subprocess.CalledProcessError as e:
+            print(f"Error running analysis: {e}")
+            print(f"Output: {e.stdout}")
+            print(f"Error: {e.stderr}")
+            sys.exit(1)
+
+    # Load the data
+    try:
+        with open(cache_file, encoding='utf-8') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"Error loading analysis data: {e}")
+        sys.exit(1)
+
+
+def analyze_specific_circular_deps(data: dict):
+    """Analyze the specific circular dependencies found."""
 
     print("="*100)
     print("DETAILED CIRCULAR DEPENDENCY ANALYSIS")
     print("="*100)
 
-    circular_deps = data['circular_dependencies']
+    circular_deps = data.get('circular_dependencies', [])
+
+    if not circular_deps:
+        print("\n🎉 NO CIRCULAR DEPENDENCIES FOUND!")
+        print("   Your codebase has clean dependency architecture.")
+
+        # Show metadata if available
+        if 'metadata' in data:
+            meta = data['metadata']
+            if 'generated_at' in meta:
+                generated_time = datetime.fromisoformat(meta['generated_at'].replace('Z', '+00:00'))
+                print(f"   Analysis generated: {generated_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        return
 
     for i, cycle in enumerate(circular_deps, 1):
         print(f"\n🔄 CIRCULAR DEPENDENCY #{i}:")
@@ -67,18 +120,15 @@ def analyze_specific_circular_deps():
             print("   - Extract shared functionality to a lower-level module")
             print("   - Use events/signals for loose coupling")
 
-def create_dependency_graph():
+def create_dependency_graph(data: dict):
     """Create a simple text representation of the dependency graph."""
-
-    with open('internal_import_analysis.json') as f:
-        data = json.load(f)
 
     print("\n" + "="*100)
     print("DEPENDENCY GRAPH - MOST CONNECTED MODULES")
     print("="*100)
 
     # Get highly coupled modules
-    highly_coupled = data['highly_coupled_modules'][:10]
+    highly_coupled = data.get('highly_coupled_modules', [])[:10]
 
     for module_info in highly_coupled:
         module = module_info['module']
@@ -181,15 +231,36 @@ def generate_refactoring_plan():
             print(f"      {step}")
 
 if __name__ == "__main__":
-    analyze_specific_circular_deps()
-    create_dependency_graph()
+    # Check command line arguments
+    force_refresh = '--force' in sys.argv or '--refresh' in sys.argv
+
+    # Get fresh analysis data
+    data = ensure_fresh_analysis(force_refresh)
+
+    # Run the analysis
+    analyze_specific_circular_deps(data)
+    create_dependency_graph(data)
     generate_refactoring_plan()
 
     print(f"\n{'='*100}")
     print("SUMMARY OF ACTIONS NEEDED:")
     print(f"{'='*100}")
-    print("1. 🔥 IMMEDIATE: Fix 10 circular dependencies")
-    print("2. ⚠️  HIGH: Refactor 5 highly coupled modules")
-    print("3. 🏗️  MEDIUM: Establish clear architectural layers")
+
+    circular_count = len(data.get('circular_dependencies', []))
+    coupled_count = len(data.get('highly_coupled_modules', []))
+
+    if circular_count > 0:
+        print(f"1. 🔥 IMMEDIATE: Fix {circular_count} circular dependencies")
+    else:
+        print("1. ✅ CIRCULAR DEPENDENCIES: None found - excellent!")
+
+    if coupled_count > 5:
+        print(f"2. ⚠️  HIGH: Refactor {coupled_count} highly coupled modules")
+    elif coupled_count > 0:
+        print(f"2. 🟡 MEDIUM: Review {coupled_count} moderately coupled modules")
+    else:
+        print("2. ✅ COUPLING: Low coupling detected - good architecture!")
+
+    print("3. �️  MEDIUM: Establish clear architectural layers")
     print("4. 📚 LOW: Add documentation for new interfaces")
     print(f"{'='*100}")

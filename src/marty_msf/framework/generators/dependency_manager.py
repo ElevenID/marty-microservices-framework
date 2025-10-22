@@ -17,8 +17,7 @@ import yaml
 
 from marty_msf.framework.cache.manager import CacheManager
 from marty_msf.framework.config import BaseServiceConfig
-from marty_msf.framework.messaging.queue import MessageQueue
-from marty_msf.framework.messaging.streams import EventStreamManager
+from marty_msf.framework.messaging import EventStreamManager, MessageQueue
 
 
 class DependencyType(Enum):

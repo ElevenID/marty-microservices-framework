@@ -19,7 +19,7 @@ import pytest
 # Framework imports
 from marty_msf.framework.config import BaseServiceConfig
 from marty_msf.framework.events.enhanced_event_bus import EnhancedEventBus
-from marty_msf.framework.messaging.manager import MessagingManager as MessageBus
+from marty_msf.framework.messaging import MessagingManager as MessageBus
 from marty_msf.framework.monitoring.core import MetricsCollector
 from marty_msf.observability.logging import UnifiedServiceLogger as StructuredLogger
 

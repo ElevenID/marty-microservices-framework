@@ -1,57 +1,23 @@
 {
   "summary": {
     "total_modules": 209,
-    "total_internal_imports": 510,
-    "circular_dependencies_count": 7,
-    "highly_coupled_modules_count": 28
+    "total_internal_imports": 503,
+    "circular_dependencies_count": 0,
+    "highly_coupled_modules_count": 25
   },
-  "circular_dependencies": [
-    [
-      "marty_msf.framework.resilience.resilience_manager_service",
-      "marty_msf.framework.resilience.consolidated_manager",
-      "marty_msf.framework.resilience.resilience_manager_service"
-    ],
-    [
-      "marty_msf.framework.messaging.core",
-      "marty_msf.framework.messaging.backends",
-      "marty_msf.framework.messaging.core"
-    ],
-    [
-      "marty_msf.framework.messaging.core",
-      "marty_msf.framework.messaging.manager",
-      "marty_msf.framework.messaging.dlq",
-      "marty_msf.framework.messaging.core"
-    ],
-    [
-      "marty_msf.framework.messaging.core",
-      "marty_msf.framework.messaging.manager",
-      "marty_msf.framework.messaging.middleware",
-      "marty_msf.framework.messaging.core"
-    ],
-    [
-      "marty_msf.framework.messaging.patterns",
-      "marty_msf.framework.messaging.core",
-      "marty_msf.framework.messaging.manager",
-      "marty_msf.framework.messaging.patterns"
-    ],
-    [
-      "marty_msf.framework.messaging.core",
-      "marty_msf.framework.messaging.manager",
-      "marty_msf.framework.messaging.routing",
-      "marty_msf.framework.messaging.core"
-    ],
-    [
-      "marty_msf.framework.messaging.core",
-      "marty_msf.framework.messaging.manager",
-      "marty_msf.framework.messaging.core"
-    ]
-  ],
+  "circular_dependencies": [],
   "highly_coupled_modules": [
     {
       "module": "marty_msf.security",
-      "coupling_score": 17,
-      "imports": 17,
+      "coupling_score": 20,
+      "imports": 20,
       "imported_by": 0
+    },
+    {
+      "module": "marty_msf.framework.resilience",
+      "coupling_score": 14,
+      "imports": 12,
+      "imported_by": 2
     },
     {
       "module": "marty_msf.framework.discovery.config",
@@ -72,22 +38,10 @@
       "imported_by": 0
     },
     {
-      "module": "marty_msf.framework.resilience",
-      "coupling_score": 12,
-      "imports": 10,
-      "imported_by": 2
-    },
-    {
-      "module": "marty_msf.framework.messaging",
-      "coupling_score": 12,
-      "imports": 12,
-      "imported_by": 0
-    },
-    {
-      "module": "marty_msf.core.enhanced_di",
+      "module": "marty_msf.security.bootstrap",
       "coupling_score": 11,
-      "imports": 1,
-      "imported_by": 10
+      "imports": 8,
+      "imported_by": 3
     },
     {
       "module": "marty_msf.framework.config",
@@ -106,6 +60,12 @@
       "coupling_score": 10,
       "imports": 5,
       "imported_by": 5
+    },
+    {
+      "module": "marty_msf.core.enhanced_di",
+      "coupling_score": 9,
+      "imports": 1,
+      "imported_by": 8
     }
   ],
   "module_statistics": {
@@ -116,50 +76,49 @@
         "marty_msf.core.registry"
       ],
       "imported_by": [
-        "marty_msf.observability.tracing",
         "marty_msf.observability.standard",
-        "marty_msf.patterns.config"
+        "marty_msf.patterns.config",
+        "marty_msf.observability.tracing"
       ]
     },
     "marty_msf.core.base_services": {
       "imports_count": 1,
-      "imported_by_count": 3,
+      "imported_by_count": 4,
       "imports": [
         "marty_msf.core.enhanced_di"
       ],
       "imported_by": [
-        "marty_msf.framework.events.event_bus_service",
+        "marty_msf.framework.resilience.isolated_service",
         "marty_msf.framework.resilience.resilience_manager_service",
+        "marty_msf.framework.events.event_bus_service",
         "marty_msf.security.policy_engines.opa_service"
       ]
     },
     "marty_msf.core.enhanced_di": {
       "imports_count": 1,
-      "imported_by_count": 10,
+      "imported_by_count": 8,
       "imports": [
         "marty_msf.core.di_container"
       ],
       "imported_by": [
         "marty_msf.security.rbac",
-        "marty_msf.framework.resilience.consolidated_manager",
-        "marty_msf.framework.resilience.resilience_manager_service",
-        "marty_msf.security.policy_engines.opa_service",
         "marty_msf.framework.events.event_bus_service",
-        "marty_msf.security.policy_engines",
-        "marty_msf.framework.events.decorators",
         "marty_msf.core.base_services",
-        "marty_msf.framework.resilience.middleware",
-        "marty_msf.security.abac"
+        "marty_msf.security.abac",
+        "marty_msf.security.policy_engines.opa_service",
+        "marty_msf.framework.events.decorators",
+        "marty_msf.security.policy_engines",
+        "marty_msf.framework.resilience.middleware"
       ]
     },
     "marty_msf.patterns.config": {
       "imports_count": 4,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.patterns.cqrs.enhanced_cqrs",
-        "marty_msf.core.services",
         "marty_msf.patterns.outbox.enhanced_outbox",
-        "marty_msf.framework.config.injection"
+        "marty_msf.patterns.cqrs.enhanced_cqrs",
+        "marty_msf.framework.config.injection",
+        "marty_msf.core.services"
       ],
       "imported_by": []
     },
@@ -167,20 +126,22 @@
       "imports_count": 4,
       "imported_by_count": 0,
       "imports": [
+        "marty_msf.patterns.patterns.saga.saga_patterns",
         "marty_msf.patterns.patterns.config",
         "marty_msf.patterns.patterns.outbox.enhanced_outbox",
-        "marty_msf.patterns.patterns.saga.saga_patterns",
         "marty_msf.patterns.patterns.cqrs.enhanced_cqrs"
       ],
       "imported_by": []
     },
     "marty_msf.framework": {
       "imports_count": 1,
-      "imported_by_count": 0,
+      "imported_by_count": 1,
       "imports": [
         "marty_msf.events"
       ],
-      "imported_by": []
+      "imported_by": [
+        "marty_msf.security"
+      ]
     },
     "marty_msf.framework.config_factory": {
       "imports_count": 1,
@@ -194,10 +155,10 @@
       "imports_count": 4,
       "imported_by_count": 1,
       "imports": [
-        "marty_msf.framework.load_balancing",
+        "marty_msf.framework.traffic_management",
         "marty_msf.framework.service_discovery",
-        "marty_msf.framework.service_mesh",
-        "marty_msf.framework.traffic_management"
+        "marty_msf.framework.load_balancing",
+        "marty_msf.framework.service_mesh"
       ],
       "imported_by": [
         "marty_msf.framework.discovery"
@@ -231,8 +192,8 @@
       "imports_count": 3,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.mesh.health_checker",
         "marty_msf.framework.service_mesh",
+        "marty_msf.framework.mesh.health_checker",
         "marty_msf.framework.mesh.registry"
       ],
       "imported_by": []
@@ -249,8 +210,8 @@
       "imports_count": 2,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.mesh.health_checker",
-        "marty_msf.framework.mesh.models"
+        "marty_msf.framework.mesh.models",
+        "marty_msf.framework.mesh.health_checker"
       ],
       "imported_by": []
     },
@@ -275,10 +236,10 @@
       "imported_by_count": 1,
       "imports": [
         "marty_msf.framework.utilities",
-        "marty_msf.framework.manager",
         "marty_msf.framework.models",
-        "marty_msf.framework.transaction",
         "marty_msf.framework.repository",
+        "marty_msf.framework.manager",
+        "marty_msf.framework.transaction",
         "marty_msf.framework.config"
       ],
       "imported_by": [
@@ -289,8 +250,8 @@
       "imports_count": 2,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.database.models",
-        "marty_msf.framework.database.manager"
+        "marty_msf.framework.database.manager",
+        "marty_msf.framework.database.models"
       ],
       "imported_by": []
     },
@@ -298,8 +259,8 @@
       "imports_count": 2,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.database.models",
-        "marty_msf.framework.database.manager"
+        "marty_msf.framework.database.manager",
+        "marty_msf.framework.database.models"
       ],
       "imported_by": []
     },
@@ -307,13 +268,13 @@
       "imports_count": 2,
       "imported_by_count": 3,
       "imports": [
-        "marty_msf.framework.database.models",
-        "marty_msf.framework.database.config"
+        "marty_msf.framework.database.config",
+        "marty_msf.framework.database.models"
       ],
       "imported_by": [
-        "marty_msf.framework.database.repository",
+        "marty_msf.framework.database.transaction",
         "marty_msf.framework.database.utilities",
-        "marty_msf.framework.database.transaction"
+        "marty_msf.framework.database.repository"
       ]
     },
     "marty_msf.framework.cache": {
@@ -331,19 +292,19 @@
         "marty_msf.framework.unified_grpc_server"
       ],
       "imported_by": [
-        "marty_msf.observability.correlation",
         "marty_msf.observability.monitoring.middleware",
-        "marty_msf.observability.metrics_middleware",
-        "marty_msf.observability.standard_correlation"
+        "marty_msf.observability.standard_correlation",
+        "marty_msf.observability.correlation",
+        "marty_msf.observability.metrics_middleware"
       ]
     },
     "marty_msf.framework.grpc.unified_grpc_server": {
       "imports_count": 3,
       "imported_by_count": 0,
       "imports": [
+        "marty_msf.observability.standard",
         "marty_msf.framework.config",
-        "marty_msf.framework.config.unified",
-        "marty_msf.observability.standard"
+        "marty_msf.framework.config.unified"
       ],
       "imported_by": []
     },
@@ -362,17 +323,17 @@
       "imports_count": 3,
       "imported_by_count": 7,
       "imports": [
-        "marty_msf.framework.manager",
         "marty_msf.framework.unified",
-        "marty_msf.framework.plugin_config"
+        "marty_msf.framework.plugin_config",
+        "marty_msf.framework.manager"
       ],
       "imported_by": [
-        "marty_msf.framework.discovery",
-        "marty_msf.framework.database",
-        "marty_msf.observability.unified_observability",
-        "marty_msf.framework.grpc.unified_grpc_server",
-        "marty_msf.framework.gateway",
         "marty_msf.framework.generators.dependency_manager",
+        "marty_msf.framework.grpc.unified_grpc_server",
+        "marty_msf.observability.unified_observability",
+        "marty_msf.framework.discovery",
+        "marty_msf.framework.gateway",
+        "marty_msf.framework.database",
         "marty_msf.framework.config_factory"
       ]
     },
@@ -393,11 +354,12 @@
       "imported_by": []
     },
     "marty_msf.framework.plugins": {
-      "imports_count": 2,
+      "imports_count": 3,
       "imported_by_count": 1,
       "imports": [
+        "marty_msf.framework.api",
         "marty_msf.framework.bootstrap",
-        "marty_msf.framework.api"
+        "marty_msf.framework.decorators"
       ],
       "imported_by": [
         "marty_msf.framework.gateway"
@@ -421,23 +383,23 @@
         "marty_msf.framework.integration.external_connectors.enums"
       ],
       "imported_by": [
-        "marty_msf.framework.integration.external_connectors.connectors.rest_api",
-        "marty_msf.framework.integration.external_connectors.connectors.database",
-        "marty_msf.framework.integration.external_connectors.test_imports",
+        "marty_msf.framework.integration.external_connectors.connectors.manager",
+        "marty_msf.framework.integration.external_connectors.transformation",
+        "marty_msf.framework.integration.external_connectors.tests.test_integration",
         "marty_msf.framework.integration.external_connectors.connectors.filesystem",
         "marty_msf.framework.integration.external_connectors.base",
-        "marty_msf.framework.integration.external_connectors.connectors.manager",
-        "marty_msf.framework.integration.external_connectors.tests.test_integration",
-        "marty_msf.framework.integration.external_connectors.transformation"
+        "marty_msf.framework.integration.external_connectors.test_imports",
+        "marty_msf.framework.integration.external_connectors.connectors.rest_api",
+        "marty_msf.framework.integration.external_connectors.connectors.database"
       ]
     },
     "marty_msf.framework.integration.external_connectors.test_imports": {
       "imports_count": 3,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.integration.external_connectors.base",
         "marty_msf.framework.integration.external_connectors.enums",
-        "marty_msf.framework.integration.external_connectors.config"
+        "marty_msf.framework.integration.external_connectors.config",
+        "marty_msf.framework.integration.external_connectors.base"
       ],
       "imported_by": []
     },
@@ -445,11 +407,11 @@
       "imports_count": 5,
       "imported_by_count": 0,
       "imports": [
+        "marty_msf.framework.integration.base",
+        "marty_msf.framework.integration.transformation",
         "marty_msf.framework.integration.config",
         "marty_msf.framework.integration.enums",
-        "marty_msf.framework.integration.connectors",
-        "marty_msf.framework.integration.base",
-        "marty_msf.framework.integration.transformation"
+        "marty_msf.framework.integration.connectors"
       ],
       "imported_by": []
     },
@@ -460,20 +422,20 @@
         "marty_msf.framework.integration.external_connectors.config"
       ],
       "imported_by": [
-        "marty_msf.framework.integration.external_connectors.connectors.rest_api",
-        "marty_msf.framework.integration.external_connectors.connectors.database",
-        "marty_msf.framework.integration.external_connectors.test_imports",
-        "marty_msf.framework.integration.external_connectors.connectors.filesystem",
         "marty_msf.framework.integration.external_connectors.connectors.manager",
-        "marty_msf.framework.integration.external_connectors.tests.test_integration"
+        "marty_msf.framework.integration.external_connectors.tests.test_integration",
+        "marty_msf.framework.integration.external_connectors.connectors.filesystem",
+        "marty_msf.framework.integration.external_connectors.test_imports",
+        "marty_msf.framework.integration.external_connectors.connectors.rest_api",
+        "marty_msf.framework.integration.external_connectors.connectors.database"
       ]
     },
     "marty_msf.framework.integration.external_connectors.connectors.database": {
       "imports_count": 2,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.integration.external_connectors.base",
-        "marty_msf.framework.integration.external_connectors.config"
+        "marty_msf.framework.integration.external_connectors.config",
+        "marty_msf.framework.integration.external_connectors.base"
       ],
       "imported_by": []
     },
@@ -481,8 +443,8 @@
       "imports_count": 2,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.integration.external_connectors.base",
-        "marty_msf.framework.integration.external_connectors.config"
+        "marty_msf.framework.integration.external_connectors.config",
+        "marty_msf.framework.integration.external_connectors.base"
       ],
       "imported_by": []
     },
@@ -491,9 +453,9 @@
       "imported_by_count": 0,
       "imports": [
         "marty_msf.framework.integration.external_connectors.rest_api",
-        "marty_msf.framework.integration.external_connectors.manager",
         "marty_msf.framework.integration.external_connectors.filesystem",
-        "marty_msf.framework.integration.external_connectors.database"
+        "marty_msf.framework.integration.external_connectors.database",
+        "marty_msf.framework.integration.external_connectors.manager"
       ],
       "imported_by": []
     },
@@ -501,8 +463,8 @@
       "imports_count": 2,
       "imported_by_count": 1,
       "imports": [
-        "marty_msf.framework.integration.external_connectors.base",
-        "marty_msf.framework.integration.external_connectors.config"
+        "marty_msf.framework.integration.external_connectors.config",
+        "marty_msf.framework.integration.external_connectors.base"
       ],
       "imported_by": [
         "marty_msf.framework.integration.external_connectors.tests.test_integration"
@@ -512,8 +474,8 @@
       "imports_count": 2,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.integration.external_connectors.base",
-        "marty_msf.framework.integration.external_connectors.config"
+        "marty_msf.framework.integration.external_connectors.config",
+        "marty_msf.framework.integration.external_connectors.base"
       ],
       "imported_by": []
     },
@@ -521,10 +483,10 @@
       "imports_count": 4,
       "imported_by_count": 0,
       "imports": [
+        "marty_msf.framework.discovery.config",
         "marty_msf.framework.discovery.cache",
         "marty_msf.framework.discovery.clients",
-        "marty_msf.framework.discovery.results",
-        "marty_msf.framework.discovery.config"
+        "marty_msf.framework.discovery.results"
       ],
       "imported_by": []
     },
@@ -540,11 +502,11 @@
       "imports_count": 5,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.integration.external_connectors.connectors.rest_api",
-        "marty_msf.framework.integration.external_connectors.enums",
-        "marty_msf.framework.integration.external_connectors.base",
+        "marty_msf.framework.integration.external_connectors.transformation",
         "marty_msf.framework.integration.external_connectors.config",
-        "marty_msf.framework.integration.external_connectors.transformation"
+        "marty_msf.framework.integration.external_connectors.base",
+        "marty_msf.framework.integration.external_connectors.enums",
+        "marty_msf.framework.integration.external_connectors.connectors.rest_api"
       ],
       "imported_by": []
     },
@@ -552,38 +514,38 @@
       "imports_count": 2,
       "imported_by_count": 11,
       "imports": [
-        "marty_msf.framework.discovery.core",
-        "marty_msf.framework.discovery.load_balancing"
+        "marty_msf.framework.discovery.load_balancing",
+        "marty_msf.framework.discovery.core"
       ],
       "imported_by": [
-        "marty_msf.framework.discovery.mesh",
-        "marty_msf.framework.discovery.clients.server_side",
-        "marty_msf.framework.integration.external_connectors.tests.test_discovery_improvements",
-        "marty_msf.framework.discovery.clients.base",
-        "marty_msf.framework.discovery.clients.hybrid",
-        "marty_msf.framework.discovery.clients.client_side",
-        "marty_msf.framework.discovery.manager",
         "marty_msf.framework.discovery.cache",
         "marty_msf.framework.discovery.clients.service_mesh",
+        "marty_msf.framework.discovery.clients.base",
+        "marty_msf.framework.discovery.clients.hybrid",
         "marty_msf.framework.discovery.results",
-        "marty_msf.framework.discovery.factory"
+        "marty_msf.framework.discovery.clients.client_side",
+        "marty_msf.framework.discovery.factory",
+        "marty_msf.framework.integration.external_connectors.tests.test_discovery_improvements",
+        "marty_msf.framework.discovery.mesh",
+        "marty_msf.framework.discovery.manager",
+        "marty_msf.framework.discovery.clients.server_side"
       ]
     },
     "marty_msf.framework.discovery.results": {
       "imports_count": 2,
       "imported_by_count": 7,
       "imports": [
-        "marty_msf.framework.discovery.core",
-        "marty_msf.framework.discovery.config"
+        "marty_msf.framework.discovery.config",
+        "marty_msf.framework.discovery.core"
       ],
       "imported_by": [
-        "marty_msf.framework.discovery.mesh",
-        "marty_msf.framework.discovery.clients.server_side",
-        "marty_msf.framework.integration.external_connectors.tests.test_discovery_improvements",
+        "marty_msf.framework.discovery.clients.service_mesh",
         "marty_msf.framework.discovery.clients.base",
         "marty_msf.framework.discovery.clients.hybrid",
-        "marty_msf.framework.discovery.clients.service_mesh",
-        "marty_msf.framework.discovery.clients.client_side"
+        "marty_msf.framework.discovery.clients.client_side",
+        "marty_msf.framework.integration.external_connectors.tests.test_discovery_improvements",
+        "marty_msf.framework.discovery.mesh",
+        "marty_msf.framework.discovery.clients.server_side"
       ]
     },
     "marty_msf.framework.discovery.registry": {
@@ -610,30 +572,30 @@
       "imports_count": 2,
       "imported_by_count": 2,
       "imports": [
-        "marty_msf.framework.discovery.core",
-        "marty_msf.framework.discovery.config"
+        "marty_msf.framework.discovery.config",
+        "marty_msf.framework.discovery.core"
       ],
       "imported_by": [
-        "marty_msf.framework.discovery.clients.base",
-        "marty_msf.framework.integration.external_connectors.tests.test_discovery_improvements"
+        "marty_msf.framework.integration.external_connectors.tests.test_discovery_improvements",
+        "marty_msf.framework.discovery.clients.base"
       ]
     },
     "marty_msf.framework.discovery": {
       "imports_count": 12,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.core",
-        "marty_msf.framework.clients.client_side",
         "marty_msf.framework.circuit_breaker",
         "marty_msf.framework.mesh",
-        "marty_msf.framework.health",
         "marty_msf.framework.clients.base",
+        "marty_msf.framework.core",
         "marty_msf.framework.clients.server_side",
         "marty_msf.framework.load_balancing",
         "marty_msf.framework.manager",
         "marty_msf.framework.registry",
+        "marty_msf.framework.health",
         "marty_msf.framework.monitoring",
-        "marty_msf.framework.config"
+        "marty_msf.framework.config",
+        "marty_msf.framework.clients.client_side"
       ],
       "imported_by": []
     },
@@ -641,9 +603,9 @@
       "imports_count": 3,
       "imported_by_count": 1,
       "imports": [
+        "marty_msf.framework.discovery.config",
         "marty_msf.framework.discovery.core",
-        "marty_msf.framework.discovery.results",
-        "marty_msf.framework.discovery.config"
+        "marty_msf.framework.discovery.results"
       ],
       "imported_by": [
         "marty_msf.framework.discovery.manager"
@@ -653,8 +615,8 @@
       "imports_count": 2,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.discovery.clients",
-        "marty_msf.framework.discovery.config"
+        "marty_msf.framework.discovery.config",
+        "marty_msf.framework.discovery.clients"
       ],
       "imported_by": []
     },
@@ -665,25 +627,25 @@
         "marty_msf.framework.discovery.core"
       ],
       "imported_by": [
+        "marty_msf.framework.discovery.config",
         "marty_msf.framework.discovery.clients.base",
-        "marty_msf.framework.discovery.manager",
-        "marty_msf.framework.discovery.config"
+        "marty_msf.framework.discovery.manager"
       ]
     },
     "marty_msf.framework.discovery.manager": {
       "imports_count": 10,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.discovery.mesh",
-        "marty_msf.framework.discovery.load_balancing",
-        "marty_msf.framework.discovery.clients.base",
-        "marty_msf.framework.discovery.monitoring",
-        "marty_msf.framework.discovery.clients.client_side",
-        "marty_msf.framework.discovery.config",
-        "marty_msf.framework.discovery.registry",
-        "marty_msf.framework.discovery.core",
         "marty_msf.framework.discovery.circuit_breaker",
-        "marty_msf.framework.discovery.health"
+        "marty_msf.framework.discovery.health",
+        "marty_msf.framework.discovery.registry",
+        "marty_msf.framework.discovery.config",
+        "marty_msf.framework.discovery.load_balancing",
+        "marty_msf.framework.discovery.core",
+        "marty_msf.framework.discovery.clients.base",
+        "marty_msf.framework.discovery.clients.client_side",
+        "marty_msf.framework.discovery.mesh",
+        "marty_msf.framework.discovery.monitoring"
       ],
       "imported_by": []
     },
@@ -691,10 +653,10 @@
       "imports_count": 4,
       "imported_by_count": 1,
       "imports": [
+        "marty_msf.framework.discovery.config",
         "marty_msf.framework.discovery.core",
         "marty_msf.framework.discovery.clients.base",
-        "marty_msf.framework.discovery.results",
-        "marty_msf.framework.discovery.config"
+        "marty_msf.framework.discovery.results"
       ],
       "imported_by": [
         "marty_msf.framework.discovery.clients.hybrid"
@@ -704,10 +666,10 @@
       "imports_count": 4,
       "imported_by_count": 2,
       "imports": [
+        "marty_msf.framework.discovery.config",
         "marty_msf.framework.discovery.core",
         "marty_msf.framework.discovery.clients.base",
-        "marty_msf.framework.discovery.results",
-        "marty_msf.framework.discovery.config"
+        "marty_msf.framework.discovery.results"
       ],
       "imported_by": [
         "marty_msf.framework.discovery.manager",
@@ -718,11 +680,11 @@
       "imports_count": 5,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.discovery.clients.server_side",
-        "marty_msf.framework.discovery.clients.base",
         "marty_msf.framework.discovery.config",
+        "marty_msf.framework.discovery.clients.base",
         "marty_msf.framework.discovery.results",
-        "marty_msf.framework.discovery.clients.client_side"
+        "marty_msf.framework.discovery.clients.client_side",
+        "marty_msf.framework.discovery.clients.server_side"
       ],
       "imported_by": []
     },
@@ -730,12 +692,12 @@
       "imports_count": 6,
       "imported_by_count": 2,
       "imports": [
-        "marty_msf.framework.discovery.server_side",
-        "marty_msf.framework.discovery.hybrid",
-        "marty_msf.framework.discovery.mesh_client",
-        "marty_msf.framework.discovery.client_side",
         "marty_msf.framework.discovery.service_mesh",
-        "marty_msf.framework.discovery.base"
+        "marty_msf.framework.discovery.server_side",
+        "marty_msf.framework.discovery.client_side",
+        "marty_msf.framework.discovery.mesh_client",
+        "marty_msf.framework.discovery.base",
+        "marty_msf.framework.discovery.hybrid"
       ],
       "imported_by": [
         "marty_msf.framework.integration.external_connectors.tests.test_discovery_improvements",
@@ -746,10 +708,10 @@
       "imports_count": 5,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.discovery.clients.base",
+        "marty_msf.framework.discovery.clients.mesh_client",
         "marty_msf.framework.discovery.config",
         "marty_msf.framework.discovery.core",
-        "marty_msf.framework.discovery.clients.mesh_client",
+        "marty_msf.framework.discovery.clients.base",
         "marty_msf.framework.discovery.results"
       ],
       "imported_by": []
@@ -758,26 +720,26 @@
       "imports_count": 5,
       "imported_by_count": 5,
       "imports": [
-        "marty_msf.framework.discovery.load_balancing",
         "marty_msf.framework.discovery.cache",
         "marty_msf.framework.discovery.config",
+        "marty_msf.framework.discovery.load_balancing",
         "marty_msf.framework.discovery.core",
         "marty_msf.framework.discovery.results"
       ],
       "imported_by": [
-        "marty_msf.framework.discovery.clients.server_side",
         "marty_msf.framework.discovery.clients.hybrid",
-        "marty_msf.framework.discovery.manager",
+        "marty_msf.framework.discovery.clients.client_side",
+        "marty_msf.framework.discovery.clients.server_side",
         "marty_msf.framework.discovery.clients.service_mesh",
-        "marty_msf.framework.discovery.clients.client_side"
+        "marty_msf.framework.discovery.manager"
       ]
     },
     "marty_msf.framework.event_streaming.saga": {
       "imports_count": 2,
       "imported_by_count": 1,
       "imports": [
-        "marty_msf.framework.event_streaming.core",
-        "marty_msf.framework.event_streaming.cqrs"
+        "marty_msf.framework.event_streaming.cqrs",
+        "marty_msf.framework.event_streaming.core"
       ],
       "imported_by": [
         "marty_msf.framework.messaging.extended.saga_integration"
@@ -838,13 +800,13 @@
       "imports_count": 7,
       "imported_by_count": 0,
       "imports": [
+        "marty_msf.framework.test_automation",
         "marty_msf.framework.core",
         "marty_msf.framework.patterns",
-        "marty_msf.framework.chaos_engineering",
         "marty_msf.framework.integration_testing",
         "marty_msf.framework.performance_testing",
         "marty_msf.framework.contract_testing",
-        "marty_msf.framework.test_automation"
+        "marty_msf.framework.chaos_engineering"
       ],
       "imported_by": []
     },
@@ -863,8 +825,8 @@
         "marty_msf.framework.testing.core"
       ],
       "imported_by": [
-        "marty_msf.framework.testing.grpc_contract_testing",
-        "marty_msf.cli.api_commands"
+        "marty_msf.cli.api_commands",
+        "marty_msf.framework.testing.grpc_contract_testing"
       ]
     },
     "marty_msf.framework.testing.test_automation": {
@@ -879,8 +841,8 @@
       "imports_count": 2,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.testing.patterns",
-        "marty_msf.framework.events"
+        "marty_msf.framework.events",
+        "marty_msf.framework.testing.patterns"
       ],
       "imported_by": []
     },
@@ -924,8 +886,8 @@
       "imports_count": 4,
       "imported_by_count": 1,
       "imports": [
-        "marty_msf.framework.destinations",
         "marty_msf.framework.logger",
+        "marty_msf.framework.destinations",
         "marty_msf.framework.events",
         "marty_msf.framework.middleware"
       ],
@@ -937,8 +899,8 @@
       "imports_count": 2,
       "imported_by_count": 1,
       "imports": [
-        "marty_msf.framework.audit.events",
-        "marty_msf.framework.audit.destinations"
+        "marty_msf.framework.audit.destinations",
+        "marty_msf.framework.audit.events"
       ],
       "imported_by": [
         "marty_msf.framework.audit.middleware"
@@ -961,13 +923,22 @@
       ],
       "imported_by": []
     },
+    "marty_msf.framework.resilience.bootstrap": {
+      "imports_count": 2,
+      "imported_by_count": 0,
+      "imports": [
+        "marty_msf.framework.resilience.consolidated_manager",
+        "marty_msf.framework.resilience.api"
+      ],
+      "imported_by": []
+    },
     "marty_msf.framework.resilience.external_dependencies": {
       "imports_count": 3,
       "imported_by_count": 0,
       "imports": [
         "marty_msf.framework.resilience.circuit_breaker",
-        "marty_msf.framework.resilience.timeout",
-        "marty_msf.framework.resilience.bulkhead"
+        "marty_msf.framework.resilience.bulkhead",
+        "marty_msf.framework.resilience.timeout"
       ],
       "imported_by": []
     },
@@ -978,42 +949,61 @@
         "marty_msf.framework.resilience.timeout",
         "marty_msf.framework.resilience.bulkhead",
         "marty_msf.framework.resilience.fallback",
-        "marty_msf.framework.resilience.circuit_breaker",
-        "marty_msf.framework.resilience.retry"
+        "marty_msf.framework.resilience.retry",
+        "marty_msf.framework.resilience.circuit_breaker"
+      ],
+      "imported_by": []
+    },
+    "marty_msf.framework.resilience.isolated_service": {
+      "imports_count": 1,
+      "imported_by_count": 0,
+      "imports": [
+        "marty_msf.core.base_services"
       ],
       "imported_by": []
     },
     "marty_msf.framework.resilience.resilience_manager_service": {
       "imports_count": 3,
-      "imported_by_count": 2,
+      "imported_by_count": 0,
       "imports": [
+        "marty_msf.framework.resilience.service_api",
         "marty_msf.core.base_services",
-        "marty_msf.core.enhanced_di",
-        "marty_msf.framework.resilience.consolidated_manager"
+        "marty_msf.framework.resilience.api"
+      ],
+      "imported_by": []
+    },
+    "marty_msf.framework.resilience.timeout": {
+      "imports_count": 1,
+      "imported_by_count": 3,
+      "imports": [
+        "marty_msf.framework.resilience.api"
       ],
       "imported_by": [
-        "marty_msf.framework.resilience.middleware",
-        "marty_msf.framework.resilience.consolidated_manager"
+        "marty_msf.framework.resilience.patterns",
+        "marty_msf.framework.resilience.consolidated_manager",
+        "marty_msf.framework.resilience.external_dependencies"
       ]
     },
     "marty_msf.framework.resilience": {
-      "imports_count": 10,
+      "imports_count": 12,
       "imported_by_count": 2,
       "imports": [
-        "marty_msf.framework.patterns",
-        "marty_msf.framework.circuit_breaker",
-        "marty_msf.framework.bulkhead",
+        "marty_msf.framework.api",
         "marty_msf.framework.timeout",
-        "marty_msf.framework.consolidated_manager",
-        "marty_msf.framework.connection_pools.manager",
-        "marty_msf.framework.connection_pools",
-        "marty_msf.framework.retry",
+        "marty_msf.framework.bulkhead",
+        "marty_msf.framework.circuit_breaker",
         "marty_msf.framework.middleware",
+        "marty_msf.framework.connection_pools",
+        "marty_msf.framework.patterns",
+        "marty_msf.framework.retry",
+        "marty_msf.framework.bootstrap",
+        "marty_msf.framework.connection_pools.manager",
+        "marty_msf.framework.consolidated_manager",
         "marty_msf.framework.fallback"
       ],
       "imported_by": [
-        "marty_msf.framework.resilience.examples",
-        "marty_msf.framework.resilience.examples.consolidated_manager_usage"
+        "marty_msf.framework.resilience.examples.consolidated_manager_usage",
+        "marty_msf.framework.resilience.examples"
       ]
     },
     "marty_msf.framework.resilience.retry": {
@@ -1038,37 +1028,36 @@
       "imports_count": 2,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.resilience.middleware",
-        "marty_msf.framework.resilience.connection_pools.manager"
+        "marty_msf.framework.resilience.connection_pools.manager",
+        "marty_msf.framework.resilience.middleware"
       ],
       "imported_by": []
     },
     "marty_msf.framework.resilience.consolidated_manager": {
-      "imports_count": 6,
+      "imports_count": 5,
       "imported_by_count": 1,
       "imports": [
+        "marty_msf.framework.resilience.api",
+        "marty_msf.framework.resilience.enhanced.advanced_retry",
         "marty_msf.framework.resilience.timeout",
         "marty_msf.framework.resilience.bulkhead",
-        "marty_msf.framework.resilience.resilience_manager_service",
-        "marty_msf.framework.resilience.circuit_breaker",
-        "marty_msf.core.enhanced_di",
-        "marty_msf.framework.resilience.enhanced.advanced_retry"
+        "marty_msf.framework.resilience.circuit_breaker"
       ],
       "imported_by": [
-        "marty_msf.framework.resilience.resilience_manager_service"
+        "marty_msf.framework.resilience.bootstrap"
       ]
     },
     "marty_msf.framework.resilience.middleware": {
       "imports_count": 7,
       "imported_by_count": 1,
       "imports": [
+        "marty_msf.framework.resilience.api",
+        "marty_msf.framework.resilience.connection_pools.redis_pool",
         "marty_msf.framework.resilience.connection_pools.manager",
-        "marty_msf.framework.resilience.connection_pools.http_pool",
-        "marty_msf.framework.resilience.resilience_manager_service",
-        "marty_msf.framework.resilience.bulkhead",
-        "marty_msf.framework.resilience.circuit_breaker",
         "marty_msf.core.enhanced_di",
-        "marty_msf.framework.resilience.connection_pools.redis_pool"
+        "marty_msf.framework.resilience.connection_pools.http_pool",
+        "marty_msf.framework.resilience.bulkhead",
+        "marty_msf.framework.resilience.circuit_breaker"
       ],
       "imported_by": [
         "marty_msf.framework.resilience.load_testing"
@@ -1078,10 +1067,10 @@
       "imports_count": 4,
       "imported_by_count": 0,
       "imports": [
+        "marty_msf.framework.resilience.http_pool",
         "marty_msf.framework.resilience.health",
         "marty_msf.framework.resilience.manager",
-        "marty_msf.framework.resilience.redis_pool",
-        "marty_msf.framework.resilience.http_pool"
+        "marty_msf.framework.resilience.redis_pool"
       ],
       "imported_by": []
     },
@@ -1093,8 +1082,8 @@
         "marty_msf.framework.resilience.connection_pools.http_pool"
       ],
       "imported_by": [
-        "marty_msf.framework.resilience.middleware",
-        "marty_msf.framework.resilience.load_testing"
+        "marty_msf.framework.resilience.load_testing",
+        "marty_msf.framework.resilience.middleware"
       ]
     },
     "marty_msf.framework.resilience.examples.consolidated_manager_usage": {
@@ -1118,13 +1107,13 @@
       "imports_count": 7,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.resilience.enhanced_circuit_breaker",
-        "marty_msf.framework.resilience.advanced_retry",
-        "marty_msf.framework.resilience.graceful_degradation",
-        "marty_msf.framework.resilience.monitoring",
         "marty_msf.framework.resilience.grpc_interceptors",
+        "marty_msf.framework.resilience.monitoring",
+        "marty_msf.framework.resilience.outbound_resilience",
+        "marty_msf.framework.resilience.advanced_retry",
         "marty_msf.framework.resilience.chaos_engineering",
-        "marty_msf.framework.resilience.outbound_resilience"
+        "marty_msf.framework.resilience.enhanced_circuit_breaker",
+        "marty_msf.framework.resilience.graceful_degradation"
       ],
       "imported_by": []
     },
@@ -1148,14 +1137,14 @@
       "imports_count": 2,
       "imported_by_count": 4,
       "imports": [
-        "marty_msf.framework.ml.enums",
-        "marty_msf.framework.ml.core"
+        "marty_msf.framework.ml.core",
+        "marty_msf.framework.ml.enums"
       ],
       "imported_by": [
-        "marty_msf.framework.ml.serving.model_server",
         "marty_msf.framework.ml.registry.model_registry",
+        "marty_msf.framework.ml.feature_store.store_impl",
         "marty_msf.framework.ml.feature_store.interface",
-        "marty_msf.framework.ml.feature_store.store_impl"
+        "marty_msf.framework.ml.serving.model_server"
       ]
     },
     "marty_msf.framework.ml.models.core": {
@@ -1196,8 +1185,8 @@
       "imports_count": 2,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.ml.store_impl",
-        "marty_msf.framework.ml.interface"
+        "marty_msf.framework.ml.interface",
+        "marty_msf.framework.ml.store_impl"
       ],
       "imported_by": []
     },
@@ -1214,8 +1203,8 @@
       "imports_count": 2,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.deployment.helm_charts",
-        "marty_msf.framework.deployment.core"
+        "marty_msf.framework.deployment.core",
+        "marty_msf.framework.deployment.helm_charts"
       ],
       "imported_by": []
     },
@@ -1231,11 +1220,11 @@
       "imports_count": 5,
       "imported_by_count": 0,
       "imports": [
+        "marty_msf.framework.helm_charts",
         "marty_msf.framework.core",
-        "marty_msf.framework.cicd",
         "marty_msf.framework.operators",
-        "marty_msf.framework.infrastructure",
-        "marty_msf.framework.helm_charts"
+        "marty_msf.framework.cicd",
+        "marty_msf.framework.infrastructure"
       ],
       "imported_by": []
     },
@@ -1265,21 +1254,21 @@
       ],
       "imported_by": [
         "marty_msf.framework.deployment.strategies.managers.rollback",
-        "marty_msf.framework.deployment.strategies.managers.validation",
         "marty_msf.framework.deployment.strategies.managers.traffic",
+        "marty_msf.framework.deployment.strategies.orchestrator",
         "marty_msf.framework.deployment.strategies.managers.features",
-        "marty_msf.framework.deployment.strategies.managers.infrastructure",
-        "marty_msf.framework.deployment.strategies.orchestrator"
+        "marty_msf.framework.deployment.strategies.managers.validation",
+        "marty_msf.framework.deployment.strategies.managers.infrastructure"
       ]
     },
     "marty_msf.framework.deployment.strategies": {
       "imports_count": 4,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.deployment.models",
-        "marty_msf.framework.deployment.enums",
         "marty_msf.framework.deployment.managers",
-        "marty_msf.framework.deployment.orchestrator"
+        "marty_msf.framework.deployment.orchestrator",
+        "marty_msf.framework.deployment.models",
+        "marty_msf.framework.deployment.enums"
       ],
       "imported_by": []
     },
@@ -1288,12 +1277,12 @@
       "imported_by_count": 0,
       "imports": [
         "marty_msf.framework.deployment.strategies.managers.rollback",
-        "marty_msf.framework.deployment.strategies.managers.validation",
         "marty_msf.framework.deployment.strategies.managers.traffic",
         "marty_msf.framework.deployment.strategies.managers.features",
         "marty_msf.framework.deployment.strategies.models",
-        "marty_msf.framework.deployment.strategies.managers.infrastructure",
-        "marty_msf.framework.deployment.strategies.enums"
+        "marty_msf.framework.deployment.strategies.managers.validation",
+        "marty_msf.framework.deployment.strategies.enums",
+        "marty_msf.framework.deployment.strategies.managers.infrastructure"
       ],
       "imported_by": []
     },
@@ -1313,10 +1302,10 @@
       "imported_by_count": 0,
       "imports": [
         "marty_msf.framework.deployment.strategies.validation",
-        "marty_msf.framework.deployment.strategies.features",
         "marty_msf.framework.deployment.strategies.traffic",
-        "marty_msf.framework.deployment.strategies.rollback",
-        "marty_msf.framework.deployment.strategies.infrastructure"
+        "marty_msf.framework.deployment.strategies.infrastructure",
+        "marty_msf.framework.deployment.strategies.features",
+        "marty_msf.framework.deployment.strategies.rollback"
       ],
       "imported_by": []
     },
@@ -1365,8 +1354,8 @@
       "imports_count": 2,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.deployment.infrastructure.models.enums",
-        "marty_msf.framework.deployment.core"
+        "marty_msf.framework.deployment.core",
+        "marty_msf.framework.deployment.infrastructure.models.enums"
       ],
       "imported_by": []
     },
@@ -1386,20 +1375,19 @@
         "marty_msf.framework.enhanced_manager"
       ],
       "imported_by": [
-        "marty_msf.framework.mesh.discovery",
-        "marty_msf.cli.commands",
         "marty_msf.cli.generators",
-        "marty_msf.framework.mesh"
+        "marty_msf.framework.mesh.discovery",
+        "marty_msf.framework.mesh",
+        "marty_msf.cli.commands"
       ]
     },
     "marty_msf.framework.generators.dependency_manager": {
-      "imports_count": 4,
+      "imports_count": 3,
       "imported_by_count": 0,
       "imports": [
         "marty_msf.framework.cache.manager",
-        "marty_msf.framework.messaging.streams",
-        "marty_msf.framework.messaging.queue",
-        "marty_msf.framework.config"
+        "marty_msf.framework.config",
+        "marty_msf.framework.messaging"
       ],
       "imported_by": []
     },
@@ -1417,15 +1405,15 @@
       "imports_count": 5,
       "imported_by_count": 3,
       "imports": [
-        "marty_msf.framework.types",
-        "marty_msf.framework.enhanced_events",
+        "marty_msf.framework.exceptions",
         "marty_msf.framework.decorators",
+        "marty_msf.framework.enhanced_events",
         "marty_msf.framework.enhanced_event_bus",
-        "marty_msf.framework.exceptions"
+        "marty_msf.framework.types"
       ],
       "imported_by": [
-        "marty_msf.framework.testing.patterns",
         "marty_msf.framework.testing.examples",
+        "marty_msf.framework.testing.patterns",
         "marty_msf.framework.audit"
       ]
     },
@@ -1433,8 +1421,8 @@
       "imports_count": 3,
       "imported_by_count": 1,
       "imports": [
-        "marty_msf.core.base_services",
         "marty_msf.framework.events.enhanced_event_bus",
+        "marty_msf.core.base_services",
         "marty_msf.core.enhanced_di"
       ],
       "imported_by": [
@@ -1445,10 +1433,10 @@
       "imports_count": 4,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.events.enhanced_event_bus",
         "marty_msf.framework.events.types",
-        "marty_msf.core.enhanced_di",
-        "marty_msf.framework.events.event_bus_service"
+        "marty_msf.framework.events.enhanced_event_bus",
+        "marty_msf.framework.events.event_bus_service",
+        "marty_msf.core.enhanced_di"
       ],
       "imported_by": []
     },
@@ -1456,10 +1444,10 @@
       "imports_count": 5,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.event_sourcing_patterns",
         "marty_msf.framework.saga_patterns",
-        "marty_msf.framework.cqrs_patterns",
         "marty_msf.framework.consistency_patterns",
+        "marty_msf.framework.event_sourcing_patterns",
+        "marty_msf.framework.cqrs_patterns",
         "marty_msf.framework.transaction_patterns"
       ],
       "imported_by": []
@@ -1480,119 +1468,33 @@
       ],
       "imported_by": []
     },
-    "marty_msf.framework.messaging.patterns": {
-      "imports_count": 2,
-      "imported_by_count": 1,
-      "imports": [
-        "marty_msf.framework.messaging.core",
-        "marty_msf.framework.messaging.serialization"
-      ],
-      "imported_by": [
-        "marty_msf.framework.messaging.manager"
-      ]
-    },
-    "marty_msf.framework.messaging": {
-      "imports_count": 12,
+    "marty_msf.framework.messaging.bootstrap": {
+      "imports_count": 1,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.events",
-        "marty_msf.framework.extended",
-        "marty_msf.framework.patterns",
-        "marty_msf.framework.core",
-        "marty_msf.framework.streams",
-        "marty_msf.framework.queue",
-        "marty_msf.framework.manager",
-        "marty_msf.framework.routing",
-        "marty_msf.framework.serialization",
-        "marty_msf.framework.dlq",
-        "marty_msf.framework.backends",
-        "marty_msf.framework.middleware"
+        "marty_msf.framework.messaging.api"
       ],
       "imported_by": []
     },
-    "marty_msf.framework.messaging.core": {
-      "imports_count": 2,
-      "imported_by_count": 6,
-      "imports": [
-        "marty_msf.framework.messaging.backends",
-        "marty_msf.framework.messaging.manager"
-      ],
-      "imported_by": [
-        "marty_msf.framework.messaging.backends",
-        "marty_msf.framework.messaging.dlq",
-        "marty_msf.framework.messaging.middleware",
-        "marty_msf.framework.messaging.manager",
-        "marty_msf.framework.messaging.patterns",
-        "marty_msf.framework.messaging.routing"
-      ]
-    },
-    "marty_msf.framework.messaging.backends": {
-      "imports_count": 1,
-      "imported_by_count": 3,
-      "imports": [
-        "marty_msf.framework.messaging.core"
-      ],
-      "imported_by": [
-        "marty_msf.framework.messaging.manager",
-        "marty_msf.framework.messaging.core",
-        "marty_msf.framework.messaging.dlq"
-      ]
-    },
-    "marty_msf.framework.messaging.routing": {
-      "imports_count": 1,
-      "imported_by_count": 1,
-      "imports": [
-        "marty_msf.framework.messaging.core"
-      ],
-      "imported_by": [
-        "marty_msf.framework.messaging.manager"
-      ]
-    },
-    "marty_msf.framework.messaging.manager": {
-      "imports_count": 7,
-      "imported_by_count": 1,
-      "imports": [
-        "marty_msf.framework.messaging.backends",
-        "marty_msf.framework.messaging.dlq",
-        "marty_msf.framework.messaging.middleware",
-        "marty_msf.framework.messaging.patterns",
-        "marty_msf.framework.messaging.routing",
-        "marty_msf.framework.messaging.core",
-        "marty_msf.framework.messaging.serialization"
-      ],
-      "imported_by": [
-        "marty_msf.framework.messaging.core"
-      ]
-    },
-    "marty_msf.framework.messaging.middleware": {
-      "imports_count": 1,
-      "imported_by_count": 1,
-      "imports": [
-        "marty_msf.framework.messaging.core"
-      ],
-      "imported_by": [
-        "marty_msf.framework.messaging.manager"
-      ]
-    },
-    "marty_msf.framework.messaging.dlq": {
+    "marty_msf.framework.messaging": {
       "imports_count": 2,
       "imported_by_count": 1,
       "imports": [
-        "marty_msf.framework.messaging.backends",
-        "marty_msf.framework.messaging.core"
+        "marty_msf.framework.api",
+        "marty_msf.framework.bootstrap"
       ],
       "imported_by": [
-        "marty_msf.framework.messaging.manager"
+        "marty_msf.framework.generators.dependency_manager"
       ]
     },
     "marty_msf.framework.messaging.extended.saga_integration": {
       "imports_count": 4,
       "imported_by_count": 1,
       "imports": [
-        "marty_msf.framework.messaging.extended.extended_architecture",
-        "marty_msf.framework.event_streaming.saga",
         "marty_msf.framework.messaging.extended.unified_event_bus",
-        "marty_msf.framework.event_streaming"
+        "marty_msf.framework.messaging.extended.extended_architecture",
+        "marty_msf.framework.event_streaming",
+        "marty_msf.framework.event_streaming.saga"
       ],
       "imported_by": [
         "marty_msf.framework.messaging.extended.examples"
@@ -1603,10 +1505,10 @@
       "imported_by_count": 0,
       "imports": [
         "marty_msf.framework.messaging.saga_integration",
+        "marty_msf.framework.messaging.nats_backend",
         "marty_msf.framework.events.enhanced_event_bus",
-        "marty_msf.framework.messaging.aws_sns_backend",
         "marty_msf.framework.messaging.extended_architecture",
-        "marty_msf.framework.messaging.nats_backend"
+        "marty_msf.framework.messaging.aws_sns_backend"
       ],
       "imported_by": []
     },
@@ -1614,11 +1516,11 @@
       "imports_count": 5,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.messaging.extended.nats_backend",
         "marty_msf.framework.messaging.extended.extended_architecture",
+        "marty_msf.framework.messaging.extended.saga_integration",
         "marty_msf.framework.messaging.extended.unified_event_bus",
-        "marty_msf.framework.messaging.extended.aws_sns_backend",
-        "marty_msf.framework.messaging.extended.saga_integration"
+        "marty_msf.framework.messaging.extended.nats_backend",
+        "marty_msf.framework.messaging.extended.aws_sns_backend"
       ],
       "imported_by": []
     },
@@ -1680,17 +1582,17 @@
       "imports": [
         "marty_msf.framework.websocket",
         "marty_msf.framework.core",
+        "marty_msf.framework.middleware",
+        "marty_msf.framework.factory",
+        "marty_msf.framework.load_balancing",
         "marty_msf.framework.api_gateway",
-        "marty_msf.framework.rate_limiting",
+        "marty_msf.framework.transformation",
+        "marty_msf.framework.monitoring",
         "marty_msf.framework.plugins",
         "marty_msf.framework.security",
-        "marty_msf.framework.load_balancing",
+        "marty_msf.framework.config",
         "marty_msf.framework.routing",
-        "marty_msf.framework.factory",
-        "marty_msf.framework.monitoring",
-        "marty_msf.framework.transformation",
-        "marty_msf.framework.middleware",
-        "marty_msf.framework.config"
+        "marty_msf.framework.rate_limiting"
       ],
       "imported_by": []
     },
@@ -1712,27 +1614,29 @@
     },
     "marty_msf.security.bootstrap": {
       "imports_count": 8,
-      "imported_by_count": 1,
+      "imported_by_count": 3,
       "imports": [
-        "marty_msf.security.api",
-        "marty_msf.security.caching",
-        "marty_msf.security.audit_impl",
-        "marty_msf.security.secrets_impl",
         "marty_msf.security.auth_impl",
-        "marty_msf.core.di_container",
+        "marty_msf.security.secrets_impl",
+        "marty_msf.security.authz_impl",
         "marty_msf.security.sessions",
-        "marty_msf.security.authz_impl"
+        "marty_msf.core.di_container",
+        "marty_msf.security.audit_impl",
+        "marty_msf.security.api",
+        "marty_msf.security.caching"
       ],
       "imported_by": [
-        "marty_msf.security.canonical"
+        "marty_msf.security.canonical",
+        "marty_msf.security.status",
+        "marty_msf.security.framework"
       ]
     },
     "marty_msf.security.auth": {
       "imports_count": 2,
       "imported_by_count": 1,
       "imports": [
-        "marty_msf.security.config",
-        "marty_msf.security.errors"
+        "marty_msf.security.errors",
+        "marty_msf.security.config"
       ],
       "imported_by": [
         "marty_msf.security.middleware"
@@ -1762,35 +1666,58 @@
       "imports_count": 3,
       "imported_by_count": 1,
       "imports": [
-        "marty_msf.security.config",
         "marty_msf.security.errors",
+        "marty_msf.security.config",
         "marty_msf.core.di_container"
       ],
       "imported_by": [
         "marty_msf.security.middleware"
       ]
     },
-    "marty_msf.security": {
-      "imports_count": 17,
+    "marty_msf.security.events": {
+      "imports_count": 2,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.authz_impl",
-        "marty_msf.auth_impl",
-        "marty_msf.decorators",
-        "marty_msf.api",
-        "marty_msf.caching",
-        "marty_msf",
-        "marty_msf.audit_impl",
-        "marty_msf.canonical",
+        "marty_msf.security.monitoring",
+        "marty_msf.security.models"
+      ],
+      "imported_by": []
+    },
+    "marty_msf.security.framework": {
+      "imports_count": 4,
+      "imported_by_count": 0,
+      "imports": [
+        "marty_msf.security.api",
+        "marty_msf.security.monitoring",
+        "marty_msf.security.bootstrap",
+        "marty_msf.security.models"
+      ],
+      "imported_by": []
+    },
+    "marty_msf.security": {
+      "imports_count": 20,
+      "imported_by_count": 0,
+      "imports": [
         "marty_msf.audit",
-        "marty_msf.authentication",
-        "marty_msf.bootstrap",
-        "marty_msf.exceptions",
+        "marty_msf.events",
+        "marty_msf.decorators",
         "marty_msf.rbac",
-        "marty_msf.secrets_impl",
-        "marty_msf.sessions",
+        "marty_msf.status",
         "marty_msf.policy_engines",
-        "marty_msf.abac"
+        "marty_msf",
+        "marty_msf.exceptions",
+        "marty_msf.sessions",
+        "marty_msf.auth_impl",
+        "marty_msf.framework",
+        "marty_msf.caching",
+        "marty_msf.audit_impl",
+        "marty_msf.abac",
+        "marty_msf.bootstrap",
+        "marty_msf.authz_impl",
+        "marty_msf.api",
+        "marty_msf.canonical",
+        "marty_msf.authentication",
+        "marty_msf.secrets_impl"
       ],
       "imported_by": []
     },
@@ -1808,10 +1735,10 @@
       "imports_count": 4,
       "imported_by_count": 1,
       "imports": [
-        "marty_msf.security.api",
-        "marty_msf.security.bootstrap",
+        "marty_msf.security.exceptions",
         "marty_msf.core.di_container",
-        "marty_msf.security.exceptions"
+        "marty_msf.security.api",
+        "marty_msf.security.bootstrap"
       ],
       "imported_by": [
         "marty_msf.security.decorators"
@@ -1851,11 +1778,22 @@
       "imports_count": 5,
       "imported_by_count": 0,
       "imports": [
+        "marty_msf.security.auth",
         "marty_msf.security.authorization",
         "marty_msf.security.errors",
         "marty_msf.security.config",
-        "marty_msf.security.auth",
         "marty_msf.security.rate_limiting"
+      ],
+      "imported_by": []
+    },
+    "marty_msf.security.status": {
+      "imports_count": 4,
+      "imported_by_count": 0,
+      "imports": [
+        "marty_msf.security.api",
+        "marty_msf.security.monitoring",
+        "marty_msf.security.bootstrap",
+        "marty_msf.security.models"
       ],
       "imported_by": []
     },
@@ -1863,9 +1801,9 @@
       "imports_count": 3,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.security.api",
         "marty_msf.security.canonical",
-        "marty_msf.security.exceptions"
+        "marty_msf.security.exceptions",
+        "marty_msf.security.api"
       ],
       "imported_by": []
     },
@@ -1889,8 +1827,8 @@
       "imports_count": 2,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.core.enhanced_di",
-        "marty_msf.exceptions"
+        "marty_msf.exceptions",
+        "marty_msf.core.enhanced_di"
       ],
       "imported_by": []
     },
@@ -1906,9 +1844,9 @@
       "imports_count": 3,
       "imported_by_count": 1,
       "imports": [
-        "marty_msf.security.secret_manager",
         "marty_msf.security.manager",
-        "marty_msf.security.vault_client"
+        "marty_msf.security.vault_client",
+        "marty_msf.security.secret_manager"
       ],
       "imported_by": [
         "marty_msf.framework.config.unified"
@@ -1966,8 +1904,8 @@
       "imports_count": 2,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.core.enhanced_di",
-        "marty_msf.exceptions"
+        "marty_msf.exceptions",
+        "marty_msf.core.enhanced_di"
       ],
       "imported_by": []
     },
@@ -2001,8 +1939,8 @@
       "imports_count": 2,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.security.compliance",
-        "marty_msf.security.api"
+        "marty_msf.security.api",
+        "marty_msf.security.compliance"
       ],
       "imported_by": []
     },
@@ -2050,10 +1988,10 @@
       "imports_count": 4,
       "imported_by_count": 0,
       "imports": [
+        "marty_msf.exceptions",
         "marty_msf.abac",
-        "marty_msf.core.enhanced_di",
         "marty_msf.security.opa_service",
-        "marty_msf.exceptions"
+        "marty_msf.core.enhanced_di"
       ],
       "imported_by": []
     },
@@ -2070,8 +2008,8 @@
       "imports_count": 2,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.decorators",
-        "marty_msf.security.manager"
+        "marty_msf.security.manager",
+        "marty_msf.decorators"
       ],
       "imported_by": []
     },
@@ -2098,9 +2036,9 @@
       "imports_count": 3,
       "imported_by_count": 1,
       "imports": [
-        "marty_msf.api_commands",
         "marty_msf",
-        "marty_msf.cli.commands"
+        "marty_msf.cli.commands",
+        "marty_msf.api_commands"
       ],
       "imported_by": [
         "marty_msf.cli.__main__"
@@ -2139,9 +2077,9 @@
       "imports_count": 3,
       "imported_by_count": 1,
       "imports": [
-        "marty_msf.core.services",
         "marty_msf.observability.factories",
-        "marty_msf.core.di_container"
+        "marty_msf.core.di_container",
+        "marty_msf.core.services"
       ],
       "imported_by": [
         "marty_msf.observability.tracing.examples"
@@ -2161,9 +2099,9 @@
       "imports_count": 3,
       "imported_by_count": 1,
       "imports": [
-        "marty_msf.core.services",
         "marty_msf.observability.factories",
-        "marty_msf.core.di_container"
+        "marty_msf.core.di_container",
+        "marty_msf.core.services"
       ],
       "imported_by": [
         "marty_msf.framework.grpc.unified_grpc_server"
@@ -2186,9 +2124,9 @@
         "marty_msf.core.di_container"
       ],
       "imported_by": [
+        "marty_msf.observability.standard",
         "marty_msf.observability.framework_metrics",
-        "marty_msf.observability.tracing",
-        "marty_msf.observability.standard"
+        "marty_msf.observability.tracing"
       ]
     },
     "marty_msf.observability.framework_metrics": {
@@ -2298,10 +2236,10 @@
         "marty_msf.observability.middleware"
       ],
       "imported_by": [
-        "marty_msf.observability.unified_observability",
+        "marty_msf.observability.metrics",
         "marty_msf.framework.testing.patterns",
         "marty_msf.observability.advanced_monitoring",
-        "marty_msf.observability.metrics"
+        "marty_msf.observability.unified_observability"
       ]
     },
     "marty_msf.observability.monitoring.core": {
@@ -2318,8 +2256,8 @@
       "imports_count": 2,
       "imported_by_count": 0,
       "imports": [
-        "marty_msf.framework.monitoring",
-        "marty_msf.framework.monitoring.core"
+        "marty_msf.framework.monitoring.core",
+        "marty_msf.framework.monitoring"
       ],
       "imported_by": []
     },
@@ -2426,9 +2364,12 @@
       "marty_msf.framework.audit.logger",
       "marty_msf.framework.audit.examples",
       "marty_msf.framework.audit.middleware",
+      "marty_msf.framework.resilience.bootstrap",
       "marty_msf.framework.resilience.external_dependencies",
       "marty_msf.framework.resilience.patterns",
+      "marty_msf.framework.resilience.isolated_service",
       "marty_msf.framework.resilience.resilience_manager_service",
+      "marty_msf.framework.resilience.timeout",
       "marty_msf.framework.resilience",
       "marty_msf.framework.resilience.retry",
       "marty_msf.framework.resilience.examples",
@@ -2474,14 +2415,8 @@
       "marty_msf.framework.data",
       "marty_msf.framework.data.event_sourcing",
       "marty_msf.framework.data.event_sourcing.core",
-      "marty_msf.framework.messaging.patterns",
+      "marty_msf.framework.messaging.bootstrap",
       "marty_msf.framework.messaging",
-      "marty_msf.framework.messaging.core",
-      "marty_msf.framework.messaging.backends",
-      "marty_msf.framework.messaging.routing",
-      "marty_msf.framework.messaging.manager",
-      "marty_msf.framework.messaging.middleware",
-      "marty_msf.framework.messaging.dlq",
       "marty_msf.framework.messaging.extended.saga_integration",
       "marty_msf.framework.messaging.extended",
       "marty_msf.framework.messaging.extended.examples",
@@ -2499,6 +2434,8 @@
       "marty_msf.security.sessions",
       "marty_msf.security.secrets_impl",
       "marty_msf.security.rate_limiting",
+      "marty_msf.security.events",
+      "marty_msf.security.framework",
       "marty_msf.security",
       "marty_msf.security.caching",
       "marty_msf.security.canonical",
@@ -2506,6 +2443,7 @@
       "marty_msf.security.audit_impl",
       "marty_msf.security.authz_impl",
       "marty_msf.security.middleware",
+      "marty_msf.security.status",
       "marty_msf.security.decorators",
       "marty_msf.security.mesh.istio_security",
       "marty_msf.security.mesh.linkerd_security",
@@ -2562,18 +2500,26 @@
     ]
   },
   "recommendations": [
-    "\ud83d\udd04 CRITICAL: Found 7 circular dependencies that need immediate attention",
-    "   - Consider using dependency injection or interfaces to break cycles",
-    "   - Move shared code to a common module",
-    "\u26a0\ufe0f  HIGH COUPLING: 28 modules are highly coupled",
+    "\u26a0\ufe0f  HIGH COUPLING: 25 modules are highly coupled",
     "   - Consider splitting large modules into smaller, focused modules",
     "   - Apply Single Responsibility Principle",
     "\ud83c\udfdb\ufe0f  GOD MODULES: 1 modules may be doing too much",
-    "   - marty_msf.security (coupling: 17)",
+    "   - marty_msf.security (coupling: 20)",
     "\ud83d\udccb GENERAL RECOMMENDATIONS:",
     "   - Follow layered architecture: API \u2192 Services \u2192 Domain \u2192 Infrastructure",
     "   - Use dependency inversion for external dependencies",
     "   - Consider using events/messaging for loose coupling",
     "   - Implement proper abstractions and interfaces"
-  ]
+  ],
+  "metadata": {
+    "generated_at": "2025-10-21T15:15:41.887648",
+    "analysis_type": "real_time",
+    "parse_errors": [
+      [
+        "src/marty_msf/framework/resilience/consolidated_manager_broken.py",
+        "unexpected indent (<unknown>, line 46)"
+      ]
+    ],
+    "skipped_files": []
+  }
 }
