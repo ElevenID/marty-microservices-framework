@@ -25,6 +25,9 @@ import redis
 from elasticsearch import Elasticsearch
 from prometheus_client import CollectorRegistry, Counter, Gauge, Histogram
 
+# DI Container imports
+from ..core.di_container import get_service, has_service, register_instance
+
 
 class SecurityEventType(Enum):
     """Types of security events"""
@@ -184,11 +187,17 @@ class SecurityEventCollector:
     - Event correlation and deduplication
     """
 
-    def __init__(self):
+    def __init__(self, redis_client: redis.Redis | None = None):
         self.event_sources: builtins.dict[str, Any] = {}
         self.event_processors: builtins.list[Any] = []
         self.event_queue = asyncio.Queue()
         self.processed_events: builtins.dict[str, SecurityEvent] = {}
+
+        # Use injected Redis client or get from DI container
+        if redis_client:
+            self.redis_client = redis_client
+        else:
+            self.redis_client = self._get_redis_client()
 
         # Event deduplication
         self.recent_events = deque(maxlen=10000)
@@ -207,6 +216,16 @@ class SecurityEventCollector:
             ["status"],
         )
 
+    def _get_redis_client(self) -> redis.Redis:
+        """Get Redis client from DI container or create default."""
+        if has_service(redis.Redis):
+            return get_service(redis.Redis)
+        else:
+            # Create default Redis client and register it
+            client = redis.Redis(host="localhost", port=6379, db=1)
+            register_instance(redis.Redis, client)
+            return client
+
     def register_event_source(self, source_name: str, source_config: builtins.dict[str, Any]):
         """Register a new event source"""
         self.event_sources[source_name] = source_config
@@ -218,7 +237,7 @@ class SecurityEventCollector:
         event_type: SecurityEventType,
         severity: SecurityEventSeverity,
         event_data: builtins.dict[str, Any],
-    ) -> SecurityEvent:
+    ) -> SecurityEvent | None:
         """Collect and process a security event"""
 
         # Create security event
@@ -378,14 +397,16 @@ class SecurityAnalyticsEngine:
     - Security metrics calculation
     """
 
-    def __init__(self):
+    def __init__(self, redis_client: redis.Redis | None = None):
         self.correlation_rules: builtins.list[builtins.dict[str, Any]] = []
         self.behavioral_baselines: builtins.dict[str, builtins.dict[str, Any]] = {}
         self.threat_patterns: builtins.list[builtins.dict[str, Any]] = []
 
-        # todo: use configurable redis connection
-        self.redis_client = redis.Redis(host="localhost", port=6379, db=2)
-
+        # Use injected Redis client or get from DI container
+        if redis_client:
+            self.redis_client = redis_client
+        else:
+            self.redis_client = self._get_redis_client()
 
         # Initialize built-in correlation rules
         self._initialize_correlation_rules()
@@ -402,6 +423,16 @@ class SecurityAnalyticsEngine:
             "Security anomalies detected",
             ["anomaly_type"],
         )
+
+    def _get_redis_client(self) -> redis.Redis:
+        """Get Redis client from DI container or create default."""
+        if has_service(redis.Redis):
+            return get_service(redis.Redis)
+        else:
+            # Create default Redis client and register it
+            client = redis.Redis(host="localhost", port=6379, db=2)
+            register_instance(redis.Redis, client)
+            return client
 
     def _initialize_correlation_rules(self):
         """Initialize built-in correlation rules"""
@@ -646,11 +677,15 @@ class SIEMIntegration:
     - Threat intelligence feeds
     """
 
-    def __init__(self):
+    def __init__(self, elasticsearch_client: Elasticsearch | None = None):
         self.siem_connections: builtins.dict[str, Any] = {}
         self.log_forwarders: builtins.list[Any] = []
 
-        self.elasticsearch = Elasticsearch([{"host": "localhost", "port": 9200}])
+        # Use injected Elasticsearch client or get from DI container
+        if elasticsearch_client:
+            self.elasticsearch = elasticsearch_client
+        else:
+            self.elasticsearch = self._get_elasticsearch_client()
 
         # Metrics
         self.logs_forwarded = Counter(
@@ -658,6 +693,16 @@ class SIEMIntegration:
             "Logs forwarded to SIEM",
             ["destination"],
         )
+
+    def _get_elasticsearch_client(self) -> Elasticsearch:
+        """Get Elasticsearch client from DI container or create default."""
+        if has_service(Elasticsearch):
+            return get_service(Elasticsearch)
+        else:
+            # Create default Elasticsearch client and register it
+            client = Elasticsearch([{"host": "localhost", "port": 9200}])
+            register_instance(Elasticsearch, client)
+            return client
 
     def configure_siem_connection(self, siem_name: str, config: builtins.dict[str, Any]):
         """Configure connection to SIEM platform"""
@@ -884,11 +929,19 @@ class SecurityMonitoringSystem:
     - Dashboard and reporting
     """
 
-    def __init__(self):
-        self.event_collector = SecurityEventCollector()
-        self.analytics_engine = SecurityAnalyticsEngine()
-        self.siem_integration = SIEMIntegration()
-        self.dashboard = SecurityMonitoringDashboard()
+    def __init__(self,
+                 event_collector: SecurityEventCollector | None = None,
+                 analytics_engine: SecurityAnalyticsEngine | None = None,
+                 siem_integration: SIEMIntegration | None = None,
+                 dashboard: SecurityMonitoringDashboard | None = None):
+        # Use injected components or create new ones
+        self.event_collector = event_collector or SecurityEventCollector()
+        self.analytics_engine = analytics_engine or SecurityAnalyticsEngine()
+        self.siem_integration = siem_integration or SIEMIntegration()
+        self.dashboard = dashboard or SecurityMonitoringDashboard()
+
+        # Register components in DI container
+        self._register_components_in_di()
 
         # Processing queues
         self.event_queue = asyncio.Queue()
@@ -900,6 +953,14 @@ class SecurityMonitoringSystem:
 
         # Register common event sources
         self._register_default_sources()
+
+    def _register_components_in_di(self) -> None:
+        """Register monitoring components in DI container."""
+        register_instance(SecurityEventCollector, self.event_collector)
+        register_instance(SecurityAnalyticsEngine, self.analytics_engine)
+        register_instance(SIEMIntegration, self.siem_integration)
+        register_instance(SecurityMonitoringDashboard, self.dashboard)
+        register_instance(SecurityMonitoringSystem, self)
 
     def _register_default_sources(self):
         """Register default event sources"""
@@ -1189,6 +1250,52 @@ async def main():
     print(f"Events Processed: {status['processed_events']}")
     print(f"Active Alerts: {status['active_alerts']}")
     print(f"SIEM Connections: {status['siem_connections']}")
+
+
+# DI container convenience functions
+
+def create_monitoring_system_with_di() -> SecurityMonitoringSystem:
+    """Create a complete monitoring system with all components registered in DI container."""
+    monitoring_system = SecurityMonitoringSystem()
+    return monitoring_system
+
+
+def get_monitoring_system_from_di() -> SecurityMonitoringSystem:
+    """Get the monitoring system from DI container, creating if necessary."""
+    if has_service(SecurityMonitoringSystem):
+        return get_service(SecurityMonitoringSystem)
+    else:
+        return create_monitoring_system_with_di()
+
+
+def get_event_collector_from_di() -> SecurityEventCollector:
+    """Get the event collector from DI container."""
+    if has_service(SecurityEventCollector):
+        return get_service(SecurityEventCollector)
+    else:
+        # Create monitoring system which will register the event collector
+        create_monitoring_system_with_di()
+        return get_service(SecurityEventCollector)
+
+
+def get_analytics_engine_from_di() -> SecurityAnalyticsEngine:
+    """Get the analytics engine from DI container."""
+    if has_service(SecurityAnalyticsEngine):
+        return get_service(SecurityAnalyticsEngine)
+    else:
+        # Create monitoring system which will register the analytics engine
+        create_monitoring_system_with_di()
+        return get_service(SecurityAnalyticsEngine)
+
+
+def get_siem_integration_from_di() -> SIEMIntegration:
+    """Get the SIEM integration from DI container."""
+    if has_service(SIEMIntegration):
+        return get_service(SIEMIntegration)
+    else:
+        # Create monitoring system which will register the SIEM integration
+        create_monitoring_system_with_di()
+        return get_service(SIEMIntegration)
 
 
 if __name__ == "__main__":

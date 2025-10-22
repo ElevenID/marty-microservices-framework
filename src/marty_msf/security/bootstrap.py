@@ -16,7 +16,13 @@ import logging
 import os
 from typing import Any
 
-from ..core.di_container import get_service, has_service, register_instance
+from ..core.di_container import (
+    configure_service,
+    get_service,
+    has_service,
+    register_factory,
+    register_instance,
+)
 from .api import (
     IAuditor,
     IAuthenticator,
@@ -50,7 +56,7 @@ class SecurityBootstrap:
     """
     Security system bootstrap and configuration.
 
-    This class is responsible for creating and wiring together all security components
+    This class is responsible for registering security components in the DI container
     based on configuration. It serves as the composition root for the security system.
     """
 
@@ -62,94 +68,92 @@ class SecurityBootstrap:
             config: Configuration dictionary for security components
         """
         self.config = config or self._get_default_config()
+        self._registered = False
 
-        # Core security components
-        self._secret_manager: ISecretManager | None = None
-        self._authenticator: IAuthenticator | None = None
-        self._authorizer: IAuthorizer | None = None
+    def register_security_services(self) -> None:
+        """
+        Register all security services in the DI container.
+        """
+        if self._registered:
+            return
 
-        # Extended security components
-        self._auditor: IAuditor | None = None
-        self._cache_manager: ICacheManager | None = None
-        self._session_manager: ISessionManager | None = None
+        # Register concrete implementations in dependency order
+        self._register_secret_manager()
+        self._register_authenticator()
+        self._register_authorizer()
+        self._register_auditor()
+        self._register_cache_manager()
+        self._register_session_manager()
 
-        # Policy and compliance (will be implemented in separate modules)
-        self._policy_engines: dict[str, IPolicyEngine] = {}
-        self._compliance_scanner: IComplianceScanner | None = None
+        # Register this bootstrap instance
+        register_instance(SecurityBootstrap, self)
+
+        self._registered = True
+        logger.info("Security services registered in DI container")
 
     def get_secret_manager(self) -> ISecretManager:
         """
-        Get or create the configured secret manager.
+        Get the secret manager from DI container.
 
         Returns:
             Configured secret manager instance
         """
-        if self._secret_manager is None:
-            self._secret_manager = self._create_secret_manager()
-        return self._secret_manager
+        return get_service(ISecretManager)
 
     def get_authenticator(self) -> IAuthenticator:
         """
-        Get or create the configured authenticator.
+        Get the authenticator from DI container.
 
         Returns:
             Configured authenticator instance
         """
-        if self._authenticator is None:
-            self._authenticator = self._create_authenticator()
-        return self._authenticator
+        return get_service(IAuthenticator)
 
     def get_authorizer(self) -> IAuthorizer:
         """
-        Get or create the configured authorizer.
+        Get the authorizer from DI container.
 
         Returns:
             Configured authorizer instance
         """
-        if self._authorizer is None:
-            self._authorizer = self._create_authorizer()
-        return self._authorizer
+        return get_service(IAuthorizer)
 
     def get_auditor(self) -> IAuditor:
         """
-        Get or create the configured auditor.
+        Get the auditor from DI container.
 
         Returns:
             Configured auditor instance
         """
-        if self._auditor is None:
-            self._auditor = self._create_auditor()
-        return self._auditor
+        return get_service(IAuditor)
 
     def get_cache_manager(self) -> ICacheManager:
         """
-        Get or create the configured cache manager.
+        Get the cache manager from DI container.
 
         Returns:
             Configured cache manager instance
         """
-        if self._cache_manager is None:
-            self._cache_manager = self._create_cache_manager()
-        return self._cache_manager
+        return get_service(ICacheManager)
 
     def get_session_manager(self) -> ISessionManager:
         """
-        Get or create the configured session manager.
+        Get the session manager from DI container.
 
         Returns:
             Configured session manager instance
         """
-        if self._session_manager is None:
-            self._session_manager = self._create_session_manager()
-        return self._session_manager
+        return get_service(ISessionManager)
 
     def initialize_security_system(self) -> dict[str, Any]:
         """
-        Initialize and return all security components.
+        Initialize security system by registering all components in DI container.
 
         Returns:
-            Dictionary containing all security components
+            Dictionary containing all security components from DI container
         """
+        self.register_security_services()
+
         components = {
             "secret_manager": self.get_secret_manager(),
             "authenticator": self.get_authenticator(),
@@ -166,11 +170,13 @@ class SecurityBootstrap:
 
     def initialize_core_security_system(self) -> tuple[IAuthenticator, IAuthorizer, ISecretManager]:
         """
-        Initialize and return core security components.
+        Initialize core security components.
 
         Returns:
-            Tuple of (authenticator, authorizer, secret_manager)
+            Tuple of (authenticator, authorizer, secret_manager) from DI container
         """
+        self.register_security_services()
+
         secret_manager = self.get_secret_manager()
         authenticator = self.get_authenticator()
         authorizer = self.get_authorizer()
@@ -182,20 +188,20 @@ class SecurityBootstrap:
 
         return authenticator, authorizer, secret_manager
 
-    def _create_secret_manager(self) -> ISecretManager:
-        """Create and configure the secret manager."""
+    def _register_secret_manager(self) -> None:
+        """Register the secret manager in DI container."""
         manager_type = self.config.get("secret_manager", {}).get("type", "environment")
 
         if manager_type == "environment":
             prefix = self.config.get("secret_manager", {}).get("prefix", "SECRET_")
-            return EnvironmentSecretManager(prefix=prefix)
+            manager = EnvironmentSecretManager(prefix=prefix)
 
         elif manager_type == "file":
             secrets_file = self.config.get("secret_manager", {}).get("file", "secrets.json")
-            return FileSecretManager(secrets_file=secrets_file)
+            manager = FileSecretManager(secrets_file=secrets_file)
 
         elif manager_type == "memory":
-            return InMemorySecretManager()
+            manager = InMemorySecretManager()
 
         elif manager_type == "composite":
             # Create multiple managers based on configuration
@@ -221,70 +227,73 @@ class SecurityBootstrap:
                     FileSecretManager()
                 ]
 
-            return CompositeSecretManager(managers)
-
+            manager = CompositeSecretManager(managers)
         else:
             logger.warning("Unknown secret manager type %s, using environment", manager_type)
-            return EnvironmentSecretManager()
+            manager = EnvironmentSecretManager()
 
-    def _create_authenticator(self) -> IAuthenticator:
-        """Create and configure the authenticator."""
+        register_instance(ISecretManager, manager)
+
+    def _register_authenticator(self) -> None:
+        """Register the authenticator in DI container."""
         auth_type = self.config.get("authenticator", {}).get("type", "basic")
-        secret_manager = self.get_secret_manager()
+        secret_manager = get_service(ISecretManager)
 
         if auth_type == "basic":
-            return BasicAuthenticator(secret_manager=secret_manager)
-
+            authenticator = BasicAuthenticator(secret_manager=secret_manager)
         elif auth_type == "jwt":
-            return JwtAuthenticator(secret_manager=secret_manager)
-
+            authenticator = JwtAuthenticator(secret_manager=secret_manager)
         elif auth_type == "environment":
-            return EnvironmentAuthenticator(secret_manager=secret_manager)
-
+            authenticator = EnvironmentAuthenticator(secret_manager=secret_manager)
         else:
             logger.warning("Unknown authenticator type %s, using basic", auth_type)
-            return BasicAuthenticator(secret_manager=secret_manager)
+            authenticator = BasicAuthenticator(secret_manager=secret_manager)
 
-    def _create_authorizer(self) -> IAuthorizer:
-        """Create and configure the authorizer."""
+        register_instance(IAuthenticator, authenticator)
+
+    def _register_authorizer(self) -> None:
+        """Register the authorizer in DI container."""
         authz_type = self.config.get("authorizer", {}).get("type", "role_based")
 
         if authz_type == "role_based":
             role_permissions = self.config.get("authorizer", {}).get("role_permissions")
-            return RoleBasedAuthorizer(role_permissions=role_permissions)
-
+            authorizer = RoleBasedAuthorizer(role_permissions=role_permissions)
         elif authz_type == "permission_based":
-            return PermissionBasedAuthorizer()
-
+            authorizer = PermissionBasedAuthorizer()
         elif authz_type == "attribute_based":
             policies = self.config.get("authorizer", {}).get("policies")
-            return AttributeBasedAuthorizer(policies=policies)
-
+            authorizer = AttributeBasedAuthorizer(policies=policies)
         else:
             logger.warning("Unknown authorizer type %s, using role_based", authz_type)
-            return RoleBasedAuthorizer()
+            authorizer = RoleBasedAuthorizer()
 
-    def _create_auditor(self) -> IAuditor:
-        """Create and configure the auditor."""
-        return create_default_auditor(self.config)
+        register_instance(IAuthorizer, authorizer)
 
-    def _create_cache_manager(self) -> ICacheManager:
-        """Create and configure the cache manager."""
+    def _register_auditor(self) -> None:
+        """Register the auditor in DI container."""
+        auditor = create_default_auditor(self.config)
+        register_instance(IAuditor, auditor)
+
+    def _register_cache_manager(self) -> None:
+        """Register the cache manager in DI container."""
         cache_config = self.config.get("cache", {})
         cache_type = cache_config.get("type", "advanced")
 
         if cache_type == "advanced":
-            return SecurityCacheManager(self.config)
+            cache_manager = SecurityCacheManager(self.config)
         elif cache_type == "memory":
-            return InMemoryCacheManager()
+            cache_manager = InMemoryCacheManager()
         else:
             logger.warning("Unknown cache type %s, using advanced", cache_type)
-            return SecurityCacheManager(self.config)
+            cache_manager = SecurityCacheManager(self.config)
 
-    def _create_session_manager(self) -> ISessionManager:
-        """Create and configure the session manager."""
+        register_instance(ICacheManager, cache_manager)
+
+    def _register_session_manager(self) -> None:
+        """Register the session manager in DI container."""
         # For now, return a placeholder. This will be implemented in a separate module.
-        return InMemorySessionManager()
+        session_manager = InMemorySessionManager()
+        register_instance(ISessionManager, session_manager)
 
     def _get_default_config(self) -> dict[str, Any]:
         """
@@ -378,14 +387,14 @@ def create_production_security_system() -> tuple[IAuthenticator, IAuthorizer, IS
 
 def configure_security_in_container(config: dict[str, Any]) -> None:
     """
-    Configure security bootstrap in the dependency injection container.
+    Configure security services in the dependency injection container.
 
     Args:
         config: Security configuration dictionary
     """
     bootstrap = SecurityBootstrap(config)
-    register_instance(SecurityBootstrap, bootstrap)
-    logger.info("Security bootstrap registered in DI container")
+    bootstrap.register_security_services()
+    logger.info("Security services configured in DI container")
 
 
 def get_security_components_from_container() -> tuple[IAuthenticator, IAuthorizer, ISecretManager]:
@@ -395,18 +404,14 @@ def get_security_components_from_container() -> tuple[IAuthenticator, IAuthorize
     Returns:
         Tuple of (authenticator, authorizer, secret_manager)
     """
-    if not has_service(SecurityBootstrap):
+    if not has_service(IAuthenticator):
         # Auto-configure with defaults if not already configured
         configure_security_in_container({})
 
-    bootstrap = get_service(SecurityBootstrap)
-    components = bootstrap.initialize_security_system()
-
-    # Extract the core components from the full component dict
     return (
-        components["authenticator"],
-        components["authorizer"],
-        components["secret_manager"]
+        get_service(IAuthenticator),
+        get_service(IAuthorizer),
+        get_service(ISecretManager)
     )
 
 

@@ -157,6 +157,17 @@ from .exceptions import (
     require_permission,
     require_role,
 )
+
+# Import security service factory
+from .factory import (
+    SecurityServiceFactory,
+    check_security_services_health,
+    get_security_factory,
+    get_security_monitoring,
+    get_security_services,
+    initialize_security_services,
+    reset_security_services,
+)
 from .framework import SecurityHardeningFramework, create_security_framework
 from .policy_engines import (
     PolicyEvaluationRequest,
@@ -259,6 +270,15 @@ __all__ = [
     "requires_rbac",
     "requires_abac",
     "get_current_user",
+
+    # Security Service Factory
+    "SecurityServiceFactory",
+    "get_security_factory",
+    "initialize_security_services",
+    "get_security_services",
+    "get_security_monitoring",
+    "reset_security_services",
+    "check_security_services_health",
 
     # Exceptions
     "SecurityError",

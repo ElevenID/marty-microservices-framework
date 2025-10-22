@@ -8,20 +8,24 @@ from collections.abc import Callable
 from typing import Any
 
 import grpc
-from fastapi import HTTPException, Request, Response
+from fastapi import Depends, HTTPException, Request, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
+# DI container and canonical functions
+from ..core.di_container import get_service, has_service
+from .api import IAuthenticator, IAuthorizer, User
 from .auth import (
     APIKeyAuthenticator,
     AuthenticatedUser,
     JWTAuthenticator,
     MTLSAuthenticator,
 )
-from .authorization import get_rbac
+from .canonical import authenticate_credentials, authorize_principal
 from .config import SecurityConfig
 from .errors import AuthenticationError, AuthorizationError, SecurityError
+from .factory import initialize_security_services
 from .rate_limiting import get_rate_limiter
 
 logger = logging.getLogger(__name__)
@@ -32,9 +36,13 @@ class SecurityMiddleware:
 
     def __init__(self, config: SecurityConfig):
         self.config = config
-        self.authenticators = {}
 
-        # Initialize authenticators based on configuration
+        # Ensure security services are initialized
+        if not has_service(IAuthenticator):
+            initialize_security_services()
+
+        # Initialize authenticators based on configuration (fallback for specific auth types)
+        self.authenticators = {}
         if config.enable_jwt and config.jwt_config:
             self.authenticators["jwt"] = JWTAuthenticator(config)
 
@@ -44,13 +52,74 @@ class SecurityMiddleware:
         if config.enable_mtls and config.mtls_config:
             self.authenticators["mtls"] = MTLSAuthenticator(config)
 
-        self.rbac = get_rbac()
+        # Use DI container for RBAC if available
+        self.rbac = None
+        if has_service(IAuthorizer):
+            self.rbac = get_service(IAuthorizer)
+
         self.rate_limiter = get_rate_limiter()
 
     async def authenticate_request(
         self, request_info: builtins.dict[str, Any]
     ) -> AuthenticatedUser | None:
         """Authenticate a request using available authenticators."""
+
+        # First try using canonical authentication if credentials are available
+        credentials = self._extract_credentials_from_request(request_info)
+        if credentials:
+            user = authenticate_credentials(credentials)
+            if user:
+                # Convert User to AuthenticatedUser if needed
+                return self._convert_to_authenticated_user(user)
+
+        # Fallback to specific authenticator implementations
+        return await self._authenticate_with_specific_methods(request_info)
+
+    def _extract_credentials_from_request(self, request_info: builtins.dict[str, Any]) -> dict[str, Any] | None:
+        """Extract credentials from request info for canonical authentication."""
+        credentials = {}
+
+        # Extract authorization header
+        auth_header = request_info.get("authorization")
+        if auth_header:
+            if auth_header.startswith("Bearer "):
+                credentials["token"] = auth_header[7:]
+                credentials["auth_type"] = "bearer"
+            elif auth_header.startswith("Basic "):
+                credentials["token"] = auth_header[6:]
+                credentials["auth_type"] = "basic"
+
+        # Extract API key
+        headers = request_info.get("headers", {})
+        query_params = request_info.get("query_params", {})
+
+        api_key = headers.get("x-api-key") or query_params.get("api_key")
+        if api_key:
+            credentials["api_key"] = api_key
+            credentials["auth_type"] = "api_key"
+
+        # Extract client certificate for mTLS
+        client_cert = request_info.get("client_cert")
+        if client_cert:
+            credentials["client_cert"] = client_cert
+            credentials["auth_type"] = "mtls"
+
+        return credentials if credentials else None
+
+    def _convert_to_authenticated_user(self, user) -> AuthenticatedUser:
+        """Convert User to AuthenticatedUser."""
+        return AuthenticatedUser(
+            user_id=user.id,
+            username=user.username,
+            roles=user.roles,
+            permissions=getattr(user, 'permissions', []),
+            metadata=getattr(user, 'metadata', {})
+        )
+
+    async def _authenticate_with_specific_methods(
+        self, request_info: builtins.dict[str, Any]
+    ) -> AuthenticatedUser | None:
+        """Fallback authentication using specific authenticator implementations."""
 
         # Try JWT authentication first
         if "jwt" in self.authenticators:
@@ -298,10 +367,12 @@ def require_permission_dependency(permission: str):
     """Create a FastAPI dependency that requires a specific permission."""
 
     async def dependency(
-        user: AuthenticatedUser = require_authentication,
+        user: AuthenticatedUser = Depends(require_authentication),
     ) -> AuthenticatedUser:
-        rbac = get_rbac()
-        if not rbac.check_permission(user, permission):
+        # Use canonical authorization function
+        security_user = User(id=user.user_id, username=user.username or user.user_id, roles=user.roles)
+
+        if not authorize_principal(security_user, "api", permission):
             raise HTTPException(status_code=403, detail=f"Permission required: {permission}")
         return user
 
@@ -312,10 +383,12 @@ def require_role_dependency(role: str):
     """Create a FastAPI dependency that requires a specific role."""
 
     async def dependency(
-        user: AuthenticatedUser = require_authentication,
+        user: AuthenticatedUser = Depends(require_authentication),
     ) -> AuthenticatedUser:
-        rbac = get_rbac()
-        if not rbac.check_role(user, role):
+        # Use canonical authorization function
+        security_user = User(id=user.user_id, username=user.username or user.user_id, roles=user.roles)
+
+        if not authorize_principal(security_user, "api", f"role:{role}"):
             raise HTTPException(status_code=403, detail=f"Role required: {role}")
         return user
 

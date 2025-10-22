@@ -12,6 +12,7 @@ from collections.abc import Callable
 from datetime import datetime, timezone
 from typing import Any, TypeVar
 
+from ..core.di_container import get_service, has_service, register_instance
 from .api import User
 from .canonical import (
     authenticate_credentials,
@@ -96,7 +97,7 @@ class SecurityContext:
 # User context service for dependency injection
 
 
-class _CurrentUserService:
+class CurrentUserService:
     """Thread-safe service to manage current user context without global variables."""
 
     def __init__(self):
@@ -114,18 +115,22 @@ class _CurrentUserService:
             self._current_user = user
 
 
-# Module-level service instance (better than global var, encapsulated in class)
-_user_service = _CurrentUserService()
+def _get_user_service() -> CurrentUserService:
+    """Get or create the current user service from DI container."""
+    if not has_service(CurrentUserService):
+        service = CurrentUserService()
+        register_instance(CurrentUserService, service)
+    return get_service(CurrentUserService)
 
 
 def get_current_user() -> User | None:
     """Get the current authenticated user."""
-    return _user_service.get_user()
+    return _get_user_service().get_user()
 
 
 def _set_current_user(user: User | None) -> None:
     """Set the current authenticated user (internal use)."""
-    _user_service.set_user(user)
+    _get_user_service().set_user(user)
 
 
 def requires_auth(func: F) -> F:

@@ -21,7 +21,7 @@ from .api import (
     IAuthorizer,
     User,
 )
-from .bootstrap import SecurityBootstrap
+from .bootstrap import SecurityBootstrap, configure_security_in_container
 from .exceptions import AuthenticationError, AuthorizationError
 
 logger = logging.getLogger(__name__)
@@ -29,12 +29,9 @@ logger = logging.getLogger(__name__)
 
 def get_security_bootstrap() -> SecurityBootstrap:
     """Get the security bootstrap instance from the service container."""
-
     # Auto-initialize if not already configured
     if not has_service(SecurityBootstrap):
-        bootstrap = SecurityBootstrap()
-        bootstrap.initialize_security_system()
-        register_instance(SecurityBootstrap, bootstrap)
+        configure_security_in_container({})
 
     return get_service(SecurityBootstrap)
 
@@ -53,9 +50,11 @@ def authenticate_credentials(credentials: dict[str, Any]) -> User | None:
         User if authentication succeeds, None otherwise
     """
     try:
-        bootstrap = get_security_bootstrap()
-        authenticator = bootstrap.get_authenticator()
+        # Ensure security services are registered
+        if not has_service(IAuthenticator):
+            get_security_bootstrap()
 
+        authenticator = get_service(IAuthenticator)
         result = authenticator.authenticate(credentials)
 
         if result.success and result.user:
@@ -82,8 +81,11 @@ def authorize_principal(user: User, resource: str, action: str) -> bool:
         True if authorized, False otherwise
     """
     try:
-        bootstrap = get_security_bootstrap()
-        authorizer = bootstrap.get_authorizer()
+        # Ensure security services are registered
+        if not has_service(IAuthorizer):
+            get_security_bootstrap()
+
+        authorizer = get_service(IAuthorizer)
 
         context = AuthorizationContext(
             user=user,
@@ -102,18 +104,19 @@ def audit_security_event(event: dict[str, Any]) -> None:
     """
     Canonical audit function for use by other modules.
 
-    This is the single source of truth for audit logging.
+    This is the single source of truth for security auditing.
     All modules should use this function instead of implementing their own.
 
     Args:
-        event: Event dictionary to audit
+        event: Security event data to audit
     """
     try:
-        bootstrap = get_security_bootstrap()
-        auditor = bootstrap.get_auditor()
+        # Ensure security services are registered
+        if not has_service(IAuditor):
+            get_security_bootstrap()
 
-        # Extract event type from the event dict
-        event_type = event.get('event_type', 'security_event')
+        auditor = get_service(IAuditor)
+        event_type = event.get("event_type", "UNKNOWN")
         auditor.audit_event(event_type, event)
     except Exception as e:
         logger.error(f"Audit failed: {e}")
@@ -121,7 +124,7 @@ def audit_security_event(event: dict[str, Any]) -> None:
 
 def configure_security_system(config: dict[str, Any]) -> SecurityBootstrap:
     """
-    Configure and return a security bootstrap instance.
+    Configure the security system with the given configuration.
 
     Args:
         config: Security configuration dictionary
@@ -129,12 +132,9 @@ def configure_security_system(config: dict[str, Any]) -> SecurityBootstrap:
     Returns:
         Configured SecurityBootstrap instance
     """
-    bootstrap = SecurityBootstrap(config)
-    bootstrap.initialize_security_system()
 
-    # Register in service container for global access
-    register_instance(SecurityBootstrap, bootstrap)
+    # Configure security services in DI container
+    configure_security_in_container(config)
 
-    return bootstrap
-
-    return bootstrap
+    # Return the bootstrap instance
+    return get_service(SecurityBootstrap)
