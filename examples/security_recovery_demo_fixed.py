@@ -13,13 +13,19 @@ Usage:
 import asyncio
 from datetime import datetime, timedelta, timezone
 
-from marty_msf.security import (
-    ComplianceFramework,
-    create_event_manager,
-    create_security_framework,
-    create_status_reporter,
+from marty_msf.audit_compliance import SecurityEventManager, create_event_manager
+from marty_msf.audit_compliance.monitoring import (
+    SecurityEventSeverity,
+    SecurityEventType,
 )
-from marty_msf.security.monitoring import SecurityEventSeverity, SecurityEventType
+
+# Import from new modular security structure
+from marty_msf.security_core import (
+    AuthenticationResult,
+    SecurityError,
+    User,
+    create_default_security_system,
+)
 
 
 async def demonstrate_security_recovery():

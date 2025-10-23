@@ -7,22 +7,27 @@ import asyncio
 import hashlib
 import logging
 
-# Test the new modular security architecture
-from marty_msf.security import (  # Core interfaces; Bootstrap functions; Implementation classes; Data models
+from marty_msf.authentication import (
+    BasicAuthenticator,
+    EnvironmentSecretManager,
+    IAuthenticator,
+    InMemorySecretManager,
+    ISecretManager,
+    JwtAuthenticator,
+)
+from marty_msf.authorization import (
+    IAuthorizer,
+    PermissionAction,
+    PermissionBasedAuthorizer,
+    RoleBasedAuthorizer,
+)
+
+# Import from new modular security structure
+from marty_msf.security_core import (
     AuthenticationMethod,
     AuthenticationResult,
     AuthorizationContext,
     AuthorizationResult,
-    BasicAuthenticator,
-    EnvironmentSecretManager,
-    IAuthenticator,
-    IAuthorizer,
-    InMemorySecretManager,
-    ISecretManager,
-    JwtAuthenticator,
-    PermissionAction,
-    PermissionBasedAuthorizer,
-    RoleBasedAuthorizer,
     User,
     create_default_security_system,
     create_development_security_system,

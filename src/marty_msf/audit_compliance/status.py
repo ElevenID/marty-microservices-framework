@@ -8,7 +8,7 @@ in the Marty Microservices Framework.
 from datetime import datetime, timezone
 from typing import Any
 
-from .api import (
+from ..security_core.api import (
     ComplianceFramework,
     IAuditor,
     IAuthenticator,
@@ -17,8 +17,11 @@ from .api import (
     ISecretManager,
     ISessionManager,
 )
-from .bootstrap import SecurityBootstrap
-from .models import SecurityThreatLevel
+from ..security_core.bootstrap import (
+    SecurityHardeningFramework,
+    create_security_framework,
+)
+from ..security_core.models import SecurityThreatLevel
 from .monitoring import SecurityEvent, SecurityEventSeverity
 
 
@@ -27,9 +30,9 @@ class SecurityStatusReporter:
     Comprehensive security status reporting for the entire security subsystem.
     """
 
-    def __init__(self, bootstrap: SecurityBootstrap | None = None):
+    def __init__(self, bootstrap: SecurityHardeningFramework | None = None):
         """Initialize the security status reporter."""
-        self.bootstrap = bootstrap or SecurityBootstrap()
+        self.bootstrap = bootstrap or create_security_framework("default_service")
 
     def get_comprehensive_status(self) -> dict[str, Any]:
         """Get comprehensive status across all security components."""
@@ -481,12 +484,12 @@ class SecurityStatusReporter:
         return "healthy"
 
 
-def create_status_reporter(bootstrap: SecurityBootstrap | None = None) -> SecurityStatusReporter:
+def create_status_reporter(bootstrap: SecurityHardeningFramework | None = None) -> SecurityStatusReporter:
     """
     Create a security status reporter instance.
 
     Args:
-        bootstrap: Optional SecurityBootstrap instance
+        bootstrap: Optional SecurityHardeningFramework instance
 
     Returns:
         Configured SecurityStatusReporter instance

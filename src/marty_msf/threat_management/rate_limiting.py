@@ -14,8 +14,8 @@ from functools import wraps
 import redis.asyncio as redis
 
 from ..core.di_container import get_service_optional, register_instance
-from .config import RateLimitConfig
-from .errors import RateLimitExceededError
+from ..security_core.config import RateLimitConfig
+from ..security_core.exceptions import RateLimitExceededError
 
 logger = logging.getLogger(__name__)
 

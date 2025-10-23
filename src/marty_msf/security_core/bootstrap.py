@@ -6,6 +6,7 @@ while respecting the level contract architecture.
 """
 
 import uuid
+import warnings
 from collections import deque
 from datetime import datetime, timezone
 from typing import Any
@@ -23,7 +24,6 @@ from .api import (
     SecurityPrincipal,
     User,
 )
-from .bootstrap import SecurityBootstrap
 from .models import SecurityThreatLevel
 from .monitoring import SecurityEvent, SecurityEventSeverity, SecurityEventType
 
@@ -39,8 +39,9 @@ class SecurityHardeningFramework:
         self.service_name = service_name
         self.config = config or {}
 
-        # Initialize the bootstrap system
-        self.bootstrap = SecurityBootstrap(self.config)
+        # Initialize bootstrap system (placeholder)
+        # TODO: Implement bootstrap system initialization
+        # self.bootstrap = SecurityBootstrap(self.config)
 
         # Lazy-loaded security components
         self._authenticator: IAuthenticator | None = None
@@ -114,8 +115,8 @@ class SecurityHardeningFramework:
         if config:
             self.config.update(config)
 
-        # Initialize the bootstrap system
-        self.bootstrap = SecurityBootstrap(self.config)
+        # Initialize the bootstrap system (placeholder)
+        # self.bootstrap = SecurityBootstrap(self.config)  # TODO: Implement
 
         # Set up compliance standards
         if "compliance_standards" in self.config:
@@ -184,7 +185,7 @@ class SecurityHardeningFramework:
                     result="failure",
                     threat_level=SecurityThreatLevel.MEDIUM,
                     details={
-                        "reason": auth_result.message or "Authentication failed",
+                        "reason": auth_result.error_message or "Authentication failed",
                         "provider": provider or "local"
                     }
                 )

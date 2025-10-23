@@ -21,19 +21,20 @@ from .api import (
     IAuthorizer,
     User,
 )
-from .bootstrap import SecurityBootstrap, configure_security_in_container
+from .bootstrap import SecurityHardeningFramework, create_security_framework
 from .exceptions import AuthenticationError, AuthorizationError
 
 logger = logging.getLogger(__name__)
 
 
-def get_security_bootstrap() -> SecurityBootstrap:
+def get_security_bootstrap() -> SecurityHardeningFramework:
     """Get the security bootstrap instance from the service container."""
     # Auto-initialize if not already configured
-    if not has_service(SecurityBootstrap):
-        configure_security_in_container({})
+    if not has_service(SecurityHardeningFramework):
+        framework = create_security_framework("default_service", {})
+        register_instance(SecurityHardeningFramework, framework)
 
-    return get_service(SecurityBootstrap)
+    return get_service(SecurityHardeningFramework)
 
 
 def authenticate_credentials(credentials: dict[str, Any]) -> User | None:
@@ -122,7 +123,7 @@ def audit_security_event(event: dict[str, Any]) -> None:
         logger.error(f"Audit failed: {e}")
 
 
-def configure_security_system(config: dict[str, Any]) -> SecurityBootstrap:
+def configure_security_system(config: dict[str, Any]) -> SecurityHardeningFramework:
     """
     Configure the security system with the given configuration.
 
@@ -130,11 +131,13 @@ def configure_security_system(config: dict[str, Any]) -> SecurityBootstrap:
         config: Security configuration dictionary
 
     Returns:
-        Configured SecurityBootstrap instance
+        Configured SecurityHardeningFramework instance
     """
 
     # Configure security services in DI container
-    configure_security_in_container(config)
+    service_name = config.get("service_name", "default_service")
+    framework = create_security_framework(service_name, config)
+    register_instance(SecurityHardeningFramework, framework)
 
-    # Return the bootstrap instance
-    return get_service(SecurityBootstrap)
+    # Return the framework instance
+    return get_service(SecurityHardeningFramework)

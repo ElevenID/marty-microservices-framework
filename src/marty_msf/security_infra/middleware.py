@@ -13,20 +13,25 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
-# DI container and canonical functions
-from ..core.di_container import get_service, has_service
-from .api import IAuthenticator, IAuthorizer, User
-from .auth import (
+from ..authentication.auth import (
     APIKeyAuthenticator,
     AuthenticatedUser,
     JWTAuthenticator,
     MTLSAuthenticator,
 )
-from .canonical import authenticate_credentials, authorize_principal
-from .config import SecurityConfig
-from .errors import AuthenticationError, AuthorizationError, SecurityError
-from .factory import initialize_security_services
-from .rate_limiting import get_rate_limiter
+
+# DI container and canonical functions
+from ..core.di_container import get_service, has_service
+from ..security_core.api import IAuthenticator, IAuthorizer, User
+from ..security_core.canonical import authenticate_credentials, authorize_principal
+from ..security_core.config import SecurityConfig
+from ..security_core.exceptions import (
+    AuthenticationError,
+    AuthorizationError,
+    SecurityError,
+)
+from ..security_core.factory import initialize_security_services
+from ..threat_management.rate_limiting import get_rate_limiter
 
 logger = logging.getLogger(__name__)
 

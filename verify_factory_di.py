@@ -7,12 +7,16 @@ import os
 import sys
 import traceback
 
-from marty_msf.core.di_container import has_service, reset_container
-from marty_msf.security.factory import (
+# Import from new modular security structure
+from marty_msf.authentication import (
     SecurityServiceFactory,
+    check_security_services_health,
     get_security_factory,
+    get_security_services,
+    initialize_security_services,
     reset_security_services,
 )
+from marty_msf.core.di_container import has_service, reset_container
 
 # Add project root to path
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

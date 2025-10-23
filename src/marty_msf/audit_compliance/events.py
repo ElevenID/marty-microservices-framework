@@ -11,7 +11,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from .models import SecurityThreatLevel
+from ..security_core.models import SecurityThreatLevel
 from .monitoring import SecurityEvent, SecurityEventSeverity, SecurityEventType
 
 

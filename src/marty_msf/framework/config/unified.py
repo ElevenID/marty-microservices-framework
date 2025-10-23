@@ -52,8 +52,9 @@ from google.cloud import secretmanager  # type: ignore
 from pydantic import BaseModel, Field, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Import from new modular security structure
+from marty_msf.crypto_secrets import VaultClient, VaultConfig
 from marty_msf.framework.config.manager import Environment
-from marty_msf.security.secrets import VaultClient, VaultConfig
 
 # Import existing security module components with fallbacks
 try:

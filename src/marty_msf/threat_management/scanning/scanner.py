@@ -11,7 +11,8 @@ import uuid
 from collections import defaultdict, deque
 from typing import Any
 
-from marty_msf.security.models import SecurityThreatLevel, SecurityVulnerability
+# Import from new modular security structure
+from marty_msf.security_core.models import SecurityThreatLevel, SecurityVulnerability
 
 
 class SecurityScanner:

@@ -13,13 +13,13 @@ from datetime import datetime, timezone
 from typing import Any, TypeVar
 
 from ..core.di_container import get_service, has_service, register_instance
-from .api import User
-from .canonical import (
+from ..security_core.api import User
+from ..security_core.canonical import (
     authenticate_credentials,
     authorize_principal,
     get_security_bootstrap,
 )
-from .exceptions import (
+from ..security_core.exceptions import (
     AuthenticationError,
     AuthorizationError,
     PermissionDeniedError,

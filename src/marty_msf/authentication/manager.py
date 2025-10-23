@@ -12,6 +12,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from ..audit_compliance.monitoring import (
+    SecurityAnalyticsEngine,
+    SecurityEventCollector,
+    SecurityMonitoringDashboard,
+    SecurityMonitoringSystem,
+    SIEMIntegration,
+)
 from ..core.di_container import (
     get_container,
     get_service,
@@ -20,7 +27,7 @@ from ..core.di_container import (
     register_factory,
     register_instance,
 )
-from .api import (
+from ..security_core.api import (
     IAuditor,
     IAuthenticator,
     IAuthorizer,
@@ -28,13 +35,9 @@ from .api import (
     ISecretManager,
     ISessionManager,
 )
-from .bootstrap import SecurityBootstrap
-from .monitoring import (
-    SecurityAnalyticsEngine,
-    SecurityEventCollector,
-    SecurityMonitoringDashboard,
-    SecurityMonitoringSystem,
-    SIEMIntegration,
+from ..security_core.bootstrap import (
+    SecurityHardeningFramework,
+    create_security_framework,
 )
 
 logger = logging.getLogger(__name__)
@@ -83,9 +86,10 @@ class SecurityServiceFactory:
         logger.info("All security services initialized successfully")
 
     def _initialize_core_security_services(self) -> None:
-        """Initialize core security services via bootstrap."""
-        bootstrap = SecurityBootstrap(self.config)
-        bootstrap.register_security_services()
+        """Initialize core security services via SecurityHardeningFramework."""
+        service_name = self.config.get("service_name", "default_service")
+        bootstrap = create_security_framework(service_name, self.config)
+        bootstrap.initialize_security()
 
         logger.info("Core security services registered: %s",
                    [ISecretManager.__name__, IAuthenticator.__name__,

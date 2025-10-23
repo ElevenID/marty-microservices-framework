@@ -22,7 +22,6 @@ from typing import Any, Protocol, runtime_checkable
 # --- Core Data Models ---
 
 @dataclass
-@dataclass
 class User:
     """Represents a user in the security system."""
     id: str
@@ -34,12 +33,41 @@ class User:
 
 
 @dataclass
+class AuthenticatedUser:
+    """Represents an authenticated user with enhanced session information."""
+    user_id: str
+    username: str | None = None
+    email: str | None = None
+    roles: list[str] = field(default_factory=list)
+    permissions: list[str] = field(default_factory=list)
+    session_id: str | None = None
+    auth_method: str | None = None
+    expires_at: datetime | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def has_role(self, role: str) -> bool:
+        """Check if user has a specific role."""
+        return role in self.roles
+
+    def has_permission(self, permission: str) -> bool:
+        """Check if user has a specific permission."""
+        return permission in self.permissions
+
+    def is_expired(self) -> bool:
+        """Check if the authentication has expired."""
+        if not self.expires_at:
+            return False
+        return datetime.now(timezone.utc) > self.expires_at
+
+
+@dataclass
 class AuthenticationResult:
     """Result of an authentication attempt."""
     success: bool
-    user: User | None = None
-    error_message: str | None = None
-    session_data: dict[str, Any] = field(default_factory=dict)
+    user: AuthenticatedUser | None = None
+    error: str | None = None
+    error_code: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -219,6 +247,18 @@ class PermissionAction(Enum):
 
 
 # --- Abstract Base Classes (Alternative to Protocols) ---
+
+class BaseAuthenticator(ABC):
+    """Base class for authentication providers compatible with legacy code."""
+
+    @abstractmethod
+    async def authenticate(self, credentials: dict[str, Any]) -> AuthenticationResult:
+        """Authenticate a user with provided credentials."""
+
+    @abstractmethod
+    async def validate_token(self, token: str) -> AuthenticationResult:
+        """Validate an authentication token."""
+
 
 class AbstractAuthenticator(ABC):
     """Abstract base class for authenticators."""

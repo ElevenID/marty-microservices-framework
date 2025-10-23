@@ -15,14 +15,14 @@ from pathlib import Path
 # Add the src directory to the path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from marty_msf.security.api import (
+# Import from new modular security structure
+from marty_msf.security_core import (
     AuthenticationResult,
     AuthorizationContext,
     AuthorizationResult,
-    SecurityPolicyType,
+    SecurityBootstrap,
     User,
 )
-from marty_msf.security.bootstrap import SecurityBootstrap
 
 
 async def validate_authentication():

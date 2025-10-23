@@ -14,8 +14,8 @@ import jwt
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 
-from .config import SecurityConfig
-from .errors import CertificateValidationError
+from ..security_core.config import SecurityConfig
+from ..security_core.exceptions import CertificateValidationError
 
 logger = logging.getLogger(__name__)
 
