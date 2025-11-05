@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mmf-system
+  labels:
+    name: mmf-system
+    purpose: microservices-framework
+    architecture: hexagonal
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mmf-config
+  namespace: mmf-system
+  labels:
+    app: mmf
+    component: configuration
+data:
+  environment: "development"
+  log_level: "INFO"
+  architecture_type: "hexagonal"
+  example_type: "minimal"
