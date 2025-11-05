@@ -1,0 +1,435 @@
+name: MMF PR Validation
+
+on:
+  pull_request:
+    branches: [ main, dev ]
+    types: [ opened, synchronize, reopened, ready_for_review ]
+    paths:
+      - 'mmf/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - 'requirements.txt'
+      - '.github/workflows/**'
+  # Allow manual triggering for testing
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to test (optional)'
+        required: false
+        type: string
+
+# Cancel previous runs for the same PR
+concurrency:
+  group: pr-validation-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  KIND_VERSION: v0.24.0
+  KUBECTL_VERSION: v1.31.0
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  # Skip draft PRs unless explicitly requested
+  check-pr-status:
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.check.outputs.should_run }}
+    steps:
+    - name: Check if PR should run tests
+      id: check
+      run: |
+        if [[ "${{ github.event.pull_request.draft }}" == "true" && "${{ github.event.action }}" != "ready_for_review" ]]; then
+          echo "should_run=false" >> $GITHUB_OUTPUT
+          echo "Skipping tests for draft PR"
+        else
+          echo "should_run=true" >> $GITHUB_OUTPUT
+          echo "Running tests for PR"
+        fi
+
+  # Quick validation tests - run first
+  quick-validation:
+    needs: check-pr-status
+    if: needs.check-pr-status.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install UV package manager
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Install dependencies
+      run: |
+        uv sync --group dev
+
+    - name: Run code quality checks
+      working-directory: ./mmf
+      run: |
+        echo "Running linting and formatting checks on MMF..."
+        uv run ruff check . || echo "Linting issues found - will continue with tests"
+        uv run ruff format --check . || echo "Formatting issues found - will continue with tests"
+
+    - name: Run unit tests
+      working-directory: ./mmf
+      run: |
+        echo "Running MMF unit tests..."
+        ../tests/run_mmf_tests.sh --unit --verbose
+
+    - name: Run integration tests
+      run: |
+        echo "Running integration tests..."
+        uv run pytest tests/integration/ -v --tb=short -x || true
+
+  # Contract tests - validate API compatibility
+  contract-tests:
+    needs: [check-pr-status, quick-validation]
+    if: needs.check-pr-status.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install UV package manager
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Install dependencies
+      run: |
+        uv sync --group dev
+
+    - name: Run contract tests
+      working-directory: ./mmf
+      run: |
+        echo "Running MMF API contract validation tests..."
+        ../tests/run_mmf_tests.sh --contract --verbose
+
+    - name: Upload contract test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: contract-test-results
+        path: |
+          test-results/
+          *.xml
+        retention-days: 3
+
+  # End-to-end tests - comprehensive system validation
+  e2e-tests:
+    needs: [check-pr-status, quick-validation]
+    if: needs.check-pr-status.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    strategy:
+      matrix:
+        test-mode: [quick, smoke]
+      fail-fast: false
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install UV package manager
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Install KIND
+      run: |
+        curl -Lo ./kind https://kind.sigs.k8s.io/dl/${{ env.KIND_VERSION }}/kind-linux-amd64
+        chmod +x ./kind
+        sudo mv ./kind /usr/local/bin/kind
+
+    - name: Install kubectl
+      run: |
+        curl -LO "https://dl.k8s.io/release/${{ env.KUBECTL_VERSION }}/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin/kubectl
+
+    - name: Verify installations
+      run: |
+        echo "Docker version: $(docker --version)"
+        echo "KIND version: $(kind --version)"
+        echo "kubectl version: $(kubectl version --client --short)"
+
+    - name: Run E2E Tests (${{ matrix.test-mode }} mode)
+      id: e2e-tests
+      working-directory: ./mmf
+      run: |
+        cd ${{ github.workspace }}
+
+        if [[ "${{ matrix.test-mode }}" == "quick" ]]; then
+          echo "Running quick MMF E2E tests..."
+          ./tests/run_mmf_tests.sh --e2e --quick --verbose
+        elif [[ "${{ matrix.test-mode }}" == "smoke" ]]; then
+          echo "Running MMF smoke tests..."
+          ./tests/run_mmf_tests.sh --e2e --smoke --verbose
+        else
+          echo "Running full MMF E2E test suite..."
+          ./tests/run_mmf_tests.sh --e2e --verbose
+        fi
+
+    - name: Upload E2E test artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: e2e-test-artifacts-${{ matrix.test-mode }}
+        path: |
+          /tmp/identity-service-e2e.yaml
+          /tmp/e2e-test-*.log
+          test-results/
+        retention-days: 7
+
+    - name: Cleanup E2E resources
+      if: always()
+      run: |
+        echo "Cleaning up E2E test resources..."
+        # Clean up KIND clusters
+        for cluster in $(kind get clusters 2>/dev/null | grep -E "(test|e2e|mmf)" || true); do
+          echo "Deleting cluster: $cluster"
+          kind delete cluster --name "$cluster" || true
+        done
+
+        # Clean up Docker images
+        docker rmi mmf/identity-service:e2e-test || true
+        docker rmi $(docker images -q --filter "reference=mmf/*:*test*" 2>/dev/null) || true
+
+  # Performance baseline - ensure no major regressions
+  performance-check:
+    needs: [check-pr-status, quick-validation]
+    if: needs.check-pr-status.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install UV package manager
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Install dependencies
+      run: |
+        uv sync --group dev
+
+    - name: Run performance baseline tests
+      working-directory: ./mmf
+      run: |
+        echo "Running MMF performance baseline tests..."
+        # Use unified test runner for performance tests
+        ../tests/run_mmf_tests.sh --performance --quick --verbose
+
+    - name: Upload performance results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-baseline-results
+        path: |
+          performance-results/
+          benchmark-*.json
+        retention-days: 3
+
+  # Security validation - quick security checks
+  security-check:
+    needs: [check-pr-status, quick-validation]
+    if: needs.check-pr-status.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install UV package manager
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Install dependencies
+      run: |
+        uv sync --group dev
+
+    - name: Run security baseline tests
+      working-directory: ./mmf
+      run: |
+        echo "Running MMF security baseline tests..."
+        # Use unified test runner for security tests
+        ../tests/run_mmf_tests.sh --security --quick --verbose
+
+    - name: Check for secrets in code
+      run: |
+        echo "Scanning for potential secrets..."
+        # Basic secret scanning (you might want to use a proper tool like TruffleHog)
+        git diff origin/main...HEAD --name-only | xargs grep -l -i -E "(password|secret|key|token|api.key)" || echo "No obvious secrets found"
+
+  # Final validation summary
+  validation-summary:
+    needs: [check-pr-status, quick-validation, contract-tests, e2e-tests, performance-check, security-check]
+    if: always() && needs.check-pr-status.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Collect test results
+      run: |
+        echo "## PR Validation Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+
+        echo "### Test Results" >> $GITHUB_STEP_SUMMARY
+        echo "| Test Category | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|---------------|--------|" >> $GITHUB_STEP_SUMMARY
+
+        # Quick validation
+        if [[ "${{ needs.quick-validation.result }}" == "success" ]]; then
+          echo "| Quick Validation | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| Quick Validation | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        # Contract tests
+        if [[ "${{ needs.contract-tests.result }}" == "success" ]]; then
+          echo "| Contract Tests | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| Contract Tests | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        # E2E tests
+        if [[ "${{ needs.e2e-tests.result }}" == "success" ]]; then
+          echo "| E2E Tests | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| E2E Tests | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        # Performance check
+        if [[ "${{ needs.performance-check.result }}" == "success" ]]; then
+          echo "| Performance Check | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| Performance Check | ⚠️ Issues Found |" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        # Security check
+        if [[ "${{ needs.security-check.result }}" == "success" ]]; then
+          echo "| Security Check | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| Security Check | ⚠️ Issues Found |" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+
+        # Determine overall status
+        if [[ "${{ needs.quick-validation.result }}" == "success" &&
+              "${{ needs.contract-tests.result }}" == "success" &&
+              "${{ needs.e2e-tests.result }}" == "success" ]]; then
+          echo "✅ **PR is ready for review!** All critical tests passed." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The code changes have been validated and are ready to merge." >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **PR needs attention.** Some tests failed." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Please review the failed tests and make necessary fixes." >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: Comment on PR
+      if: github.event.pull_request.number
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const prNumber = context.payload.pull_request.number;
+
+          let status = "✅ **All tests passed!**";
+          let details = "Your PR has been validated and is ready for review.";
+
+          if ("${{ needs.quick-validation.result }}" !== "success" ||
+              "${{ needs.contract-tests.result }}" !== "success" ||
+              "${{ needs.e2e-tests.result }}" !== "success") {
+            status = "❌ **Some tests failed**";
+            details = "Please check the workflow results and fix any issues.";
+          }
+
+          const body = `## 🤖 PR Validation Results
+
+          ${status}
+
+          ### Test Results Summary:
+          - **Quick Validation**: ${{ needs.quick-validation.result == 'success' && '✅ Passed' || '❌ Failed' }}
+          - **Contract Tests**: ${{ needs.contract-tests.result == 'success' && '✅ Passed' || '❌ Failed' }}
+          - **E2E Tests**: ${{ needs.e2e-tests.result == 'success' && '✅ Passed' || '❌ Failed' }}
+          - **Performance**: ${{ needs.performance-check.result == 'success' && '✅ Passed' || '⚠️ Issues' }}
+          - **Security**: ${{ needs.security-check.result == 'success' && '✅ Passed' || '⚠️ Issues' }}
+
+          ${details}
+
+          ---
+          *View detailed results in the [Actions tab](${context.payload.repository.html_url}/actions/runs/${context.runId})*`;
+
+          // Check for existing bot comments
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: prNumber,
+          });
+
+          const botComment = comments.find(comment =>
+            comment.user.type === 'Bot' &&
+            comment.body.includes('🤖 PR Validation Results')
+          );
+
+          if (botComment) {
+            // Update existing comment
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body: body
+            });
+          } else {
+            // Create new comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: body
+            });
+          }

@@ -1,0 +1,572 @@
+name: MMF Comprehensive E2E Testing
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main, dev]
+    paths:
+      - 'mmf/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - 'requirements.txt'
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: 'Test mode to run'
+        required: true
+        default: 'comprehensive'
+        type: choice
+        options:
+        - quick
+        - smoke
+        - comprehensive
+        - chaos
+      pr_number:
+        description: 'PR number (for manual runs)'
+        required: false
+        type: string
+
+env:
+  PYTHON_VERSION: "3.11"
+  KIND_VERSION: "v0.20.0"
+  KUBECTL_VERSION: "v1.28.0"
+  DOCKER_BUILDKIT: 1
+
+jobs:
+  # Check if we should run tests
+  check-test-scope:
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.check.outputs.should-run }}
+      test-mode: ${{ steps.check.outputs.test-mode }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Determine test scope
+      id: check
+      run: |
+        # Skip draft PRs unless explicitly triggered
+        if [[ "${{ github.event.pull_request.draft }}" == "true" && "${{ github.event_name }}" != "workflow_dispatch" ]]; then
+          echo "should-run=false" >> $GITHUB_OUTPUT
+          echo "Skipping tests for draft PR"
+          exit 0
+        fi
+
+        # Determine test mode
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          echo "test-mode=${{ github.event.inputs.test_mode }}" >> $GITHUB_OUTPUT
+          echo "should-run=true" >> $GITHUB_OUTPUT
+        elif [[ "${{ github.event.pull_request.title }}" == *"[quick]"* ]]; then
+          echo "test-mode=quick" >> $GITHUB_OUTPUT
+          echo "should-run=true" >> $GITHUB_OUTPUT
+        elif [[ "${{ github.event.pull_request.title }}" == *"[chaos]"* ]]; then
+          echo "test-mode=chaos" >> $GITHUB_OUTPUT
+          echo "should-run=true" >> $GITHUB_OUTPUT
+        else
+          echo "test-mode=comprehensive" >> $GITHUB_OUTPUT
+          echo "should-run=true" >> $GITHUB_OUTPUT
+        fi
+
+  # Infrastructure setup
+  setup-infrastructure:
+    needs: check-test-scope
+    if: needs.check-test-scope.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Install KIND
+      run: |
+        curl -Lo ./kind https://kind.sigs.k8s.io/dl/${{ env.KIND_VERSION }}/kind-linux-amd64
+        chmod +x ./kind
+        sudo mv ./kind /usr/local/bin/kind
+
+    - name: Install kubectl
+      run: |
+        curl -LO "https://dl.k8s.io/release/${{ env.KUBECTL_VERSION }}/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin/kubectl
+
+    - name: Verify infrastructure
+      run: |
+        echo "Docker version: $(docker --version)"
+        echo "KIND version: $(kind --version)"
+        echo "kubectl version: $(kubectl version --client --short)"
+
+  # Contract validation
+  contract-validation:
+    needs: [check-test-scope, setup-infrastructure]
+    if: needs.check-test-scope.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install UV package manager
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Install dependencies
+      run: |
+        uv sync --group dev
+
+    - name: Run contract tests
+      working-directory: ./mmf
+      run: |
+        echo "Running MMF contract validation tests..."
+        ../tests/run_mmf_tests.sh --contract --verbose
+
+    - name: Upload contract test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: contract-test-results
+        path: |
+          test-results/
+          *.xml
+        retention-days: 7
+
+  # End-to-end testing matrix
+  e2e-testing:
+    needs: [check-test-scope, setup-infrastructure, contract-validation]
+    if: needs.check-test-scope.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    strategy:
+      matrix:
+        include:
+          - test-category: "e2e"
+            test-mode: ${{ needs.check-test-scope.outputs.test-mode }}
+            timeout: 35
+          - test-category: "integration"
+            test-mode: "comprehensive"
+            timeout: 25
+      fail-fast: false
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install UV package manager
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Install KIND
+      run: |
+        curl -Lo ./kind https://kind.sigs.k8s.io/dl/${{ env.KIND_VERSION }}/kind-linux-amd64
+        chmod +x ./kind
+        sudo mv ./kind /usr/local/bin/kind
+
+    - name: Install kubectl
+      run: |
+        curl -LO "https://dl.k8s.io/release/${{ env.KUBECTL_VERSION }}/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin/kubectl
+
+    - name: Install dependencies
+      run: |
+        uv sync --group dev
+
+    - name: Run ${{ matrix.test-category }} tests (${{ matrix.test-mode }} mode)
+      timeout-minutes: ${{ matrix.timeout }}
+      working-directory: ./mmf
+      run: |
+        cd ${{ github.workspace }}
+
+        echo "Running MMF ${{ matrix.test-category }} tests in ${{ matrix.test-mode }} mode..."
+
+        case "${{ matrix.test-mode }}" in
+          "quick")
+            ./tests/run_mmf_tests.sh --${{ matrix.test-category }} --quick --verbose
+            ;;
+          "smoke")
+            ./tests/run_mmf_tests.sh --${{ matrix.test-category }} --smoke --verbose
+            ;;
+          "comprehensive")
+            ./tests/run_mmf_tests.sh --${{ matrix.test-category }} --verbose
+            ;;
+          "chaos")
+            ./tests/run_mmf_tests.sh --${{ matrix.test-category }} --chaos --verbose
+            ;;
+          *)
+            echo "Unknown test mode: ${{ matrix.test-mode }}"
+            exit 1
+            ;;
+        esac
+
+    - name: Upload test artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.test-category }}-test-artifacts-${{ matrix.test-mode }}
+        path: |
+          /tmp/*e2e*.yaml
+          /tmp/*test*.log
+          test-results/
+          logs/
+        retention-days: 7
+
+    - name: Cleanup test resources
+      if: always()
+      run: |
+        echo "Cleaning up ${{ matrix.test-category }} test resources..."
+
+        # Clean up KIND clusters
+        for cluster in $(kind get clusters 2>/dev/null | grep -E "(test|e2e|mmf|integration)" || true); do
+          echo "Deleting cluster: $cluster"
+          kind delete cluster --name "$cluster" || true
+        done
+
+        # Clean up Docker containers and images
+        docker ps -a | grep -E "(mmf|test)" | awk '{print $1}' | xargs -r docker rm -f || true
+        docker images | grep -E "(mmf.*test|test.*mmf)" | awk '{print $3}' | xargs -r docker rmi -f || true
+
+  # Performance validation
+  performance-validation:
+    needs: [check-test-scope, setup-infrastructure]
+    if: needs.check-test-scope.outputs.should-run == 'true' && needs.check-test-scope.outputs.test-mode != 'quick'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install UV package manager
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Install dependencies
+      run: |
+        uv sync --group dev
+
+    - name: Run performance tests
+      working-directory: ./mmf
+      run: |
+        echo "Running MMF performance validation tests..."
+        if [[ "${{ needs.check-test-scope.outputs.test-mode }}" == "comprehensive" ]]; then
+          ../tests/run_mmf_tests.sh --performance --verbose
+        else
+          ../tests/run_mmf_tests.sh --performance --quick --verbose
+        fi
+
+    - name: Upload performance results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-test-results
+        path: |
+          performance-results/
+          benchmark-*.json
+          *.xml
+        retention-days: 7
+
+  # Security validation
+  security-validation:
+    needs: [check-test-scope, setup-infrastructure]
+    if: needs.check-test-scope.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install UV package manager
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Install dependencies
+      run: |
+        uv sync --group dev
+
+    - name: Run security tests
+      working-directory: ./mmf
+      run: |
+        echo "Running MMF security validation tests..."
+        ../tests/run_mmf_tests.sh --security --verbose
+
+    - name: Security scan
+      run: |
+        echo "Running security scan..."
+        # Basic secret scanning
+        git diff origin/main...HEAD --name-only | xargs grep -l -i -E "(password|secret|key|token|api.key)" || echo "No obvious secrets found"
+
+    - name: Upload security results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-test-results
+        path: |
+          security-results/
+          *.xml
+        retention-days: 7
+
+  # Chaos engineering (only for chaos mode)
+  chaos-testing:
+    needs: [check-test-scope, setup-infrastructure, e2e-testing]
+    if: needs.check-test-scope.outputs.should-run == 'true' && needs.check-test-scope.outputs.test-mode == 'chaos'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install UV package manager
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Install KIND
+      run: |
+        curl -Lo ./kind https://kind.sigs.k8s.io/dl/${{ env.KIND_VERSION }}/kind-linux-amd64
+        chmod +x ./kind
+        sudo mv ./kind /usr/local/bin/kind
+
+    - name: Install kubectl
+      run: |
+        curl -LO "https://dl.k8s.io/release/${{ env.KUBECTL_VERSION }}/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin/kubectl
+
+    - name: Install dependencies
+      run: |
+        uv sync --group dev
+
+    - name: Run chaos engineering tests
+      working-directory: ./mmf
+      run: |
+        echo "Running MMF chaos engineering tests..."
+        ../tests/run_mmf_tests.sh --chaos --verbose
+
+    - name: Upload chaos test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: chaos-test-results
+        path: |
+          chaos-results/
+          test-results/
+          *.xml
+        retention-days: 7
+
+    - name: Cleanup chaos resources
+      if: always()
+      run: |
+        echo "Cleaning up chaos test resources..."
+        # More aggressive cleanup for chaos tests
+        kind delete clusters --all || true
+        docker system prune -f || true
+
+  # Final test summary
+  test-summary:
+    needs: [
+      check-test-scope,
+      contract-validation,
+      e2e-testing,
+      performance-validation,
+      security-validation,
+      chaos-testing
+    ]
+    if: always() && needs.check-test-scope.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Generate test summary
+      run: |
+        echo "## 🚀 Comprehensive E2E Test Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Test Mode:** ${{ needs.check-test-scope.outputs.test-mode }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+
+        echo "### Test Results Overview" >> $GITHUB_STEP_SUMMARY
+        echo "| Test Category | Status | Duration |" >> $GITHUB_STEP_SUMMARY
+        echo "|---------------|---------|----------|" >> $GITHUB_STEP_SUMMARY
+
+        # Contract validation
+        if [[ "${{ needs.contract-validation.result }}" == "success" ]]; then
+          echo "| Contract Validation | ✅ Passed | ~15min |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| Contract Validation | ❌ Failed | ~15min |" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        # E2E testing
+        if [[ "${{ needs.e2e-testing.result }}" == "success" ]]; then
+          echo "| E2E & Integration | ✅ Passed | ~45min |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| E2E & Integration | ❌ Failed | ~45min |" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        # Performance validation
+        if [[ "${{ needs.performance-validation.result }}" == "success" ]]; then
+          echo "| Performance | ✅ Passed | ~20min |" >> $GITHUB_STEP_SUMMARY
+        elif [[ "${{ needs.performance-validation.result }}" == "skipped" ]]; then
+          echo "| Performance | ⏭️ Skipped | - |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| Performance | ❌ Failed | ~20min |" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        # Security validation
+        if [[ "${{ needs.security-validation.result }}" == "success" ]]; then
+          echo "| Security | ✅ Passed | ~15min |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| Security | ❌ Failed | ~15min |" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        # Chaos testing
+        if [[ "${{ needs.chaos-testing.result }}" == "success" ]]; then
+          echo "| Chaos Engineering | ✅ Passed | ~30min |" >> $GITHUB_STEP_SUMMARY
+        elif [[ "${{ needs.chaos-testing.result }}" == "skipped" ]]; then
+          echo "| Chaos Engineering | ⏭️ Skipped | - |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| Chaos Engineering | ❌ Failed | ~30min |" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        echo "" >> $GITHUB_STEP_SUMMARY
+
+        # Overall status
+        if [[ "${{ needs.contract-validation.result }}" == "success" &&
+              "${{ needs.e2e-testing.result }}" == "success" &&
+              "${{ needs.security-validation.result }}" == "success" ]]; then
+          echo "### ✅ Overall Result: **PASSED**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All critical tests passed! The changes are validated and ready for review." >> $GITHUB_STEP_SUMMARY
+        else
+          echo "### ❌ Overall Result: **FAILED**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Some tests failed. Please review the results and fix any issues." >> $GITHUB_STEP_SUMMARY
+        fi
+
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📊 Test Artifacts" >> $GITHUB_STEP_SUMMARY
+        echo "- Contract test results: Available in artifacts" >> $GITHUB_STEP_SUMMARY
+        echo "- E2E test logs: Available in artifacts" >> $GITHUB_STEP_SUMMARY
+        echo "- Performance metrics: Available in artifacts" >> $GITHUB_STEP_SUMMARY
+        echo "- Security scan results: Available in artifacts" >> $GITHUB_STEP_SUMMARY
+
+        if [[ "${{ needs.check-test-scope.outputs.test-mode }}" == "chaos" ]]; then
+          echo "- Chaos engineering results: Available in artifacts" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: Comment on PR with results
+      if: github.event.pull_request.number
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const prNumber = context.payload.pull_request.number;
+          const testMode = "${{ needs.check-test-scope.outputs.test-mode }}";
+
+          let overallStatus = "✅ **All tests passed!**";
+          let statusIcon = "🎉";
+
+          if ("${{ needs.contract-validation.result }}" !== "success" ||
+              "${{ needs.e2e-testing.result }}" !== "success" ||
+              "${{ needs.security-validation.result }}" !== "success") {
+            overallStatus = "❌ **Some tests failed**";
+            statusIcon = "⚠️";
+          }
+
+          const body = `## ${statusIcon} Comprehensive E2E Test Results
+
+          ${overallStatus}
+
+          **Test Mode:** \`${testMode}\`
+
+          ### 📋 Detailed Results:
+          - **Contract Validation**: ${{ needs.contract-validation.result == 'success' && '✅ Passed' || '❌ Failed' }}
+          - **E2E & Integration Tests**: ${{ needs.e2e-testing.result == 'success' && '✅ Passed' || '❌ Failed' }}
+          - **Performance Tests**: ${{ needs.performance-validation.result == 'success' && '✅ Passed' || (needs.performance-validation.result == 'skipped' && '⏭️ Skipped' || '❌ Failed') }}
+          - **Security Tests**: ${{ needs.security-validation.result == 'success' && '✅ Passed' || '❌ Failed' }}
+          - **Chaos Engineering**: ${{ needs.chaos-testing.result == 'success' && '✅ Passed' || (needs.chaos-testing.result == 'skipped' && '⏭️ Skipped' || '❌ Failed') }}
+
+          ### 🔧 Testing Infrastructure:
+          - **Platform**: Ubuntu Latest with KIND ${process.env.KIND_VERSION}
+          - **Python**: ${process.env.PYTHON_VERSION}
+          - **Test Runner**: MMF Unified Test Framework
+          - **Container Runtime**: Docker with Buildx
+
+          ### 📊 Artifacts:
+          All test artifacts, logs, and results are available in the [Actions tab](${context.payload.repository.html_url}/actions/runs/${context.runId}).
+
+          ---
+          *🤖 Automated testing with the MMF comprehensive test suite*`;
+
+          // Check for existing comprehensive test comments
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: prNumber,
+          });
+
+          const existingComment = comments.find(comment =>
+            comment.user.type === 'Bot' &&
+            comment.body.includes('🚀 Comprehensive E2E Test Results')
+          );
+
+          if (existingComment) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: existingComment.id,
+              body: body
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: body
+            });
+          }
