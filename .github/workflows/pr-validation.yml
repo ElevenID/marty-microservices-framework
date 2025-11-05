@@ -301,9 +301,80 @@ jobs:
         # Basic secret scanning (you might want to use a proper tool like TruffleHog)
         git diff origin/main...HEAD --name-only | xargs grep -l -i -E "(password|secret|key|token|api.key)" || echo "No obvious secrets found"
 
+  # Build validation - ensure code can be built into container images
+  builds:
+    needs: [check-pr-status, quick-validation]
+    if: needs.check-pr-status.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build MMF identity service image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        platforms: linux/amd64
+        push: false
+        tags: mmf/identity-service:pr-${{ github.event.pull_request.number || 'local' }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Test container startup
+      run: |
+        echo "Testing container can start successfully..."
+        docker run --rm --name test-container \
+          -e ENVIRONMENT=testing \
+          -d mmf/identity-service:pr-${{ github.event.pull_request.number || 'local' }}
+
+        # Wait a moment for startup
+        sleep 5
+
+        # Check if container is still running
+        if docker ps | grep test-container; then
+          echo "✅ Container started successfully"
+          docker stop test-container
+        else
+          echo "❌ Container failed to start or exited"
+          docker logs test-container || true
+          exit 1
+        fi
+
+    - name: Validate Dockerfile best practices
+      run: |
+        echo "Validating Dockerfile best practices..."
+        # Basic Dockerfile validation
+        if [ -f "./Dockerfile" ]; then
+          echo "✅ Dockerfile exists"
+
+          # Check for multi-stage build
+          if grep -q "FROM.*AS" ./Dockerfile; then
+            echo "✅ Multi-stage build detected"
+          else
+            echo "⚠️  Consider using multi-stage builds for smaller images"
+          fi
+
+          # Check for non-root user
+          if grep -q "USER" ./Dockerfile; then
+            echo "✅ Non-root user configured"
+          else
+            echo "⚠️  Consider running as non-root user for security"
+          fi
+
+        else
+          echo "❌ Dockerfile not found"
+          exit 1
+        fi
+
   # Final validation summary
   validation-summary:
-    needs: [check-pr-status, quick-validation, contract-tests, e2e-tests, performance-check, security-check]
+    needs: [check-pr-status, quick-validation, contract-tests, e2e-tests, performance-check, security-check, builds]
     if: always() && (needs.check-pr-status.outputs.should-run == 'true' || needs.check-pr-status.result == 'skipped')
     runs-on: ubuntu-latest
 
@@ -328,6 +399,7 @@ jobs:
         E2E_RESULT="${{ needs.e2e-tests.result || 'unknown' }}"
         PERF_RESULT="${{ needs.performance-check.result || 'unknown' }}"
         SEC_RESULT="${{ needs.security-check.result || 'unknown' }}"
+        BUILD_RESULT="${{ needs.builds.result || 'unknown' }}"
 
         # Quick validation
         if [[ "$QUICK_RESULT" == "success" ]]; then
@@ -374,11 +446,20 @@ jobs:
           echo "| Security Check | ⚠️ Issues Found |" >> $GITHUB_STEP_SUMMARY
         fi
 
+        # Build check
+        if [[ "$BUILD_RESULT" == "success" ]]; then
+          echo "| Build Check | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+        elif [[ "$BUILD_RESULT" == "skipped" ]]; then
+          echo "| Build Check | ⏭️ Skipped |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| Build Check | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+        fi
+
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
 
         # Determine overall status
-        if [[ "$QUICK_RESULT" == "success" && "$CONTRACT_RESULT" == "success" && "$E2E_RESULT" == "success" ]]; then
+        if [[ "$QUICK_RESULT" == "success" && "$CONTRACT_RESULT" == "success" && "$E2E_RESULT" == "success" && "$BUILD_RESULT" == "success" ]]; then
           echo "✅ **PR is ready for review!** All critical tests passed." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "The code changes have been validated and are ready to merge." >> $GITHUB_STEP_SUMMARY
@@ -392,6 +473,7 @@ jobs:
           echo "- Quick Validation: $QUICK_RESULT" >> $GITHUB_STEP_SUMMARY
           echo "- Contract Tests: $CONTRACT_RESULT" >> $GITHUB_STEP_SUMMARY
           echo "- E2E Tests: $E2E_RESULT" >> $GITHUB_STEP_SUMMARY
+          echo "- Build Check: $BUILD_RESULT" >> $GITHUB_STEP_SUMMARY
         fi
 
     - name: Comment on PR
@@ -407,11 +489,12 @@ jobs:
           const e2eResult = "${{ needs.e2e-tests.result || 'unknown' }}";
           const perfResult = "${{ needs.performance-check.result || 'unknown' }}";
           const secResult = "${{ needs.security-check.result || 'unknown' }}";
+          const buildResult = "${{ needs.builds.result || 'unknown' }}";
 
           let status = "✅ **All tests passed!**";
           let details = "Your PR has been validated and is ready for review.";
 
-          if (quickResult !== "success" || contractResult !== "success" || e2eResult !== "success") {
+          if (quickResult !== "success" || contractResult !== "success" || e2eResult !== "success" || buildResult !== "success") {
             status = "⚠️ **Some tests need attention**";
             details = "Please check the workflow results and address any issues.";
           }
@@ -435,6 +518,7 @@ jobs:
           - **E2E Tests**: ${getStatusEmoji(e2eResult)}
           - **Performance**: ${getStatusEmoji(perfResult)}
           - **Security**: ${getStatusEmoji(secResult)}
+          - **Build Check**: ${getStatusEmoji(buildResult)}
 
           ${details}
 
