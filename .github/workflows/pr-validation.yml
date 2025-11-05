@@ -322,6 +322,7 @@ jobs:
         file: ./Dockerfile
         platforms: linux/amd64
         push: false
+        load: true
         tags: mmf/identity-service:pr-${{ github.event.pull_request.number || 'local' }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
@@ -329,20 +330,39 @@ jobs:
     - name: Test container startup
       run: |
         echo "Testing container can start successfully..."
-        docker run --rm --name test-container \
+        IMAGE_TAG="mmf/identity-service:pr-${{ github.event.pull_request.number || 'local' }}"
+
+        # Verify the image exists locally
+        if docker images | grep -q "mmf/identity-service"; then
+          echo "✅ Image built successfully: $IMAGE_TAG"
+        else
+          echo "❌ Image not found locally"
+          docker images
+          exit 1
+        fi
+
+        # Start container in detached mode
+        CONTAINER_ID=$(docker run --rm --name test-container \
           -e ENVIRONMENT=testing \
-          -d mmf/identity-service:pr-${{ github.event.pull_request.number || 'local' }}
+          -d "$IMAGE_TAG")
+
+        if [ -z "$CONTAINER_ID" ]; then
+          echo "❌ Failed to start container"
+          exit 1
+        fi
+
+        echo "✅ Container started with ID: $CONTAINER_ID"
 
         # Wait a moment for startup
         sleep 5
 
         # Check if container is still running
         if docker ps | grep test-container; then
-          echo "✅ Container started successfully"
+          echo "✅ Container is running successfully"
           docker stop test-container
         else
           echo "❌ Container failed to start or exited"
-          docker logs test-container || true
+          docker logs test-container 2>/dev/null || true
           exit 1
         fi
 
