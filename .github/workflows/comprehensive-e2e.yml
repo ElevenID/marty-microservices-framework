@@ -417,7 +417,7 @@ jobs:
       security-validation,
       chaos-testing
     ]
-    if: always() && needs.check-test-scope.outputs.should-run == 'true'
+    if: always() && (needs.check-test-scope.outputs.should-run == 'true' || needs.check-test-scope.result == 'skipped')
     runs-on: ubuntu-latest
 
     steps:
@@ -426,9 +426,11 @@ jobs:
 
     - name: Generate test summary
       run: |
+        set +e  # Don't exit on error
+
         echo "## 🚀 Comprehensive E2E Test Results" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Test Mode:** ${{ needs.check-test-scope.outputs.test-mode }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Test Mode:** ${{ needs.check-test-scope.outputs.test-mode || 'N/A' }}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
 
         echo "### Test Results Overview" >> $GITHUB_STEP_SUMMARY
@@ -436,39 +438,50 @@ jobs:
         echo "|---------------|---------|----------|" >> $GITHUB_STEP_SUMMARY
 
         # Contract validation
-        if [[ "${{ needs.contract-validation.result }}" == "success" ]]; then
+        CONTRACT_RESULT="${{ needs.contract-validation.result || 'unknown' }}"
+        if [[ "$CONTRACT_RESULT" == "success" ]]; then
           echo "| Contract Validation | ✅ Passed | ~15min |" >> $GITHUB_STEP_SUMMARY
+        elif [[ "$CONTRACT_RESULT" == "skipped" ]]; then
+          echo "| Contract Validation | ⏭️ Skipped | - |" >> $GITHUB_STEP_SUMMARY
         else
           echo "| Contract Validation | ❌ Failed | ~15min |" >> $GITHUB_STEP_SUMMARY
         fi
 
         # E2E testing
-        if [[ "${{ needs.e2e-testing.result }}" == "success" ]]; then
+        E2E_RESULT="${{ needs.e2e-testing.result || 'unknown' }}"
+        if [[ "$E2E_RESULT" == "success" ]]; then
           echo "| E2E & Integration | ✅ Passed | ~45min |" >> $GITHUB_STEP_SUMMARY
+        elif [[ "$E2E_RESULT" == "skipped" ]]; then
+          echo "| E2E & Integration | ⏭️ Skipped | - |" >> $GITHUB_STEP_SUMMARY
         else
           echo "| E2E & Integration | ❌ Failed | ~45min |" >> $GITHUB_STEP_SUMMARY
         fi
 
         # Performance validation
-        if [[ "${{ needs.performance-validation.result }}" == "success" ]]; then
+        PERF_RESULT="${{ needs.performance-validation.result || 'unknown' }}"
+        if [[ "$PERF_RESULT" == "success" ]]; then
           echo "| Performance | ✅ Passed | ~20min |" >> $GITHUB_STEP_SUMMARY
-        elif [[ "${{ needs.performance-validation.result }}" == "skipped" ]]; then
+        elif [[ "$PERF_RESULT" == "skipped" ]]; then
           echo "| Performance | ⏭️ Skipped | - |" >> $GITHUB_STEP_SUMMARY
         else
           echo "| Performance | ❌ Failed | ~20min |" >> $GITHUB_STEP_SUMMARY
         fi
 
         # Security validation
-        if [[ "${{ needs.security-validation.result }}" == "success" ]]; then
+        SEC_RESULT="${{ needs.security-validation.result || 'unknown' }}"
+        if [[ "$SEC_RESULT" == "success" ]]; then
           echo "| Security | ✅ Passed | ~15min |" >> $GITHUB_STEP_SUMMARY
+        elif [[ "$SEC_RESULT" == "skipped" ]]; then
+          echo "| Security | ⏭️ Skipped | - |" >> $GITHUB_STEP_SUMMARY
         else
           echo "| Security | ❌ Failed | ~15min |" >> $GITHUB_STEP_SUMMARY
         fi
 
         # Chaos testing
-        if [[ "${{ needs.chaos-testing.result }}" == "success" ]]; then
+        CHAOS_RESULT="${{ needs.chaos-testing.result || 'unknown' }}"
+        if [[ "$CHAOS_RESULT" == "success" ]]; then
           echo "| Chaos Engineering | ✅ Passed | ~30min |" >> $GITHUB_STEP_SUMMARY
-        elif [[ "${{ needs.chaos-testing.result }}" == "skipped" ]]; then
+        elif [[ "$CHAOS_RESULT" == "skipped" ]]; then
           echo "| Chaos Engineering | ⏭️ Skipped | - |" >> $GITHUB_STEP_SUMMARY
         else
           echo "| Chaos Engineering | ❌ Failed | ~30min |" >> $GITHUB_STEP_SUMMARY
@@ -476,17 +489,21 @@ jobs:
 
         echo "" >> $GITHUB_STEP_SUMMARY
 
-        # Overall status
-        if [[ "${{ needs.contract-validation.result }}" == "success" &&
-              "${{ needs.e2e-testing.result }}" == "success" &&
-              "${{ needs.security-validation.result }}" == "success" ]]; then
+        # Overall status - only require critical tests
+        if [[ "$CONTRACT_RESULT" == "success" && "$E2E_RESULT" == "success" && "$SEC_RESULT" == "success" ]]; then
           echo "### ✅ Overall Result: **PASSED**" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "All critical tests passed! The changes are validated and ready for review." >> $GITHUB_STEP_SUMMARY
+          exit 0
         else
-          echo "### ❌ Overall Result: **FAILED**" >> $GITHUB_STEP_SUMMARY
+          echo "### ⚠️ Overall Result: **NEEDS ATTENTION**" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Some tests failed. Please review the results and fix any issues." >> $GITHUB_STEP_SUMMARY
+          echo "Some tests failed or were skipped. Please review the results." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Critical tests status:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Contract: $CONTRACT_RESULT" >> $GITHUB_STEP_SUMMARY
+          echo "- E2E: $E2E_RESULT" >> $GITHUB_STEP_SUMMARY
+          echo "- Security: $SEC_RESULT" >> $GITHUB_STEP_SUMMARY
         fi
 
         echo "" >> $GITHUB_STEP_SUMMARY
@@ -496,7 +513,7 @@ jobs:
         echo "- Performance metrics: Available in artifacts" >> $GITHUB_STEP_SUMMARY
         echo "- Security scan results: Available in artifacts" >> $GITHUB_STEP_SUMMARY
 
-        if [[ "${{ needs.check-test-scope.outputs.test-mode }}" == "chaos" ]]; then
+        if [[ "${{ needs.check-test-scope.outputs.test-mode || 'comprehensive' }}" == "chaos" ]]; then
           echo "- Chaos engineering results: Available in artifacts" >> $GITHUB_STEP_SUMMARY
         fi
 
@@ -506,17 +523,31 @@ jobs:
       with:
         script: |
           const prNumber = context.payload.pull_request.number;
-          const testMode = "${{ needs.check-test-scope.outputs.test-mode }}";
+          const testMode = "${{ needs.check-test-scope.outputs.test-mode || 'comprehensive' }}";
+
+          // Get job results with fallbacks
+          const contractResult = "${{ needs.contract-validation.result || 'unknown' }}";
+          const e2eResult = "${{ needs.e2e-testing.result || 'unknown' }}";
+          const perfResult = "${{ needs.performance-validation.result || 'unknown' }}";
+          const secResult = "${{ needs.security-validation.result || 'unknown' }}";
+          const chaosResult = "${{ needs.chaos-testing.result || 'unknown' }}";
 
           let overallStatus = "✅ **All tests passed!**";
           let statusIcon = "🎉";
 
-          if ("${{ needs.contract-validation.result }}" !== "success" ||
-              "${{ needs.e2e-testing.result }}" !== "success" ||
-              "${{ needs.security-validation.result }}" !== "success") {
-            overallStatus = "❌ **Some tests failed**";
+          if (contractResult !== "success" || e2eResult !== "success" || secResult !== "success") {
+            overallStatus = "⚠️ **Some tests need attention**";
             statusIcon = "⚠️";
           }
+
+          const getStatusEmoji = (result) => {
+            switch(result) {
+              case "success": return "✅ Passed";
+              case "skipped": return "⏭️ Skipped";
+              case "failure": return "❌ Failed";
+              default: return "❓ Unknown";
+            }
+          };
 
           const body = `## ${statusIcon} Comprehensive E2E Test Results
 
@@ -525,15 +556,15 @@ jobs:
           **Test Mode:** \`${testMode}\`
 
           ### 📋 Detailed Results:
-          - **Contract Validation**: ${{ needs.contract-validation.result == 'success' && '✅ Passed' || '❌ Failed' }}
-          - **E2E & Integration Tests**: ${{ needs.e2e-testing.result == 'success' && '✅ Passed' || '❌ Failed' }}
-          - **Performance Tests**: ${{ needs.performance-validation.result == 'success' && '✅ Passed' || (needs.performance-validation.result == 'skipped' && '⏭️ Skipped' || '❌ Failed') }}
-          - **Security Tests**: ${{ needs.security-validation.result == 'success' && '✅ Passed' || '❌ Failed' }}
-          - **Chaos Engineering**: ${{ needs.chaos-testing.result == 'success' && '✅ Passed' || (needs.chaos-testing.result == 'skipped' && '⏭️ Skipped' || '❌ Failed') }}
+          - **Contract Validation**: ${getStatusEmoji(contractResult)}
+          - **E2E & Integration Tests**: ${getStatusEmoji(e2eResult)}
+          - **Performance Tests**: ${getStatusEmoji(perfResult)}
+          - **Security Tests**: ${getStatusEmoji(secResult)}
+          - **Chaos Engineering**: ${getStatusEmoji(chaosResult)}
 
           ### 🔧 Testing Infrastructure:
-          - **Platform**: Ubuntu Latest with KIND ${process.env.KIND_VERSION}
-          - **Python**: ${process.env.PYTHON_VERSION}
+          - **Platform**: Ubuntu Latest with KIND ${process.env.KIND_VERSION || 'v0.20.0'}
+          - **Python**: ${process.env.PYTHON_VERSION || '3.11'}
           - **Test Runner**: MMF Unified Test Framework
           - **Container Runtime**: Docker with Buildx
 
@@ -543,30 +574,35 @@ jobs:
           ---
           *🤖 Automated testing with the MMF comprehensive test suite*`;
 
-          // Check for existing comprehensive test comments
-          const { data: comments } = await github.rest.issues.listComments({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: prNumber,
-          });
-
-          const existingComment = comments.find(comment =>
-            comment.user.type === 'Bot' &&
-            comment.body.includes('🚀 Comprehensive E2E Test Results')
-          );
-
-          if (existingComment) {
-            await github.rest.issues.updateComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              comment_id: existingComment.id,
-              body: body
-            });
-          } else {
-            await github.rest.issues.createComment({
+          try {
+            // Check for existing comprehensive test comments
+            const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: prNumber,
-              body: body
             });
+
+            const existingComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('🚀 Comprehensive E2E Test Results')
+            );
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: body
+              });
+            }
+          } catch (error) {
+            console.log('Error posting comment:', error.message);
+            // Don't fail the job if commenting fails
           }

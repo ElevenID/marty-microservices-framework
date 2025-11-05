@@ -304,7 +304,7 @@ jobs:
   # Final validation summary
   validation-summary:
     needs: [check-pr-status, quick-validation, contract-tests, e2e-tests, performance-check, security-check]
-    if: always() && needs.check-pr-status.outputs.should-run == 'true'
+    if: always() && (needs.check-pr-status.outputs.should-run == 'true' || needs.check-pr-status.result == 'skipped')
     runs-on: ubuntu-latest
 
     steps:
@@ -313,6 +313,8 @@ jobs:
 
     - name: Collect test results
       run: |
+        set +e  # Don't exit on error
+
         echo "## PR Validation Summary" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
 
@@ -320,37 +322,54 @@ jobs:
         echo "| Test Category | Status |" >> $GITHUB_STEP_SUMMARY
         echo "|---------------|--------|" >> $GITHUB_STEP_SUMMARY
 
+        # Get results with fallbacks
+        QUICK_RESULT="${{ needs.quick-validation.result || 'unknown' }}"
+        CONTRACT_RESULT="${{ needs.contract-tests.result || 'unknown' }}"
+        E2E_RESULT="${{ needs.e2e-tests.result || 'unknown' }}"
+        PERF_RESULT="${{ needs.performance-check.result || 'unknown' }}"
+        SEC_RESULT="${{ needs.security-check.result || 'unknown' }}"
+
         # Quick validation
-        if [[ "${{ needs.quick-validation.result }}" == "success" ]]; then
+        if [[ "$QUICK_RESULT" == "success" ]]; then
           echo "| Quick Validation | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+        elif [[ "$QUICK_RESULT" == "skipped" ]]; then
+          echo "| Quick Validation | ⏭️ Skipped |" >> $GITHUB_STEP_SUMMARY
         else
           echo "| Quick Validation | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
         fi
 
         # Contract tests
-        if [[ "${{ needs.contract-tests.result }}" == "success" ]]; then
+        if [[ "$CONTRACT_RESULT" == "success" ]]; then
           echo "| Contract Tests | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+        elif [[ "$CONTRACT_RESULT" == "skipped" ]]; then
+          echo "| Contract Tests | ⏭️ Skipped |" >> $GITHUB_STEP_SUMMARY
         else
           echo "| Contract Tests | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
         fi
 
         # E2E tests
-        if [[ "${{ needs.e2e-tests.result }}" == "success" ]]; then
+        if [[ "$E2E_RESULT" == "success" ]]; then
           echo "| E2E Tests | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+        elif [[ "$E2E_RESULT" == "skipped" ]]; then
+          echo "| E2E Tests | ⏭️ Skipped |" >> $GITHUB_STEP_SUMMARY
         else
           echo "| E2E Tests | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
         fi
 
         # Performance check
-        if [[ "${{ needs.performance-check.result }}" == "success" ]]; then
+        if [[ "$PERF_RESULT" == "success" ]]; then
           echo "| Performance Check | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+        elif [[ "$PERF_RESULT" == "skipped" ]]; then
+          echo "| Performance Check | ⏭️ Skipped |" >> $GITHUB_STEP_SUMMARY
         else
           echo "| Performance Check | ⚠️ Issues Found |" >> $GITHUB_STEP_SUMMARY
         fi
 
         # Security check
-        if [[ "${{ needs.security-check.result }}" == "success" ]]; then
+        if [[ "$SEC_RESULT" == "success" ]]; then
           echo "| Security Check | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+        elif [[ "$SEC_RESULT" == "skipped" ]]; then
+          echo "| Security Check | ⏭️ Skipped |" >> $GITHUB_STEP_SUMMARY
         else
           echo "| Security Check | ⚠️ Issues Found |" >> $GITHUB_STEP_SUMMARY
         fi
@@ -359,16 +378,20 @@ jobs:
         echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
 
         # Determine overall status
-        if [[ "${{ needs.quick-validation.result }}" == "success" &&
-              "${{ needs.contract-tests.result }}" == "success" &&
-              "${{ needs.e2e-tests.result }}" == "success" ]]; then
+        if [[ "$QUICK_RESULT" == "success" && "$CONTRACT_RESULT" == "success" && "$E2E_RESULT" == "success" ]]; then
           echo "✅ **PR is ready for review!** All critical tests passed." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "The code changes have been validated and are ready to merge." >> $GITHUB_STEP_SUMMARY
+          exit 0
         else
-          echo "❌ **PR needs attention.** Some tests failed." >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ **PR needs attention.** Some tests failed or were skipped." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Please review the failed tests and make necessary fixes." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Critical tests status:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Quick Validation: $QUICK_RESULT" >> $GITHUB_STEP_SUMMARY
+          echo "- Contract Tests: $CONTRACT_RESULT" >> $GITHUB_STEP_SUMMARY
+          echo "- E2E Tests: $E2E_RESULT" >> $GITHUB_STEP_SUMMARY
         fi
 
     - name: Comment on PR
@@ -378,58 +401,77 @@ jobs:
         script: |
           const prNumber = context.payload.pull_request.number;
 
+          // Get job results with fallbacks
+          const quickResult = "${{ needs.quick-validation.result || 'unknown' }}";
+          const contractResult = "${{ needs.contract-tests.result || 'unknown' }}";
+          const e2eResult = "${{ needs.e2e-tests.result || 'unknown' }}";
+          const perfResult = "${{ needs.performance-check.result || 'unknown' }}";
+          const secResult = "${{ needs.security-check.result || 'unknown' }}";
+
           let status = "✅ **All tests passed!**";
           let details = "Your PR has been validated and is ready for review.";
 
-          if ("${{ needs.quick-validation.result }}" !== "success" ||
-              "${{ needs.contract-tests.result }}" !== "success" ||
-              "${{ needs.e2e-tests.result }}" !== "success") {
-            status = "❌ **Some tests failed**";
-            details = "Please check the workflow results and fix any issues.";
+          if (quickResult !== "success" || contractResult !== "success" || e2eResult !== "success") {
+            status = "⚠️ **Some tests need attention**";
+            details = "Please check the workflow results and address any issues.";
           }
+
+          const getStatusEmoji = (result) => {
+            switch(result) {
+              case "success": return "✅ Passed";
+              case "skipped": return "⏭️ Skipped";
+              case "failure": return "❌ Failed";
+              default: return "❓ Unknown";
+            }
+          };
 
           const body = `## 🤖 PR Validation Results
 
           ${status}
 
           ### Test Results Summary:
-          - **Quick Validation**: ${{ needs.quick-validation.result == 'success' && '✅ Passed' || '❌ Failed' }}
-          - **Contract Tests**: ${{ needs.contract-tests.result == 'success' && '✅ Passed' || '❌ Failed' }}
-          - **E2E Tests**: ${{ needs.e2e-tests.result == 'success' && '✅ Passed' || '❌ Failed' }}
-          - **Performance**: ${{ needs.performance-check.result == 'success' && '✅ Passed' || '⚠️ Issues' }}
-          - **Security**: ${{ needs.security-check.result == 'success' && '✅ Passed' || '⚠️ Issues' }}
+          - **Quick Validation**: ${getStatusEmoji(quickResult)}
+          - **Contract Tests**: ${getStatusEmoji(contractResult)}
+          - **E2E Tests**: ${getStatusEmoji(e2eResult)}
+          - **Performance**: ${getStatusEmoji(perfResult)}
+          - **Security**: ${getStatusEmoji(secResult)}
 
           ${details}
 
           ---
           *View detailed results in the [Actions tab](${context.payload.repository.html_url}/actions/runs/${context.runId})*`;
 
-          // Check for existing bot comments
-          const { data: comments } = await github.rest.issues.listComments({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: prNumber,
-          });
-
-          const botComment = comments.find(comment =>
-            comment.user.type === 'Bot' &&
-            comment.body.includes('🤖 PR Validation Results')
-          );
-
-          if (botComment) {
-            // Update existing comment
-            await github.rest.issues.updateComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              comment_id: botComment.id,
-              body: body
-            });
-          } else {
-            // Create new comment
-            await github.rest.issues.createComment({
+          try {
+            // Check for existing bot comments
+            const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: prNumber,
-              body: body
             });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('🤖 PR Validation Results')
+            );
+
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: body
+              });
+            }
+          } catch (error) {
+            console.log('Error posting comment:', error.message);
+            // Don't fail the job if commenting fails
           }
