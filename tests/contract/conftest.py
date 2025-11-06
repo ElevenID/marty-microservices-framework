@@ -7,14 +7,21 @@ Contract tests validate API specifications, data schemas, and service contracts.
 
 import json
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 import requests
+from jsonschema import Draft7Validator
 
 # Test configuration
 CONTRACT_TEST_TIMEOUT = 30
 API_BASE_URL = "http://localhost:8000"
+
+
+@pytest.fixture(scope="session")
+def api_base_url():
+    """Provides the API base URL for contract tests."""
+    return API_BASE_URL
 
 
 @pytest.fixture(scope="session")
@@ -82,9 +89,8 @@ def identity_service_contract():
 @pytest.fixture
 def schema_validator():
     """Provides JSON schema validation functionality."""
-    from jsonschema import Draft7Validator
 
-    def validate_schema(data: Dict[Any, Any], schema: Dict[str, Any]) -> bool:
+    def validate_schema(data: dict[Any, Any], schema: dict[str, Any]) -> bool:
         validator = Draft7Validator(schema)
         return validator.is_valid(data)
 

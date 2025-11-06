@@ -6,12 +6,12 @@ This module demonstrates performance testing patterns using the MMF testing fram
 
 import asyncio
 import time
-from typing import Any, Dict, List
+from typing import Any
 
 import pytest
 
-from mmf.core.events import Event
-from mmf.infrastructure.pubsub import MessageBroker
+from marty_msf.framework.events import Event
+from marty_msf.framework.integration.event_driven import EventBus as MessageBroker
 
 
 @pytest.mark.performance
@@ -27,7 +27,7 @@ class TestMessageBrokerPerformance:
         messages = []
         for i in range(message_count):
             event = Event(
-                type="test_event",
+                event_type="test_event",
                 data={"payload": "x" * payload_size, "sequence": i}
             )
             messages.append(event)
@@ -57,7 +57,7 @@ class TestMessageBrokerPerformance:
         consumer_count = 10
         messages_per_consumer = 100
 
-        async def consumer_worker(consumer_id: int, results: List[Dict[str, Any]]):
+        async def consumer_worker(consumer_id: int, results: list[dict[str, Any]]):
             """Worker function for concurrent consumers."""
             start_time = time.time()
             consumed_count = 0
@@ -84,7 +84,7 @@ class TestMessageBrokerPerformance:
             for i in range(consumer_count * messages_per_consumer):
                 consumer_id = i % consumer_count
                 event = Event(
-                    type="perf_test",
+                    event_type="perf_test",
                     data={"message_id": i}
                 )
                 await message_broker.publish(f"perf.consumer.{consumer_id}", event)
@@ -135,7 +135,7 @@ class TestEventProcessingPerformance:
             events = []
             for i in range(batch_size):
                 event = Event(
-                    type="processing_test",
+                    event_type="processing_test",
                     data={"batch": batch_size, "index": i}
                 )
                 events.append(event)
@@ -166,9 +166,9 @@ class TestEventProcessingPerformance:
         # Process large number of events
         event_count = 10000
 
-        for i in range(event_count):
-            event = Event(
-                type="memory_test",
+        for _ in range(event_count):
+            Event(
+                event_type="memory_test",
                 data={"large_payload": "x" * 1024 * 10}  # 10KB payload
             )
             # Process event (implementation would be provided by fixture)
@@ -257,9 +257,6 @@ class TestResourceUtilization:
 
     async def test_cpu_utilization(self, performance_metrics, resource_monitor):
         """Test CPU utilization under various loads."""
-        # Baseline measurement
-        baseline_cpu = resource_monitor.get_cpu_usage()
-
         # CPU-intensive workload
         start_time = time.time()
         iteration_count = 1000000
