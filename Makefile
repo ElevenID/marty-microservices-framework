@@ -32,24 +32,64 @@ install: ## Install framework dependencies
 # Testing
 # ==============================================================================
 
-test: ## Run all tests (unit + integration + e2e)
-	@echo "🧪 Running all tests..."
-	@uv run pytest -v
+test: ## Run all tests (unit + integration + contract + e2e)
+	@echo "🧪 Running comprehensive test suite..."
+	@./tests/run_tests.sh
 
 test-unit: ## Run unit tests only
 	@echo "🧪 Running unit tests..."
-	@uv run pytest -m unit -v
+	@uv run pytest tests/unit/ -v -m unit
 
 test-integration: ## Run integration tests only
 	@echo "🧪 Running integration tests..."
-	@uv run pytest -m integration -v
+	@uv run pytest tests/integration/ -v -m integration
 
-test-e2e: ## Run end-to-end tests (includes docker containers)
-	@echo "🧪 Running E2E tests..."
-	@uv run pytest -m e2e -v
+test-contract: ## Run contract tests only
+	@echo "🧪 Running contract tests..."
+	@uv run pytest tests/contract/ -v -m contract
 
-test-kind: ## Run Kind-based E2E tests only (no docker containers)
-	@echo "🎭 Running Kind + Playwright E2E tests..."
+test-e2e: ## Run comprehensive end-to-end tests with KIND
+	@echo "🧪 Running comprehensive E2E tests with KIND..."
+	@./tests/e2e/kind/automated/e2e-test.sh
+
+test-performance: ## Run performance tests
+	@echo "🚀 Running performance tests..."
+	@uv run pytest tests/performance/ -v -m performance
+
+test-security: ## Run security tests
+	@echo "🔒 Running security tests..."
+	@uv run pytest tests/security/ -v -m security
+
+test-chaos: ## Run chaos engineering tests
+	@echo "💥 Running chaos engineering tests..."
+	@uv run pytest tests/chaos/ -v -m chaos
+
+test-all: ## Run all test categories including experimental
+	@echo "🧪 Running all test categories..."
+	@./tests/run_tests.sh --all
+
+test-core: ## Run core test suite (unit + integration + contract + e2e)
+	@echo "🧪 Running core test suite..."
+	@./tests/run_tests.sh --unit --integration --contract --e2e
+
+test-e2e-quick: ## Run quick E2E tests for development
+	@echo "⚡ Running quick E2E tests..."
+	@./tests/e2e/kind/test-e2e.sh -m quick
+
+test-e2e-smoke: ## Run smoke tests only
+	@echo "💨 Running smoke tests..."
+	@./tests/e2e/kind/test-e2e.sh -m smoke
+
+test-e2e-dev: ## Run E2E tests and keep cluster for debugging
+	@echo "🔧 Running E2E tests with debug cluster..."
+	@./tests/e2e/kind/test-e2e.sh -m quick -k -v
+
+test-e2e-clean: ## Clean up all E2E test resources
+	@echo "🧹 Cleaning up E2E test resources..."
+	@./tests/e2e/kind/test-e2e.sh -m clean
+
+test-kind: ## Run Kind-based E2E tests only (legacy pytest)
+	@echo "🎭 Running legacy Kind + Playwright E2E tests..."
 	@uv run pytest tests/e2e/test_kind_playwright_e2e.py tests/e2e/simple_kind_playwright_test.py -v
 
 test-coverage: ## Run all tests with coverage report
