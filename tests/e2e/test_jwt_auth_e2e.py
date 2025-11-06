@@ -20,6 +20,7 @@ Usage:
 
 import asyncio
 import json
+import shutil
 import subprocess
 import tempfile
 import time
@@ -417,7 +418,6 @@ EOF
         if self.config_file.exists():
             self.config_file.unlink()
         if self.manifests_dir.exists():
-            import shutil
             shutil.rmtree(self.manifests_dir)
 
 

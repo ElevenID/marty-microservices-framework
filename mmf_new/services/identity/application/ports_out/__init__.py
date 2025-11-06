@@ -4,6 +4,13 @@ from abc import ABC, abstractmethod
 
 from mmf_new.services.identity.domain.models import Credentials, UserId
 
+from .token_provider import (
+    TokenCreationError,
+    TokenError,
+    TokenProvider,
+    TokenValidationError,
+)
+
 
 class UserRepository(ABC):
     """Port for user data persistence."""
@@ -23,3 +30,13 @@ class EventBus(ABC):
     @abstractmethod
     def publish(self, event: dict[str, any]) -> None:
         """Publish an event."""
+
+
+__all__ = [
+    "UserRepository",
+    "EventBus",
+    "TokenProvider",
+    "TokenError",
+    "TokenCreationError",
+    "TokenValidationError",
+]

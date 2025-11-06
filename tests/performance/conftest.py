@@ -16,6 +16,12 @@ from typing import Any
 import psutil
 import pytest
 
+from marty_msf.framework.integration.event_driven import (
+    EventMessage,
+    EventSubscription,
+    InMemoryEventBus,
+)
+
 
 @dataclass
 class PerformanceMetrics:
@@ -178,11 +184,6 @@ def performance_metrics():
 @pytest.fixture
 def message_broker():
     """Message broker fixture using in-memory implementation for testing."""
-    from marty_msf.framework.integration.event_driven import (
-        EventMessage,
-        EventSubscription,
-        InMemoryEventBus,
-    )
 
     class MessageBrokerAdapter:
         """Adapter to provide simple publish/subscribe interface for performance tests."""

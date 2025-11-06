@@ -1,7 +1,8 @@
 """HTTP adapter for the identity service."""
 
-from typing import Any, Dict
+from typing import Any
 
+import uvicorn
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
@@ -114,5 +115,4 @@ app = identity_app.app
 
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

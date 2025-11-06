@@ -29,12 +29,24 @@ from pydantic import BaseModel
 
 # Test the JWT integration components
 from mmf_new.services.identity.integration import (
+    AuthenticatedUserResponse,
+    AuthenticateJWTRequestModel,
+    AuthenticationResponse,
+    JWTAuthConfig,
     JWTAuthenticationMiddleware,
+    TokenValidationResponse,
+    ValidateTokenRequestModel,
     create_development_config,
+    create_production_config,
     create_testing_config,
+    get_config_for_environment,
     get_current_user,
+    load_config_from_env,
     require_authenticated_user,
+    require_permission,
+    require_role,
 )
+from mmf_new.services.identity.integration import router
 from mmf_new.services.identity.integration import router as jwt_router
 
 
@@ -97,25 +109,6 @@ class JWTIntegrationE2ETest:
     def test_integration_imports(self):
         """Test that all integration components can be imported."""
         try:
-            from mmf_new.services.identity.integration import (
-                AuthenticatedUserResponse,
-                AuthenticateJWTRequestModel,
-                AuthenticationResponse,
-                JWTAuthConfig,
-                JWTAuthenticationMiddleware,
-                TokenValidationResponse,
-                ValidateTokenRequestModel,
-                create_development_config,
-                create_production_config,
-                create_testing_config,
-                get_config_for_environment,
-                get_current_user,
-                load_config_from_env,
-                require_authenticated_user,
-                require_permission,
-                require_role,
-                router,
-            )
             return {"status": "passed", "message": "All components imported successfully"}
         except ImportError as e:
             return {"status": "failed", "error": str(e)}

@@ -1,0 +1,57 @@
+[flake8]
+# Flake8 configuration for Marty Microservices Framework
+# Complementary to Ruff linting, following similar ignore patterns
+
+# Maximum line length (matches Black and Ruff)
+max-line-length = 88
+
+# Files and directories to exclude
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    env,
+    build,
+    dist,
+    *.egg-info,
+    .tox,
+    .mypy_cache,
+    .pytest_cache,
+    # Service directories (handled separately)
+    services/,
+    tools/scaffolding/,
+    # Example and demo files
+    examples/,
+    examples/demos/istio-1.27.2/,
+    # Test and script files that may have different patterns
+    scripts/detect_globals.py,
+    *migration*.py,
+    *legacy*.py,
+    # Jupyter notebooks
+    *.ipynb
+
+# Error codes to ignore (aligning with Ruff configuration)
+ignore =
+    E203,
+    W503,
+    E501,
+    N802,
+    N806,
+    F401,
+    C901
+
+# Error codes to specifically check
+select = E,W,F,C,N
+
+# Maximum complexity (more lenient for framework code)
+max-complexity = 15
+
+# Per-file ignores (matching Ruff patterns)
+per-file-ignores =
+    __init__.py:F401
+    examples/security_example.py:B008
+    framework/audit/examples.py:B008
+    tests/*:F401,E501
+    setup.py:E501
+    conftest.py:F401,E501
