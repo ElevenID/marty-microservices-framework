@@ -154,7 +154,7 @@ class JWTAuthenticationMiddleware(BaseHTTPMiddleware):
         try:
             # Execute token validation
             request = ValidateTokenRequest(token=token)
-            result = self.validate_use_case.execute(request)
+            result = await self.validate_use_case.execute(request)
 
             if result.is_valid and result.user:
                 # Convert user to dict for easy access
@@ -166,7 +166,7 @@ class JWTAuthenticationMiddleware(BaseHTTPMiddleware):
                     "permissions": list(result.user.permissions),
                     "created_at": result.user.created_at,
                     "expires_at": result.user.expires_at,
-                    "user_metadata": result.user.user_metadata,
+                    "user_metadata": result.user.metadata,
                 }
             else:
                 if not is_optional:
