@@ -71,7 +71,7 @@ class JWTTokenProvider(TokenProvider):
         self,
         user: AuthenticatedUser,
         expires_at: datetime | None = None,
-        additional_claims: dict[str, Any] | None = None
+        additional_claims: dict[str, Any] | None = None,
     ) -> str:
         """
         Create a JWT token for the authenticated user.
@@ -92,7 +92,9 @@ class JWTTokenProvider(TokenProvider):
 
             # Calculate expiration time
             if expires_at is None:
-                expires_at = now + timedelta(minutes=self._config.access_token_expire_minutes)
+                expires_at = now + timedelta(
+                    minutes=self._config.access_token_expire_minutes
+                )
 
             # Ensure timezone awareness
             if expires_at.tzinfo is None:
@@ -133,9 +135,7 @@ class JWTTokenProvider(TokenProvider):
 
             # Create and return token
             return jwt.encode(
-                payload,
-                self._config.secret_key,
-                algorithm=self._config.algorithm
+                payload, self._config.secret_key, algorithm=self._config.algorithm
             )
 
         except Exception as error:
@@ -170,7 +170,7 @@ class JWTTokenProvider(TokenProvider):
                 algorithms=[self._config.algorithm],
                 audience=self._config.audience,
                 issuer=self._config.issuer,
-                options=decode_options
+                options=decode_options,
             )
 
             # Extract required fields
@@ -218,7 +218,7 @@ class JWTTokenProvider(TokenProvider):
                     "token_expires_at": expires_at,
                     "token_issuer": payload.get("iss"),
                     "token_audience": payload.get("aud"),
-                }
+                },
             )
 
         except jwt.ExpiredSignatureError as error:
@@ -231,9 +231,7 @@ class JWTTokenProvider(TokenProvider):
             raise TokenValidationError(f"Token validation failed: {error}") from error
 
     async def refresh_token(
-        self,
-        token: str,
-        new_expires_at: datetime | None = None
+        self, token: str, new_expires_at: datetime | None = None
     ) -> str:
         """
         Refresh an existing JWT token with new expiration.

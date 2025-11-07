@@ -29,16 +29,19 @@ from mmf_new.services.identity.infrastructure.adapters import (
 # Request/Response Models
 class AuthenticateJWTRequestModel(BaseModel):
     """Request model for JWT authentication."""
+
     token: str = Field(..., description="JWT token to authenticate")
 
 
 class ValidateTokenRequestModel(BaseModel):
     """Request model for token validation."""
+
     token: str = Field(..., description="JWT token to validate")
 
 
 class AuthenticatedUserResponse(BaseModel):
     """Response model for authenticated user information."""
+
     user_id: str
     username: str
     email: str | None = None
@@ -51,6 +54,7 @@ class AuthenticatedUserResponse(BaseModel):
 
 class AuthenticationResponse(BaseModel):
     """Response model for authentication operations."""
+
     status: str
     user: AuthenticatedUserResponse | None = None
     error_code: str | None = None
@@ -60,6 +64,7 @@ class AuthenticationResponse(BaseModel):
 
 class TokenValidationResponse(BaseModel):
     """Response model for token validation operations."""
+
     is_valid: bool
     user: AuthenticatedUserResponse | None = None
     error_message: str | None = None
@@ -72,24 +77,26 @@ def get_jwt_config() -> JWTConfig:
         secret_key="your-secret-key-here",  # Should come from environment
         algorithm="HS256",
         issuer="marty-microservices-framework",
-        audience="marty-api"
+        audience="marty-api",
     )
 
 
-def get_jwt_token_provider(config: JWTConfig = Depends(get_jwt_config)) -> JWTTokenProvider:
+def get_jwt_token_provider(
+    config: JWTConfig = Depends(get_jwt_config),
+) -> JWTTokenProvider:
     """Get JWT token provider."""
     return JWTTokenProvider(config)
 
 
 def get_authenticate_use_case(
-    token_provider: JWTTokenProvider = Depends(get_jwt_token_provider)
+    token_provider: JWTTokenProvider = Depends(get_jwt_token_provider),
 ) -> AuthenticateWithJWTUseCase:
     """Get authentication use case."""
     return AuthenticateWithJWTUseCase(token_provider)
 
 
 def get_validate_token_use_case(
-    token_provider: JWTTokenProvider = Depends(get_jwt_token_provider)
+    token_provider: JWTTokenProvider = Depends(get_jwt_token_provider),
 ) -> ValidateTokenUseCase:
     """Get token validation use case."""
     return ValidateTokenUseCase(token_provider)
@@ -102,7 +109,7 @@ router = APIRouter(prefix="/auth/jwt", tags=["JWT Authentication"])
 @router.post("/authenticate", response_model=AuthenticationResponse)
 async def authenticate_with_jwt(
     request: AuthenticateJWTRequestModel,
-    use_case: AuthenticateWithJWTUseCase = Depends(get_authenticate_use_case)
+    use_case: AuthenticateWithJWTUseCase = Depends(get_authenticate_use_case),
 ) -> AuthenticationResponse:
     """
     Authenticate a user using a JWT token.
@@ -132,13 +139,11 @@ async def authenticate_with_jwt(
                 permissions=list(result.user.permissions),
                 created_at=result.user.created_at,
                 expires_at=result.user.expires_at,
-                user_metadata=result.user.user_metadata
+                user_metadata=result.user.user_metadata,
             )
 
             return AuthenticationResponse(
-                status=result.status.value,
-                user=user_response,
-                metadata=result.metadata
+                status=result.status.value, user=user_response, metadata=result.metadata
             )
         else:
             # Authentication failed
@@ -146,17 +151,16 @@ async def authenticate_with_jwt(
             if result.error_code == AuthenticationErrorCode.TOKEN_INVALID:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail=f"Authentication failed: {result.error_message}"
+                    detail=f"Authentication failed: {result.error_message}",
                 )
             elif result.error_code == AuthenticationErrorCode.TOKEN_EXPIRED:
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Token has expired"
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired"
                 )
             else:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Authentication failed: {result.error_message}"
+                    detail=f"Authentication failed: {result.error_message}",
                 )
 
     except HTTPException:
@@ -164,14 +168,14 @@ async def authenticate_with_jwt(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Internal authentication error: {str(e)}"
+            detail=f"Internal authentication error: {str(e)}",
         ) from e
 
 
 @router.post("/validate", response_model=TokenValidationResponse)
 async def validate_token(
     request: ValidateTokenRequestModel,
-    use_case: ValidateTokenUseCase = Depends(get_validate_token_use_case)
+    use_case: ValidateTokenUseCase = Depends(get_validate_token_use_case),
 ) -> TokenValidationResponse:
     """
     Validate a JWT token and extract user information.
@@ -201,23 +205,19 @@ async def validate_token(
                 permissions=list(result.user.permissions),
                 created_at=result.user.created_at,
                 expires_at=result.user.expires_at,
-                user_metadata=result.user.user_metadata
+                user_metadata=result.user.user_metadata,
             )
 
-            return TokenValidationResponse(
-                is_valid=True,
-                user=user_response
-            )
+            return TokenValidationResponse(is_valid=True, user=user_response)
         else:
             return TokenValidationResponse(
-                is_valid=False,
-                error_message=result.error_message
+                is_valid=False, error_message=result.error_message
             )
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Token validation error: {str(e)}"
+            detail=f"Token validation error: {str(e)}",
         ) from e
 
 

@@ -26,15 +26,13 @@ class AuthenticatePrincipalUseCase(AuthenticatePrincipal):
         user_id = self._user_repository.find_by_username(credentials.username)
         if user_id is None:
             return AuthenticationResult(
-                status=AuthenticationStatus.FAILED,
-                error_message="User not found"
+                status=AuthenticationStatus.FAILED, error_message="User not found"
             )
 
         # Verify credentials
         if not self._user_repository.verify_credentials(credentials):
             return AuthenticationResult(
-                status=AuthenticationStatus.FAILED,
-                error_message="Invalid credentials"
+                status=AuthenticationStatus.FAILED, error_message="Invalid credentials"
             )
 
         # Create principal
@@ -43,17 +41,18 @@ class AuthenticatePrincipalUseCase(AuthenticatePrincipal):
             user_id=user_id,
             username=credentials.username,
             authenticated_at=now,
-            expires_at=now + timedelta(hours=24)
+            expires_at=now + timedelta(hours=24),
         )
 
         # Publish authentication event
-        self._event_bus.publish({
-            "event_type": "user_authenticated",
-            "user_id": user_id.value,
-            "timestamp": now.isoformat()
-        })
+        self._event_bus.publish(
+            {
+                "event_type": "user_authenticated",
+                "user_id": user_id.value,
+                "timestamp": now.isoformat(),
+            }
+        )
 
         return AuthenticationResult(
-            status=AuthenticationStatus.SUCCESS,
-            principal=principal
+            status=AuthenticationStatus.SUCCESS, principal=principal
         )

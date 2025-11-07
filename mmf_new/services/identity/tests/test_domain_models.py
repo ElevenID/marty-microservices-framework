@@ -65,7 +65,7 @@ class TestPrincipal:
             user_id=user_id,
             username="testuser",
             authenticated_at=now,
-            expires_at=future
+            expires_at=future,
         )
 
         assert not principal.is_expired(now)
@@ -77,10 +77,7 @@ class TestPrincipal:
         past = now - timedelta(hours=1)
 
         principal = Principal(
-            user_id=user_id,
-            username="testuser",
-            authenticated_at=past,
-            expires_at=past
+            user_id=user_id, username="testuser", authenticated_at=past, expires_at=past
         )
 
         assert principal.is_expired(now)
@@ -91,9 +88,7 @@ class TestPrincipal:
         now = datetime.utcnow()
 
         principal = Principal(
-            user_id=user_id,
-            username="testuser",
-            authenticated_at=now
+            user_id=user_id, username="testuser", authenticated_at=now
         )
 
         assert not principal.is_expired(now)
@@ -104,26 +99,27 @@ class TestAuthenticationResult:
 
     def test_successful_result_requires_principal(self):
         """Test that successful result must include principal."""
-        with pytest.raises(ValueError, match="Successful authentication must include a principal"):
+        with pytest.raises(
+            ValueError, match="Successful authentication must include a principal"
+        ):
             AuthenticationResult(status=AuthenticationStatus.SUCCESS)
 
     def test_failed_result_requires_error_message(self):
         """Test that failed result must include error message."""
-        with pytest.raises(ValueError, match="Failed authentication must include an error message"):
+        with pytest.raises(
+            ValueError, match="Failed authentication must include an error message"
+        ):
             AuthenticationResult(status=AuthenticationStatus.FAILED)
 
     def test_valid_successful_result(self):
         """Test valid successful authentication result."""
         user_id = UserId("user123")
         principal = Principal(
-            user_id=user_id,
-            username="testuser",
-            authenticated_at=datetime.utcnow()
+            user_id=user_id, username="testuser", authenticated_at=datetime.utcnow()
         )
 
         result = AuthenticationResult(
-            status=AuthenticationStatus.SUCCESS,
-            principal=principal
+            status=AuthenticationStatus.SUCCESS, principal=principal
         )
 
         assert result.status == AuthenticationStatus.SUCCESS
@@ -133,8 +129,7 @@ class TestAuthenticationResult:
     def test_valid_failed_result(self):
         """Test valid failed authentication result."""
         result = AuthenticationResult(
-            status=AuthenticationStatus.FAILED,
-            error_message="Invalid credentials"
+            status=AuthenticationStatus.FAILED, error_message="Invalid credentials"
         )
 
         assert result.status == AuthenticationStatus.FAILED

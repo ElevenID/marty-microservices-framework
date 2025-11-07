@@ -138,6 +138,10 @@ class TestAuthenticatePrincipalUseCase:
         assert before_auth <= principal.authenticated_at <= after_auth
 
         # Check that expiration is set to 24 hours from authentication
-        expected_expiry_min = principal.authenticated_at + timedelta(hours=24, minutes=-1)
-        expected_expiry_max = principal.authenticated_at + timedelta(hours=24, minutes=1)
+        expected_expiry_min = principal.authenticated_at + timedelta(
+            hours=24, minutes=-1
+        )
+        expected_expiry_max = principal.authenticated_at + timedelta(
+            hours=24, minutes=1
+        )
         assert expected_expiry_min <= principal.expires_at <= expected_expiry_max

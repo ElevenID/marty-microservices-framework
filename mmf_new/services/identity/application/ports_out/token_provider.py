@@ -36,7 +36,7 @@ class TokenProvider(ABC):
         self,
         user: AuthenticatedUser,
         expires_at: datetime | None = None,
-        additional_claims: dict[str, Any] | None = None
+        additional_claims: dict[str, Any] | None = None,
     ) -> str:
         """
         Create a JWT token for the authenticated user.
@@ -72,9 +72,7 @@ class TokenProvider(ABC):
 
     @abstractmethod
     async def refresh_token(
-        self,
-        token: str,
-        new_expires_at: datetime | None = None
+        self, token: str, new_expires_at: datetime | None = None
     ) -> str:
         """
         Refresh an existing JWT token with new expiration.

@@ -11,10 +11,13 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
+from uuid import UUID
+
+from mmf_new.core.domain.entity import ValueObject
 
 
 @dataclass(frozen=True)
-class AuthenticatedUser:
+class AuthenticatedUser(ValueObject):
     """
     Domain model representing an authenticated user.
 
@@ -41,29 +44,35 @@ class AuthenticatedUser:
         if not self.user_id.strip():
             raise ValueError("User ID cannot be empty")
 
-        if not isinstance(self.username, str):
+        if self.username is not None and not isinstance(self.username, str):
             raise TypeError("Username must be a string")
-        if not self.username.strip():
+        if self.username is not None and not self.username.strip():
             raise ValueError("Username cannot be empty")
 
         # Convert roles to set if it's a list
         if isinstance(self.roles, list):
-            object.__setattr__(self, 'roles', set(self.roles))
+            object.__setattr__(self, "roles", set(self.roles))
 
         # Convert permissions to set if it's a list
         if isinstance(self.permissions, list):
-            object.__setattr__(self, 'permissions', set(self.permissions))
+            object.__setattr__(self, "permissions", set(self.permissions))
 
         # Validate email format if provided
-        if self.email and not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', self.email):
+        if self.email and not re.match(
+            r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", self.email
+        ):
             raise ValueError("Invalid email format")
 
         # Ensure timezone awareness for datetime fields
         if self.expires_at and self.expires_at.tzinfo is None:
-            object.__setattr__(self, 'expires_at', self.expires_at.replace(tzinfo=timezone.utc))
+            object.__setattr__(
+                self, "expires_at", self.expires_at.replace(tzinfo=timezone.utc)
+            )
 
         if self.created_at.tzinfo is None:
-            object.__setattr__(self, 'created_at', self.created_at.replace(tzinfo=timezone.utc))
+            object.__setattr__(
+                self, "created_at", self.created_at.replace(tzinfo=timezone.utc)
+            )
 
     def has_role(self, role: str) -> bool:
         """Check if user has a specific role."""
@@ -114,7 +123,7 @@ class AuthenticatedUser:
             auth_method=self.auth_method,
             expires_at=self.expires_at,
             metadata=self.metadata,
-            created_at=self.created_at
+            created_at=self.created_at,
         )
 
     def with_expiry(self, expires_at: datetime) -> AuthenticatedUser:
@@ -129,7 +138,7 @@ class AuthenticatedUser:
             auth_method=self.auth_method,
             expires_at=expires_at,
             metadata=self.metadata,
-            created_at=self.created_at
+            created_at=self.created_at,
         )
 
     def add_role(self, role: str) -> AuthenticatedUser:
@@ -146,7 +155,7 @@ class AuthenticatedUser:
             auth_method=self.auth_method,
             expires_at=self.expires_at,
             metadata=self.metadata,
-            created_at=self.created_at
+            created_at=self.created_at,
         )
 
     def add_permission(self, permission: str) -> AuthenticatedUser:
@@ -163,42 +172,42 @@ class AuthenticatedUser:
             auth_method=self.auth_method,
             expires_at=self.expires_at,
             metadata=self.metadata,
-            created_at=self.created_at
+            created_at=self.created_at,
         )
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
-            'user_id': self.user_id,
-            'username': self.username,
-            'email': self.email,
-            'roles': list(self.roles),
-            'permissions': list(self.permissions),
-            'session_id': self.session_id,
-            'auth_method': self.auth_method,
-            'expires_at': self.expires_at.isoformat() if self.expires_at else None,
-            'metadata': self.metadata,
-            'created_at': self.created_at.isoformat()
+            "user_id": self.user_id,
+            "username": self.username,
+            "email": self.email,
+            "roles": list(self.roles),
+            "permissions": list(self.permissions),
+            "session_id": self.session_id,
+            "auth_method": self.auth_method,
+            "expires_at": self.expires_at.isoformat() if self.expires_at else None,
+            "metadata": self.metadata,
+            "created_at": self.created_at.isoformat(),
         }
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> AuthenticatedUser:
         """Create instance from dictionary."""
         expires_at = None
-        if data.get('expires_at'):
-            expires_at = datetime.fromisoformat(data['expires_at'])
+        if data.get("expires_at"):
+            expires_at = datetime.fromisoformat(data["expires_at"])
 
-        created_at = datetime.fromisoformat(data['created_at'])
+        created_at = datetime.fromisoformat(data["created_at"])
 
         return cls(
-            user_id=data['user_id'],
-            username=data.get('username'),
-            email=data.get('email'),
-            roles=set(data.get('roles', [])),
-            permissions=set(data.get('permissions', [])),
-            session_id=data.get('session_id'),
-            auth_method=data.get('auth_method'),
+            user_id=data["user_id"],
+            username=data.get("username"),
+            email=data.get("email"),
+            roles=set(data.get("roles", [])),
+            permissions=set(data.get("permissions", [])),
+            session_id=data.get("session_id"),
+            auth_method=data.get("auth_method"),
             expires_at=expires_at,
-            metadata=data.get('metadata', {}),
-            created_at=created_at
+            metadata=data.get("metadata", {}),
+            created_at=created_at,
         )

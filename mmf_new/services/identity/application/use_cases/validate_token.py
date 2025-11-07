@@ -44,23 +44,14 @@ class TokenValidationResult:
     @classmethod
     def success(cls, user: AuthenticatedUser) -> "TokenValidationResult":
         """Create successful validation result."""
-        return cls(
-            is_valid=True,
-            user=user
-        )
+        return cls(is_valid=True, user=user)
 
     @classmethod
     def failure(
-        cls,
-        message: str,
-        code: AuthenticationErrorCode
+        cls, message: str, code: AuthenticationErrorCode
     ) -> "TokenValidationResult":
         """Create failed validation result."""
-        return cls(
-            is_valid=False,
-            error_message=message,
-            error_code=code
-        )
+        return cls(is_valid=False, error_message=message, error_code=code)
 
 
 class ValidateTokenUseCase:
@@ -93,7 +84,9 @@ class ValidateTokenUseCase:
         """
         try:
             # Validate and extract user from token
-            authenticated_user = await self._token_provider.validate_token(request.token)
+            authenticated_user = await self._token_provider.validate_token(
+                request.token
+            )
 
             # Return successful validation
             return TokenValidationResult.success(user=authenticated_user)
@@ -102,19 +95,19 @@ class ValidateTokenUseCase:
             # Handle token validation failures
             return TokenValidationResult.failure(
                 message=f"Token validation failed: {error}",
-                code=AuthenticationErrorCode.TOKEN_INVALID
+                code=AuthenticationErrorCode.TOKEN_INVALID,
             )
 
         except (ValueError, TypeError) as error:
             # Handle request validation errors
             return TokenValidationResult.failure(
                 message=f"Invalid request: {error}",
-                code=AuthenticationErrorCode.TOKEN_INVALID
+                code=AuthenticationErrorCode.TOKEN_INVALID,
             )
 
         except Exception:
             # Handle unexpected errors
             return TokenValidationResult.failure(
                 message="Unexpected error during token validation",
-                code=AuthenticationErrorCode.INTERNAL_ERROR
+                code=AuthenticationErrorCode.INTERNAL_ERROR,
             )

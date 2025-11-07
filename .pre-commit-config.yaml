@@ -4,7 +4,7 @@
 repos:
   # Basic code formatting and linting (RUN FIRST - these fix syntax issues)
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
         name: Remove trailing whitespace
@@ -28,7 +28,7 @@ repos:
 
   # Import sorting with isort (fixes import organization)
   - repo: https://github.com/pycqa/isort
-    rev: 5.12.0
+    rev: 7.0.0
     hooks:
       - id: isort
         name: Sort Python imports with isort
@@ -36,16 +36,25 @@ repos:
 
   # Python linting with Ruff (fixes many syntax and style issues)
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.0
+    rev: v0.14.4
     hooks:
       - id: ruff
         name: Lint Python code with Ruff
         args: [--fix, --exit-non-zero-on-fix]
         exclude: ^(services/.*\.py$|tools/scaffolding/.*\.py$|services/shared/modern_service_template\.py$|.*\.ipynb$)
 
+  # Auto-format Python code with Black (fixes flake8 formatting issues)
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black
+        name: Auto-format Python code with Black
+        args: [--line-length=88]
+        exclude: ^(services/.*\.py$|tools/scaffolding/.*\.py$|services/shared/modern_service_template\.py$|.*\.ipynb$|examples/demos/istio-1\.27\.2/.*\.py|examples/.*\.py|scripts/detect_globals\.py|.*migration.*\.py|.*legacy.*\.py)$
+
   # Additional Python linting with flake8 (complementary to Ruff)
   - repo: https://github.com/pycqa/flake8
-    rev: 7.1.1
+    rev: 7.3.0
     hooks:
       - id: flake8
         name: Lint Python code with flake8
@@ -67,7 +76,7 @@ repos:
 
   # Final syntax validation (after all fixes)
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v6.0.0
     hooks:
       - id: check-ast
         name: Final Python AST Syntax Check
@@ -98,7 +107,7 @@ repos:
 
   # Security checks with bandit (using development version of rich for Python 3.13 compatibility)
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.8.0
+    rev: 1.8.6
     hooks:
       - id: bandit
         name: Security checks with Bandit

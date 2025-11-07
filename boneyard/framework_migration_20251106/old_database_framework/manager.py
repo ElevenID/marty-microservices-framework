@@ -19,8 +19,9 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import QueuePool
 
+from mmf_new.core.infrastructure.database import BaseModel
+
 from .config import DatabaseConfig
-from .models import BaseModel
 
 logger = logging.getLogger(__name__)
 

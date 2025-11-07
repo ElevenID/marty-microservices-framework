@@ -10,8 +10,9 @@ from typing import Any
 
 from sqlalchemy import MetaData, Table, func, inspect, select, text
 
+from mmf_new.core.infrastructure.database import BaseModel
+
 from .manager import DatabaseManager
-from .models import BaseModel
 
 logger = logging.getLogger(__name__)
 

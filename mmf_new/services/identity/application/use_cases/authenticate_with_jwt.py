@@ -7,6 +7,7 @@ orchestrating domain models and external services through ports.
 
 from dataclasses import dataclass
 
+from mmf_new.core.application.base import UseCase, ValidationError
 from mmf_new.services.identity.application.ports_out.token_provider import (
     TokenProvider,
     TokenValidationError,
@@ -27,13 +28,15 @@ class AuthenticateWithJWTRequest:
     def __post_init__(self) -> None:
         """Validate request data."""
         if not self.token:
-            raise ValueError("Token is required")
+            raise ValidationError("Token is required")
 
         if not isinstance(self.token, str):
-            raise TypeError("Token must be a string")
+            raise ValidationError("Token must be a string")
 
 
-class AuthenticateWithJWTUseCase:
+class AuthenticateWithJWTUseCase(
+    UseCase[AuthenticateWithJWTRequest, AuthenticationResult]
+):
     """
     Use case for authenticating users with JWT tokens.
 
@@ -50,7 +53,9 @@ class AuthenticateWithJWTUseCase:
         """
         self._token_provider = token_provider
 
-    async def execute(self, request: AuthenticateWithJWTRequest) -> AuthenticationResult:
+    async def execute(
+        self, request: AuthenticateWithJWTRequest
+    ) -> AuthenticationResult:
         """
         Execute JWT authentication for a user.
 
@@ -62,12 +67,14 @@ class AuthenticateWithJWTUseCase:
         """
         try:
             # Validate and extract user from token
-            authenticated_user = await self._token_provider.validate_token(request.token)
+            authenticated_user = await self._token_provider.validate_token(
+                request.token
+            )
 
             # Return successful authentication
             return AuthenticationResult.create_success(
                 user=authenticated_user,
-                metadata={"token": request.token, "auth_method": "JWT"}
+                metadata={"token": request.token, "auth_method": "JWT"},
             )
 
         except (TokenValidationError, ValueError) as error:
@@ -75,7 +82,7 @@ class AuthenticateWithJWTUseCase:
             return AuthenticationResult.failure(
                 message=f"Token validation failed: {error}",
                 code=AuthenticationErrorCode.TOKEN_INVALID,
-                metadata={"original_error": str(error)}
+                metadata={"original_error": str(error)},
             )
 
         except Exception as error:
@@ -83,5 +90,5 @@ class AuthenticateWithJWTUseCase:
             return AuthenticationResult.failure(
                 message="Unexpected error during JWT authentication",
                 code=AuthenticationErrorCode.INTERNAL_ERROR,
-                metadata={"original_error": str(error)}
+                metadata={"original_error": str(error)},
             )

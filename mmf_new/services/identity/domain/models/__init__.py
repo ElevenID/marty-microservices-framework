@@ -15,6 +15,7 @@ from .authentication_result import (
 @dataclass(frozen=True)
 class UserId:
     """Value object representing a user identifier."""
+
     value: str
 
     def __post_init__(self):
@@ -25,6 +26,7 @@ class UserId:
 @dataclass(frozen=True)
 class Credentials:
     """Value object representing authentication credentials."""
+
     username: str
     password: str
 
@@ -38,6 +40,7 @@ class Credentials:
 @dataclass
 class Principal:
     """Entity representing an authenticated principal."""
+
     user_id: UserId
     username: str
     authenticated_at: datetime
@@ -54,6 +57,7 @@ class Principal:
 @dataclass
 class LegacyAuthenticationResult:
     """Legacy result of an authentication attempt."""
+
     status: AuthenticationStatus
     principal: Principal | None = None
     error_message: str | None = None

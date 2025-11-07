@@ -27,7 +27,9 @@ class TestIdentityServiceIntegration:
         test_user_id = user_repository.add_user("integration_user", "test_password")
 
         # Set up use case
-        authentication_usecase = AuthenticatePrincipalUseCase(user_repository, event_bus)
+        authentication_usecase = AuthenticatePrincipalUseCase(
+            user_repository, event_bus
+        )
 
         # Act - Execute authentication
         credentials = Credentials("integration_user", "test_password")
@@ -60,7 +62,9 @@ class TestIdentityServiceIntegration:
         # Arrange
         user_repository = InMemoryUserRepository()
         event_bus = InMemoryEventBus()
-        authentication_usecase = AuthenticatePrincipalUseCase(user_repository, event_bus)
+        authentication_usecase = AuthenticatePrincipalUseCase(
+            user_repository, event_bus
+        )
 
         # Act
         credentials = Credentials("unknown_user", "any_password")
@@ -85,7 +89,9 @@ class TestIdentityServiceIntegration:
         user_repository.add_user("test_user", "correct_password")
 
         # Set up use case
-        authentication_usecase = AuthenticatePrincipalUseCase(user_repository, event_bus)
+        authentication_usecase = AuthenticatePrincipalUseCase(
+            user_repository, event_bus
+        )
 
         # Act
         credentials = Credentials("test_user", "wrong_password")
@@ -110,7 +116,9 @@ class TestIdentityServiceIntegration:
         user1_id = user_repository.add_user("user1", "password1")
         user2_id = user_repository.add_user("user2", "password2")
 
-        authentication_usecase = AuthenticatePrincipalUseCase(user_repository, event_bus)
+        authentication_usecase = AuthenticatePrincipalUseCase(
+            user_repository, event_bus
+        )
 
         # Act - Authenticate first user
         result1 = authentication_usecase.execute(Credentials("user1", "password1"))
