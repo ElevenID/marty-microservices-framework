@@ -7,13 +7,16 @@ Chaos tests validate system resilience, fault tolerance, and recovery capabiliti
 
 import random
 import subprocess
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
 import pytest
+import requests
 
 
 class ChaosType(Enum):
@@ -46,7 +49,7 @@ def chaos_config():
         'target_service': 'identity-service',
         'experiment_duration': 60,  # seconds
         'recovery_timeout': 300,    # seconds
-        'health_check_interval': 5, # seconds
+        'health_check_interval': 5,  # seconds
         'success_threshold': 0.95,  # 95% success rate
         'max_response_time': 5.0,   # seconds
     }
@@ -143,7 +146,6 @@ def chaos_monitor():
 
     def monitor_service_health(service_url: str, duration: int, interval: int = 5):
         """Monitor service health during chaos experiment."""
-        import requests
 
         start_time = time.time()
         end_time = start_time + duration
@@ -200,7 +202,6 @@ def fault_injection():
     @contextmanager
     def inject_latency(delay_ms: int):
         """Inject artificial latency."""
-        import time
         original_sleep = time.sleep
 
         def delayed_sleep(duration):
@@ -215,7 +216,6 @@ def fault_injection():
     @contextmanager
     def inject_errors(error_rate: float):
         """Inject random errors."""
-        import requests
         original_get = requests.get
         original_post = requests.post
 
@@ -285,8 +285,6 @@ def resilience_patterns():
 
     def test_bulkhead_isolation(service_calls: list, isolation_limit: int = 3):
         """Test bulkhead isolation pattern."""
-        import threading
-        from concurrent.futures import ThreadPoolExecutor
 
         def isolated_calls():
             with ThreadPoolExecutor(max_workers=isolation_limit) as executor:

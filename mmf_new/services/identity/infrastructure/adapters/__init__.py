@@ -3,6 +3,8 @@
 from mmf_new.services.identity.application.ports_out import EventBus, UserRepository
 from mmf_new.services.identity.domain.models import Credentials, UserId
 
+from .jwt_adapter import JWTConfig, JWTTokenProvider
+
 
 class InMemoryUserRepository(UserRepository):
     """In-memory implementation of UserRepository for testing."""
@@ -63,3 +65,11 @@ class InMemoryEventBus(EventBus):
     def clear_events(self) -> None:
         """Clear all events for testing."""
         self._published_events.clear()
+
+
+__all__ = [
+    "InMemoryUserRepository",
+    "InMemoryEventBus",
+    "JWTTokenProvider",
+    "JWTConfig",
+]

@@ -5,20 +5,28 @@ This module provides pytest configuration and fixtures for performance testing.
 Performance tests include load testing, stress testing, and benchmark validation.
 """
 
+import asyncio
 import statistics
 import time
+from collections.abc import Callable
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List
+from typing import Any
 
 import psutil
 import pytest
+
+from marty_msf.framework.integration.event_driven import (
+    EventMessage,
+    EventSubscription,
+    InMemoryEventBus,
+)
 
 
 @dataclass
 class PerformanceMetrics:
     """Container for performance test metrics."""
-    response_times: List[float]
+    response_times: list[float]
     throughput: float
     error_rate: float
     cpu_usage: float
@@ -36,6 +44,22 @@ class PerformanceMetrics:
         sorted_times = sorted(self.response_times)
         index = int(0.95 * len(sorted_times))
         return sorted_times[index]
+
+    def record_response_time(self, time_ms: float) -> None:
+        """Record a response time measurement."""
+        self.response_times.append(time_ms)
+
+    def record_throughput(self, rps: float) -> None:
+        """Record a throughput measurement."""
+        self.throughput = rps
+
+    def record_memory_usage(self, memory_mb: float) -> None:
+        """Record a memory usage measurement."""
+        self.memory_usage = memory_mb
+
+    def record_cpu_usage(self, cpu_percent: float) -> None:
+        """Record a CPU usage measurement."""
+        self.cpu_usage = cpu_percent
 
 
 @pytest.fixture
@@ -121,7 +145,7 @@ def response_time_tracker():
             return result
         return wrapper
 
-    def get_metrics() -> Dict[str, float]:
+    def get_metrics() -> dict[str, float]:
         if not response_times:
             return {}
 
@@ -142,6 +166,173 @@ def response_time_tracker():
     })()
 
     return tracker
+
+
+@pytest.fixture
+def performance_metrics():
+    """Performance metrics fixture for recording test results."""
+    return PerformanceMetrics(
+        response_times=[],
+        throughput=0.0,
+        error_rate=0.0,
+        cpu_usage=0.0,
+        memory_usage=0.0,
+        concurrent_users=0
+    )
+
+
+@pytest.fixture
+def message_broker():
+    """Message broker fixture using in-memory implementation for testing."""
+
+    class MessageBrokerAdapter:
+        """Adapter to provide simple publish/subscribe interface for performance tests."""
+
+        def __init__(self):
+            self.event_bus = InMemoryEventBus()
+
+        async def publish(self, topic: str, event):
+            """Publish an event to a topic."""
+            # Convert to EventMessage if needed
+            if hasattr(event, 'event_type') and hasattr(event, 'data'):
+                # It's already an Event object from marty_msf.framework.events
+                event_message = EventMessage(
+                    message_id=getattr(event, 'event_id', f"perf-{hash(event)}"),
+                    event_type=event.event_type,
+                    source=topic,
+                    data=event.data
+                )
+            else:
+                # Fallback for simple objects
+                event_message = EventMessage(
+                    message_id=f"perf-{hash(str(event))}",
+                    event_type="performance_test",
+                    source=topic,
+                    data={"event": str(event)}
+                )
+
+            return await self.event_bus.publish(event_message)
+
+        async def subscribe(self, topic: str, handler):
+            """Subscribe a handler to a topic."""
+            subscription = EventSubscription(
+                subscription_id=f"perf-sub-{hash(topic + str(handler))}",
+                consumer_group="performance_test",
+                event_types=[topic],
+                handler=handler
+            )
+            return await self.event_bus.subscribe(subscription)
+
+    return MessageBrokerAdapter()
+
+
+@pytest.fixture
+def event_processor():
+    """Event processor fixture for testing event processing performance."""
+    class MockEventProcessor:
+        def __init__(self):
+            self.processed_events = []
+
+        async def process_event(self, event):
+            """Process an event (mock implementation)."""
+            # Simulate some processing time
+            await asyncio.sleep(0.001)  # 1ms
+            self.processed_events.append(event)
+            return {"status": "processed", "event_id": getattr(event, 'id', 'unknown')}
+
+        async def process_batch(self, events):
+            """Process a batch of events."""
+            results = []
+            for event in events:
+                result = await self.process_event(event)
+                results.append(result)
+            return results
+
+    return MockEventProcessor()
+
+
+@pytest.fixture
+def resource_monitor():
+    """Resource monitor fixture for testing system resource usage."""
+    class MockResourceMonitor:
+        def get_memory_usage(self):
+            """Get current memory usage in MB."""
+            return 128.5  # Mock value
+
+        def get_cpu_usage(self):
+            """Get current CPU usage percentage."""
+            return 25.0  # Mock value
+
+        async def monitor_during_load(self, duration_seconds=10):
+            """Monitor resources during a load test."""
+            # Simulate monitoring
+            await asyncio.sleep(0.1)
+            return {
+                "peak_memory": 256.0,
+                "avg_memory": 180.0,
+                "peak_cpu": 75.0,
+                "avg_cpu": 45.0
+            }
+
+    return MockResourceMonitor()
+
+
+@pytest.fixture
+def system_under_test():
+    """System under test fixture for end-to-end performance testing."""
+    class MockSystemUnderTest:
+        def __init__(self):
+            self.requests_processed = 0
+
+        async def process_request(self, request_data):
+            """Process a request through the system."""
+            # Simulate processing
+            await asyncio.sleep(0.01)  # 10ms
+            self.requests_processed += 1
+            return {"status": "success", "request_id": request_data.get("id", "unknown")}
+
+        async def process_batch_requests(self, requests):
+            """Process multiple requests."""
+            results = []
+            for request in requests:
+                result = await self.process_request(request)
+                results.append(result)
+            return results
+
+    return MockSystemUnderTest()
+
+
+@pytest.fixture
+def network_client():
+    """Network client fixture for testing network I/O performance."""
+    class MockNetworkClient:
+        def __init__(self):
+            self.requests_made = 0
+
+        async def make_request(self, url, method="GET", data=None):
+            """Make a network request."""
+            # Simulate network latency
+            await asyncio.sleep(0.05)  # 50ms
+            self.requests_made += 1
+            return {
+                "status_code": 200,
+                "response_time": 0.05,
+                "url": url,
+                "method": method
+            }
+
+        async def make_concurrent_requests(self, urls, concurrency=10):
+            """Make multiple concurrent requests."""
+            semaphore = asyncio.Semaphore(concurrency)
+
+            async def bounded_request(url):
+                async with semaphore:
+                    return await self.make_request(url)
+
+            tasks = [bounded_request(url) for url in urls]
+            return await asyncio.gather(*tasks)
+
+    return MockNetworkClient()
 
 
 # Performance test thresholds

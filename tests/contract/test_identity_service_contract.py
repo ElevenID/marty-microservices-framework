@@ -15,13 +15,13 @@ from jsonschema import ValidationError, validate
 class TestIdentityServiceContract:
     """Test suite for identity service API contracts."""
 
-    def test_health_endpoint_contract(self, api_client, identity_service_contract, schema_validator):
+    def test_health_endpoint_contract(self, api_client, api_base_url, identity_service_contract, schema_validator):
         """Test health endpoint contract compliance."""
         # Get expected schema
         health_schema = identity_service_contract["endpoints"]["/health"]["response_schema"]
 
         # Make request
-        response = api_client.get(f"{API_BASE_URL}/health")
+        response = api_client.get(f"{api_base_url}/health")
 
         # Validate contract
         assert response.status_code == 200
@@ -62,14 +62,14 @@ class TestIdentityServiceContract:
         for invalid_request in invalid_requests:
             assert not schema_validator(invalid_request, request_schema)
 
-    def test_authenticate_endpoint_response_contract(self, api_client, identity_service_contract, schema_validator):
+    def test_authenticate_endpoint_response_contract(self, api_client, api_base_url, identity_service_contract, schema_validator):
         """Test authenticate endpoint response contract."""
         auth_contract = identity_service_contract["endpoints"]["/authenticate"]
         response_schema = auth_contract["response_schema"]
 
         # Test successful authentication response
         response = api_client.post(
-            f"{API_BASE_URL}/authenticate",
+            f"{api_base_url}/authenticate",
             json={"username": "admin", "password": "admin123"}
         )
 
@@ -87,14 +87,14 @@ class TestIdentityServiceContract:
         assert isinstance(response_data["expires_at"], str)
         assert response_data["error_message"] is None
 
-    def test_authenticate_failure_response_contract(self, api_client, identity_service_contract, schema_validator):
+    def test_authenticate_failure_response_contract(self, api_client, api_base_url, identity_service_contract, schema_validator):
         """Test authenticate endpoint failure response contract."""
         auth_contract = identity_service_contract["endpoints"]["/authenticate"]
         response_schema = auth_contract["response_schema"]
 
         # Test failed authentication response
         response = api_client.post(
-            f"{API_BASE_URL}/authenticate",
+            f"{api_base_url}/authenticate",
             json={"username": "admin", "password": "wrong_password"}
         )
 
@@ -193,20 +193,20 @@ class TestDataSchemaValidation:
 class TestBackwardCompatibility:
     """Test suite for backward compatibility validation."""
 
-    def test_api_version_compatibility(self, api_client):
+    def test_api_version_compatibility(self, api_client, api_base_url):
         """Test API version backward compatibility."""
         # Test that older API versions still work
         headers = {"API-Version": "1.0"}
-        response = api_client.get(f"{API_BASE_URL}/health", headers=headers)
+        response = api_client.get(f"{api_base_url}/health", headers=headers)
 
         assert response.status_code == 200
         assert "status" in response.json()
 
-    def test_response_field_presence(self, api_client):
+    def test_response_field_presence(self, api_client, api_base_url):
         """Test that all expected response fields are present."""
         # Test authentication response has all expected fields
         response = api_client.post(
-            f"{API_BASE_URL}/authenticate",
+            f"{api_base_url}/authenticate",
             json={"username": "admin", "password": "admin123"}
         )
 
@@ -218,10 +218,10 @@ class TestBackwardCompatibility:
 
         assert expected_fields <= set(response_data.keys())
 
-    def test_field_type_consistency(self, api_client):
+    def test_field_type_consistency(self, api_client, api_base_url):
         """Test that field types remain consistent."""
         response = api_client.post(
-            f"{API_BASE_URL}/authenticate",
+            f"{api_base_url}/authenticate",
             json={"username": "admin", "password": "admin123"}
         )
 
@@ -240,7 +240,7 @@ class TestBackwardCompatibility:
         if response_data["error_message"] is not None:
             assert isinstance(response_data["error_message"], str)
 
-    def test_error_response_format_consistency(self, api_client):
+    def test_error_response_format_consistency(self, api_client, api_base_url):
         """Test that error responses maintain consistent format."""
         # Test various error scenarios
         error_scenarios = [
@@ -250,7 +250,7 @@ class TestBackwardCompatibility:
         ]
 
         for scenario in error_scenarios:
-            response = api_client.post(f"{API_BASE_URL}/authenticate", json=scenario)
+            response = api_client.post(f"{api_base_url}/authenticate", json=scenario)
             response_data = response.json()
 
             # All error responses should have consistent structure

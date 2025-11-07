@@ -43,6 +43,15 @@ repos:
         args: [--fix, --exit-non-zero-on-fix]
         exclude: ^(services/.*\.py$|tools/scaffolding/.*\.py$|services/shared/modern_service_template\.py$|.*\.ipynb$)
 
+  # Additional Python linting with flake8 (complementary to Ruff)
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8
+        name: Lint Python code with flake8
+        args: [--max-line-length=88]
+        exclude: ^(services/.*\.py$|tools/scaffolding/.*\.py$|services/shared/modern_service_template\.py$|.*\.ipynb$|examples/demos/istio-1\.27\.2/.*\.py|examples/.*\.py|scripts/detect_globals\.py|.*migration.*\.py|.*legacy.*\.py)$
+
   # Import placement check (runs after syntax fixers)
   - repo: local
     hooks:

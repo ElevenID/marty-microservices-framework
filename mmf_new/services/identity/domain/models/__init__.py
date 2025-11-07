@@ -1,16 +1,15 @@
 """Core domain models for identity management."""
 
+# Legacy domain models (will be phased out as we migrate)
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
 
-
-class AuthenticationStatus(Enum):
-    """Status of an authentication attempt."""
-    SUCCESS = "success"
-    FAILED = "failed"
-    PENDING = "pending"
-    EXPIRED = "expired"
+from .authenticated_user import AuthenticatedUser
+from .authentication_result import (
+    AuthenticationErrorCode,
+    AuthenticationResult,
+    AuthenticationStatus,
+)
 
 
 @dataclass(frozen=True)
@@ -51,9 +50,10 @@ class Principal:
         return current_time >= self.expires_at
 
 
+# Legacy AuthenticationResult - use the new one instead
 @dataclass
-class AuthenticationResult:
-    """Result of an authentication attempt."""
+class LegacyAuthenticationResult:
+    """Legacy result of an authentication attempt."""
     status: AuthenticationStatus
     principal: Principal | None = None
     error_message: str | None = None
@@ -63,3 +63,15 @@ class AuthenticationResult:
             raise ValueError("Successful authentication must include a principal")
         if self.status == AuthenticationStatus.FAILED and self.error_message is None:
             raise ValueError("Failed authentication must include an error message")
+
+
+__all__ = [
+    "AuthenticatedUser",
+    "AuthenticationResult",
+    "AuthenticationStatus",
+    "AuthenticationErrorCode",
+    "UserId",
+    "Credentials",
+    "Principal",
+    "LegacyAuthenticationResult",  # Keep for backward compatibility during migration
+]

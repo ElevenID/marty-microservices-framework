@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
+import jwt
 import pytest
 
 
@@ -71,7 +72,6 @@ def security_test_credentials():
 @pytest.fixture
 def jwt_test_tokens():
     """Provides JWT tokens for security testing."""
-    import jwt
 
     secret = "test_secret_key"
 
@@ -162,7 +162,7 @@ def vulnerability_scanner():
             'Content-Security-Policy': None  # Should be present
         }
 
-        for header, expected in security_headers.items():
+        for header, _expected in security_headers.items():
             if header not in headers:
                 vulnerabilities.append(SecurityVulnerability(
                     name=f"Missing {header} header",

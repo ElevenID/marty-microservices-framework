@@ -1,10 +1,17 @@
 # End-to-End Testing Suite for Marty Framework
 
-This comprehensive end-to-end testing suite demonstrates the full capabilities of the Marty microservices framework, including performance analysis, bottleneck detection, timeout monitoring, auditability, and visual testing.
+This comprehensive end-to-end testing suite demonstrates the full capabilities of the Marty microservices framework, including JWT authentication, performance analysis, bottleneck detection, timeout monitoring, auditability, and visual testing.
 
 ## Overview
 
 The E2E test suite includes:
+
+### 🔐 **JWT Authentication E2E Tests** (`test_jwt_auth_e2e.py` & `test_jwt_integration_e2e.py`)
+- Comprehensive tests for the migrated JWT authentication system
+- Full Kind-based cluster testing with real deployments
+- Lightweight integration testing for fast feedback
+- Token lifecycle validation and security testing
+- Authentication middleware and endpoint integration
 
 ### 🔍 **Bottleneck Analysis** (`test_bottleneck_analysis.py`)
 - Uses example plugins to generate realistic workload
@@ -55,7 +62,28 @@ pip install -e ".[dev]"
 playwright install chromium
 ```
 
-### Running Tests
+### JWT Authentication E2E Testing
+
+#### Quick JWT Test Run
+```bash
+# Run all JWT E2E tests
+./tests/e2e/run_jwt_e2e_tests.sh
+
+# Run only integration tests (fast)
+./tests/e2e/run_jwt_e2e_tests.sh --integration-only
+
+# Run only Kind-based tests (comprehensive)
+./tests/e2e/run_jwt_e2e_tests.sh --kind-only
+```
+
+#### JWT Test Requirements
+For Kind-based tests, ensure you have:
+- Docker installed and running
+- Kind installed (`brew install kind` on macOS)
+- kubectl installed
+- Available system resources (Kind clusters require ~500MB-1GB)
+
+### Running Other Tests
 
 #### Run All E2E Tests (Recommended)
 ```bash
