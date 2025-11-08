@@ -127,19 +127,20 @@ async def authenticate_with_jwt(
     try:
         # Execute authentication use case
         auth_request = AuthenticateWithJWTRequest(token=request.token)
-        result = use_case.execute(auth_request)
+        result = await use_case.execute(auth_request)
 
         # Convert result to response model
-        if result.status == AuthenticationStatus.SUCCESS and result.user:
+        if result.status == AuthenticationStatus.SUCCESS and result.authenticated_user:
             user_response = AuthenticatedUserResponse(
-                user_id=result.user.user_id,
-                username=result.user.username,
-                email=result.user.email,
-                roles=list(result.user.roles),
-                permissions=list(result.user.permissions),
-                created_at=result.user.created_at,
-                expires_at=result.user.expires_at,
-                user_metadata=result.user.user_metadata,
+                user_id=result.authenticated_user.user_id,
+                username=result.authenticated_user.username
+                or result.authenticated_user.user_id,  # fallback to user_id if username is None
+                email=result.authenticated_user.email,
+                roles=list(result.authenticated_user.roles),
+                permissions=list(result.authenticated_user.permissions),
+                created_at=result.authenticated_user.created_at,
+                expires_at=result.authenticated_user.expires_at,
+                user_metadata=result.authenticated_user.metadata,
             )
 
             return AuthenticationResponse(
@@ -193,19 +194,20 @@ async def validate_token(
     try:
         # Execute validation use case
         validation_request = ValidateTokenRequest(token=request.token)
-        result = use_case.execute(validation_request)
+        result = await use_case.execute(validation_request)
 
         # Convert result to response model
         if result.is_valid and result.user:
             user_response = AuthenticatedUserResponse(
                 user_id=result.user.user_id,
-                username=result.user.username,
+                username=result.user.username
+                or result.user.user_id,  # fallback to user_id if username is None
                 email=result.user.email,
                 roles=list(result.user.roles),
                 permissions=list(result.user.permissions),
                 created_at=result.user.created_at,
                 expires_at=result.user.expires_at,
-                user_metadata=result.user.user_metadata,
+                user_metadata=result.user.metadata,
             )
 
             return TokenValidationResponse(is_valid=True, user=user_response)

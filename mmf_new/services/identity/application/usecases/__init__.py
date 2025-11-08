@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from mmf_new.services.identity.application.ports_in import AuthenticatePrincipal
 from mmf_new.services.identity.application.ports_out import EventBus, UserRepository
 from mmf_new.services.identity.domain.models import (
+    AuthenticatedUser,
+    AuthenticationErrorCode,
     AuthenticationResult,
     AuthenticationStatus,
     Credentials,
@@ -25,23 +27,33 @@ class AuthenticatePrincipalUseCase(AuthenticatePrincipal):
         # Find user by username
         user_id = self._user_repository.find_by_username(credentials.username)
         if user_id is None:
-            return AuthenticationResult(
-                status=AuthenticationStatus.FAILED, error_message="User not found"
+            return AuthenticationResult.failure(
+                message="User not found", code=AuthenticationErrorCode.INVALID_USERNAME
             )
 
         # Verify credentials
         if not self._user_repository.verify_credentials(credentials):
-            return AuthenticationResult(
-                status=AuthenticationStatus.FAILED, error_message="Invalid credentials"
+            return AuthenticationResult.failure(
+                message="Invalid credentials",
+                code=AuthenticationErrorCode.INVALID_PASSWORD,
             )
 
-        # Create principal
+        # Create authenticated user from principal data
         now = datetime.utcnow()
         principal = Principal(
             user_id=user_id,
             username=credentials.username,
             authenticated_at=now,
             expires_at=now + timedelta(hours=24),
+        )
+
+        # Convert Principal to AuthenticatedUser for the new API
+        authenticated_user = AuthenticatedUser(
+            user_id=user_id.value,
+            username=credentials.username,
+            auth_method="password",
+            expires_at=principal.expires_at,
+            created_at=principal.authenticated_at,
         )
 
         # Publish authentication event
@@ -53,6 +65,4 @@ class AuthenticatePrincipalUseCase(AuthenticatePrincipal):
             }
         )
 
-        return AuthenticationResult(
-            status=AuthenticationStatus.SUCCESS, principal=principal
-        )
+        return AuthenticationResult.create_success(user=authenticated_user)

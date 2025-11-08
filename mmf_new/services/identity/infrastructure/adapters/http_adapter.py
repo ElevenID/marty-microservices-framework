@@ -76,15 +76,19 @@ class IdentityServiceApp:
                 # Execute use case
                 result = self.auth_usecase.execute(credentials)
 
-                if result.status == AuthenticationStatus.SUCCESS:
+                if (
+                    result.status == AuthenticationStatus.SUCCESS
+                    and result.authenticated_user
+                ):
                     return AuthenticationResponse(
                         success=True,
-                        user_id=result.principal.user_id.value,
-                        username=result.principal.username,
-                        authenticated_at=result.principal.authenticated_at.isoformat(),
+                        user_id=result.authenticated_user.user_id,
+                        username=result.authenticated_user.username
+                        or result.authenticated_user.user_id,
+                        authenticated_at=result.authenticated_user.created_at.isoformat(),
                         expires_at=(
-                            result.principal.expires_at.isoformat()
-                            if result.principal.expires_at
+                            result.authenticated_user.expires_at.isoformat()
+                            if result.authenticated_user.expires_at
                             else None
                         ),
                     )

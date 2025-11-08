@@ -37,15 +37,18 @@ class TestIdentityServiceIntegration:
 
         # Assert - Verify successful authentication
         assert result.status == AuthenticationStatus.SUCCESS
-        assert result.principal is not None
-        assert result.principal.user_id == test_user_id
-        assert result.principal.username == "integration_user"
+        assert result.authenticated_user is not None
+        assert result.authenticated_user.user_id == test_user_id.value
+        assert result.authenticated_user.username == "integration_user"
         assert result.error_message is None
 
-        # Verify principal has reasonable expiration
+        # Verify authenticated_user has reasonable expiration
         now = datetime.utcnow()
         expected_expiry = now + timedelta(hours=24)
-        time_diff = abs((result.principal.expires_at - expected_expiry).total_seconds())
+        assert result.authenticated_user.expires_at is not None
+        time_diff = abs(
+            (result.authenticated_user.expires_at - expected_expiry).total_seconds()
+        )
         assert time_diff < 60  # Within 1 minute
 
         # Verify event was published
@@ -72,7 +75,7 @@ class TestIdentityServiceIntegration:
 
         # Assert
         assert result.status == AuthenticationStatus.FAILED
-        assert result.principal is None
+        assert result.authenticated_user is None
         assert result.error_message == "User not found"
 
         # Verify no event was published
@@ -99,7 +102,7 @@ class TestIdentityServiceIntegration:
 
         # Assert
         assert result.status == AuthenticationStatus.FAILED
-        assert result.principal is None
+        assert result.authenticated_user is None
         assert result.error_message == "Invalid credentials"
 
         # Verify no event was published
@@ -128,12 +131,14 @@ class TestIdentityServiceIntegration:
 
         # Assert - Both authentications successful
         assert result1.status == AuthenticationStatus.SUCCESS
-        assert result1.principal.user_id == user1_id
-        assert result1.principal.username == "user1"
+        assert result1.authenticated_user is not None
+        assert result1.authenticated_user.user_id == user1_id.value
+        assert result1.authenticated_user.username == "user1"
 
         assert result2.status == AuthenticationStatus.SUCCESS
-        assert result2.principal.user_id == user2_id
-        assert result2.principal.username == "user2"
+        assert result2.authenticated_user is not None
+        assert result2.authenticated_user.user_id == user2_id.value
+        assert result2.authenticated_user.username == "user2"
 
         # Verify both events were published
         events = event_bus.get_published_events()
