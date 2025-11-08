@@ -471,15 +471,25 @@ class SQLAlchemyDomainRepository(
                 deleted_count = 0
 
                 for entity_id in entity_ids:
-                    entity = await self.find_by_id(entity_id)
-                    if entity:
-                        # Soft delete if model supports it
-                        if hasattr(entity, "deleted_at"):
-                            entity.deleted_at = datetime.now(timezone.utc)
-                            session.add(entity)
-                        else:
-                            await session.delete(entity)
-                        deleted_count += 1
+                    # Load entity within the transaction's session to avoid detached instances
+                    entity = await session.get(self.model_class, entity_id)
+
+                    # Skip if entity doesn't exist or is already soft-deleted
+                    if entity is None:
+                        continue
+
+                    # Additional check for soft-deleted entities
+                    if hasattr(entity, "deleted_at") and entity.deleted_at is not None:
+                        continue
+
+                    # Soft delete if model supports it
+                    if hasattr(entity, "deleted_at"):
+                        entity.deleted_at = datetime.now(timezone.utc)
+                        # No need to add to session as entity is already attached
+                    else:
+                        await session.delete(entity)
+
+                    deleted_count += 1
 
                 logger.debug(
                     "Bulk deleted %d %s entities",
