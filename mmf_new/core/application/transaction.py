@@ -206,6 +206,9 @@ class TransactionManager:
                         else:
                             result = await operation()
                         results.append(result)
+
+                        # Commit the savepoint after successful operation
+                        await savepoint.commit()
                         logger.debug(
                             "Savepoint %s completed successfully", savepoint_name
                         )
