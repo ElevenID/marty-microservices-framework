@@ -86,7 +86,13 @@ class TransactionManager:
         """Internal managed transaction with configuration."""
         transaction_id = id(session)
         try:
-            # Set transaction configuration
+            # Begin transaction first to avoid implicit transaction from SET TRANSACTION statements
+            if config.timeout:
+                await asyncio.wait_for(session.begin(), timeout=config.timeout)
+            else:
+                await session.begin()
+
+            # Set transaction configuration after begin()
             if config.isolation_level:
                 await session.execute(
                     text(f"SET TRANSACTION ISOLATION LEVEL {config.isolation_level.value}")
@@ -95,11 +101,6 @@ class TransactionManager:
                 await session.execute(text("SET TRANSACTION READ ONLY"))
             if config.deferrable:
                 await session.execute(text("SET TRANSACTION DEFERRABLE"))
-            # Set timeout if specified
-            if config.timeout:
-                await asyncio.wait_for(session.begin(), timeout=config.timeout)
-            else:
-                await session.begin()
             self._active_transactions[str(transaction_id)] = session
             yield session
             # Commit the transaction
