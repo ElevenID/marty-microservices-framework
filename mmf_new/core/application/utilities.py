@@ -101,13 +101,11 @@ class DatabaseUtilities:
             try:
                 quoted_table = self._quote_identifier(table_name)
                 await session.execute(text(f"DELETE FROM {quoted_table}"))
-                await session.commit()
                 logger.info("Truncated table: %s", table_name)
                 return True
 
             except Exception as e:
                 logger.error("Error truncating table %s: %s", table_name, e)
-                await session.rollback()
                 return False
 
     async def clean_soft_deleted(
@@ -141,7 +139,6 @@ class DatabaseUtilities:
                         f"WHERE deleted_at IS NOT NULL AND deleted_at < :cutoff_date"
                     )
                     await session.execute(delete_query, {"cutoff_date": cutoff_date})
-                    await session.commit()
                     logger.info(
                         "Cleaned up %d soft-deleted records from %s", count, table_name
                     )
@@ -152,7 +149,6 @@ class DatabaseUtilities:
                 logger.error(
                     "Error cleaning soft-deleted records from %s: %s", table_name, e
                 )
-                await session.rollback()
                 raise
 
     async def backup_table(
@@ -173,14 +169,12 @@ class DatabaseUtilities:
                     f"CREATE TABLE {valid_backup} AS SELECT * FROM {valid_src}"
                 )
                 await session.execute(backup_query)
-                await session.commit()
 
                 logger.info("Created backup table: %s", backup_table_name)
                 return backup_table_name
 
             except Exception as e:
                 logger.error("Error creating backup for table %s: %s", table_name, e)
-                await session.rollback()
                 raise
 
     async def execute_maintenance(
