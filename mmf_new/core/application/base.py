@@ -206,6 +206,28 @@ class WriteCommand(Command[TRequest, TResponse]):
         return result
 
 
+class UseCase(ABC, Generic[TRequest, TResponse]):
+    """Base class for use cases in the application layer.
+
+    Use cases represent the application-specific business rules and workflows.
+    They orchestrate the flow of data to and from the entities,
+    and direct those entities to use their business rules to
+    achieve the goals of the use case.
+    """
+
+    @abstractmethod
+    async def execute(self, request: TRequest) -> TResponse:
+        """Execute the use case with the given request.
+
+        Args:
+            request: The input data for the use case
+
+        Returns:
+            The response data from the use case
+        """
+        ...
+
+
 # Command Error Hierarchy
 class CommandError(Exception):
     """Base exception for command errors."""
