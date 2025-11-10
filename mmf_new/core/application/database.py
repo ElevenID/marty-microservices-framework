@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
-from ..domain.database import DatabaseType
+from ..domain.database import DatabaseType, IsolationLevel
 
 
 @dataclass
@@ -23,6 +23,19 @@ class ConnectionPoolConfig:
     pool_pre_ping: bool = True
     echo: bool = False
     echo_pool: bool = False
+
+
+@dataclass
+class TransactionConfig:
+    """Transaction configuration."""
+
+    isolation_level: IsolationLevel | None = None
+    read_only: bool = False
+    deferrable: bool = False
+    max_retries: int = 3
+    retry_delay: float = 0.1
+    retry_backoff: float = 2.0
+    timeout: float | None = None
 
 
 @dataclass

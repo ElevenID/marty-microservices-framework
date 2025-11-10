@@ -50,6 +50,20 @@ class RetryableError(TransactionError):
     """Error that can be retried."""
 
 
+class TransactionManager(ABC):
+    """Abstract transaction manager interface."""
+
+    @abstractmethod
+    async def transaction(self, **kwargs) -> AbstractAsyncContextManager[AsyncSession]:
+        """Create a managed transaction context."""
+        raise NotImplementedError
+
+    @abstractmethod
+    async def retry_transaction(self, operation, max_retries: int = 3):
+        """Execute an operation with retry logic."""
+        raise NotImplementedError
+
+
 class DatabaseManager(ABC):
     """Abstract database manager interface for domain layer."""
 

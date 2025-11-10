@@ -17,6 +17,9 @@ from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 from ..application.database import DatabaseConfig
 from ..domain.database import ConnectionError, DatabaseError
 from ..domain.database import DatabaseManager as AbstractDatabaseManager
+from .migration import create_migration_manager
+from .transaction import create_transaction_manager
+from .utilities import create_database_utilities
 
 logger = logging.getLogger(__name__)
 
@@ -187,6 +190,27 @@ class DatabaseManager(AbstractDatabaseManager):
     def engine(self):
         """Get the async engine."""
         return self._async_engine
+
+    def create_session_factory(self):
+        """Create a session factory for use with repositories."""
+        if not self._async_session_factory:
+            raise DatabaseError("Database manager not initialized")
+        return self._async_session_factory
+
+    def create_transaction_manager(self):
+        """Create a transaction manager for this database."""
+
+        return create_transaction_manager(self.create_session_factory())
+
+    def create_migration_manager(self, migration_directory: str | None = None):
+        """Create a migration manager for this database."""
+
+        return create_migration_manager(self, migration_directory)
+
+    def create_utilities(self):
+        """Create database utilities for this database."""
+
+        return create_database_utilities(self)
 
 
 # Backwards compatibility aliases
