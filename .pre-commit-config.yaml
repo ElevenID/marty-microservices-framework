@@ -238,15 +238,16 @@ repos:
             TEMP_DIR=$(mktemp -d)
             CURRENT_DIR=$(pwd)
             cd "$CURRENT_DIR"
-            # Test CLI service generation
-            uv run python -m marty_msf.cli service init fastapi smoke-test
-            if [ -d "plugins/smoke_test" ]; then
-              echo "✅ Service generation smoke test passed"
-              rm -rf "plugins/smoke_test"
-            else
-              echo "❌ Service generation smoke test failed"
-              exit 1
-            fi
+            # CLI has been moved to boneyard - skipping service generation test
+            echo "⚠️ CLI service generation has been moved to boneyard - skipping smoke test"
+            # uv run python -m marty_msf.cli service init fastapi smoke-test
+            # if [ -d "plugins/smoke_test" ]; then
+            #   echo "✅ Service generation smoke test passed"
+            #   rm -rf "plugins/smoke_test"
+            # else
+            #   echo "❌ Service generation smoke test failed"
+            #   exit 1
+            # fi
         require_serial: true
         pass_filenames: false
         always_run: true
@@ -461,12 +462,14 @@ repos:
               PY_CMD="uv run python"
             fi
             export PYTHONPATH="$(pwd):$PYTHONPATH"
-            if $PY_CMD -c "import marty_msf.cli; print('CLI import successful')" 2>/dev/null; then
-              echo "  ✅ CLI module imports successfully (via $PY_CMD)"
-            else
-              echo "  ❌ CLI module import failed (tried $PY_CMD)"
-              exit 1
-            fi
+            # CLI has been moved to boneyard - skipping import check
+            echo "  ⚠️ CLI module has been moved to boneyard - skipping import check"
+            # if $PY_CMD -c "import marty_msf.cli; print('CLI import successful')" 2>/dev/null; then
+            #   echo "  ✅ CLI module imports successfully (via $PY_CMD)"
+            # else
+            #   echo "  ❌ CLI module import failed (tried $PY_CMD)"
+            #   exit 1
+            # fi
 
             # Check for CLI documentation
             if [ -f "CLI_README.md" ]; then
