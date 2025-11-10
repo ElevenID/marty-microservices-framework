@@ -114,8 +114,9 @@ Repository = "https://github.com/marty-framework/marty-microservices-framework"
 Issues = "https://github.com/marty-framework/marty-microservices-framework/issues"
 
 [project.scripts]
-marty = "marty_msf.cli:cli"
-marty-msf = "marty_msf.cli:cli"
+# CLI has been moved to boneyard - console scripts disabled
+# marty = "marty_msf.cli:cli"
+# marty-msf = "marty_msf.cli:cli"
 
 [project.entry-points."mmf.plugins"]
 # Production plugins will be registered here when they exist
