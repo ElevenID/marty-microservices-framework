@@ -34,7 +34,7 @@ class JWTAuthenticationMiddleware(BaseHTTPMiddleware):
         app,
         jwt_config: JWTConfig,
         excluded_paths: list[str] | None = None,
-        optional_paths: list[str] | None = None
+        optional_paths: list[str] | None = None,
     ):
         """
         Initialize JWT authentication middleware.
@@ -51,20 +51,21 @@ class JWTAuthenticationMiddleware(BaseHTTPMiddleware):
         self.security = HTTPBearer(auto_error=False)
 
         # Default excluded paths (public endpoints)
-        self.excluded_paths = set(excluded_paths or [
-            "/health",
-            "/docs",
-            "/openapi.json",
-            "/auth/jwt/health",
-        ])
+        self.excluded_paths = set(
+            excluded_paths
+            or [
+                "/health",
+                "/docs",
+                "/openapi.json",
+                "/auth/jwt/health",
+            ]
+        )
 
         # Paths where authentication is optional
         self.optional_paths = set(optional_paths or [])
 
     async def dispatch(
-        self,
-        request: Request,
-        call_next: Callable[[Request], Awaitable[Response]]
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
         """
         Process request with JWT authentication.
@@ -137,7 +138,9 @@ class JWTAuthenticationMiddleware(BaseHTTPMiddleware):
         except ValueError:
             return None
 
-    async def _validate_token(self, token: str, is_optional: bool = False) -> dict | None:
+    async def _validate_token(
+        self, token: str, is_optional: bool = False
+    ) -> dict | None:
         """
         Validate JWT token and extract user information.
 
@@ -238,6 +241,7 @@ def require_permission(permission: str) -> Callable[[Request], dict]:
     Returns:
         Dependency function that validates permission
     """
+
     def check_permission(request: Request) -> dict:
         user = require_authenticated_user(request)
         if permission not in user.get("permissions", []):
@@ -260,6 +264,7 @@ def require_role(role: str) -> Callable[[Request], dict]:
     Returns:
         Dependency function that validates role
     """
+
     def check_role(request: Request) -> dict:
         user = require_authenticated_user(request)
         if role not in user.get("roles", []):

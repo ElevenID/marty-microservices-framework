@@ -50,7 +50,12 @@ class JWTAuthenticationMiddleware(BaseHTTPMiddleware):
         self.token_provider = JWTTokenProvider(jwt_config)
         self.validate_use_case = ValidateTokenUseCase(self.token_provider)
         self.protected_paths = protected_paths or ["/api/", "/admin/"]
-        self.exclude_paths = exclude_paths or ["/auth/", "/health", "/docs", "/openapi.json"]
+        self.exclude_paths = exclude_paths or [
+            "/auth/",
+            "/health",
+            "/docs",
+            "/openapi.json",
+        ]
 
     def _is_protected_path(self, path: str) -> bool:
         """Check if path requires authentication."""
@@ -225,6 +230,7 @@ def require_permissions(*required_permissions: str) -> Callable:
     Returns:
         Dependency function that validates user permissions
     """
+
     def permission_checker(user: AuthenticatedUser = None) -> AuthenticatedUser:
         """Check if user has required permissions."""
         if not user:
@@ -256,6 +262,7 @@ def require_roles(*required_roles: str) -> Callable:
     Returns:
         Dependency function that validates user roles
     """
+
     def role_checker(user: AuthenticatedUser = None) -> AuthenticatedUser:
         """Check if user has required roles."""
         if not user:

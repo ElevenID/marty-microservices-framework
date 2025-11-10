@@ -11,12 +11,14 @@ from typing import Any
 
 import yaml
 
-from marty_msf.core.di_container import get_service
+# TODO: Update to new DI container when available
+# from marty_msf.core.di_container import get_service
 from mmf_new.services.identity.infrastructure.adapters import JWTConfig
 
 
 class ConfigurationError(Exception):
     """Raised when configuration is invalid or missing."""
+
     pass
 
 
@@ -96,7 +98,7 @@ class JWTConfigurationManager:
         if self.environment == "development":
             dev_defaults = {
                 "jwt_secret": "dev_jwt_secret_not_secure_change_in_production",
-                "service_api_key": "dev_api_key_12345"
+                "service_api_key": "dev_api_key_12345",
             }
             if secret_name in dev_defaults:
                 return dev_defaults[secret_name]
@@ -107,8 +109,7 @@ class JWTConfigurationManager:
         """Recursively resolve secret references in configuration."""
         if isinstance(config, dict):
             return {
-                key: self._resolve_config_values(value)
-                for key, value in config.items()
+                key: self._resolve_config_values(value) for key, value in config.items()
             }
         elif isinstance(config, str) and config.startswith("${SECRET:"):
             return self._resolve_secret(config)
@@ -137,12 +138,18 @@ class JWTConfigurationManager:
         self._config_cache["merged"] = resolved_config
         return resolved_config
 
-    def _deep_merge(self, base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+    def _deep_merge(
+        self, base: dict[str, Any], override: dict[str, Any]
+    ) -> dict[str, Any]:
         """Deep merge two dictionaries."""
         result = base.copy()
 
         for key, value in override.items():
-            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            if (
+                key in result
+                and isinstance(result[key], dict)
+                and isinstance(value, dict)
+            ):
                 result[key] = self._deep_merge(result[key], value)
             else:
                 result[key] = value
@@ -185,7 +192,7 @@ class JWTConfigurationManager:
             algorithm=algorithm,
             access_token_expire_minutes=expiration_minutes,
             issuer=issuer,
-            audience=audience
+            audience=audience,
         )
 
     def get_auth_config(self) -> dict[str, Any]:
@@ -208,7 +215,9 @@ def get_jwt_config_from_yaml() -> JWTConfig:
     Returns:
         JWTConfig object with settings from configuration files
     """
-    manager = get_service(JWTConfigurationManager)
+    # TODO: Update to use new DI container
+    # manager = get_service(JWTConfigurationManager)
+    manager = JWTConfigurationManager()
     return manager.get_jwt_config()
 
 

@@ -9,6 +9,7 @@ from mmf_new.services.identity.application.ports_in import AuthenticatePrincipal
 from mmf_new.services.identity.application.ports_out import EventBus, UserRepository
 from mmf_new.services.identity.application.usecases import AuthenticatePrincipalUseCase
 from mmf_new.services.identity.domain.models import (
+    AuthenticationErrorCode,
     AuthenticationResult,
     AuthenticationStatus,
     Credentials,
@@ -39,9 +40,9 @@ class TestAuthenticatePrincipalUseCase:
 
         # Assert
         assert result.status == AuthenticationStatus.SUCCESS
-        assert result.principal is not None
-        assert result.principal.user_id == user_id
-        assert result.principal.username == "testuser"
+        assert result.authenticated_user is not None
+        assert result.authenticated_user.user_id == user_id.value
+        assert result.authenticated_user.username == "testuser"
         assert result.error_message is None
 
         # Verify repository calls
@@ -71,8 +72,9 @@ class TestAuthenticatePrincipalUseCase:
 
         # Assert
         assert result.status == AuthenticationStatus.FAILED
-        assert result.principal is None
+        assert result.authenticated_user is None
         assert result.error_message == "User not found"
+        assert result.error_code == AuthenticationErrorCode.INVALID_USERNAME
 
         # Verify repository calls
         mock_repository.find_by_username.assert_called_once_with("nonexistent")
@@ -100,8 +102,9 @@ class TestAuthenticatePrincipalUseCase:
 
         # Assert
         assert result.status == AuthenticationStatus.FAILED
-        assert result.principal is None
+        assert result.authenticated_user is None
         assert result.error_message == "Invalid credentials"
+        assert result.error_code == AuthenticationErrorCode.INVALID_PASSWORD
 
         # Verify repository calls
         mock_repository.find_by_username.assert_called_once_with("testuser")
@@ -131,13 +134,20 @@ class TestAuthenticatePrincipalUseCase:
 
         # Assert
         assert result.status == AuthenticationStatus.SUCCESS
-        principal = result.principal
-        assert principal is not None
+        authenticated_user = result.authenticated_user
+        assert authenticated_user is not None
 
         # Check that authentication time is reasonable
-        assert before_auth <= principal.authenticated_at <= after_auth
+        assert before_auth <= authenticated_user.created_at <= after_auth
 
         # Check that expiration is set to 24 hours from authentication
-        expected_expiry_min = principal.authenticated_at + timedelta(hours=24, minutes=-1)
-        expected_expiry_max = principal.authenticated_at + timedelta(hours=24, minutes=1)
-        assert expected_expiry_min <= principal.expires_at <= expected_expiry_max
+        assert authenticated_user.expires_at is not None
+        expected_expiry_min = authenticated_user.created_at + timedelta(
+            hours=24, minutes=-1
+        )
+        expected_expiry_max = authenticated_user.created_at + timedelta(
+            hours=24, minutes=1
+        )
+        assert (
+            expected_expiry_min <= authenticated_user.expires_at <= expected_expiry_max
+        )

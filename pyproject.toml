@@ -161,6 +161,7 @@ dev = [
     "radon>=6.0.1",
     "marty-msf[cli,microservices,observability]",
     "pipdeptree>=2.29.0",
+    "autopep8>=2.3.2",
 ]
 
 # Ruff configuration

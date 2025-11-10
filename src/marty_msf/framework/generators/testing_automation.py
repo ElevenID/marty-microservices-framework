@@ -343,14 +343,16 @@ def mock_config():
 {"    return AsyncMock()" if config.get("use_messaging") else ""}
 '''
 
-    def _generate_database_integration_test(self, config: builtins.dict[str, Any]) -> str:
+    def _generate_database_integration_test(
+        self, config: builtins.dict[str, Any]
+    ) -> str:
         """Generate database integration test."""
         return f'''"""
 Database integration tests for {config["service_name"]}.
 """
 
 import pytest
-from marty_msf.framework.database import DatabaseManager
+from mmf_new.core.infrastructure.database import DatabaseManager
 
 
 @pytest.mark.integration
@@ -423,7 +425,9 @@ class TestCacheIntegration:
         assert value is None
 '''
 
-    def _generate_messaging_integration_test(self, config: builtins.dict[str, Any]) -> str:
+    def _generate_messaging_integration_test(
+        self, config: builtins.dict[str, Any]
+    ) -> str:
         """Generate messaging integration test."""
         return f'''"""
 Messaging integration tests for {config["service_name"]}.
@@ -601,7 +605,9 @@ class QualityAnalyzer:
             total_lines += len(analysis[1]) + len(analysis[2])
             covered_lines += len(analysis[1])
 
-        coverage_percentage = (covered_lines / total_lines * 100) if total_lines > 0 else 0
+        coverage_percentage = (
+            (covered_lines / total_lines * 100) if total_lines > 0 else 0
+        )
 
         return QualityReport(
             metric=QualityMetric.COVERAGE,
@@ -613,9 +619,11 @@ class QualityAnalyzer:
                 "uncovered_lines": total_lines - covered_lines,
             },
             recommendations=[
-                "Add tests for uncovered code paths"
-                if coverage_percentage < 80
-                else "Maintain current coverage level"
+                (
+                    "Add tests for uncovered code paths"
+                    if coverage_percentage < 80
+                    else "Maintain current coverage level"
+                )
             ],
         )
 
@@ -650,7 +658,11 @@ class QualityAnalyzer:
             details={"issue_count": len(issues)},
             issues=issues,
             recommendations=[
-                "Fix style issues found by Ruff" if issues else "Code style is excellent"
+                (
+                    "Fix style issues found by Ruff"
+                    if issues
+                    else "Code style is excellent"
+                )
             ],
         )
 
@@ -685,9 +697,11 @@ class QualityAnalyzer:
                 details={"type_issues": len(issues)},
                 issues=issues,
                 recommendations=[
-                    "Add type hints to improve type safety"
-                    if issues
-                    else "Type safety is excellent"
+                    (
+                        "Add type hints to improve type safety"
+                        if issues
+                        else "Type safety is excellent"
+                    )
                 ],
             )
 
@@ -734,7 +748,9 @@ class QualityAnalyzer:
                 )
 
         avg_complexity = total_complexity / function_count if function_count > 0 else 0
-        complexity_score = max(0, 100 - avg_complexity * 5)  # Deduct 5 points per complexity unit
+        complexity_score = max(
+            0, 100 - avg_complexity * 5
+        )  # Deduct 5 points per complexity unit
 
         return QualityReport(
             metric=QualityMetric.COMPLEXITY,
@@ -747,9 +763,11 @@ class QualityAnalyzer:
             },
             issues=complexity_issues,
             recommendations=[
-                "Refactor complex functions"
-                if complexity_issues
-                else "Code complexity is manageable"
+                (
+                    "Refactor complex functions"
+                    if complexity_issues
+                    else "Code complexity is manageable"
+                )
             ],
         )
 
@@ -799,10 +817,14 @@ class ServiceTestRunner:
             result.quality_reports = quality_reports
 
             # Calculate overall score
-            result.overall_score = self._calculate_overall_score(test_results, quality_reports)
+            result.overall_score = self._calculate_overall_score(
+                test_results, quality_reports
+            )
 
             # Generate recommendations
-            result.recommendations = self._generate_recommendations(test_results, quality_reports)
+            result.recommendations = self._generate_recommendations(
+                test_results, quality_reports
+            )
 
             # Determine if validation passed
             result.passed = (
@@ -837,7 +859,9 @@ class ServiceTestRunner:
         test_results.append(unit_result)
 
         # Run integration tests
-        integration_result = await self._run_test_type(service_dir, TestType.INTEGRATION)
+        integration_result = await self._run_test_type(
+            service_dir, TestType.INTEGRATION
+        )
         test_results.append(integration_result)
 
         # Run contract tests
@@ -845,12 +869,16 @@ class ServiceTestRunner:
         test_results.append(contract_result)
 
         # Run performance tests
-        performance_result = await self._run_test_type(service_dir, TestType.PERFORMANCE)
+        performance_result = await self._run_test_type(
+            service_dir, TestType.PERFORMANCE
+        )
         test_results.append(performance_result)
 
         return test_results
 
-    async def _run_test_type(self, service_dir: Path, test_type: TestType) -> TestResult:
+    async def _run_test_type(
+        self, service_dir: Path, test_type: TestType
+    ) -> TestResult:
         """Run a specific type of test."""
         test_dir = service_dir / "tests" / test_type.value
 

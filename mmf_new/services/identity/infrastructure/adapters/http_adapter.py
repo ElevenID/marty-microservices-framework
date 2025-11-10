@@ -16,12 +16,14 @@ from mmf_new.services.identity.infrastructure.adapters import (
 
 class AuthenticationRequest(BaseModel):
     """HTTP request model for authentication."""
+
     username: str
     password: str
 
 
 class AuthenticationResponse(BaseModel):
     """HTTP response model for authentication."""
+
     success: bool
     user_id: str | None = None
     username: str | None = None
@@ -37,7 +39,7 @@ class IdentityServiceApp:
         self.app = FastAPI(
             title="Identity Service",
             description="Minimal example of hexagonal architecture identity service",
-            version="1.0.0"
+            version="1.0.0",
         )
 
         # Initialize infrastructure adapters
@@ -46,8 +48,7 @@ class IdentityServiceApp:
 
         # Initialize use case
         self.auth_usecase = AuthenticatePrincipalUseCase(
-            self.user_repository,
-            self.event_bus
+            self.user_repository, self.event_bus
         )
 
         # Add some test users
@@ -75,22 +76,31 @@ class IdentityServiceApp:
                 # Execute use case
                 result = self.auth_usecase.execute(credentials)
 
-                if result.status == AuthenticationStatus.SUCCESS:
+                if (
+                    result.status == AuthenticationStatus.SUCCESS
+                    and result.authenticated_user
+                ):
                     return AuthenticationResponse(
                         success=True,
-                        user_id=result.principal.user_id.value,
-                        username=result.principal.username,
-                        authenticated_at=result.principal.authenticated_at.isoformat(),
-                        expires_at=result.principal.expires_at.isoformat() if result.principal.expires_at else None
+                        user_id=result.authenticated_user.user_id,
+                        username=result.authenticated_user.username
+                        or result.authenticated_user.user_id,
+                        authenticated_at=result.authenticated_user.created_at.isoformat(),
+                        expires_at=(
+                            result.authenticated_user.expires_at.isoformat()
+                            if result.authenticated_user.expires_at
+                            else None
+                        ),
                     )
                 else:
                     return AuthenticationResponse(
-                        success=False,
-                        error_message=result.error_message
+                        success=False, error_message=result.error_message
                     )
 
             except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+                raise HTTPException(
+                    status_code=500, detail=f"Internal server error: {str(e)}"
+                )
 
         @self.app.get("/events")
         async def get_events():
@@ -104,7 +114,7 @@ class IdentityServiceApp:
                 "test_users": [
                     {"username": "admin", "password": "admin123"},
                     {"username": "user", "password": "password"},
-                    {"username": "demo", "password": "demo123"}
+                    {"username": "demo", "password": "demo123"},
                 ]
             }
 

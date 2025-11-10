@@ -1,8 +1,9 @@
 """
-Configuration integration for JWT authentication.
+Configuration integration for JWT authentication using the new core framework.
 
 This module provides configuration classes and factory functions
-for setting up JWT authentication in different environments.
+for setting up JWT authentication in different environments using
+the hexagonal architecture core framework.
 """
 
 import os
@@ -12,7 +13,14 @@ from typing import Any
 
 import yaml
 
+from mmf_new.core.infrastructure.database import CoreDatabaseManager, DatabaseConfig
+from mmf_new.services.identity.application.use_cases.authenticate_with_jwt import (
+    AuthenticateWithJWTUseCase,
+)
 from mmf_new.services.identity.infrastructure.adapters import JWTConfig
+from mmf_new.services.identity.infrastructure.adapters.user_repository_impl import (
+    AuthenticatedUserRepository,
+)
 
 
 @dataclass
@@ -21,7 +29,7 @@ class JWTAuthConfig:
     Complete JWT authentication configuration.
 
     Combines JWT token configuration with authentication middleware settings
-    for easy application setup.
+    for easy application setup using the new core framework.
     """
 
     # JWT Token Configuration
@@ -147,9 +155,7 @@ def create_testing_config(secret_key: str | None = None) -> JWTAuthConfig:
 
 
 def create_production_config(
-    secret_key: str,
-    issuer: str | None = None,
-    audience: str | None = None
+    secret_key: str, issuer: str | None = None, audience: str | None = None
 ) -> JWTAuthConfig:
     """
     Create JWT configuration for production environment.
@@ -303,10 +309,7 @@ CONFIG_REGISTRY: dict[str, Any] = {
 }
 
 
-def get_config_for_environment(
-    environment: str,
-    **kwargs
-) -> JWTAuthConfig:
+def get_config_for_environment(environment: str, **kwargs) -> JWTAuthConfig:
     """
     Get JWT configuration for specified environment.
 

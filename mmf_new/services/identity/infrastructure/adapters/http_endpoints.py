@@ -33,12 +33,14 @@ from mmf_new.services.identity.infrastructure.adapters.config_integration import
 # Request/Response Models
 class LoginRequest(BaseModel):
     """Request model for user login."""
+
     username: str = Field(..., min_length=1, description="Username")
     password: str = Field(..., min_length=1, description="Password")
 
 
 class TokenResponse(BaseModel):
     """Response model for token operations."""
+
     token: str = Field(..., description="JWT token")
     token_type: str = Field(default="Bearer", description="Token type")
     expires_in: int = Field(..., description="Token expiration in seconds")
@@ -48,6 +50,7 @@ class TokenResponse(BaseModel):
 
 class ValidateTokenResponse(BaseModel):
     """Response model for token validation."""
+
     valid: bool = Field(..., description="Whether token is valid")
     user_id: str | None = Field(None, description="User ID if valid")
     username: str | None = Field(None, description="Username if valid")
@@ -59,6 +62,7 @@ class ValidateTokenResponse(BaseModel):
 
 class UserResponse(BaseModel):
     """Response model for user information."""
+
     user_id: str = Field(..., description="User ID")
     username: str = Field(..., description="Username")
     email: str | None = Field(None, description="Email")
@@ -71,6 +75,7 @@ class UserResponse(BaseModel):
 
 class ErrorResponse(BaseModel):
     """Response model for error cases."""
+
     error: str = Field(..., description="Error type")
     message: str = Field(..., description="Error message")
     code: str | None = Field(None, description="Error code")
@@ -88,33 +93,33 @@ def get_token_provider(config: JWTConfig = Depends(get_jwt_config)) -> JWTTokenP
 
 
 def get_auth_use_case(
-    token_provider: JWTTokenProvider = Depends(get_token_provider)
+    token_provider: JWTTokenProvider = Depends(get_token_provider),
 ) -> AuthenticateWithJWTUseCase:
     """Get JWT authentication use case."""
     return AuthenticateWithJWTUseCase(token_provider)
 
 
 def get_validate_use_case(
-    token_provider: JWTTokenProvider = Depends(get_token_provider)
+    token_provider: JWTTokenProvider = Depends(get_token_provider),
 ) -> ValidateTokenUseCase:
     """Get token validation use case."""
     return ValidateTokenUseCase(token_provider)
 
 
 async def extract_token_from_header(
-    authorization: Annotated[str | None, Header()] = None
+    authorization: Annotated[str | None, Header()] = None,
 ) -> str:
     """Extract JWT token from Authorization header."""
     if not authorization:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authorization header required"
+            detail="Authorization header required",
         )
 
     if not authorization.startswith("Bearer "):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authorization header format"
+            detail="Invalid authorization header format",
         )
 
     return authorization[7:]  # Remove "Bearer " prefix
@@ -127,7 +132,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 @router.post("/login", response_model=TokenResponse)
 async def login(
     request: LoginRequest,
-    token_provider: JWTTokenProvider = Depends(get_token_provider)
+    token_provider: JWTTokenProvider = Depends(get_token_provider),
 ) -> TokenResponse:
     """
     Authenticate user and return JWT token.
@@ -143,7 +148,7 @@ async def login(
         user_id=f"user_{request.username}",
         username=request.username,
         auth_method="password",
-        metadata={"login_time": datetime.utcnow().isoformat()}
+        metadata={"login_time": datetime.utcnow().isoformat()},
     )
 
     try:
@@ -153,19 +158,19 @@ async def login(
             token=token,
             expires_in=3600,  # 1 hour in seconds
             user_id=authenticated_user.user_id,
-            username=authenticated_user.username
+            username=authenticated_user.username,
         )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create token: {str(e)}"
+            detail=f"Failed to create token: {str(e)}",
         )
 
 
 @router.post("/validate", response_model=ValidateTokenResponse)
 async def validate_token(
     token: Annotated[str, Depends(extract_token_from_header)],
-    validate_use_case: ValidateTokenUseCase = Depends(get_validate_use_case)
+    validate_use_case: ValidateTokenUseCase = Depends(get_validate_use_case),
 ) -> ValidateTokenResponse:
     """
     Validate JWT token and return user information.
@@ -185,24 +190,26 @@ async def validate_token(
                 email=result.user.email,
                 roles=list(result.user.roles),
                 permissions=list(result.user.permissions),
-                expires_at=result.user.expires_at.isoformat() if result.user.expires_at else None
+                expires_at=(
+                    result.user.expires_at.isoformat()
+                    if result.user.expires_at
+                    else None
+                ),
             )
         else:
-            return ValidateTokenResponse(
-                valid=False
-            )
+            return ValidateTokenResponse(valid=False)
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Token validation failed: {str(e)}"
+            detail=f"Token validation failed: {str(e)}",
         )
 
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user(
     token: Annotated[str, Depends(extract_token_from_header)],
-    auth_use_case: AuthenticateWithJWTUseCase = Depends(get_auth_use_case)
+    auth_use_case: AuthenticateWithJWTUseCase = Depends(get_auth_use_case),
 ) -> UserResponse:
     """
     Get current authenticated user information.
@@ -224,12 +231,12 @@ async def get_current_user(
                 permissions=list(user.permissions),
                 auth_method=user.auth_method,
                 created_at=user.created_at.isoformat(),
-                expires_at=user.expires_at.isoformat() if user.expires_at else None
+                expires_at=user.expires_at.isoformat() if user.expires_at else None,
             )
         else:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=result.error_message or "Authentication failed"
+                detail=result.error_message or "Authentication failed",
             )
 
     except HTTPException:
@@ -237,14 +244,14 @@ async def get_current_user(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get user information: {str(e)}"
+            detail=f"Failed to get user information: {str(e)}",
         )
 
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh_token(
     token: Annotated[str, Depends(extract_token_from_header)],
-    token_provider: JWTTokenProvider = Depends(get_token_provider)
+    token_provider: JWTTokenProvider = Depends(get_token_provider),
 ) -> TokenResponse:
     """
     Refresh JWT token.
@@ -262,13 +269,13 @@ async def refresh_token(
             token=new_token,
             expires_in=3600,  # 1 hour in seconds
             user_id=authenticated_user.user_id,
-            username=authenticated_user.username
+            username=authenticated_user.username,
         )
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Token refresh failed: {str(e)}"
+            detail=f"Token refresh failed: {str(e)}",
         )
 
 

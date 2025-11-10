@@ -51,8 +51,8 @@ from rich.text import Text
 
 import marty_msf
 from marty_msf.cli.commands import migrate, plugin, service, service_mesh
+from mmf_new.core.application.sql import SQLGenerator
 
-from ..framework.database.sql_generator import SQLGenerator
 from .api_commands import add_api_commands
 
 __version__ = "1.0.0"
@@ -211,12 +211,14 @@ class MartyTemplateManager:
 
         # Scan all service directories for templates
         if self.services_path.exists():
-            service_dirs = ['fastapi', 'grpc', 'hybrid', 'shared']
+            service_dirs = ["fastapi", "grpc", "hybrid", "shared"]
             for service_type in service_dirs:
                 service_dir = self.services_path / service_type
                 if service_dir.exists():
                     for template_dir in service_dir.iterdir():
-                        if template_dir.is_dir() and not template_dir.name.startswith("."):
+                        if template_dir.is_dir() and not template_dir.name.startswith(
+                            "."
+                        ):
                             config = self._load_template_config(template_dir)
                             if config:
                                 templates[config.name] = config
@@ -258,7 +260,9 @@ class MartyTemplateManager:
         try:
             templates = self.get_available_templates()
             if config.template not in templates:
-                console.print(f"[red]Error: Template '{config.template}' not found[/red]")
+                console.print(
+                    f"[red]Error: Template '{config.template}' not found[/red]"
+                )
                 return False
 
             template_config = templates[config.template]
@@ -309,7 +313,9 @@ class MartyTemplateManager:
                 # In non-interactive mode, initialize git if git_repo is specified or default to True
                 should_init_git = config.git_repo or True
             else:
-                should_init_git = config.git_repo or Confirm.ask("Initialize git repository?")
+                should_init_git = config.git_repo or Confirm.ask(
+                    "Initialize git repository?"
+                )
 
             if should_init_git:
                 self._init_git_repo(project_path, config.git_repo)
@@ -335,12 +341,18 @@ class MartyTemplateManager:
         )
 
         # Define template filters
-        jinja_env.filters["slug"] = lambda x: x.lower().replace(" ", "-").replace("_", "-")
-        jinja_env.filters["snake"] = lambda x: x.lower().replace(" ", "_").replace("-", "_")
+        jinja_env.filters["slug"] = (
+            lambda x: x.lower().replace(" ", "-").replace("_", "-")
+        )
+        jinja_env.filters["snake"] = (
+            lambda x: x.lower().replace(" ", "_").replace("-", "_")
+        )
         jinja_env.filters["pascal"] = lambda x: "".join(
             word.capitalize() for word in x.replace("-", " ").replace("_", " ").split()
         )
-        jinja_env.filters["kebab"] = lambda x: x.lower().replace(" ", "-").replace("_", "-")
+        jinja_env.filters["kebab"] = (
+            lambda x: x.lower().replace(" ", "-").replace("_", "-")
+        )
 
         for root, dirs, files in os.walk(template_path):
             # Skip hidden directories and template config
@@ -350,7 +362,9 @@ class MartyTemplateManager:
             relative_path = root_path.relative_to(template_path)
 
             # Process directory names
-            processed_relative = self._process_path_template(str(relative_path), context)
+            processed_relative = self._process_path_template(
+                str(relative_path), context
+            )
             output_dir = output_path / processed_relative
             output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -397,7 +411,9 @@ class MartyTemplateManager:
                     # Fallback to direct copy
                     shutil.copy2(file_path, output_file)
 
-    def _process_path_template(self, path: str, context: builtins.dict[str, Any]) -> str:
+    def _process_path_template(
+        self, path: str, context: builtins.dict[str, Any]
+    ) -> str:
         """Process path templates."""
         try:
             template = jinja2.Template(path)
@@ -443,7 +459,9 @@ class MartyTemplateManager:
     def _setup_python_environment(self, project_path: Path, python_version: str):
         """Setup Python virtual environment and install dependencies."""
         try:
-            console.print(f"[blue]Setting up Python {python_version} environment...[/blue]")
+            console.print(
+                f"[blue]Setting up Python {python_version} environment...[/blue]"
+            )
 
             # Create virtual environment
             venv_path = project_path / ".venv"
@@ -590,7 +608,9 @@ class MartyProjectManager:
             # Check for different build systems
             if (self.current_project / "pyproject.toml").exists():
                 # Modern Python packaging
-                subprocess.run(["python", "-m", "build"], check=True, cwd=self.current_project)
+                subprocess.run(
+                    ["python", "-m", "build"], check=True, cwd=self.current_project
+                )
             elif (self.current_project / "setup.py").exists():
                 # Legacy setup.py
                 subprocess.run(
@@ -612,7 +632,9 @@ class MartyProjectManager:
                     cwd=self.current_project,
                 )
             else:
-                console.print("[yellow]Warning: No recognized build system found[/yellow]")
+                console.print(
+                    "[yellow]Warning: No recognized build system found[/yellow]"
+                )
                 return False
 
             console.print("[green]✓ Project built successfully[/green]")
@@ -638,7 +660,9 @@ class MartyProjectManager:
             if (self.current_project / "pytest.ini").exists() or (
                 self.current_project / "pyproject.toml"
             ).exists():
-                subprocess.run(["python", "-m", "pytest"], check=True, cwd=self.current_project)
+                subprocess.run(
+                    ["python", "-m", "pytest"], check=True, cwd=self.current_project
+                )
             elif (self.current_project / "tests").exists():
                 subprocess.run(
                     ["python", "-m", "unittest", "discover", "tests"],
@@ -682,10 +706,14 @@ class MartyProjectManager:
                 console.print("[green]✓ Deployed to Kubernetes[/green]")
             elif docker_compose.exists():
                 # Docker Compose deployment
-                subprocess.run(["docker-compose", "up", "-d"], check=True, cwd=self.current_project)
+                subprocess.run(
+                    ["docker-compose", "up", "-d"], check=True, cwd=self.current_project
+                )
                 console.print("[green]✓ Deployed with Docker Compose[/green]")
             else:
-                console.print("[yellow]Warning: No deployment configuration found[/yellow]")
+                console.print(
+                    "[yellow]Warning: No deployment configuration found[/yellow]"
+                )
                 return False
 
             return True
@@ -816,8 +844,14 @@ class MartyServiceRunner:
             ("main.py", "main:app"),
             ("app.py", "app:app"),
             ("api.py", "api:app"),
-            (f"{self.current_directory.name}/main.py", f"{self.current_directory.name}.main:app"),
-            (f"{self.current_directory.name}/app.py", f"{self.current_directory.name}.app:app"),
+            (
+                f"{self.current_directory.name}/main.py",
+                f"{self.current_directory.name}.main:app",
+            ),
+            (
+                f"{self.current_directory.name}/app.py",
+                f"{self.current_directory.name}.app:app",
+            ),
         ]
 
         for file_path, module in patterns:
@@ -1016,19 +1050,27 @@ def new(
         console.print(table)
 
         if template not in available_templates:
-            template = Prompt.ask("\nSelect template", choices=list(available_templates.keys()))
+            template = Prompt.ask(
+                "\nSelect template", choices=list(available_templates.keys())
+            )
 
         if not name:
             name = Prompt.ask("Project name")
 
         if not author:
-            author = Prompt.ask("Author name", default=template_manager.config.get("author", ""))
+            author = Prompt.ask(
+                "Author name", default=template_manager.config.get("author", "")
+            )
 
         if not email:
-            email = Prompt.ask("Author email", default=template_manager.config.get("email", ""))
+            email = Prompt.ask(
+                "Author email", default=template_manager.config.get("email", "")
+            )
 
         if not description:
-            description = Prompt.ask("Project description", default=f"A {template} microservice")
+            description = Prompt.ask(
+                "Project description", default=f"A {template} microservice"
+            )
 
     # Use config defaults
     config = template_manager.config
@@ -1106,7 +1148,9 @@ def templates():
         table.add_column("Python", style="green")
 
         for tmpl_name, tmpl_config in templates:
-            table.add_row(tmpl_name, tmpl_config.description, tmpl_config.python_version)
+            table.add_row(
+                tmpl_name, tmpl_config.description, tmpl_config.python_version
+            )
 
         console.print(table)
 
@@ -1186,9 +1230,13 @@ def run():
 
         # Check for different run configurations
         if (project_manager.current_project / "main.py").exists():
-            subprocess.run(["python", "main.py"], cwd=project_manager.current_project, check=False)
+            subprocess.run(
+                ["python", "main.py"], cwd=project_manager.current_project, check=False
+            )
         elif (project_manager.current_project / "app.py").exists():
-            subprocess.run(["python", "app.py"], cwd=project_manager.current_project, check=False)
+            subprocess.run(
+                ["python", "app.py"], cwd=project_manager.current_project, check=False
+            )
         elif (project_manager.current_project / "uvicorn").exists():
             subprocess.run(
                 ["uvicorn", "main:app", "--reload"],
@@ -1196,7 +1244,9 @@ def run():
                 check=False,
             )
         else:
-            console.print("[yellow]Warning: No recognized run configuration found[/yellow]")
+            console.print(
+                "[yellow]Warning: No recognized run configuration found[/yellow]"
+            )
             console.print("Try running: python main.py")
 
     except KeyboardInterrupt:
@@ -1216,9 +1266,13 @@ def run():
 @click.option("--reload", is_flag=True, help="Enable auto-reload for development")
 @click.option("--debug", is_flag=True, help="Enable debug mode")
 @click.option("--log-level", default="info", help="Log level")
-@click.option("--access-log/--no-access-log", default=True, help="Enable access logging")
+@click.option(
+    "--access-log/--no-access-log", default=True, help="Enable access logging"
+)
 @click.option("--metrics/--no-metrics", default=True, help="Enable metrics")
-@click.option("--dry-run", is_flag=True, help="Show what would be run without executing")
+@click.option(
+    "--dry-run", is_flag=True, help="Show what would be run without executing"
+)
 @click.argument("service_name", required=False)
 def runservice(
     service_name,
@@ -1285,9 +1339,13 @@ def runservice(
         # Start the service
         console.print(f"[green]Starting {service_config.name} service...[/green]")
         console.print(f"Environment: {service_config.environment}")
-        console.print(f"HTTP Server: http://{service_config.host}:{service_config.port}")
+        console.print(
+            f"HTTP Server: http://{service_config.host}:{service_config.port}"
+        )
         if service_config.grpc_enabled:
-            console.print(f"gRPC Server: {service_config.host}:{service_config.grpc_port}")
+            console.print(
+                f"gRPC Server: {service_config.host}:{service_config.grpc_port}"
+            )
 
         service_runner.run_service(service_config)
 
@@ -1359,7 +1417,9 @@ def config_set(author, email, license, python_version):
     console.print(f"Author: {config_data.get('author', 'Not set')}")
     console.print(f"Email: {config_data.get('email', 'Not set')}")
     console.print(f"Default License: {config_data.get('default_license', 'MIT')}")
-    console.print(f"Default Python Version: {config_data.get('default_python_version', '3.11')}")
+    console.print(
+        f"Default Python Version: {config_data.get('default_python_version', '3.11')}"
+    )
 
 
 @config.command("validate")
@@ -1422,7 +1482,9 @@ def config_validate(service_path):
 
 @config.command("show")
 @click.option("--service-path", required=True, help="Path to service")
-@click.option("--environment", default="development", help="Environment to show config for")
+@click.option(
+    "--environment", default="development", help="Environment to show config for"
+)
 def config_show(service_path, environment):
     """Show service configuration for a specific environment."""
     service_path = Path(service_path)
@@ -1468,8 +1530,6 @@ def create():
     pass
 
 
-
-
 # Database command group
 @cli.group()
 def security():
@@ -1487,7 +1547,9 @@ def scan(service_path: str):
         console.print(f"❌ Service path does not exist: {service_path}", style="red")
         raise click.Abort()
 
-    console.print(f"🔍 Scanning service at {service_path} for security vulnerabilities...")
+    console.print(
+        f"🔍 Scanning service at {service_path} for security vulnerabilities..."
+    )
 
     # Basic security checks
     issues = []
@@ -1507,7 +1569,9 @@ def scan(service_path: str):
     for pattern in sensitive_patterns:
         for file in service_path_obj.rglob(pattern):
             if file.is_file():
-                issues.append(f"MEDIUM: Sensitive file found: {file.relative_to(service_path_obj)}")
+                issues.append(
+                    f"MEDIUM: Sensitive file found: {file.relative_to(service_path_obj)}"
+                )
 
     # Check for hardcoded secrets in Python files
     for py_file in service_path_obj.rglob("*.py"):
@@ -1562,12 +1626,6 @@ def db():
     pass
 
 
-
-
-
-
-
-
 @db.command()
 @click.option("--service-path", default=".", help="Path to service directory")
 @click.option("--db-host", default="localhost", help="Database host")
@@ -1578,7 +1636,6 @@ def db():
 def seed(service_path, db_host, db_port, db_name, db_user, db_password):
     """Seed database with initial data."""
 
-
     async def run_seeding():
         console.print("🌱 Seeding database...")
 
@@ -1587,16 +1644,20 @@ def seed(service_path, db_host, db_port, db_name, db_user, db_password):
 
         # Create default seed data if no seeds directory exists
         if not seeds_dir.exists():
-            console.print("[yellow]⚠️  No seeds directory found, creating sample data[/yellow]")
+            console.print(
+                "[yellow]⚠️  No seeds directory found, creating sample data[/yellow]"
+            )
             seeds_dir.mkdir(exist_ok=True)
-            (seeds_dir / "sample_data.sql").write_text("""INSERT INTO users (name, email) VALUES
+            (seeds_dir / "sample_data.sql").write_text(
+                """INSERT INTO users (name, email) VALUES
     ('John Doe', 'john@example.com'),
     ('Jane Smith', 'jane@example.com');
 
 INSERT INTO items (name, description) VALUES
     ('Sample Item 1', 'A sample item for testing'),
     ('Sample Item 2', 'Another sample item');
-""")
+"""
+            )
 
         # Get all seed files
         seed_files = list(seeds_dir.glob("*.sql"))
@@ -1607,7 +1668,11 @@ INSERT INTO items (name, description) VALUES
         try:
             # Connect to database
             conn = await asyncpg.connect(
-                host=db_host, port=db_port, database=db_name, user=db_user, password=db_password
+                host=db_host,
+                port=db_port,
+                database=db_name,
+                user=db_user,
+                password=db_password,
             )
 
             # Run seed files in order
@@ -1789,8 +1854,12 @@ def _generate_env_config_yaml(
     with_tls: bool = False,
 ) -> str:
     """Generate environment-specific config.yaml content."""
-    db_suffix = {"development": "_dev", "testing": "_test", "production": ""}.get(environment, "")
-    redis_db = {"development": "0", "testing": "1", "production": "0"}.get(environment, "0")
+    db_suffix = {"development": "_dev", "testing": "_test", "production": ""}.get(
+        environment, ""
+    )
+    redis_db = {"development": "0", "testing": "1", "production": "0"}.get(
+        environment, "0"
+    )
     debug = str(environment in ["development", "testing"]).lower()
     pool_sizes = {"development": "5", "testing": "2", "production": "20"}
     max_connections = {"development": "10", "testing": "5", "production": "20"}
@@ -1831,25 +1900,30 @@ def _create_security_files(output_path: Path) -> None:
     certs_dir.mkdir(exist_ok=True)
 
     # Create dummy certificate files for testing
-    (certs_dir / "server.crt").write_text("""-----BEGIN CERTIFICATE-----
+    (certs_dir / "server.crt").write_text(
+        """-----BEGIN CERTIFICATE-----
 MIIDXTCCAkWgAwIBAgIJAKoK/hgyQjKsMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
 BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBX
 aWRnaXRzIFB0eSBMdGQwHhcNMjQwMTAxMDAwMDAwWhcNMjUwMTAxMDAwMDAwWjBF
 MQswCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50
 ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB
 CgKCAQEAuGSQj+5cMB+5xfGfGKANdO7d5qXhL8+FGN6FyGJRAFpUPDl1LMMS2CfT
------END CERTIFICATE-----""")
+-----END CERTIFICATE-----"""
+    )
 
-    (certs_dir / "server.key").write_text("""-----BEGIN PRIVATE KEY-----
+    (certs_dir / "server.key").write_text(
+        """-----BEGIN PRIVATE KEY-----
 MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC4ZJCP7lwwH7nF
 8Z8YoA107t3mpeEvz4UY3oXIYlEAWlQ8OXUswxLYJ9O/s3E3D5yA2H4uGKGN+Rl1
------END PRIVATE KEY-----""")
+-----END PRIVATE KEY-----"""
+    )
 
     # Create auth directory and files
     auth_dir = output_path / "auth"
     auth_dir.mkdir(exist_ok=True)
 
-    (auth_dir / "jwt_config.py").write_text('''"""JWT authentication configuration."""
+    (auth_dir / "jwt_config.py").write_text(
+        '''"""JWT authentication configuration."""
 
 import os
 from datetime import timedelta
@@ -1865,13 +1939,15 @@ JWT_CONFIG = {
     "access_token_expire_minutes": JWT_ACCESS_TOKEN_EXPIRE_MINUTES,
     "refresh_token_expire_days": JWT_REFRESH_TOKEN_EXPIRE_DAYS,
 }
-''')
+'''
+    )
 
     # Create middleware directory and files
     middleware_dir = output_path / "middleware"
     middleware_dir.mkdir(exist_ok=True)
 
-    (middleware_dir / "security.py").write_text('''"""Security middleware for the service."""
+    (middleware_dir / "security.py").write_text(
+        '''"""Security middleware for the service."""
 
 from fastapi import Request, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -1918,7 +1994,8 @@ class SecurityMiddleware:
             return payload
         except (ValueError, jwt.PyJWTError):
             return None
-''')
+'''
+    )
 
 
 def _generate_config_yaml(
@@ -1937,13 +2014,21 @@ def _generate_config_yaml(
         config["monitoring"] = {"enabled": True, "metrics_port": 9090}
 
     if with_caching:
-        config["cache"] = {"redis_url": "${REDIS_URL:redis://localhost:6379}", "ttl": 3600}
+        config["cache"] = {
+            "redis_url": "${REDIS_URL:redis://localhost:6379}",
+            "ttl": 3600,
+        }
 
     return yaml.dump(config, default_flow_style=False)
 
 
 def _generate_requirements(
-    service_type, with_database, with_monitoring, with_caching, with_auth=False, with_tls=False
+    service_type,
+    with_database,
+    with_monitoring,
+    with_caching,
+    with_auth=False,
+    with_tls=False,
 ):
     """Generate requirements.txt content."""
     requirements = []
@@ -2044,12 +2129,12 @@ def _create_database_files(output_path):
             "id SERIAL PRIMARY KEY",
             "name VARCHAR(255) NOT NULL",
             "email VARCHAR(255) UNIQUE NOT NULL",
-            "created_at TIMESTAMP DEFAULT NOW()"
+            "created_at TIMESTAMP DEFAULT NOW()",
         ],
         indexes=[
             {"name": "idx_users_email", "columns": ["email"]},
-            {"name": "idx_users_created_at", "columns": ["created_at"]}
-        ]
+            {"name": "idx_users_created_at", "columns": ["created_at"]},
+        ],
     )
 
     items_table_sql = generator.create_table_with_indexes(
@@ -2059,12 +2144,12 @@ def _create_database_files(output_path):
             "name VARCHAR(255) NOT NULL",
             "description TEXT",
             "metadata JSONB",
-            "created_at TIMESTAMP DEFAULT NOW()"
+            "created_at TIMESTAMP DEFAULT NOW()",
         ],
         indexes=[
             {"name": "idx_items_name", "columns": ["name"]},
-            {"name": "idx_items_metadata", "columns": ["metadata"], "type": "gin"}
-        ]
+            {"name": "idx_items_metadata", "columns": ["metadata"], "type": "gin"},
+        ],
     )
 
     # Create configuration table with JSONB
@@ -2076,13 +2161,13 @@ def _create_database_files(output_path):
             "config_value JSONB NOT NULL",
             "config_type VARCHAR(50) NOT NULL DEFAULT 'setting'",
             "created_at TIMESTAMP DEFAULT NOW()",
-            "updated_at TIMESTAMP DEFAULT NOW()"
+            "updated_at TIMESTAMP DEFAULT NOW()",
         ],
         indexes=[
             {"name": "idx_config_key", "columns": ["config_key"]},
             {"name": "idx_config_type", "columns": ["config_type"]},
-            {"name": "idx_config_value", "columns": ["config_value"], "type": "gin"}
-        ]
+            {"name": "idx_config_value", "columns": ["config_value"], "type": "gin"},
+        ],
     )
 
     # Generate sample data with properly formatted JSONB values
@@ -2091,10 +2176,20 @@ def _create_database_files(output_path):
         columns=["config_key", "config_value", "config_type"],
         values=[
             ["'app.name'", generator.format_jsonb_value("MyApp"), "'setting'"],
-            ["'feature_flags.new_ui'", generator.format_jsonb_value(True), "'feature_flag'"],
+            [
+                "'feature_flags.new_ui'",
+                generator.format_jsonb_value(True),
+                "'feature_flag'",
+            ],
             ["'database.pool_size'", generator.format_jsonb_value(10), "'setting'"],
-            ["'notifications.config'", generator.format_jsonb_value({"enabled": True, "channels": ["email", "sms"]}), "'setting'"]
-        ]
+            [
+                "'notifications.config'",
+                generator.format_jsonb_value(
+                    {"enabled": True, "channels": ["email", "sms"]}
+                ),
+                "'setting'",
+            ],
+        ],
     )
 
     complete_sql = f"""-- Initial migration with valid PostgreSQL syntax
@@ -2118,7 +2213,8 @@ def _create_monitoring_files(output_path):
     monitoring_dir = output_path / "monitoring"
     monitoring_dir.mkdir(exist_ok=True)
 
-    (monitoring_dir / "prometheus.yml").write_text("""
+    (monitoring_dir / "prometheus.yml").write_text(
+        """
 global:
   scrape_interval: 15s
 
@@ -2126,7 +2222,8 @@ scrape_configs:
   - job_name: 'service'
     static_configs:
       - targets: ['localhost:8080']
-""")
+"""
+    )
 
 
 # Add API documentation and contract testing commands
