@@ -126,7 +126,16 @@ class SQLAlchemyRepository(Repository[ModelType], Generic[ModelType]):
         """Update an entity."""
         async with self.get_transaction() as session:
             try:
-                entity = await self.find_by_id(entity_id)
+                # Fetch entity within the transaction's session to avoid detached instances
+                query = select(self.model_class).where(self.model_class.id == entity_id)
+
+                # Apply soft delete filter if model supports it
+                if hasattr(self.model_class, "deleted_at"):
+                    query = query.where(self.model_class.deleted_at.is_(None))
+
+                result = await session.execute(query)
+                entity = result.scalar_one_or_none()
+
                 if not entity:
                     raise EntityNotFoundError(
                         f"{self.model_class.__name__} with id {entity_id} not found"
@@ -137,7 +146,7 @@ class SQLAlchemyRepository(Repository[ModelType], Generic[ModelType]):
                     if hasattr(entity, key):
                         setattr(entity, key, value)
 
-                session.add(entity)
+                # No need to call session.add() since entity is already attached to session
                 await session.flush()
                 await session.refresh(entity)
                 return entity
@@ -157,14 +166,23 @@ class SQLAlchemyRepository(Repository[ModelType], Generic[ModelType]):
         """Delete an entity."""
         async with self.get_transaction() as session:
             try:
-                entity = await self.find_by_id(entity_id)
+                # Fetch entity within the transaction's session to avoid detached instances
+                query = select(self.model_class).where(self.model_class.id == entity_id)
+
+                # Apply soft delete filter if model supports it
+                if hasattr(self.model_class, "deleted_at"):
+                    query = query.where(self.model_class.deleted_at.is_(None))
+
+                result = await session.execute(query)
+                entity = result.scalar_one_or_none()
+
                 if not entity:
                     return False
 
                 # Soft delete if model supports it
                 if hasattr(entity, "deleted_at"):
                     entity.deleted_at = datetime.now(timezone.utc)
-                    session.add(entity)
+                    # No need to call session.add() since entity is already attached to session
                 else:
                     await session.delete(entity)
 
