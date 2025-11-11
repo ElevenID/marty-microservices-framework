@@ -122,7 +122,7 @@ app.add_middleware(ResilienceMiddleware, config=resilience_config)
 @app.get("/health")
 async def health_check():
     """Health check endpoint (excluded from resilience patterns)"""
-    pool_manager = await get_pool_manager()
+    pool_manager = get_pool_manager()
     health_status = await pool_manager.health_check()
 
     return {
@@ -135,7 +135,7 @@ async def health_check():
 @app.get("/metrics")
 async def get_metrics():
     """Metrics endpoint showing resilience framework status"""
-    pool_manager = await get_pool_manager()
+    pool_manager = get_pool_manager()
     metrics = pool_manager.get_metrics()
 
     return {
@@ -148,8 +148,8 @@ async def get_metrics():
 async def get_external_data():
     """Example endpoint that uses HTTP connection pool for external API call"""
     try:
-        pool_manager = await get_pool_manager()
-        http_pool = await pool_manager.get_http_pool("external_api")
+        pool_manager = get_pool_manager()
+        http_pool = await pool_manager.get_pool("external_api")
 
         # Make request through connection pool (with automatic retries)
         response = await http_pool.get("https://jsonplaceholder.typicode.com/posts/1")
@@ -169,7 +169,7 @@ async def get_external_data():
 async def get_cached_value(key: str):
     """Example endpoint that uses Redis connection pool for caching"""
     try:
-        pool_manager = await get_pool_manager()
+        pool_manager = get_pool_manager()
         redis_pool = await pool_manager.get_redis_pool("cache")
 
         # Check cache first
@@ -203,7 +203,7 @@ async def get_cached_value(key: str):
 async def set_cached_value(key: str, value: Dict[str, Any]):
     """Set a value in cache using Redis connection pool"""
     try:
-        pool_manager = await get_pool_manager()
+        pool_manager = get_pool_manager()
         redis_pool = await pool_manager.get_redis_pool("cache")
 
         # Store in cache
@@ -258,9 +258,9 @@ async def error_prone_endpoint():
 
 @app.get("/api/pool-status")
 async def get_pool_status():
-    """Get detailed status of all connection pools"""
+    """Get status information for all connection pools"""
     try:
-        pool_manager = await get_pool_manager()
+        pool_manager = get_pool_manager()
         pools_info = pool_manager.list_pools()
 
         return {

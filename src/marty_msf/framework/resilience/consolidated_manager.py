@@ -106,10 +106,10 @@ class ConsolidatedResilienceManager(IResilienceManager):
         self._bulkheads: dict[str, SemaphoreBulkhead] = {}
         self._metrics = ResilienceMetrics()
 
-    async def execute_resilient(
+    async def execute_with_resilience(
         self,
         func: Callable[[], Awaitable[T]],
-        strategy: ResilienceStrategy = ResilienceStrategy.CIRCUIT_BREAKER,
+        strategy: ResilienceStrategy = ResilienceStrategy.INTERNAL_SERVICE,
         config_override: ConsolidatedResilienceConfig | None = None,
         operation_name: str | None = None,
     ) -> T:

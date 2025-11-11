@@ -353,7 +353,7 @@ async def get_pool(name: str) -> HTTPConnectionPool | RedisConnectionPool:
     return await manager.get_pool(name)
 
 
-async def close_all_pools():
+async def close_all_pools() -> None:
     """Close all pools and shut down the manager"""
     manager = get_service_optional(ConnectionPoolManager)
     if manager:

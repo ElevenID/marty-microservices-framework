@@ -261,7 +261,7 @@ class ResilienceService:
         try:
             # Initialize connection pool manager if enabled
             if self.config.enable_connection_pools:
-                self.pool_manager = await get_pool_manager()
+                self.pool_manager = get_pool_manager()
 
             self._initialized = True
             logger.info("Resilience service initialized")
