@@ -6,5 +6,4 @@ from mmf.services.identity.domain.models.security_principal import SecurityPrinc
 
 
 class PrincipalRepository(Protocol):
-    async def get_by_id(self, principal_id: str) -> SecurityPrincipal | None:
-        ...
+    async def get_by_id(self, principal_id: str) -> SecurityPrincipal | None: ...

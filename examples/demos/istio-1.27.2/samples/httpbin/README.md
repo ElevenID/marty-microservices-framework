@@ -26,7 +26,7 @@ To use it:
 
 Because the httpbin service is not exposed outside the cluster
 you cannot _curl_ it directly, however you can verify that it is working correctly using
-a _curl_ command against `httpbin:8000` *from inside the cluster* using the public _dockerqa/curl_
+a _curl_ command against `httpbin:8000` _from inside the cluster_ using the public _dockerqa/curl_
 image from Docker hub:
 
 ```bash

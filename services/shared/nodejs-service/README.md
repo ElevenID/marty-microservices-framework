@@ -141,6 +141,7 @@ src/
 ```
 
 {% if include_database %}
+
 ## Database Architecture
 
 This service follows Marty's enterprise database patterns for service isolation and clean architecture:
@@ -148,6 +149,7 @@ This service follows Marty's enterprise database patterns for service isolation 
 ### Service-Specific Database Isolation
 
 Each service uses its own dedicated database following the naming convention:
+
 - Database name: `{service_name}_db`
 - Automatic configuration based on `SERVICE_NAME` environment variable
 - No direct database connections - all access through DatabaseManager
@@ -157,17 +159,20 @@ Each service uses its own dedicated database following the naming convention:
 The service uses Marty's database framework patterns:
 
 #### DatabaseManager (Singleton)
+
 - Manages connection pooling and health checks
 - Provides service-specific database isolation
 - Handles connection lifecycle and error recovery
 
 #### BaseRepository Pattern
+
 - Provides standard CRUD operations
 - Transaction management and rollback support
 - Type-safe database operations
 - Consistent error handling
 
 #### Configuration Management
+
 - Environment-based configuration
 - Service-specific database naming
 - Connection pool settings
@@ -201,6 +206,7 @@ DATABASE_POOL_MIN=2
 DATABASE_POOL_MAX=10
 DATABASE_TIMEOUT=30000
 ```
+
 {% endif %}
 
 ## Monitoring

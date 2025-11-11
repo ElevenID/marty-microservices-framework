@@ -122,13 +122,17 @@ class ObservabilityConfig:
             # Tracing
             tracing_enabled=os.getenv("TRACING_ENABLED", "true").lower() == "true",
             jaeger_endpoint=os.getenv("JAEGER_ENDPOINT", "http://jaeger:14268/api/traces"),
-            otlp_trace_endpoint=os.getenv("OTLP_TRACE_ENDPOINT", "http://opentelemetry-collector:4317"),
+            otlp_trace_endpoint=os.getenv(
+                "OTLP_TRACE_ENDPOINT", "http://opentelemetry-collector:4317"
+            ),
             trace_sample_rate=float(os.getenv("TRACE_SAMPLE_RATE", "1.0")),
             # Metrics
             metrics_enabled=os.getenv("METRICS_ENABLED", "true").lower() == "true",
             prometheus_enabled=os.getenv("PROMETHEUS_ENABLED", "true").lower() == "true",
             prometheus_port=int(os.getenv("PROMETHEUS_PORT", "8000")),
-            otlp_metrics_endpoint=os.getenv("OTLP_METRICS_ENDPOINT", "http://opentelemetry-collector:4317"),
+            otlp_metrics_endpoint=os.getenv(
+                "OTLP_METRICS_ENDPOINT", "http://opentelemetry-collector:4317"
+            ),
             # Logging
             log_level=os.getenv("LOG_LEVEL", "INFO"),
             debug_mode=os.getenv("DEBUG_MODE", "false").lower() == "true",
@@ -173,7 +177,10 @@ class UnifiedObservability:
             logger.info(
                 "Unified observability initialized for service %s",
                 self.config.service_name,
-                extra={"service_version": self.config.service_version, "environment": self.config.environment},
+                extra={
+                    "service_version": self.config.service_version,
+                    "environment": self.config.environment,
+                },
             )
 
         except Exception as e:
@@ -262,7 +269,6 @@ class UnifiedObservability:
 
         # Setup console exporter for debugging
         if self.config.enable_console_exporter:
-
             console_exporter = ConsoleSpanExporter()
             tracer_provider.add_span_processor(BatchSpanProcessor(console_exporter))
 
@@ -532,7 +538,9 @@ class ServiceNameFilter(logging.Filter):
 
 
 # Factory function for easy initialization
-def create_observability(service_name: str, config: ObservabilityConfig | None = None) -> UnifiedObservability:
+def create_observability(
+    service_name: str, config: ObservabilityConfig | None = None
+) -> UnifiedObservability:
     """Create and initialize unified observability for a service."""
     if config is None:
         config = ObservabilityConfig.from_environment(service_name)

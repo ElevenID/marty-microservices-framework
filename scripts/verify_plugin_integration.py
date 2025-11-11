@@ -18,6 +18,7 @@ from marty_msf.framework.plugins.services import ServiceDefinition
 framework_root = Path(__file__).parent.parent
 sys.path.insert(0, str(framework_root / "src"))
 
+
 def test_plugin_discovery():
     """Test that the plugin can be discovered via entry points."""
     print("🔍 Testing plugin discovery...")
@@ -42,6 +43,7 @@ def test_plugin_discovery():
 
     except Exception as e:
         print(f"❌ Plugin discovery test failed: {e}")
+
 
 def test_plugin_import():
     """Test direct plugin import."""
@@ -80,6 +82,7 @@ def test_plugin_import():
     print(f"  📊 Plugin scan complete: {success_count} plugin directories found")
     return True
 
+
 def test_configuration():
     """Test plugin configuration loading."""
     print("\n⚙️  Testing configuration...")
@@ -113,6 +116,7 @@ def test_configuration():
         except Exception as e:
             print(f"  ❌ Configuration parsing failed: {e}")
 
+
 def test_framework_integration():
     """Test framework integration capabilities."""
     print("\n🔗 Testing framework integration...")
@@ -140,6 +144,7 @@ def test_framework_integration():
         print(f"  ❌ Framework integration test failed: {e}")
         return False
 
+
 def main():
     """Run all verification tests."""
     print("🧪 Plugin Integration Verification")
@@ -165,6 +170,7 @@ def main():
     else:
         print("❌ Some tests failed. Please check the setup.")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -15,7 +15,9 @@ from jsonschema import ValidationError, validate
 class TestIdentityServiceContract:
     """Test suite for identity service API contracts."""
 
-    def test_health_endpoint_contract(self, api_client, api_base_url, identity_service_contract, schema_validator):
+    def test_health_endpoint_contract(
+        self, api_client, api_base_url, identity_service_contract, schema_validator
+    ):
         """Test health endpoint contract compliance."""
         # Get expected schema
         health_schema = identity_service_contract["endpoints"]["/health"]["response_schema"]
@@ -37,16 +39,15 @@ class TestIdentityServiceContract:
         assert response_data["status"] == "healthy"
         assert response_data["service"] == "identity"
 
-    def test_authenticate_endpoint_request_contract(self, api_client, identity_service_contract, schema_validator):
+    def test_authenticate_endpoint_request_contract(
+        self, api_client, identity_service_contract, schema_validator
+    ):
         """Test authenticate endpoint request contract."""
         auth_contract = identity_service_contract["endpoints"]["/authenticate"]
         request_schema = auth_contract["request_schema"]
 
         # Test valid request
-        valid_request = {
-            "username": "admin",
-            "password": "admin123"
-        }
+        valid_request = {"username": "admin", "password": "admin123"}
 
         assert schema_validator(valid_request, request_schema)
 
@@ -62,15 +63,16 @@ class TestIdentityServiceContract:
         for invalid_request in invalid_requests:
             assert not schema_validator(invalid_request, request_schema)
 
-    def test_authenticate_endpoint_response_contract(self, api_client, api_base_url, identity_service_contract, schema_validator):
+    def test_authenticate_endpoint_response_contract(
+        self, api_client, api_base_url, identity_service_contract, schema_validator
+    ):
         """Test authenticate endpoint response contract."""
         auth_contract = identity_service_contract["endpoints"]["/authenticate"]
         response_schema = auth_contract["response_schema"]
 
         # Test successful authentication response
         response = api_client.post(
-            f"{api_base_url}/authenticate",
-            json={"username": "admin", "password": "admin123"}
+            f"{api_base_url}/authenticate", json={"username": "admin", "password": "admin123"}
         )
 
         assert response.status_code == 200
@@ -87,15 +89,16 @@ class TestIdentityServiceContract:
         assert isinstance(response_data["expires_at"], str)
         assert response_data["error_message"] is None
 
-    def test_authenticate_failure_response_contract(self, api_client, api_base_url, identity_service_contract, schema_validator):
+    def test_authenticate_failure_response_contract(
+        self, api_client, api_base_url, identity_service_contract, schema_validator
+    ):
         """Test authenticate endpoint failure response contract."""
         auth_contract = identity_service_contract["endpoints"]["/authenticate"]
         response_schema = auth_contract["response_schema"]
 
         # Test failed authentication response
         response = api_client.post(
-            f"{api_base_url}/authenticate",
-            json={"username": "admin", "password": "wrong_password"}
+            f"{api_base_url}/authenticate", json={"username": "admin", "password": "wrong_password"}
         )
 
         assert response.status_code == 200
@@ -124,7 +127,7 @@ class TestDataSchemaValidation:
             "type": "string",
             "pattern": "^user_[0-9]+$",
             "minLength": 6,
-            "maxLength": 20
+            "maxLength": 20,
         }
 
         # Valid user IDs
@@ -134,11 +137,11 @@ class TestDataSchemaValidation:
 
         # Invalid user IDs
         invalid_user_ids = [
-            "user",      # Too short
-            "123",       # Wrong format
-            "user_",     # Missing number
+            "user",  # Too short
+            "123",  # Wrong format
+            "user_",  # Missing number
             "user_abc",  # Non-numeric
-            "x" * 25,    # Too long
+            "x" * 25,  # Too long
         ]
         for user_id in invalid_user_ids:
             assert not schema_validator(user_id, user_id_schema)
@@ -153,15 +156,11 @@ class TestDataSchemaValidation:
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 50,
-                    "pattern": "^[a-zA-Z0-9_]+$"
+                    "pattern": "^[a-zA-Z0-9_]+$",
                 },
-                "password": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 100
-                }
+                "password": {"type": "string", "minLength": 1, "maxLength": 100},
             },
-            "additionalProperties": False
+            "additionalProperties": False,
         }
 
         # Valid credentials
@@ -206,14 +205,17 @@ class TestBackwardCompatibility:
         """Test that all expected response fields are present."""
         # Test authentication response has all expected fields
         response = api_client.post(
-            f"{api_base_url}/authenticate",
-            json={"username": "admin", "password": "admin123"}
+            f"{api_base_url}/authenticate", json={"username": "admin", "password": "admin123"}
         )
 
         response_data = response.json()
         expected_fields = {
-            "success", "user_id", "username",
-            "authenticated_at", "expires_at", "error_message"
+            "success",
+            "user_id",
+            "username",
+            "authenticated_at",
+            "expires_at",
+            "error_message",
         }
 
         assert expected_fields <= set(response_data.keys())
@@ -221,8 +223,7 @@ class TestBackwardCompatibility:
     def test_field_type_consistency(self, api_client, api_base_url):
         """Test that field types remain consistent."""
         response = api_client.post(
-            f"{api_base_url}/authenticate",
-            json={"username": "admin", "password": "admin123"}
+            f"{api_base_url}/authenticate", json={"username": "admin", "password": "admin123"}
         )
 
         response_data = response.json()

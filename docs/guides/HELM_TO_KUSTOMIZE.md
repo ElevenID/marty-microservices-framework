@@ -16,6 +16,7 @@ The migration process converts existing Helm charts to Kustomize manifests while
 Before starting the migration, ensure you have:
 
 ### Required Tools
+
 ```bash
 # Install kubectl
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
@@ -28,6 +29,7 @@ curl https://get.helm.sh/helm-v3.12.0-linux-amd64.tar.gz | tar xz
 ```
 
 ### MMF Installation
+
 ```bash
 # Install MMF CLI
 pip install marty-microservices-framework
@@ -49,6 +51,7 @@ marty migrate check-compatibility \
 ```
 
 This command analyzes your Helm chart and provides a compatibility report showing:
+
 - Components that can be automatically migrated
 - Components requiring manual intervention
 - Recommended migration approach
@@ -80,6 +83,7 @@ marty migrate helm-to-kustomize \
 ```
 
 This command:
+
 - Renders your Helm templates with provided values
 - Converts them to Kustomize base manifests
 - Generates environment-specific overlays
@@ -117,6 +121,7 @@ k8s/my-service/
 #### Update Service-Specific Configuration
 
 1. **Replace Template Placeholders:**
+
    ```bash
    # Replace microservice-template with your service name
    find k8s/my-service -type f -name "*.yaml" -exec sed -i 's/microservice-template/my-service/g' {} \;
@@ -124,6 +129,7 @@ k8s/my-service/
 
 2. **Configure Environment Variables:**
    Edit the ConfigMap and add your service-specific environment variables:
+
    ```yaml
    # base/configmap.yaml
    data:
@@ -134,6 +140,7 @@ k8s/my-service/
 
 3. **Set Resource Limits:**
    Adjust resource requests and limits based on your service requirements:
+
    ```yaml
    # overlays/prod/patch-deployment.yaml
    spec:
@@ -162,6 +169,7 @@ marty migrate generate-overlay \
 ```
 
 This generates overlays with:
+
 - Database migration jobs
 - Persistent volume claims
 - Enhanced observability
@@ -203,6 +211,7 @@ kubectl rollout status deployment/my-service -n my-service-dev
 Perform comprehensive testing:
 
 1. **Health Checks:**
+
    ```bash
    kubectl port-forward svc/my-service 8080:8080 -n my-service-dev
    curl http://localhost:8080/health
@@ -223,6 +232,7 @@ Once testing is successful:
    - Prepare rollback procedures
 
 2. **Deploy to Production:**
+
    ```bash
    # Update image tags for production
    cd k8s/my-service/overlays/prod
@@ -233,6 +243,7 @@ Once testing is successful:
    ```
 
 3. **Monitor Deployment:**
+
    ```bash
    kubectl rollout status deployment/my-service -n my-service-prod
    kubectl get pods -n my-service-prod -w
@@ -250,12 +261,14 @@ Once testing is successful:
 For services using custom Kubernetes resources:
 
 1. **Identify Custom Resources:**
+
    ```bash
    helm template my-service ./helm/my-service | grep -E "^kind:" | sort | uniq
    ```
 
 2. **Manual Migration:**
    Custom resources require manual review and migration:
+
    ```yaml
    # Add to base/kustomization.yaml
    resources:
@@ -267,6 +280,7 @@ For services using custom Kubernetes resources:
 For services with database dependencies or inter-service communication:
 
 1. **Update ConfigMaps:**
+
    ```yaml
    # base/configmap.yaml
    data:
@@ -275,6 +289,7 @@ For services with database dependencies or inter-service communication:
    ```
 
 2. **Configure Network Policies:**
+
    ```yaml
    # base/networkpolicy.yaml
    spec:
@@ -292,6 +307,7 @@ For services with database dependencies or inter-service communication:
 For stateful services:
 
 1. **Add PVC to Base:**
+
    ```yaml
    # base/pvc.yaml
    apiVersion: v1
@@ -306,6 +322,7 @@ For stateful services:
    ```
 
 2. **Mount in Deployment:**
+
    ```yaml
    # overlays/prod/patch-deployment.yaml
    spec:
@@ -327,6 +344,7 @@ For stateful services:
 ### Common Issues and Solutions
 
 #### 1. Image Pull Errors
+
 ```bash
 # Check image references
 grep -r "image:" k8s/my-service/
@@ -336,6 +354,7 @@ kustomize edit set image my-service=correct-registry/my-service:tag
 ```
 
 #### 2. Configuration Issues
+
 ```bash
 # Validate ConfigMap generation
 kustomize build k8s/my-service/overlays/dev | grep -A 10 "kind: ConfigMap"
@@ -345,6 +364,7 @@ kubectl describe pod -l app=my-service -n my-service-dev
 ```
 
 #### 3. RBAC Issues
+
 ```bash
 # Check ServiceAccount permissions
 kubectl auth can-i --list --as=system:serviceaccount:my-service-dev:my-service
@@ -354,6 +374,7 @@ kubectl describe role my-service -n my-service-dev
 ```
 
 #### 4. Network Issues
+
 ```bash
 # Check NetworkPolicy
 kubectl describe networkpolicy my-service -n my-service-dev
@@ -367,6 +388,7 @@ kubectl exec -it deployment/my-service -n my-service-dev -- curl other-service:8
 If issues occur during migration:
 
 #### 1. Quick Rollback to Helm
+
 ```bash
 # Remove Kustomize deployment
 kubectl delete -k k8s/my-service/overlays/prod
@@ -376,6 +398,7 @@ helm upgrade my-service ./helm/my-service -f values-prod.yaml
 ```
 
 #### 2. Partial Rollback
+
 ```bash
 # Scale down new deployment
 kubectl scale deployment my-service --replicas=0 -n my-service-prod
@@ -387,26 +410,31 @@ kubectl scale deployment my-service-helm --replicas=3 -n my-service-prod
 ## Best Practices
 
 ### 1. Gradual Migration
+
 - Start with non-critical services
 - Test thoroughly in development
 - Use blue-green deployment for production
 
 ### 2. Configuration Management
+
 - Use separate ConfigMaps for environment-specific values
 - Store secrets in Kubernetes Secrets, not ConfigMaps
 - Use external secret management tools when possible
 
 ### 3. Monitoring and Observability
+
 - Verify all monitoring works after migration
 - Check that dashboards show correct metrics
 - Ensure log aggregation continues working
 
 ### 4. Documentation
+
 - Update deployment documentation
 - Create runbooks for the new deployment process
 - Document any manual steps required
 
 ### 5. Automation
+
 - Integrate Kustomize deployments with CI/CD
 - Use GitOps for deployment automation
 - Automate rollback procedures
@@ -416,11 +444,13 @@ kubectl scale deployment my-service-helm --replicas=3 -n my-service-prod
 After successful migration:
 
 1. **Remove Helm Resources:**
+
    ```bash
    helm uninstall my-service-old
    ```
 
 2. **Clean Up Old ConfigMaps/Secrets:**
+
    ```bash
    kubectl delete configmap my-service-helm-config
    ```
@@ -434,12 +464,14 @@ After successful migration:
 ## Next Steps
 
 After completing the migration:
+
 - Explore advanced MMF features
 - Implement GitOps workflows
 - Set up automated testing
 - Consider service mesh integration
 
 For more information, see:
+
 - [MMF Configuration Guide](../configuration/README.md)
 - [Deployment Best Practices](../best-practices/deployment.md)
 - [Observability Setup](../observability/README.md)

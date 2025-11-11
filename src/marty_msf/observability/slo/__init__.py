@@ -234,9 +234,9 @@ class SLICollector:
                     slo_name=slo.name, sli_type=slo.sli.sli_type.value
                 ).inc()
 
-                self.sli_value_gauge.labels(
-                    slo_name=slo.name, sli_type=slo.sli.sli_type.value
-                ).set(measurement.value)
+                self.sli_value_gauge.labels(slo_name=slo.name, sli_type=slo.sli.sli_type.value).set(
+                    measurement.value
+                )
 
             return measurement
 
@@ -376,9 +376,9 @@ class SLOTracker:
         self.burn_rate_gauge = Gauge(
             "marty_slo_burn_rate",
             "Error budget burn rate",
-                ["slo_name", "service"],
-                registry=self.registry,
-            )
+            ["slo_name", "service"],
+            registry=self.registry,
+        )
 
     def register_slo(self, slo: SLODefinition):
         """Register a new SLO for tracking"""
@@ -475,7 +475,7 @@ class SLOTracker:
 
         self.burn_rate_gauge.labels(slo_name=slo_name, service=slo.service_name).set(
             budget.burn_rate
-            )
+        )
 
         return {
             "slo_name": slo_name,

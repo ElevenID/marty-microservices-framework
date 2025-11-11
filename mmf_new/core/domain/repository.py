@@ -53,9 +53,7 @@ class Repository(ABC, Generic[T]):
         ...
 
     @abstractmethod
-    async def update(
-        self, entity_id: UUID | str | int, updates: dict[str, Any]
-    ) -> T | None:
+    async def update(self, entity_id: UUID | str | int, updates: dict[str, Any]) -> T | None:
         """Update an entity.
 
         Args:
@@ -188,9 +186,7 @@ class DomainRepository(Repository[T]):
         ...
 
     @abstractmethod
-    async def bulk_update(
-        self, updates: list[tuple[UUID | str | int, dict[str, Any]]]
-    ) -> list[T]:
+    async def bulk_update(self, updates: list[tuple[UUID | str | int, dict[str, Any]]]) -> list[T]:
         """Update multiple entities in bulk.
 
         Args:

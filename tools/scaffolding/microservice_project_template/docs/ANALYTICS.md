@@ -5,17 +5,20 @@ This microservice template includes comprehensive statistical analysis capabilit
 ## Features
 
 ### 📊 Data Generation
+
 - **Sample Data Generation**: Creates realistic synthetic datasets for testing and demonstration
 - **Configurable Parameters**: Control sample size, random seed, and data characteristics
 - **Multiple Data Types**: Includes numeric, categorical, and correlated variables
 
 ### 📈 Statistical Analysis
+
 - **Descriptive Statistics**: Mean, median, standard deviation, quartiles, skewness, kurtosis
 - **Correlation Analysis**: Pearson correlation matrix with automatic strong correlation detection
 - **Distribution Analysis**: Normality tests, Q-Q plots, histograms, box plots
 - **Clustering Analysis**: K-means clustering with PCA visualization and silhouette scoring
 
 ### 📋 Visualization
+
 - **Automatic Plot Generation**: All analyses include publication-ready visualizations
 - **Base64 Encoding**: Plots are returned as base64 strings for easy integration
 - **Multiple Plot Types**: Heatmaps, scatter plots, histograms, box plots, and distribution plots
@@ -38,9 +41,11 @@ The following packages are included for statistical analysis:
 ## gRPC Endpoints
 
 ### GenerateSampleData
+
 Generate synthetic datasets for testing and demonstration.
 
 **Request:**
+
 ```protobuf
 message SampleDataRequest {
   int32 n_samples = 1;  // Number of samples to generate (default: 1000)
@@ -49,6 +54,7 @@ message SampleDataRequest {
 ```
 
 **Response:**
+
 ```protobuf
 message SampleDataResponse {
   string data_csv = 1;   // Generated data in CSV format
@@ -57,6 +63,7 @@ message SampleDataResponse {
 ```
 
 **Example Usage:**
+
 ```python
 response = await stub.GenerateSampleData(
     greeter_pb2.SampleDataRequest(n_samples=1000, seed=42)
@@ -65,9 +72,11 @@ df = pd.read_csv(io.StringIO(response.data_csv))
 ```
 
 ### AnalyzeCorrelation
+
 Perform correlation analysis on a dataset.
 
 **Request:**
+
 ```protobuf
 message CorrelationRequest {
   string data_csv = 1;  // Dataset in CSV format
@@ -75,6 +84,7 @@ message CorrelationRequest {
 ```
 
 **Response:**
+
 ```protobuf
 message AnalysisResponse {
   bool success = 1;           // Success indicator
@@ -85,6 +95,7 @@ message AnalysisResponse {
 ```
 
 **Results JSON Structure:**
+
 ```json
 {
   "correlation_matrix": {
@@ -103,9 +114,11 @@ message AnalysisResponse {
 ```
 
 ### AnalyzeClustering
+
 Perform K-means clustering analysis with PCA visualization.
 
 **Request:**
+
 ```protobuf
 message ClusteringRequest {
   string data_csv = 1;  // Dataset in CSV format
@@ -114,6 +127,7 @@ message ClusteringRequest {
 ```
 
 **Results JSON Structure:**
+
 ```json
 {
   "n_clusters": 3,
@@ -131,9 +145,11 @@ message ClusteringRequest {
 ```
 
 ### AnalyzeDistribution
+
 Analyze the statistical distribution of numeric data.
 
 **Request:**
+
 ```protobuf
 message DistributionRequest {
   repeated double values = 1;  // Numeric values to analyze
@@ -142,6 +158,7 @@ message DistributionRequest {
 ```
 
 **Results JSON Structure:**
+
 ```json
 {
   "descriptive_stats": {
@@ -178,6 +195,7 @@ make run
 ```
 
 The demo will:
+
 1. Generate a sample dataset with 1000 rows
 2. Perform correlation analysis and save a heatmap
 3. Run K-means clustering with visualization
@@ -187,6 +205,7 @@ The demo will:
 ## Integration Examples
 
 ### Using with pandas
+
 ```python
 import pandas as pd
 import io
@@ -204,6 +223,7 @@ corr_response = await stub.AnalyzeCorrelation(
 ```
 
 ### Saving Plots
+
 ```python
 import base64
 
@@ -214,6 +234,7 @@ if analysis_response.plot_base64:
 ```
 
 ### Processing Results
+
 ```python
 import json
 
@@ -244,6 +265,7 @@ To add new statistical methods:
 ## Monitoring
 
 Analytics operations are automatically instrumented with:
+
 - **OpenTelemetry Tracing**: Each analysis operation creates spans
 - **Prometheus Metrics**: Request counts, latencies, and error rates
 - **Structured Logging**: Detailed logs for debugging and auditing

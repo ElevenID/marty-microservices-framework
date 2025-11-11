@@ -253,9 +253,7 @@ def load_config_from_env() -> JWTAuthConfig:
 
     # Fall back to environment-specific defaults
     if env == "production":
-        raise ValueError(
-            "JWT_SECRET_KEY environment variable is required for production"
-        )
+        raise ValueError("JWT_SECRET_KEY environment variable is required for production")
     elif env == "testing":
         return create_testing_config()
     else:  # development
@@ -325,8 +323,7 @@ def get_config_for_environment(environment: str, **kwargs) -> JWTAuthConfig:
     """
     if environment not in CONFIG_REGISTRY:
         raise ValueError(
-            f"Unsupported environment: {environment}. "
-            f"Supported: {list(CONFIG_REGISTRY.keys())}"
+            f"Unsupported environment: {environment}. Supported: {list(CONFIG_REGISTRY.keys())}"
         )
 
     config_factory = CONFIG_REGISTRY[environment]

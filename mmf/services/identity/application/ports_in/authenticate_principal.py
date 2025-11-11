@@ -18,5 +18,6 @@ class AuthenticatePrincipalResult:
 
 
 class AuthenticatePrincipalPort(Protocol):
-    async def execute(self, command: AuthenticatePrincipalCommand) -> AuthenticatePrincipalResult:
-        ...
+    async def execute(
+        self, command: AuthenticatePrincipalCommand
+    ) -> AuthenticatePrincipalResult: ...

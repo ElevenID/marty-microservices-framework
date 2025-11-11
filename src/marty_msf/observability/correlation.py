@@ -201,7 +201,9 @@ class CorrelationManager:
         with self.correlation_context(context):
             yield context
 
-    def create_child_context(self, operation_name: str | None = None, **custom_tags) -> CorrelationContext:
+    def create_child_context(
+        self, operation_name: str | None = None, **custom_tags
+    ) -> CorrelationContext:
         """Create a child context for sub-operations."""
         current = self.get_current_context()
         if not current:
@@ -231,69 +233,69 @@ class CorrelationManager:
 
 # Middleware implementations
 class CorrelationMiddleware(BaseHTTPMiddleware):
-        """FastAPI middleware for correlation ID management."""
+    """FastAPI middleware for correlation ID management."""
 
-        def __init__(self, app, correlation_manager: CorrelationManager):
-            super().__init__(app)
-            self.correlation_manager = correlation_manager
+    def __init__(self, app, correlation_manager: CorrelationManager):
+        super().__init__(app)
+        self.correlation_manager = correlation_manager
 
-        async def dispatch(self, request: Request, call_next: Callable):
-            # Extract headers
-            headers = dict(request.headers)
+    async def dispatch(self, request: Request, call_next: Callable):
+        # Extract headers
+        headers = dict(request.headers)
 
-            # Create correlation context
-            context = self.correlation_manager.create_context_from_headers(headers)
+        # Create correlation context
+        context = self.correlation_manager.create_context_from_headers(headers)
 
-            async with self.correlation_manager.async_correlation_context(context):
-                # Add correlation info to request state
-                request.state.correlation_context = context
+        async with self.correlation_manager.async_correlation_context(context):
+            # Add correlation info to request state
+            request.state.correlation_context = context
 
-                # Process request
-                response = await call_next(request)
+            # Process request
+            response = await call_next(request)
 
-                # Add correlation headers to response
-                for key, value in context.to_headers().items():
-                    response.headers[key] = value
+            # Add correlation headers to response
+            for key, value in context.to_headers().items():
+                response.headers[key] = value
 
-                return response
+            return response
 
 
 class CorrelationInterceptor(grpc.ServerInterceptor):
-        """gRPC server interceptor for correlation ID management."""
+    """gRPC server interceptor for correlation ID management."""
 
-        def __init__(self, correlation_manager: CorrelationManager):
-            self.correlation_manager = correlation_manager
+    def __init__(self, correlation_manager: CorrelationManager):
+        self.correlation_manager = correlation_manager
 
-        def intercept_service(self, continuation, handler_call_details):
-            # Get the original handler
-            handler = continuation(handler_call_details)
+    def intercept_service(self, continuation, handler_call_details):
+        # Get the original handler
+        handler = continuation(handler_call_details)
 
-            if handler is None:
-                return None
+        if handler is None:
+            return None
 
-            def enhanced_unary_unary(request, context):
-                # Extract metadata
-                metadata = dict(context.invocation_metadata())
+        def enhanced_unary_unary(request, context):
+            # Extract metadata
+            metadata = dict(context.invocation_metadata())
 
-                # Create correlation context from metadata
-                headers = {k.title(): v for k, v in metadata.items()}
-                correlation_context = self.correlation_manager.create_context_from_headers(headers)
+            # Create correlation context from metadata
+            headers = {k.title(): v for k, v in metadata.items()}
+            correlation_context = self.correlation_manager.create_context_from_headers(headers)
 
-                # Set correlation context
-                with self.correlation_manager.correlation_context(correlation_context):
-                    # Add context to gRPC context
-                    try:
-                        context.set_trailing_metadata(correlation_context.to_headers().items())
-                    except Exception:
-                        pass  # Ignore if trailing metadata cannot be set
+            # Set correlation context
+            with self.correlation_manager.correlation_context(correlation_context):
+                # Add context to gRPC context
+                try:
+                    context.set_trailing_metadata(correlation_context.to_headers().items())
+                except Exception:
+                    pass  # Ignore if trailing metadata cannot be set
 
-                    # Call the original handler
-                    if hasattr(handler, 'unary_unary') and handler.unary_unary:
-                        return handler.unary_unary(request, context)
-                    else:
-                        raise grpc.RpcError("Invalid handler type")
+                # Call the original handler
+                if hasattr(handler, "unary_unary") and handler.unary_unary:
+                    return handler.unary_unary(request, context)
+                else:
+                    raise grpc.RpcError("Invalid handler type")
 
-            return grpc.unary_unary_rpc_method_handler(enhanced_unary_unary)
+        return grpc.unary_unary_rpc_method_handler(enhanced_unary_unary)
 
 
 # Decorators for automatic correlation
@@ -454,10 +456,7 @@ class CorrelationHTTPClient:
 # Plugin debugging utilities
 @contextmanager
 def plugin_operation_context(
-    plugin_id: str,
-    operation_name: str,
-    plugin_version: str | None = None,
-    **custom_tags
+    plugin_id: str, operation_name: str, plugin_version: str | None = None, **custom_tags
 ):
     """Context manager for plugin operation debugging."""
     # Generate operation ID
@@ -477,30 +476,39 @@ def plugin_operation_context(
         plugin_id=plugin_id,
         operation_id=operation_id,
         plugin_version=plugin_version,
-        **custom_tags
+        **custom_tags,
     )
 
     try:
         with correlation_manager.correlation_context(context):
-            logger.info(f"Starting plugin operation: {plugin_id}.{operation_name}", extra={
+            logger.info(
+                f"Starting plugin operation: {plugin_id}.{operation_name}",
+                extra={
+                    "plugin_id": plugin_id,
+                    "operation_name": operation_name,
+                    "operation_id": operation_id,
+                    "plugin_version": plugin_version,
+                },
+            )
+            yield context
+            logger.info(
+                f"Completed plugin operation: {plugin_id}.{operation_name}",
+                extra={
+                    "plugin_id": plugin_id,
+                    "operation_name": operation_name,
+                    "operation_id": operation_id,
+                },
+            )
+    except Exception as e:
+        logger.error(
+            f"Failed plugin operation: {plugin_id}.{operation_name}",
+            extra={
                 "plugin_id": plugin_id,
                 "operation_name": operation_name,
                 "operation_id": operation_id,
-                "plugin_version": plugin_version
-            })
-            yield context
-            logger.info(f"Completed plugin operation: {plugin_id}.{operation_name}", extra={
-                "plugin_id": plugin_id,
-                "operation_name": operation_name,
-                "operation_id": operation_id
-            })
-    except Exception as e:
-        logger.error(f"Failed plugin operation: {plugin_id}.{operation_name}", extra={
-            "plugin_id": plugin_id,
-            "operation_name": operation_name,
-            "operation_id": operation_id,
-            "error": str(e)
-        })
+                "error": str(e),
+            },
+        )
         raise
     finally:
         # Restore original context
@@ -511,26 +519,26 @@ def plugin_operation_context(
 
 
 def trace_plugin_interaction(
-    from_plugin: str,
-    to_plugin: str,
-    interaction_type: str = "call",
-    **metadata
+    from_plugin: str, to_plugin: str, interaction_type: str = "call", **metadata
 ):
     """Trace interaction between plugins for debugging."""
     correlation_id = get_correlation_id() or str(uuid.uuid4())
 
-    logger.info(f"Plugin interaction: {from_plugin} -> {to_plugin}", extra={
-        "correlation_id": correlation_id,
-        "from_plugin": from_plugin,
-        "to_plugin": to_plugin,
-        "interaction_type": interaction_type,
-        "metadata": metadata
-    })
+    logger.info(
+        f"Plugin interaction: {from_plugin} -> {to_plugin}",
+        extra={
+            "correlation_id": correlation_id,
+            "from_plugin": from_plugin,
+            "to_plugin": to_plugin,
+            "interaction_type": interaction_type,
+            "metadata": metadata,
+        },
+    )
 
     return {
         "correlation_id": correlation_id,
         "from_plugin": from_plugin,
         "to_plugin": to_plugin,
         "interaction_type": interaction_type,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }

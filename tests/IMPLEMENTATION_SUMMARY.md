@@ -46,6 +46,7 @@ tests/
 ## Testing Categories
 
 ### 1. Unit Tests (`tests/unit/`)
+
 - **Purpose**: Fast, isolated component testing
 - **Scope**: Individual classes, functions, and modules
 - **Test Data**: Mock objects, test fixtures
@@ -53,6 +54,7 @@ tests/
 - **Coverage Target**: > 90%
 
 ### 2. Integration Tests (`tests/integration/`)
+
 - **Purpose**: Component interaction validation
 - **Scope**: Database connections, message brokers, external APIs
 - **Test Data**: Test databases, message queues
@@ -60,6 +62,7 @@ tests/
 - **Coverage Target**: > 80%
 
 ### 3. Contract Tests (`tests/contract/`)
+
 - **Purpose**: API contract validation
 - **Scope**: Request/response schemas, OpenAPI compliance
 - **Test Data**: JSON schemas, API specifications
@@ -67,6 +70,7 @@ tests/
 - **Coverage Target**: 100% of API endpoints
 
 ### 4. End-to-End Tests (`tests/e2e/`)
+
 - **Purpose**: Complete system validation
 - **Scope**: Full user workflows, deployment scenarios
 - **Test Data**: KIND clusters, deployed services
@@ -74,6 +78,7 @@ tests/
 - **Coverage Target**: Critical user paths
 
 ### 5. Performance Tests (`tests/performance/`)
+
 - **Purpose**: Load testing and benchmarking
 - **Scope**: Throughput, latency, resource utilization
 - **Test Data**: Load generators, performance metrics
@@ -81,6 +86,7 @@ tests/
 - **Coverage Target**: Key performance scenarios
 
 ### 6. Security Tests (`tests/security/`)
+
 - **Purpose**: Security vulnerability detection
 - **Scope**: Authentication, authorization, input validation
 - **Test Data**: Security test vectors, vulnerability scanners
@@ -88,6 +94,7 @@ tests/
 - **Coverage Target**: OWASP Top 10 vulnerabilities
 
 ### 7. Chaos Engineering Tests (`tests/chaos/`)
+
 - **Purpose**: System resilience validation
 - **Scope**: Fault injection, failure scenarios
 - **Test Data**: Chaos experiments, system monitors
@@ -97,6 +104,7 @@ tests/
 ## Test Runner Usage
 
 ### Basic Usage
+
 ```bash
 # Run core test suite (unit + integration + contract + e2e)
 ./tests/run_tests.sh
@@ -111,6 +119,7 @@ tests/
 ```
 
 ### Advanced Options
+
 ```bash
 # Run with verbose output
 ./tests/run_tests.sh --verbose
@@ -126,6 +135,7 @@ tests/
 ```
 
 ### Makefile Integration
+
 ```bash
 # Use Makefile targets for convenience
 make test                    # Core test suite
@@ -142,12 +152,14 @@ make test-chaos           # Chaos engineering tests
 ## Configuration Files
 
 ### Root Configuration (`tests/conftest.py`)
+
 - Global pytest configuration
 - Shared fixtures and utilities
 - Test markers and plugins
 - Logging configuration
 
 ### Category-Specific Configurations
+
 Each test category has its own `conftest.py` file with specialized fixtures:
 
 - **Unit**: Mock factories, test data builders
@@ -161,18 +173,21 @@ Each test category has its own `conftest.py` file with specialized fixtures:
 ## Test Data Management
 
 ### Test Fixtures
+
 - Hierarchical fixture inheritance
 - Category-specific test data
 - Parameterized test scenarios
 - Resource lifecycle management
 
 ### Mock Objects
+
 - Standardized mock factories
 - Behavior-driven mocking
 - Dependency injection support
 - State verification utilities
 
 ### Test Databases
+
 - Isolated test schemas
 - Transaction rollback support
 - Seed data management
@@ -181,6 +196,7 @@ Each test category has its own `conftest.py` file with specialized fixtures:
 ## CI/CD Integration
 
 ### GitHub Actions
+
 The testing infrastructure integrates with GitHub Actions for automated testing:
 
 ```yaml
@@ -196,6 +212,7 @@ The testing infrastructure integrates with GitHub Actions for automated testing:
 ```
 
 ### Test Reports
+
 - JUnit XML output for CI systems
 - Coverage reports (HTML and XML)
 - Performance metrics
@@ -204,17 +221,20 @@ The testing infrastructure integrates with GitHub Actions for automated testing:
 ## Quality Gates
 
 ### Code Coverage
+
 - **Unit Tests**: > 90% line coverage
 - **Integration Tests**: > 80% integration coverage
 - **Contract Tests**: 100% API endpoint coverage
 
 ### Performance Benchmarks
+
 - **Response Time**: < 100ms (P95)
 - **Throughput**: > 1000 RPS
 - **Memory Usage**: < 512MB steady state
 - **CPU Usage**: < 70% under load
 
 ### Security Standards
+
 - No HIGH or CRITICAL vulnerabilities
 - OWASP Top 10 compliance
 - Security headers validation
@@ -223,18 +243,21 @@ The testing infrastructure integrates with GitHub Actions for automated testing:
 ## Monitoring and Observability
 
 ### Test Metrics
+
 - Test execution times
 - Success/failure rates
 - Resource utilization
 - Error patterns
 
 ### Health Checks
+
 - Service availability
 - Database connectivity
 - Message broker status
 - External API availability
 
 ### Alerting
+
 - Test failure notifications
 - Performance degradation alerts
 - Security vulnerability alerts
@@ -243,6 +266,7 @@ The testing infrastructure integrates with GitHub Actions for automated testing:
 ## Migration Support
 
 ### Hexagonal Architecture Validation
+
 The testing infrastructure specifically supports validation of the hexagonal architecture migration:
 
 1. **Port/Adapter Testing**: Contract tests validate port interfaces
@@ -251,6 +275,7 @@ The testing infrastructure specifically supports validation of the hexagonal arc
 4. **End-to-End Flows**: E2E tests verify complete user workflows
 
 ### Legacy System Compatibility
+
 - Backward compatibility testing
 - Migration path validation
 - Data migration verification
@@ -259,12 +284,14 @@ The testing infrastructure specifically supports validation of the hexagonal arc
 ## Future Enhancements
 
 ### Planned Improvements
+
 1. **Visual Testing**: Snapshot testing for UI components
 2. **Mutation Testing**: Code quality validation through mutation testing
 3. **Property-Based Testing**: Hypothesis-driven test generation
 4. **Distributed Testing**: Multi-region test execution
 
 ### Tool Integration
+
 1. **Test Containers**: Docker-based integration testing
 2. **WireMock**: External service mocking
 3. **Artillery**: Load testing framework
@@ -273,18 +300,21 @@ The testing infrastructure specifically supports validation of the hexagonal arc
 ## Best Practices
 
 ### Test Organization
+
 1. Follow the testing pyramid (many unit, fewer integration, few e2e)
 2. Use descriptive test names and documentation
 3. Maintain test independence and isolation
 4. Implement proper test data management
 
 ### Test Development
+
 1. Write tests first (TDD approach)
 2. Use behavior-driven development (BDD) where appropriate
 3. Implement proper error handling and cleanup
 4. Maintain test code quality standards
 
 ### Test Maintenance
+
 1. Regular test review and refactoring
 2. Update tests with code changes
 3. Monitor test execution metrics

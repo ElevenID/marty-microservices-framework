@@ -96,9 +96,7 @@ class TestEventCollector(EventHandler):
     def assert_event_published(self, event_type: str, count: int = 1) -> None:
         """Assert that an event was published."""
         events = self.get_events_of_type(event_type)
-        assert (
-            len(events) == count
-        ), f"Expected {count} {event_type} events, got {len(events)}"
+        assert len(events) == count, f"Expected {count} {event_type} events, got {len(events)}"
 
     def clear(self) -> None:
         """Clear collected events."""
@@ -108,9 +106,7 @@ class TestEventCollector(EventHandler):
 class ServiceTestMixin:
     """Mixin class providing common test patterns for services."""
 
-    def setup_service_test_environment(
-        self, service_name: str
-    ) -> builtins.dict[str, Any]:
+    def setup_service_test_environment(self, service_name: str) -> builtins.dict[str, Any]:
         """Set up standardized test environment for a service."""
         return {
             "service_name": service_name,

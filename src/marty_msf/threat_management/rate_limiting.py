@@ -88,7 +88,6 @@ class RedisRateLimitBackend(RateLimitBackend):
         """Get Redis connection (lazy initialization)."""
         if self._redis is None:
             try:
-
                 self._redis = redis.from_url(self.redis_url)
             except ImportError:
                 logger.error("redis package not installed. Using memory backend.")

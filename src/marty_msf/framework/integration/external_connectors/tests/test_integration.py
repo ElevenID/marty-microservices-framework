@@ -59,7 +59,6 @@ class TestExternalConnectorsStructure(unittest.TestCase):
     def test_enum_imports(self):
         """Test that enums can be imported correctly."""
         try:
-
             # Test that enums have expected values
             self.assertEqual(ConnectorType.REST_API.value, "rest_api")
             self.assertEqual(DataFormat.JSON.value, "json")
@@ -78,7 +77,6 @@ class TestExternalConnectorsStructure(unittest.TestCase):
     def test_config_dataclasses(self):
         """Test that config dataclasses can be imported and instantiated."""
         try:
-
             # Test ExternalSystemConfig
             config = ExternalSystemConfig(
                 system_id="test_system",
@@ -108,7 +106,6 @@ class TestExternalConnectorsStructure(unittest.TestCase):
     def test_base_connector(self):
         """Test that base connector can be imported."""
         try:
-
             # Test that it's an abstract class
             self.assertTrue(hasattr(ExternalSystemConnector, "connect"))
             self.assertTrue(hasattr(ExternalSystemConnector, "disconnect"))
@@ -121,7 +118,6 @@ class TestExternalConnectorsStructure(unittest.TestCase):
     def test_transformation_engine(self):
         """Test that transformation engine can be imported."""
         try:
-
             # Test basic functionality
             engine = DataTransformationEngine()
             self.assertIsNotNone(engine.transformations)
@@ -138,7 +134,6 @@ class TestExternalConnectorsStructure(unittest.TestCase):
     def test_rest_api_connector(self):
         """Test that REST API connector can be imported."""
         try:
-
             # Test that it has expected methods
             self.assertTrue(hasattr(RESTAPIConnector, "connect"))
             self.assertTrue(hasattr(RESTAPIConnector, "disconnect"))
@@ -155,7 +150,6 @@ class TestTransformationEngine(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         try:
-
             self.engine = DataTransformationEngine()
         except ImportError:
             self.skipTest("Cannot import transformation engine")

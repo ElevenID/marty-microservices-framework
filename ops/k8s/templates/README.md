@@ -5,6 +5,7 @@ This directory contains Kubernetes deployment templates that support the Phase 2
 ## Infrastructure Components
 
 ### Phase 2 Infrastructure Support
+
 - **ConfigMaps**: Environment-specific configuration for ConfigManager
 - **Secrets**: Secure secret management for SecretManager
 - **Services**: Load balancing and service discovery for API Gateway
@@ -13,6 +14,7 @@ This directory contains Kubernetes deployment templates that support the Phase 2
 - **NetworkPolicies**: Secure communication between microservices
 
 ### Supported Backends
+
 - **Redis**: Caching and message broker support
 - **RabbitMQ**: Enterprise message queuing
 - **PostgreSQL**: Database and event store backend
@@ -39,6 +41,7 @@ templates/
 These templates are designed to be used with Helm for parameter substitution and environment-specific configurations.
 
 Deploy with environment-specific values:
+
 ```bash
 helm template my-service ./k8s/templates \
   --values ./k8s/values/development.yaml \
@@ -49,6 +52,7 @@ helm template my-service ./k8s/templates \
 ## Environment Configuration
 
 Each environment should have specific configurations:
+
 - **Development**: In-memory backends, debug enabled
 - **Testing**: Lightweight Redis, minimal resources
 - **Production**: Full Redis cluster, RabbitMQ cluster, monitoring enabled

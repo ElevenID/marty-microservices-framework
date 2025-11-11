@@ -25,11 +25,7 @@ class SecurityServiceAccessor:
     def get_core_security_services(self) -> tuple[IAuthenticator, IAuthorizer, ISecretManager]:
         """Get core security services from DI container."""
         self._ensure_initialized()
-        return (
-            get_service(IAuthenticator),
-            get_service(IAuthorizer),
-            get_service(ISecretManager)
-        )
+        return (get_service(IAuthenticator), get_service(IAuthorizer), get_service(ISecretManager))
 
     def get_monitoring_system(self) -> SecurityMonitoringSystem:
         """Get the security monitoring system from DI container."""

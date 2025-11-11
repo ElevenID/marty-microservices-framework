@@ -5,6 +5,7 @@ Welcome to the Marty Microservices Framework (MMF) Experience Polish demonstrati
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Python 3.11+
 - Kubernetes cluster (local or cloud)
 - Helm 3.x
@@ -21,6 +22,7 @@ Welcome to the Marty Microservices Framework (MMF) Experience Polish demonstrati
 ## 📊 Dashboard & Analytics Access
 
 ### Grafana Dashboard
+
 ```bash
 # Import the dashboard configuration
 kubectl apply -f operational-scaling/grafana-dashboard.yaml
@@ -31,6 +33,7 @@ kubectl port-forward -n monitoring svc/grafana 3000:80
 ```
 
 ### Jupyter Analytics Notebook
+
 ```bash
 # Install dependencies
 pip install jupyter plotly pandas numpy requests asyncio
@@ -40,6 +43,7 @@ jupyter notebook experience-polish-analytics.ipynb
 ```
 
 The notebook includes 9 comprehensive sections:
+
 - Service health monitoring
 - Customer journey tracking with message ID correlation
 - ML recommendation performance analysis
@@ -53,6 +57,7 @@ The notebook includes 9 comprehensive sections:
 ## 🎯 Demo Scenarios
 
 ### 1. Complete Customer Journey (CLI)
+
 ```bash
 # Run the full experience with ML recommendations
 python dev/experience_polish_demo.py --scenario complete_journey --with-ml --track-messages
@@ -65,6 +70,7 @@ python experience_polish_demo.py --scenario stress_test --concurrent-users 50
 ```
 
 ### 2. ML Pet Advisor Demonstration
+
 ```bash
 # Start the ML advisor sidecar
 python ml_pet_advisor.py
@@ -75,6 +81,7 @@ curl http://localhost:8001/analytics/model-performance
 ```
 
 ### 3. Operational Scaling Demo
+
 ```bash
 # Deploy with autoscaling enabled
 kubectl apply -f operational-scaling/hpa-vpa-manifests.yaml
@@ -89,11 +96,13 @@ kubectl get hpa -w
 ## 🔧 Architecture Overview
 
 ### Core Services
+
 - **Petstore Domain**: Main business logic with pet catalog, orders, payments
 - **ML Pet Advisor**: Sidecar service providing intelligent recommendations
 - **Shared Infrastructure**: Observability, scaling, and operational concerns
 
 ### Key Features Demonstrated
+
 - **Message ID Tracking**: End-to-end correlation across service boundaries
 - **Error Recovery**: Circuit breakers, retries, graceful degradation
 - **ML Integration**: Real-time recommendations with A/B testing
@@ -119,7 +128,9 @@ kubectl get hpa -w
 ## 🚦 Message ID Tracking & Error Correlation
 
 ### Message Flow Tracking
+
 Every request receives a unique correlation ID that flows through:
+
 1. API Gateway → Petstore Domain
 2. Petstore Domain → ML Advisor (for recommendations)
 3. Petstore Domain → Payment Service
@@ -127,6 +138,7 @@ Every request receives a unique correlation ID that flows through:
 5. All responses carry the same correlation ID
 
 ### Error Scenarios Demonstrated
+
 - **Payment Failures**: Simulated gateway timeouts and rejections
 - **ML Service Degradation**: Fallback to rule-based recommendations
 - **Database Connectivity**: Connection pool exhaustion recovery
@@ -135,17 +147,20 @@ Every request receives a unique correlation ID that flows through:
 ## 📈 Scaling & Performance
 
 ### Horizontal Pod Autoscaling (HPA)
+
 - **CPU Threshold**: 70% average across pods
 - **Memory Threshold**: 80% of allocated memory
 - **Custom Metrics**: Request rate, error rate, queue depth
 - **Min/Max Replicas**: 2-20 pods per service
 
 ### Vertical Pod Autoscaling (VPA)
+
 - **CPU Requests**: Auto-tune based on usage patterns
 - **Memory Requests**: Optimize for actual consumption
 - **Update Mode**: In-place updates with minimal disruption
 
 ### Canary Deployment Strategy
+
 - **Initial Split**: 90% stable, 10% canary
 - **Progressive Rollout**: 70/30 → 50/50 → 0/100
 - **Rollback Triggers**: Error rate >5%, latency >1s P95
@@ -154,12 +169,14 @@ Every request receives a unique correlation ID that flows through:
 ## 🔍 Observability Stack
 
 ### Metrics Collection
+
 - **Business Metrics**: Orders, revenue, conversion rates
 - **Technical Metrics**: Latency, throughput, error rates
 - **Infrastructure Metrics**: CPU, memory, network, storage
 - **ML Metrics**: Model accuracy, inference time, confidence scores
 
 ### Alerting Rules
+
 - **High Error Rate**: >5% for 2 minutes
 - **High Latency**: P95 >1s for 5 minutes
 - **Service Down**: Endpoint unavailable for 1 minute
@@ -168,6 +185,7 @@ Every request receives a unique correlation ID that flows through:
 ## 🧪 Testing & Validation
 
 ### Integration Tests
+
 ```bash
 # Run the complete test suite
 python -m pytest tests/integration/test_experience_polish.py -v
@@ -180,6 +198,7 @@ python -m pytest tests/integration/test_scaling.py -v
 ```
 
 ### Load Testing
+
 ```bash
 # Generate realistic load patterns
 python experience_polish_demo.py --scenario load_test --duration 300 --rps 100
@@ -191,11 +210,13 @@ python experience_polish_demo.py --scenario scaling_test --burst-load
 ## 📚 Documentation Deep Dive
 
 ### Service Architecture
+
 - [`docs/architecture/`](../architecture/) - Detailed system design
 - [`docs/guides/plugin-system.md`](../guides/plugin-system.md) - Plugin development guide
 - [`docs/guides/observability.md`](../guides/observability.md) - Monitoring setup
 
 ### Operational Guides
+
 - [`docs/guides/modern_service_guide.md`](../guides/modern_service_guide.md) - Service development best practices
 - [`docs/guides/HELM_TO_KUSTOMIZE.md`](../guides/HELM_TO_KUSTOMIZE.md) - Deployment strategies
 - [`docs/guides/event-publishing-guide.md`](../guides/event-publishing-guide.md) - Event-driven patterns
@@ -203,6 +224,7 @@ python experience_polish_demo.py --scenario scaling_test --burst-load
 ## 🎉 Business Value Demonstration
 
 ### Key Performance Indicators
+
 - **Order Completion Rate**: >95% with ML recommendations
 - **Average Response Time**: <200ms P95 across all endpoints
 - **Service Availability**: 99.9% uptime with zero-downtime deployments
@@ -210,6 +232,7 @@ python experience_polish_demo.py --scenario scaling_test --burst-load
 - **Error Recovery**: <10-second circuit breaker response
 
 ### Revenue Impact Metrics
+
 - **Conversion Rate Improvement**: 15% with personalized recommendations
 - **Customer Satisfaction**: Reduced cart abandonment by 25%
 - **Operational Efficiency**: 60% reduction in manual scaling interventions
@@ -218,18 +241,21 @@ python experience_polish_demo.py --scenario scaling_test --burst-load
 ## 🔧 Production Readiness
 
 ### Security Features
+
 - **mTLS**: Service-to-service encryption via Istio
 - **RBAC**: Kubernetes role-based access control
 - **Network Policies**: Micro-segmentation and traffic isolation
 - **Secret Management**: Encrypted configuration and credentials
 
 ### Reliability Patterns
+
 - **Circuit Breakers**: Prevent cascade failures
 - **Bulkheads**: Resource isolation between services
 - **Timeouts**: Configurable per-service limits
 - **Health Checks**: Liveness and readiness probes
 
 ### Deployment Safety
+
 - **Blue-Green**: Zero-downtime version updates
 - **Canary**: Gradual rollout with automatic rollback
 - **Feature Flags**: Runtime behavior modification
@@ -238,12 +264,14 @@ python experience_polish_demo.py --scenario scaling_test --burst-load
 ## 🎯 Next Steps & Extensions
 
 ### Immediate Enhancements
+
 1. **Chaos Engineering**: Add failure injection scenarios
 2. **Multi-Region**: Demonstrate global deployment patterns
 3. **Event Sourcing**: Add event store for audit trails
 4. **API Versioning**: Backward compatibility strategies
 
 ### Advanced Features
+
 1. **GraphQL Federation**: Unified API gateway
 2. **Stream Processing**: Real-time analytics pipeline
 3. **ML Pipeline**: Automated model training and deployment

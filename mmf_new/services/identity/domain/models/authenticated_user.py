@@ -65,14 +65,10 @@ class AuthenticatedUser(ValueObject):
 
         # Ensure timezone awareness for datetime fields
         if self.expires_at and self.expires_at.tzinfo is None:
-            object.__setattr__(
-                self, "expires_at", self.expires_at.replace(tzinfo=timezone.utc)
-            )
+            object.__setattr__(self, "expires_at", self.expires_at.replace(tzinfo=timezone.utc))
 
         if self.created_at.tzinfo is None:
-            object.__setattr__(
-                self, "created_at", self.created_at.replace(tzinfo=timezone.utc)
-            )
+            object.__setattr__(self, "created_at", self.created_at.replace(tzinfo=timezone.utc))
 
     def has_role(self, role: str) -> bool:
         """Check if user has a specific role."""

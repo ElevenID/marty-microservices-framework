@@ -210,11 +210,7 @@ class InMemoryProjectRepository:
 
     async def find_by_member(self, user_id: str) -> list[ProjectAggregate]:
         """Find all projects where user is a member."""
-        return [
-            p
-            for p in self._projects.values()
-            if user_id in p.members or p.owner_id == user_id
-        ]
+        return [p for p in self._projects.values() if user_id in p.members or p.owner_id == user_id]
 
 
 # Command/Query objects with proper structure
@@ -288,9 +284,7 @@ class GetUsersByProjectQuery:
 class CommandResult:
     """Result of command execution."""
 
-    def __init__(
-        self, success: bool, data: Any = None, error: str = None, events: list = None
-    ):
+    def __init__(self, success: bool, data: Any = None, error: str = None, events: list = None):
         self.success = success
         self.data = data
         self.error = error
@@ -323,9 +317,7 @@ class CreateUserHandler:
                 return CommandResult(success=False, error="Invalid email address")
 
             if not command.name or len(command.name.strip()) < 2:
-                return CommandResult(
-                    success=False, error="Name must be at least 2 characters"
-                )
+                return CommandResult(success=False, error="Name must be at least 2 characters")
 
             # Check if email already exists
             existing = await self.user_repository.find_by_email(command.email)
@@ -529,9 +521,7 @@ class TestRepositoryOperations:
             user2 = UserAggregate(email="unique@example.com", name="User 2")
             try:
                 await repo.save(user2)
-                raise AssertionError(
-                    "Should have raised ValueError for duplicate email"
-                )
+                raise AssertionError("Should have raised ValueError for duplicate email")
             except ValueError as e:
                 assert "already in use" in str(e)
 
@@ -722,15 +712,11 @@ class TestEventDrivenBehavior:
             assert len(result.events) == 2  # name change + email change
 
             # Verify events contain proper data
-            name_event = next(
-                e for e in result.events if e.event_name == "user.name.changed"
-            )
+            name_event = next(e for e in result.events if e.event_name == "user.name.changed")
             assert name_event.event_data["old_name"] == "Original Name"
             assert name_event.event_data["new_name"] == "Updated Name"
 
-            email_event = next(
-                e for e in result.events if e.event_name == "user.email.changed"
-            )
+            email_event = next(e for e in result.events if e.event_name == "user.email.changed")
             assert email_event.event_data["old_email"] == "events@example.com"
             assert email_event.event_data["new_email"] == "updated@example.com"
 

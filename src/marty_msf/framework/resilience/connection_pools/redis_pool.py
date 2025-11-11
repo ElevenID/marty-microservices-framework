@@ -80,7 +80,7 @@ class RedisPoolConfig:
 class RedisPooledConnection:
     """Wrapper for Redis connection with metadata and lifecycle management"""
 
-    def __init__(self, redis: Redis, pool: 'RedisConnectionPool'):
+    def __init__(self, redis: Redis, pool: "RedisConnectionPool"):
         self.redis = redis
         self.pool = pool
         self.created_at = time.time()
@@ -122,8 +122,8 @@ class RedisPooledConnection:
             # Quick ping to check connectivity
             await self.redis.ping()
             return (
-                self.idle_time < self.pool.config.max_idle_time and
-                self.age < self.pool.config.connection_ttl
+                self.idle_time < self.pool.config.max_idle_time
+                and self.age < self.pool.config.connection_ttl
             )
         except Exception:
             return False
@@ -219,16 +219,14 @@ class RedisConnectionPool:
                 # Redis Cluster support
                 redis = aioredis.Redis.from_url(
                     f"redis://{self.config.host}:{self.config.port}/{self.config.db}",
-                    **connection_params
+                    **connection_params,
                 )
             elif self.config.sentinel_hosts:
                 # Redis Sentinel support
                 sentinel = Sentinel(
                     [(host["host"], host["port"]) for host in self.config.sentinel_hosts]
                 )
-                redis = sentinel.master_for(
-                    self.config.sentinel_service_name or "mymaster"
-                )
+                redis = sentinel.master_for(self.config.sentinel_service_name or "mymaster")
             else:
                 # Standard Redis connection
                 redis = aioredis.Redis(**connection_params)
@@ -327,7 +325,9 @@ class RedisConnectionPool:
                 retries += 1
 
                 if retries <= self.config.max_retries:
-                    delay = self.config.retry_delay * (self.config.retry_backoff_factor ** (retries - 1))
+                    delay = self.config.retry_delay * (
+                        self.config.retry_backoff_factor ** (retries - 1)
+                    )
                     await asyncio.sleep(delay)
                     logger.warning(f"Redis command failed, retrying in {delay}s: {e}")
             except Exception as e:
@@ -386,7 +386,7 @@ class RedisConnectionPool:
             "max_connections": self.config.max_connections,
             "host": self.config.host,
             "port": self.config.port,
-            "db": self.config.db
+            "db": self.config.db,
         }
 
     async def close(self):
@@ -417,7 +417,9 @@ _redis_pools: dict[str, RedisConnectionPool] = {}
 _pools_lock = asyncio.Lock()
 
 
-async def get_redis_pool(name: str = "default", config: RedisPoolConfig | None = None) -> RedisConnectionPool:
+async def get_redis_pool(
+    name: str = "default", config: RedisPoolConfig | None = None
+) -> RedisConnectionPool:
     """Get or create a Redis connection pool"""
     async with _pools_lock:
         if name not in _redis_pools:

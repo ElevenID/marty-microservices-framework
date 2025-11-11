@@ -30,7 +30,6 @@ from playwright.async_api import async_playwright
 
 # Import Kubernetes client
 try:
-
     KUBERNETES_AVAILABLE = True
 except ImportError:
     KUBERNETES_AVAILABLE = False

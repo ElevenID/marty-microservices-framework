@@ -69,20 +69,14 @@ class AuthenticationResult(ValueObject):
         """Validate the authentication result data."""
         # Ensure timezone awareness
         if self.attempted_at.tzinfo is None:
-            object.__setattr__(
-                self, "attempted_at", self.attempted_at.replace(tzinfo=timezone.utc)
-            )
+            object.__setattr__(self, "attempted_at", self.attempted_at.replace(tzinfo=timezone.utc))
 
         # Validation rules for successful authentication
         if self.status == AuthenticationStatus.SUCCESS:
             if self.authenticated_user is None:
-                raise ValueError(
-                    "Successful authentication must include an authenticated user"
-                )
+                raise ValueError("Successful authentication must include an authenticated user")
             if self.error_message is not None or self.error_code is not None:
-                raise ValueError(
-                    "Successful authentication should not include error details"
-                )
+                raise ValueError("Successful authentication should not include error details")
 
         # Validation rules for failed authentication
         elif self.status in {
@@ -93,9 +87,7 @@ class AuthenticationResult(ValueObject):
             AuthenticationStatus.ACCOUNT_DISABLED,
         }:
             if self.authenticated_user is not None:
-                raise ValueError(
-                    "Failed authentication should not include user details"
-                )
+                raise ValueError("Failed authentication should not include user details")
             if self.error_message is None:
                 raise ValueError("Failed authentication must include an error message")
             if self.error_code is None:
@@ -104,18 +96,14 @@ class AuthenticationResult(ValueObject):
         # Validation for pending state
         elif self.status == AuthenticationStatus.PENDING:
             if self.authenticated_user is not None:
-                raise ValueError(
-                    "Pending authentication should not include user details"
-                )
+                raise ValueError("Pending authentication should not include user details")
             # Pending may or may not have error details depending on context
 
         # Special case for MFA required
         elif self.status == AuthenticationStatus.REQUIRES_MFA:
             # May include partial user info for MFA context
             if self.error_code is None:
-                object.__setattr__(
-                    self, "error_code", AuthenticationErrorCode.MFA_REQUIRED
-                )
+                object.__setattr__(self, "error_code", AuthenticationErrorCode.MFA_REQUIRED)
 
     @property
     def is_successful(self) -> bool:
@@ -155,9 +143,7 @@ class AuthenticationResult(ValueObject):
             attempted_at=self.attempted_at,
         )
 
-    def with_error(
-        self, message: str, code: AuthenticationErrorCode
-    ) -> AuthenticationResult:
+    def with_error(self, message: str, code: AuthenticationErrorCode) -> AuthenticationResult:
         """Create a new result with error details (for failure cases)."""
         if self.is_successful:
             raise ValueError("Cannot add error to successful authentication result")

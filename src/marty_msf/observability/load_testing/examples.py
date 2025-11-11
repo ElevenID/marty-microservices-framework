@@ -84,7 +84,6 @@ async def stress_test():
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(description="Run load tests")
     parser.add_argument(
         "test_type", choices=["grpc", "http", "stress"], help="Type of load test to run"

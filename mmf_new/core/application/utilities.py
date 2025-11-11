@@ -26,9 +26,7 @@ class DatabaseUtilities:
     def _validate_table_name(self, table_name: str) -> str:
         """Validate and sanitize table name to prevent SQL injection."""
         # Only allow alphanumeric characters, underscores, and periods
-        if not re.match(
-            r"^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)?$", table_name
-        ):
+        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)?$", table_name):
             raise ValueError(f"Invalid table name: {table_name}")
         return table_name
 
@@ -93,9 +91,7 @@ class DatabaseUtilities:
             except Exception:
                 return False
 
-    async def truncate_table(
-        self, table_name: str, restart_identity: bool = True
-    ) -> bool:
+    async def truncate_table(self, table_name: str, restart_identity: bool = True) -> bool:
         """Truncate a table."""
         async with self.db_manager.get_transaction() as session:
             try:
@@ -113,9 +109,7 @@ class DatabaseUtilities:
     ) -> int:
         """Clean up soft-deleted records older than specified days."""
         if not hasattr(model_class, "deleted_at"):
-            raise ValueError(
-                f"Model {model_class.__name__} does not support soft deletion"
-            )
+            raise ValueError(f"Model {model_class.__name__} does not support soft deletion")
 
         cutoff_date = datetime.utcnow() - timedelta(days=older_than_days)
         table_name = getattr(model_class, "__tablename__", model_class.__name__.lower())
@@ -127,9 +121,7 @@ class DatabaseUtilities:
                     f"SELECT COUNT(*) FROM {self._quote_identifier(table_name)} "
                     f"WHERE deleted_at IS NOT NULL AND deleted_at < :cutoff_date"
                 )
-                count_result = await session.execute(
-                    count_query, {"cutoff_date": cutoff_date}
-                )
+                count_result = await session.execute(count_query, {"cutoff_date": cutoff_date})
                 count = count_result.scalar() or 0
 
                 # Delete records
@@ -139,21 +131,15 @@ class DatabaseUtilities:
                         f"WHERE deleted_at IS NOT NULL AND deleted_at < :cutoff_date"
                     )
                     await session.execute(delete_query, {"cutoff_date": cutoff_date})
-                    logger.info(
-                        "Cleaned up %d soft-deleted records from %s", count, table_name
-                    )
+                    logger.info("Cleaned up %d soft-deleted records from %s", count, table_name)
 
                 return count
 
             except Exception as e:
-                logger.error(
-                    "Error cleaning soft-deleted records from %s: %s", table_name, e
-                )
+                logger.error("Error cleaning soft-deleted records from %s: %s", table_name, e)
                 raise
 
-    async def backup_table(
-        self, table_name: str, backup_table_name: str | None = None
-    ) -> str:
+    async def backup_table(self, table_name: str, backup_table_name: str | None = None) -> str:
         """Create a backup copy of a table."""
         if not backup_table_name:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -165,9 +151,7 @@ class DatabaseUtilities:
                 valid_backup = self._quote_identifier(backup_table_name)
 
                 # Create backup table with data
-                backup_query = text(
-                    f"CREATE TABLE {valid_backup} AS SELECT * FROM {valid_src}"
-                )
+                backup_query = text(f"CREATE TABLE {valid_backup} AS SELECT * FROM {valid_src}")
                 await session.execute(backup_query)
 
                 logger.info("Created backup table: %s", backup_table_name)
@@ -255,9 +239,7 @@ async def cleanup_all_soft_deleted(
                 count = await utils.clean_soft_deleted(model_class, older_than_days)
                 service_results[model_class.__name__] = count
             except Exception as e:
-                logger.error(
-                    "Error cleaning %s in %s: %s", model_class.__name__, service_name, e
-                )
+                logger.error("Error cleaning %s in %s: %s", model_class.__name__, service_name, e)
                 service_results[model_class.__name__] = -1
 
         results[service_name] = service_results

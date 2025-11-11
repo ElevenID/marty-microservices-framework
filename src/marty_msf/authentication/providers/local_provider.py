@@ -33,15 +33,12 @@ class LocalProvider(IIdentityProvider):
     def authenticate(self, credentials: dict[str, Any]) -> SecurityPrincipal | None:
         """Authenticate user with local provider."""
         # Basic implementation for testing
-        username = credentials.get('username')
-        password = credentials.get('password')
+        username = credentials.get("username")
+        password = credentials.get("password")
 
-        if username == 'admin' and password == 'admin':
+        if username == "admin" and password == "admin":
             return SecurityPrincipal(
-                id='admin',
-                type='user',
-                roles={'admin'},
-                attributes={'provider': 'local'}
+                id="admin", type="user", roles={"admin"}, attributes={"provider": "local"}
             )
 
         return None
@@ -81,12 +78,12 @@ class LocalProvider(IIdentityProvider):
                     "username": username,
                     "email": user_data.get("email"),
                     "full_name": user_data.get("full_name"),
-                    "session_token": token
+                    "session_token": token,
                 },
                 permissions=set(user_data.get("permissions", [])),
                 identity_provider="local",
                 session_id=token,
-                expires_at=expires_at
+                expires_at=expires_at,
             )
 
             return principal
@@ -124,7 +121,7 @@ class LocalProvider(IIdentityProvider):
                         "roles": user_data.get("roles", []),
                         "permissions": user_data.get("permissions", []),
                         "created_at": user_data.get("created_at"),
-                        "last_login": user_data.get("last_login")
+                        "last_login": user_data.get("last_login"),
                     }
             return {}
 
@@ -138,7 +135,7 @@ class LocalProvider(IIdentityProvider):
         password: str,
         email: str | None = None,
         full_name: str | None = None,
-        roles: list | None = None
+        roles: list | None = None,
     ) -> bool:
         """Create a new user"""
         try:
@@ -147,7 +144,7 @@ class LocalProvider(IIdentityProvider):
                 return False
 
             # Hash password
-            password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+            password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
 
             user_data = {
                 "user_id": str(uuid4()),
@@ -159,7 +156,7 @@ class LocalProvider(IIdentityProvider):
                 "permissions": [],
                 "active": True,
                 "created_at": datetime.now(timezone.utc).isoformat(),
-                "last_login": None
+                "last_login": None,
             }
 
             self.users[username] = user_data
@@ -182,7 +179,7 @@ class LocalProvider(IIdentityProvider):
             session_data = {
                 "username": username,
                 "created_at": datetime.now(timezone.utc).isoformat(),
-                "expires_at": expires_at.isoformat()
+                "expires_at": expires_at.isoformat(),
             }
 
             self.sessions[session_token] = session_data
@@ -213,6 +210,6 @@ class LocalProvider(IIdentityProvider):
                 admin_password,
                 "admin@example.com",
                 "System Administrator",
-                ["admin", "user"]
+                ["admin", "user"],
             )
             logger.info("Default admin user created")

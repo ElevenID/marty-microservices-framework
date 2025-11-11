@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 def create_service_mesh_manager(
     service_mesh_type: str = "istio",
     config: dict[str, Any] | None = None,
-    security_manager: Any | None = None
+    security_manager: Any | None = None,
 ) -> EnhancedServiceMeshManager:
     """
     Factory function to create a service mesh manager
@@ -40,16 +40,14 @@ def create_service_mesh_manager(
         "Use create_enhanced_service_mesh_manager instead."
     )
     return EnhancedServiceMeshManager(
-        service_mesh_type=service_mesh_type,
-        config=config,
-        security_manager=security_manager
+        service_mesh_type=service_mesh_type, config=config, security_manager=security_manager
     )
 
 
 def create_enhanced_service_mesh_manager(
     service_mesh_type: str = "istio",
     config: dict[str, Any] | None = None,
-    security_manager: Any | None = None
+    security_manager: Any | None = None,
 ) -> EnhancedServiceMeshManager:
     """
     Factory function to create an EnhancedServiceMeshManager instance with security integration
@@ -63,9 +61,7 @@ def create_enhanced_service_mesh_manager(
         EnhancedServiceMeshManager instance
     """
     return EnhancedServiceMeshManager(
-        service_mesh_type=service_mesh_type,
-        config=config,
-        security_manager=security_manager
+        service_mesh_type=service_mesh_type, config=config, security_manager=security_manager
     )
 
 
@@ -73,5 +69,5 @@ def create_enhanced_service_mesh_manager(
 __all__ = [
     "EnhancedServiceMeshManager",
     "create_service_mesh_manager",  # Deprecated, but kept for compatibility
-    "create_enhanced_service_mesh_manager"
+    "create_enhanced_service_mesh_manager",
 ]

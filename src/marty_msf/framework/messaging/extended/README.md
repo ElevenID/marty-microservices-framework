@@ -5,12 +5,14 @@ This module provides extended messaging capabilities for the Marty Microservices
 ## Features
 
 ### 🔄 Unified Event Bus
+
 - Single API for all messaging patterns
 - Automatic backend selection based on message type
 - Pattern-specific optimizations
 - Cross-backend compatibility
 
 ### 🚀 Multiple Backend Support
+
 - **NATS**: High-performance, low-latency messaging with JetStream
 - **AWS SNS**: Cloud-native pub/sub with FIFO support
 - **Kafka**: High-throughput event streaming (existing)
@@ -18,12 +20,14 @@ This module provides extended messaging capabilities for the Marty Microservices
 - **Redis**: Fast in-memory messaging (existing)
 
 ### 🎯 Messaging Patterns
+
 - **Pub/Sub**: Event broadcasting and subscription
 - **Point-to-Point**: Direct service-to-service messaging
 - **Request/Response**: Query/reply patterns with timeouts
 - **Streaming**: High-throughput data processing
 
 ### 🔧 Enhanced Saga Integration
+
 - Distributed saga orchestration
 - Automatic compensation handling
 - Cross-service transaction coordination
@@ -44,26 +48,31 @@ This module provides extended messaging capabilities for the Marty Microservices
 ## Components
 
 ### Core Architecture (`extended_architecture.py`)
+
 - `MessageBackendType`: Enum of supported backends
 - `MessagingPattern`: Enum of messaging patterns
 - `UnifiedEventBus`: Main interface for messaging
 - `PatternSelector`: Smart pattern selection logic
 
 ### Backend Implementations
+
 - `NATSBackend`: NATS with JetStream support
 - `AWSSNSBackend`: AWS SNS with FIFO topics
 
 ### Unified Event Bus (`unified_event_bus.py`)
+
 - `UnifiedEventBusImpl`: Main implementation
 - `create_unified_event_bus()`: Factory function
 
 ### Saga Integration (`saga_integration.py`)
+
 - `EnhancedSagaOrchestrator`: Enhanced saga coordination
 - `DistributedSagaManager`: Cross-service saga management
 
 ## Usage Examples
 
 ### Basic Usage
+
 ```python
 from marty_msf.framework.messaging.extended import (
     create_unified_event_bus,
@@ -99,6 +108,7 @@ await event_bus.stop()
 ```
 
 ### Enhanced Saga Example
+
 ```python
 from marty_msf.framework.messaging.extended import create_distributed_saga_manager
 
@@ -115,6 +125,7 @@ saga_id = await saga_manager.create_and_start_saga(
 ## Configuration
 
 ### NATS Configuration
+
 ```python
 nats_config = NATSConfig(
     servers=["nats://localhost:4222"],
@@ -128,6 +139,7 @@ nats_config = NATSConfig(
 ```
 
 ### AWS SNS Configuration
+
 ```python
 sns_config = AWSSNSConfig(
     region_name="us-east-1",
@@ -142,11 +154,13 @@ sns_config = AWSSNSConfig(
 ## Dependencies
 
 ### Required
+
 - `asyncio`: Async/await support
 - `typing`: Type annotations
 - `abc`: Abstract base classes
 
 ### Optional (Backend-specific)
+
 - `nats-py`: For NATS backend
 - `boto3`: For AWS SNS backend
 - `aiokafka`: For Kafka backend (existing)
@@ -171,6 +185,7 @@ pip install nats-py boto3 aiokafka aio-pika aioredis
 ## Testing
 
 Run the examples:
+
 ```bash
 python -m marty_msf.framework.messaging.extended.examples
 ```
@@ -178,6 +193,7 @@ python -m marty_msf.framework.messaging.extended.examples
 ## Integration with Existing Framework
 
 The extended messaging system is designed to:
+
 - Work alongside existing messaging infrastructure
 - Provide backward compatibility
 - Enable gradual migration to unified patterns
@@ -186,26 +202,31 @@ The extended messaging system is designed to:
 ## Backend Selection Guidelines
 
 ### NATS
+
 - **Best for**: Low-latency, high-performance messaging
 - **Use cases**: Real-time notifications, microservice coordination
 - **Patterns**: All patterns with JetStream support
 
 ### AWS SNS
+
 - **Best for**: Cloud-native, scalable pub/sub
 - **Use cases**: Event broadcasting, fan-out messaging
 - **Patterns**: Pub/Sub primarily, Point-to-Point with SQS
 
 ### Kafka (Existing)
+
 - **Best for**: High-throughput event streaming
 - **Use cases**: Event sourcing, log aggregation
 - **Patterns**: Streaming, Pub/Sub
 
 ### RabbitMQ (Existing)
+
 - **Best for**: Reliable message queuing
 - **Use cases**: Work distribution, guaranteed delivery
 - **Patterns**: Point-to-Point, Request/Response
 
 ### Redis (Existing)
+
 - **Best for**: Fast in-memory messaging
 - **Use cases**: Caching, session state, real-time features
 - **Patterns**: Pub/Sub, Point-to-Point

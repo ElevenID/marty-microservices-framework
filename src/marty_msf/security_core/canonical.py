@@ -88,11 +88,7 @@ def authorize_principal(user: User, resource: str, action: str) -> bool:
 
         authorizer = get_service(IAuthorizer)
 
-        context = AuthorizationContext(
-            user=user,
-            resource=resource,
-            action=action
-        )
+        context = AuthorizationContext(user=user, resource=resource, action=action)
 
         result = authorizer.authorize(context)
         return result.allowed

@@ -27,5 +27,5 @@ __all__ = [
     "requires_abac",
     "verify_jwt_token",
     "SecurityContext",
-    "get_current_user"
+    "get_current_user",
 ]

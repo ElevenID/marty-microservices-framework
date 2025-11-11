@@ -87,9 +87,7 @@ class TestPrincipal:
         user_id = UserId("user123")
         now = datetime.utcnow()
 
-        principal = Principal(
-            user_id=user_id, username="testuser", authenticated_at=now
-        )
+        principal = Principal(user_id=user_id, username="testuser", authenticated_at=now)
 
         assert not principal.is_expired(now)
 
@@ -99,16 +97,12 @@ class TestAuthenticationResult:
 
     def test_successful_result_requires_principal(self):
         """Test that successful result must include principal."""
-        with pytest.raises(
-            ValueError, match="Successful authentication must include a principal"
-        ):
+        with pytest.raises(ValueError, match="Successful authentication must include a principal"):
             AuthenticationResult(status=AuthenticationStatus.SUCCESS)
 
     def test_failed_result_requires_error_message(self):
         """Test that failed result must include error message."""
-        with pytest.raises(
-            ValueError, match="Failed authentication must include an error message"
-        ):
+        with pytest.raises(ValueError, match="Failed authentication must include an error message"):
             AuthenticationResult(status=AuthenticationStatus.FAILED)
 
     def test_valid_successful_result(self):
@@ -118,9 +112,7 @@ class TestAuthenticationResult:
             user_id=user_id, username="testuser", authenticated_at=datetime.utcnow()
         )
 
-        result = AuthenticationResult(
-            status=AuthenticationStatus.SUCCESS, principal=principal
-        )
+        result = AuthenticationResult(status=AuthenticationStatus.SUCCESS, principal=principal)
 
         assert result.status == AuthenticationStatus.SUCCESS
         assert result.principal == principal

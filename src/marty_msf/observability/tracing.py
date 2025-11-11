@@ -32,7 +32,6 @@ from .factories import register_observability_services, set_tracing_service_clas
 logger = logging.getLogger(__name__)
 
 try:
-
     OPENTELEMETRY_AVAILABLE = True
 except ImportError:
     OPENTELEMETRY_AVAILABLE = False
@@ -60,6 +59,7 @@ OTEL_CONSOLE_EXPORT = os.getenv("OTEL_CONSOLE_EXPORT", "false").lower() in (
     "1",
     "yes",
 )
+
 
 class TracingService(ObservabilityService):
     """
@@ -221,7 +221,6 @@ def instrument_grpc() -> None:
         return
 
     try:
-
         # Instrument gRPC client
         client_instrumentor = GrpcAioInstrumentorClient()
         if not client_instrumentor.is_instrumented_by_opentelemetry:
@@ -251,7 +250,6 @@ def instrument_fastapi() -> None:
         return
 
     try:
-
         if not FastAPIInstrumentor().is_instrumented_by_opentelemetry:
             FastAPIInstrumentor.instrument()
             logger.info("FastAPI instrumented for tracing")
@@ -273,7 +271,6 @@ def instrument_sqlalchemy() -> None:
         return
 
     try:
-
         if not SQLAlchemyInstrumentor().is_instrumented_by_opentelemetry:
             SQLAlchemyInstrumentor().instrument()
             logger.info("SQLAlchemy instrumented for tracing")
@@ -295,7 +292,6 @@ def instrument_requests() -> None:
         return
 
     try:
-
         if not RequestsInstrumentor().is_instrumented_by_opentelemetry:
             RequestsInstrumentor().instrument()
             logger.info("Requests library instrumented for tracing")
@@ -317,7 +313,6 @@ def instrument_kafka() -> None:
         return
 
     try:
-
         if not KafkaInstrumentor().is_instrumented_by_opentelemetry:
             KafkaInstrumentor().instrument()
             logger.info("Kafka instrumented for tracing")

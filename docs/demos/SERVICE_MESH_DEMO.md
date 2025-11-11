@@ -52,6 +52,7 @@ EOF
 Choose your preferred service mesh:
 
 #### Option A: Istio
+
 ```bash
 # Install Istio service mesh
 marty service-mesh install --mesh-type istio --enable-monitoring
@@ -61,6 +62,7 @@ marty service-mesh status --mesh-type istio
 ```
 
 #### Option B: Linkerd
+
 ```bash
 # Install Linkerd service mesh
 marty service-mesh install --mesh-type linkerd --enable-monitoring
@@ -107,6 +109,7 @@ marty service-mesh apply-policies \
 ### Scenario 1: Circuit Breaker Protection
 
 1. **Generate Load**: Send requests to trigger circuit breaker
+
    ```bash
    # Generate normal load
    kubectl run load-generator --rm -i --tty --image=busybox -- /bin/sh
@@ -114,12 +117,14 @@ marty service-mesh apply-policies \
    ```
 
 2. **Trigger Failures**: Introduce service failures
+
    ```bash
    # Scale down backend to trigger circuit breaker
    kubectl scale deployment payment-service --replicas=0
    ```
 
 3. **Monitor Circuit Breaker**: Watch metrics and policy enforcement
+
    ```bash
    # Check circuit breaker status
    kubectl get destinationrules.networking.istio.io -o yaml
@@ -132,6 +137,7 @@ marty service-mesh apply-policies \
 ### Scenario 2: Fault Injection Testing
 
 1. **Enable Chaos Headers**: Add chaos engineering headers
+
    ```bash
    # Inject 5% latency
    curl -H "x-chaos-enabled: true" http://payment-service/api/v1/payments
@@ -141,6 +147,7 @@ marty service-mesh apply-policies \
    ```
 
 2. **Monitor Impact**: Observe service behavior under induced faults
+
    ```bash
    # Watch service logs
    kubectl logs -f deployment/payment-service
@@ -152,12 +159,14 @@ marty service-mesh apply-policies \
 ### Scenario 3: Rate Limiting
 
 1. **Generate Burst Traffic**: Test rate limiting policies
+
    ```bash
    # Generate burst requests
    seq 1 200 | xargs -I {} -P 20 curl http://payment-service/api/v1/payments
    ```
 
 2. **Observe Rate Limiting**: Check enforcement
+
    ```bash
    # Check rate limit headers in response
    curl -I http://payment-service/api/v1/payments
@@ -169,12 +178,14 @@ marty service-mesh apply-policies \
 ### Scenario 4: mTLS Security
 
 1. **Verify mTLS**: Check mutual TLS enforcement
+
    ```bash
    # Check TLS certificates
    kubectl exec deployment/payment-service -c istio-proxy -- openssl s_client -connect user-service:8080 -servername user-service
    ```
 
 2. **Test Security Policies**: Verify authorization
+
    ```bash
    # Check authorization policies
    kubectl get authorizationpolicies.security.istio.io -o yaml
@@ -198,6 +209,7 @@ kubectl port-forward -n linkerd-viz service/grafana 3000:3000
 ```
 
 Available dashboards:
+
 - **Service Mesh Overview**: Overall mesh health and performance
 - **Service Details**: Per-service metrics and policies
 - **Workload Details**: Pod-level metrics and sidecar stats
@@ -224,6 +236,7 @@ kubectl port-forward -n istio-system service/prometheus 9090:9090
 ```
 
 Useful queries:
+
 - `istio_requests_total`: Total request count
 - `istio_request_duration_milliseconds`: Request latency
 - `envoy_cluster_outlier_detection_ejections_active`: Circuit breaker ejections
@@ -350,6 +363,7 @@ kubectl apply -f ops/service-mesh/monitoring/service-mesh-alerts.yml
 ```
 
 Alert examples:
+
 - **High error rate**: >5% error rate for 2 minutes
 - **Circuit breaker triggered**: Circuit breaker state changes
 - **mTLS failures**: Non-mTLS traffic detected

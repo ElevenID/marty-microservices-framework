@@ -5,20 +5,25 @@ This directory contains examples demonstrating the **Unified Security Framework*
 ## 🚀 **Updated Examples (Current)**
 
 ### ✅ `test_unified_framework.py`
+
 Simple test showing the unified security framework initialization and basic authorization check.
 
 ### ✅ `basic_security_example.py`
+
 FastAPI integration example using the unified security framework with RBAC policies.
 
 ### ✅ `unified_security_demo.py`
+
 Comprehensive demonstration of unified security capabilities including RBAC, ABAC, service mesh security, and compliance scanning.
 
 ### ✅ `enhanced_service_mesh_demo.py`
+
 Service mesh integration with real-time security policy enforcement and monitoring.
 
 ## ⚠️ **Legacy Examples (Need Updates)**
 
 ### `complete_integration_example.py`
+
 **Status:** Uses deprecated APIs - needs migration to Unified Security Framework
 
 ## 🔄 **Migration Summary**
@@ -26,11 +31,13 @@ Service mesh integration with real-time security policy enforcement and monitori
 The security framework has been **consolidated** into a unified architecture:
 
 **Before (Deprecated):**
+
 - Multiple competing implementations
 - Scattered security components
 - Complex integration patterns
 
 **After (Unified):**
+
 - Single `UnifiedSecurityFramework`
 - Consistent API across all security operations
 - Pluggable identity providers and policy engines
@@ -308,24 +315,28 @@ spec:
 ## Best Practices
 
 ### 1. Secret Management
+
 - Use Vault for all sensitive data
 - Implement automatic secret rotation
 - Never store secrets in code or configuration files
 - Use different secret backends for different environments
 
 ### 2. Policy Management
+
 - Use OPA for complex attribute-based policies
 - Keep policies version controlled
 - Test policies thoroughly before deployment
 - Monitor policy evaluation performance
 
 ### 3. Certificate Management
+
 - Use short-lived certificates (24-48 hours)
 - Implement automatic certificate rotation
 - Use separate CAs for different environments
 - Monitor certificate expiration
 
 ### 4. Audit and Compliance
+
 - Log all authentication and authorization events
 - Implement centralized log collection
 - Set up alerting for security events

@@ -35,6 +35,7 @@ service = get_service(MyService)
 ```
 
 Key features:
+
 - **Type Safety**: Full mypy support with generics
 - **Thread Safe**: Uses threading.RLock for all operations
 - **Lazy Loading**: Supports factory patterns for delayed initialization
@@ -132,40 +133,50 @@ def create_user(user: dict):
 ## Files Modified
 
 ### Core Infrastructure
+
 - **NEW**: `src/marty_msf/core/registry.py` - Service registry and atomic counter
 - **NEW**: `src/marty_msf/core/services.py` - Typed service base classes
 
 ### Configuration
+
 - `src/marty_msf/patterns/config.py` - Replaced global config with ConfigService
 
 ### Observability
+
 - `src/marty_msf/observability/standard.py` - Replaced global observability with ObservabilityService
 - `src/marty_msf/observability/tracing.py` - Replaced global tracer with TracingService
 
 ### Security
+
 - `src/marty_msf/security/manager.py` - Replaced global security manager with SecurityService
 
 ### CLI
+
 - `src/marty_msf/cli/__init__.py` - Replaced global ID counters with AtomicCounter
 
 ### Utilities
+
 - **NEW**: `scripts/global_replacement_helper.py` - Tool to identify remaining global patterns
 
 ## Migration Strategy
 
 ### Phase 1: Core Infrastructure ✅
+
 - Created service registry system
 - Created typed service base classes
 - Created atomic counter for ID generation
 
 ### Phase 2: High-Impact Modules ✅
+
 - Migrated configuration system
 - Migrated observability system
 - Migrated security manager
 - Migrated CLI ID counters
 
 ### Phase 3: Remaining Modules (In Progress)
+
 Based on the analysis script, remaining global patterns to migrate:
+
 - Event bus managers
 - Resilience managers
 - Audit loggers
@@ -175,23 +186,28 @@ Based on the analysis script, remaining global patterns to migrate:
 ## Benefits Achieved
 
 ### 1. Type Safety
+
 All services are now fully typed with mypy validation:
+
 ```bash
 $ uv run mypy src/marty_msf/core/registry.py
 Success: no issues found in 1 source file
 ```
 
 ### 2. Thread Safety
+
 - Service registry uses RLock for thread-safe operations
 - AtomicCounter provides thread-safe ID generation
 - No more race conditions with global variables
 
 ### 3. Testing
+
 - Easy service mocking with `temporary_service_override`
 - No global state pollution between tests
 - Clear service lifecycle management
 
 ### 4. Maintainability
+
 - Clear dependency relationships
 - Consistent service patterns
 - Better error handling and logging

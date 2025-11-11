@@ -24,7 +24,7 @@ class SQLGenerator:
     def format_jsonb_value(self, value: any) -> str:
         """Format a Python value as a proper JSONB string."""
         if value is None:
-            return 'null'
+            return "null"
         elif isinstance(value, str):
             # String values need to be JSON-encoded (with quotes)
             return json.dumps(value)
@@ -43,7 +43,7 @@ class SQLGenerator:
 
     def fix_mysql_index_syntax(self, sql_content: str) -> str:
         """Convert MySQL-style inline INDEX declarations to separate CREATE INDEX statements."""
-        lines = sql_content.split('\n')
+        lines = sql_content.split("\n")
         result_lines = []
         index_statements = []
         current_table = None
@@ -53,17 +53,17 @@ class SQLGenerator:
             stripped = line.strip()
 
             # Detect CREATE TABLE statements
-            if stripped.upper().startswith('CREATE TABLE'):
+            if stripped.upper().startswith("CREATE TABLE"):
                 in_create_table = True
                 # Extract table name
-                table_match = re.search(r'CREATE TABLE\s+(\w+)', stripped, re.IGNORECASE)
+                table_match = re.search(r"CREATE TABLE\s+(\w+)", stripped, re.IGNORECASE)
                 if table_match:
                     current_table = table_match.group(1)
                 result_lines.append(line)
                 continue
 
             # End of CREATE TABLE block
-            if in_create_table and stripped.endswith(');'):
+            if in_create_table and stripped.endswith(");"):
                 in_create_table = False
                 result_lines.append(line)
                 # Add collected index statements after the table
@@ -74,7 +74,7 @@ class SQLGenerator:
 
             # Process INDEX declarations within CREATE TABLE
             if in_create_table and current_table:
-                index_match = re.search(r'INDEX\s+(\w+)\s*\(([^)]+)\)', stripped, re.IGNORECASE)
+                index_match = re.search(r"INDEX\s+(\w+)\s*\(([^)]+)\)", stripped, re.IGNORECASE)
                 if index_match:
                     index_name = index_match.group(1)
                     index_columns = index_match.group(2)
@@ -87,15 +87,17 @@ class SQLGenerator:
             # Add non-index lines as-is
             result_lines.append(line)
 
-        return '\n'.join(result_lines)
+        return "\n".join(result_lines)
 
     def validate_postgresql_syntax(self, sql_content: str) -> list[str]:
         """Validate SQL content for PostgreSQL compatibility issues."""
         issues = []
 
         # Check for MySQL-style inline INDEX declarations
-        if re.search(r'INDEX\s+\w+\s*\([^)]+\)', sql_content, re.IGNORECASE):
-            issues.append("Found MySQL-style inline INDEX declarations. Use separate CREATE INDEX statements.")
+        if re.search(r"INDEX\s+\w+\s*\([^)]+\)", sql_content, re.IGNORECASE):
+            issues.append(
+                "Found MySQL-style inline INDEX declarations. Use separate CREATE INDEX statements."
+            )
 
         return issues
 
@@ -122,7 +124,7 @@ def fix_sql_file(file_path: Path, dry_run: bool = False) -> tuple[bool, list[str
     generator = SQLGenerator()
 
     try:
-        content = file_path.read_text(encoding='utf-8')
+        content = file_path.read_text(encoding="utf-8")
         original_content = content
 
         # Check for issues first
@@ -140,11 +142,11 @@ def fix_sql_file(file_path: Path, dry_run: bool = False) -> tuple[bool, list[str
 
         if was_modified and not dry_run:
             # Create backup
-            backup_path = file_path.with_suffix(file_path.suffix + '.bak')
+            backup_path = file_path.with_suffix(file_path.suffix + ".bak")
             file_path.rename(backup_path)
 
             # Write fixed content
-            file_path.write_text(content, encoding='utf-8')
+            file_path.write_text(content, encoding="utf-8")
 
             print(f"✅ Fixed: {file_path}")
             print(f"   Backup: {backup_path}")
@@ -162,31 +164,27 @@ def fix_sql_file(file_path: Path, dry_run: bool = False) -> tuple[bool, list[str
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Fix SQL syntax issues in MMF projects"
-    )
+    parser = argparse.ArgumentParser(description="Fix SQL syntax issues in MMF projects")
     parser.add_argument(
         "directory",
         nargs="?",
         default=".",
-        help="Directory to scan for SQL files (default: current directory)"
+        help="Directory to scan for SQL files (default: current directory)",
     )
     parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Show what would be fixed without making changes"
+        "--dry-run", action="store_true", help="Show what would be fixed without making changes"
     )
     parser.add_argument(
         "--include",
         action="append",
         default=[],
-        help="Additional file patterns to include (e.g., --include '*.ddl')"
+        help="Additional file patterns to include (e.g., --include '*.ddl')",
     )
     parser.add_argument(
         "--exclude",
         action="append",
         default=[],
-        help="Directories to exclude (e.g., --exclude node_modules)"
+        help="Directories to exclude (e.g., --exclude node_modules)",
     )
 
     args = parser.parse_args()

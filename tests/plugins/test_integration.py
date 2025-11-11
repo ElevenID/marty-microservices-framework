@@ -54,7 +54,6 @@ class TestFullPluginLifecycle:
             "optional_dependencies": [],
         }
 
-
         (test_plugin_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
 
         # Create plugin implementation
@@ -89,7 +88,6 @@ def create_plugin():
 
         # Test plugin discovery
         try:
-
             discoverer = DirectoryPluginDiscoverer(plugin_dir)
             plugins = discoverer.discover()
 
@@ -104,8 +102,6 @@ def create_plugin():
     async def test_plugin_manager_integration(self, mock_context):
         """Test plugin manager with full integration."""
         try:
-
-
             manager = PluginManager(mock_context)
 
             # Register test plugin
@@ -140,8 +136,6 @@ class TestServiceRegistrationIntegration:
     async def test_service_registry_integration(self, mock_context):
         """Test service registry with full integration."""
         try:
-
-
             registry = ServiceRegistry(mock_context)
 
             # Create test service
@@ -190,7 +184,6 @@ class TestServiceRegistrationIntegration:
     async def test_route_mounting_integration(self, mock_context):
         """Test route mounting and request handling."""
         try:
-
             registry = ServiceRegistry(mock_context)
 
             # Create service with multiple routes
@@ -435,7 +428,6 @@ class TestConfigurationIntegration:
             },
         }
 
-
         for filename, config_data in plugin_configs.items():
             config_file = config_dir / filename
             with open(config_file, "w") as f:
@@ -443,7 +435,6 @@ class TestConfigurationIntegration:
 
         # Test configuration loading (mocked)
         try:
-
             config_manager = create_plugin_config_manager(config_dir)
             assert config_manager is not None
         except ImportError:
@@ -471,7 +462,6 @@ class TestConfigurationIntegration:
                 "security_enhanced": True,
             },
         }
-
 
         for filename, config_data in configs.items():
             config_file = config_dir / filename
@@ -572,7 +562,6 @@ class TestPerformanceIntegration:
     @pytest.mark.asyncio
     async def test_plugin_startup_performance(self, mock_context):
         """Test startup performance with multiple plugins."""
-
 
         plugins = []
         for _i in range(5):  # Create 5 test plugins

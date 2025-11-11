@@ -14,10 +14,7 @@ class OsoPolicyEngine(AbstractPolicyEngine):
     async def evaluate_policy(self, context: SecurityContext) -> SecurityDecision:
         """Evaluate policy using Oso"""
         # Placeholder implementation
-        return SecurityDecision(
-            allowed=False,
-            reason="Oso integration not yet implemented"
-        )
+        return SecurityDecision(allowed=False, reason="Oso integration not yet implemented")
 
     async def load_policies(self, policies: list[dict[str, Any]]) -> bool:
         """Load Oso policies"""

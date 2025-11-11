@@ -5,10 +5,12 @@ This project is being restructured from a monolithic security framework to a **h
 ## Current State
 
 ### Working Code (Keep Running)
+
 - **`mmf/`** - Current working microservices structure with identity service
 - **`src/marty_msf/`** - Legacy security framework (authentication, authorization, etc.)
 
 ### New Architecture (Under Development)
+
 - **`mmf_new/`** - Minimal example implementing the new hexagonal architecture
 - **`platform_core/`** - Cross-cutting contracts (secrets, telemetry, policy)
 - **`platform_plugins/`** - Operator-scope infrastructure providers
@@ -16,6 +18,7 @@ This project is being restructured from a monolithic security framework to a **h
 - **`deploy/`** - Deployment configurations
 
 ### Deprecated Code
+
 - **`boneyard/`** - Code that has been fully migrated and replaced
 
 ## Architecture Vision
@@ -56,11 +59,13 @@ mmf_new/
 ## Migration Strategy
 
 ### Phase 1: ✅ Prove the Architecture
+
 - **Status**: COMPLETE
 - **Goal**: Create a minimal working example that demonstrates all concepts
 - **Deliverable**: `mmf_new/services/identity/` with full TDD test suite
 
 ### Phase 2: Expand the Example
+
 - **Status**: NEXT
 - **Goal**: Add more use cases and realistic infrastructure adapters
 - **Tasks**:
@@ -70,6 +75,7 @@ mmf_new/
   - Connect to platform_core contracts
 
 ### Phase 3: Begin Migration
+
 - **Status**: PLANNED
 - **Goal**: Start moving functionality from existing code to new architecture
 - **Approach**:
@@ -78,6 +84,7 @@ mmf_new/
   - Move to boneyard only after full replacement
 
 ### Phase 4: Platform Integration
+
 - **Status**: PLANNED
 - **Goal**: Implement cross-cutting concerns and platform plugins
 - **Tasks**:
@@ -88,24 +95,28 @@ mmf_new/
 ## Key Principles
 
 ### Hexagonal Architecture (Ports & Adapters)
+
 - **Domain**: Pure business logic, no external dependencies
 - **Application**: Use cases that orchestrate domain and external world
 - **Infrastructure**: Adapters that implement ports and handle I/O
 - **Ports**: Abstract interfaces that define contracts
 
 ### Test-Driven Development (TDD)
+
 - Domain models driven by unit tests
 - Use cases tested in isolation with mocks
 - Integration tests verify complete flows
 - Contract tests ensure port implementations are correct
 
 ### Bounded Contexts
+
 - Each service represents a business capability
 - Clear boundaries with explicit interfaces
 - Independent deployment and scaling
 - Domain-specific languages and models
 
 ### Plugin Architecture
+
 - **Service-scope plugins**: Feature extensions within a service
 - **Platform-scope plugins**: Infrastructure provider choices
 - Clear plugin contracts and lifecycle management

@@ -32,7 +32,6 @@ from . import ArtifactType
 
 # External dependencies
 try:
-
     AWS_AVAILABLE = True
 except ImportError:
     AWS_AVAILABLE = False

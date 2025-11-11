@@ -72,9 +72,7 @@ class AWSSNSBackend(EnhancedMessageBackend):
     async def connect(self) -> bool:
         """Connect to AWS SNS."""
         try:
-            session_kwargs = {
-                "region_name": self.config.region_name
-            }
+            session_kwargs = {"region_name": self.config.region_name}
 
             if self.config.aws_access_key_id and self.config.aws_secret_access_key:
                 session_kwargs["aws_access_key_id"] = self.config.aws_access_key_id
@@ -83,7 +81,7 @@ class AWSSNSBackend(EnhancedMessageBackend):
             if self.config.endpoint_url:
                 session_kwargs["endpoint_url"] = self.config.endpoint_url
 
-            self.sns_client = boto3.client('sns', **session_kwargs)
+            self.sns_client = boto3.client("sns", **session_kwargs)
 
             # Test connection
             self.sns_client.list_topics()
@@ -119,7 +117,9 @@ class AWSSNSBackend(EnhancedMessageBackend):
             logger.error(f"Failed to disconnect from AWS SNS: {e}")
             return False
 
-    async def _ensure_topic_exists(self, topic_name: str, pattern_config: MessagingPatternConfig) -> str:
+    async def _ensure_topic_exists(
+        self, topic_name: str, pattern_config: MessagingPatternConfig
+    ) -> str:
         """Ensure SNS topic exists and return topic ARN."""
         if topic_name in self._topics:
             return self._topics[topic_name]
@@ -130,15 +130,15 @@ class AWSSNSBackend(EnhancedMessageBackend):
 
             if self.config.fifo_topics:
                 # FIFO topics must end with .fifo
-                if not topic_name.endswith('.fifo'):
+                if not topic_name.endswith(".fifo"):
                     topic_name = f"{topic_name}.fifo"
-                attributes['FifoTopic'] = 'true'
+                attributes["FifoTopic"] = "true"
 
                 if self.config.content_based_deduplication:
-                    attributes['ContentBasedDeduplication'] = 'true'
+                    attributes["ContentBasedDeduplication"] = "true"
 
             if self.config.kms_master_key_id:
-                attributes['KmsMasterKeyId'] = self.config.kms_master_key_id
+                attributes["KmsMasterKeyId"] = self.config.kms_master_key_id
 
             # Set delivery policy for reliability
             if pattern_config.delivery_guarantee == DeliveryGuarantee.AT_LEAST_ONCE:
@@ -150,18 +150,15 @@ class AWSSNSBackend(EnhancedMessageBackend):
                         "maxDelayTarget": 20,
                         "numMinDelayRetries": 0,
                         "numNoDelayRetries": 0,
-                        "backoffFunction": "linear"
+                        "backoffFunction": "linear",
                     }
                 }
-                attributes['DeliveryPolicy'] = json.dumps(delivery_policy)
+                attributes["DeliveryPolicy"] = json.dumps(delivery_policy)
 
             # Create topic
-            response = self.sns_client.create_topic(
-                Name=topic_name,
-                Attributes=attributes
-            )
+            response = self.sns_client.create_topic(Name=topic_name, Attributes=attributes)
 
-            topic_arn = response['TopicArn']
+            topic_arn = response["TopicArn"]
             self._topics[topic_name] = topic_arn
             logger.info(f"Created/ensured SNS topic: {topic_name} -> {topic_arn}")
             return topic_arn
@@ -170,10 +167,9 @@ class AWSSNSBackend(EnhancedMessageBackend):
             logger.error(f"Failed to create SNS topic {topic_name}: {e}")
             raise
 
-    async def publish(self,
-                     topic: str,
-                     message: GenericMessage,
-                     pattern_config: MessagingPatternConfig) -> bool:
+    async def publish(
+        self, topic: str, message: GenericMessage, pattern_config: MessagingPatternConfig
+    ) -> bool:
         """Publish message to SNS topic."""
         if not self._connected or not self.sns_client:
             logger.error("AWS SNS not connected")
@@ -197,48 +193,47 @@ class AWSSNSBackend(EnhancedMessageBackend):
                     "routing_key": message.metadata.routing_key,
                     "reply_to": message.metadata.reply_to,
                     "message_type": message.metadata.message_type,
-                }
+                },
             }
 
             # Prepare SNS message parameters
             sns_params = {
-                'TopicArn': topic_arn,
-                'Message': json.dumps(message_body),
+                "TopicArn": topic_arn,
+                "Message": json.dumps(message_body),
             }
 
             # Add message attributes for filtering
             message_attributes = {}
             if message.metadata.message_type:
-                message_attributes['MessageType'] = {
-                    'DataType': 'String',
-                    'StringValue': message.metadata.message_type
+                message_attributes["MessageType"] = {
+                    "DataType": "String",
+                    "StringValue": message.metadata.message_type,
                 }
 
             if message.metadata.headers:
                 for key, value in message.metadata.headers.items():
                     if isinstance(value, str | int | float):
-                        message_attributes[key] = {
-                            'DataType': 'String',
-                            'StringValue': str(value)
-                        }
+                        message_attributes[key] = {"DataType": "String", "StringValue": str(value)}
 
             if message_attributes:
-                sns_params['MessageAttributes'] = message_attributes
+                sns_params["MessageAttributes"] = message_attributes
 
             # FIFO topic specific parameters
             if self.config.fifo_topics:
-                sns_params['MessageGroupId'] = message.metadata.routing_key or 'default'
+                sns_params["MessageGroupId"] = message.metadata.routing_key or "default"
                 if not self.config.content_based_deduplication:
-                    sns_params['MessageDeduplicationId'] = message.metadata.message_id
+                    sns_params["MessageDeduplicationId"] = message.metadata.message_id
 
             # Subject for email subscriptions
             if message.metadata.message_type:
-                sns_params['Subject'] = f"[{message.metadata.message_type}] Notification"
+                sns_params["Subject"] = f"[{message.metadata.message_type}] Notification"
 
             # Publish message
             response = self.sns_client.publish(**sns_params)
 
-            logger.debug(f"Published message to SNS topic: {topic}, MessageId: {response['MessageId']}")
+            logger.debug(
+                f"Published message to SNS topic: {topic}, MessageId: {response['MessageId']}"
+            )
             return True
 
         except ClientError as e:
@@ -248,10 +243,7 @@ class AWSSNSBackend(EnhancedMessageBackend):
             logger.error(f"Unexpected error publishing to SNS topic {topic}: {e}")
             return False
 
-    async def subscribe(self,
-                       topic: str,
-                       handler,
-                       pattern_config: MessagingPatternConfig) -> str:
+    async def subscribe(self, topic: str, handler, pattern_config: MessagingPatternConfig) -> str:
         """Subscribe to SNS topic (creates SQS subscription)."""
         if not self._connected or not self.sns_client:
             logger.error("AWS SNS not connected")
@@ -264,7 +256,9 @@ class AWSSNSBackend(EnhancedMessageBackend):
             # For SNS, we typically need an SQS queue as the subscription endpoint
             # This is a simplified implementation - in practice, you'd want to
             # create an SQS queue and subscribe it to the SNS topic
-            logger.warning("SNS subscribe requires SQS queue endpoint - this is a placeholder implementation")
+            logger.warning(
+                "SNS subscribe requires SQS queue endpoint - this is a placeholder implementation"
+            )
 
             # In a real implementation, you would:
             # 1. Create an SQS queue
@@ -300,25 +294,26 @@ class AWSSNSBackend(EnhancedMessageBackend):
             logger.error(f"Failed to unsubscribe from SNS: {e}")
             return False
 
-    async def request(self,
-                     topic: str,
-                     message: GenericMessage,
-                     timeout: timedelta = timedelta(seconds=30)) -> GenericMessage:
+    async def request(
+        self, topic: str, message: GenericMessage, timeout: timedelta = timedelta(seconds=30)
+    ) -> GenericMessage:
         """Send request via SNS (not supported - raises NotImplementedError)."""
-        raise NotImplementedError("Request/Response pattern not supported by SNS - use SQS or NATS instead")
+        raise NotImplementedError(
+            "Request/Response pattern not supported by SNS - use SQS or NATS instead"
+        )
 
-    async def reply(self,
-                   original_message: GenericMessage,
-                   response: GenericMessage) -> bool:
+    async def reply(self, original_message: GenericMessage, response: GenericMessage) -> bool:
         """Reply via SNS (not supported - raises NotImplementedError)."""
-        raise NotImplementedError("Request/Response pattern not supported by SNS - use SQS or NATS instead")
+        raise NotImplementedError(
+            "Request/Response pattern not supported by SNS - use SQS or NATS instead"
+        )
 
     def supports_pattern(self, pattern: MessagingPattern) -> bool:
         """Check if SNS supports the messaging pattern."""
         supported_patterns = {
             MessagingPattern.PUBLISH_SUBSCRIBE,
             MessagingPattern.BROADCAST,
-            MessagingPattern.POINT_TO_POINT  # With SQS subscription
+            MessagingPattern.POINT_TO_POINT,  # With SQS subscription
         }
         return pattern in supported_patterns
 
@@ -327,7 +322,7 @@ class AWSSNSBackend(EnhancedMessageBackend):
         if self.config.fifo_topics:
             return [
                 DeliveryGuarantee.AT_LEAST_ONCE,
-                DeliveryGuarantee.EXACTLY_ONCE  # With FIFO and deduplication
+                DeliveryGuarantee.EXACTLY_ONCE,  # With FIFO and deduplication
             ]
         else:
             return [DeliveryGuarantee.AT_LEAST_ONCE]

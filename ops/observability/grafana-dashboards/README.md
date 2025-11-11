@@ -5,8 +5,10 @@ This directory contains standardized Grafana dashboard templates for Marty Micro
 ## Available Dashboards
 
 ### 1. MMF Service Overview (`mmf-service-overview.json`)
+
 **Purpose**: Primary operational dashboard for service monitoring
 **Key Features**:
+
 - Request rate, error rate, and response time metrics
 - Service health and uptime tracking
 - Resource utilization (CPU, memory)
@@ -16,8 +18,10 @@ This directory contains standardized Grafana dashboard templates for Marty Micro
 **Target Audience**: DevOps teams, SREs, service owners
 
 ### 2. MMF Distributed Tracing Analysis (`mmf-tracing-analysis.json`)
+
 **Purpose**: Deep-dive tracing analysis for debugging distributed requests
 **Key Features**:
+
 - Trace duration percentiles across services
 - Service dependency mapping
 - Correlation ID coverage tracking
@@ -28,8 +32,10 @@ This directory contains standardized Grafana dashboard templates for Marty Micro
 **Target Audience**: Developers, debugging teams, performance engineers
 
 ### 3. MMF Plugin Developer Troubleshooting (`mmf-plugin-troubleshooting.json`)
+
 **Purpose**: Specialized dashboard for plugin developers and troubleshooting
 **Key Features**:
+
 - Plugin lifecycle event tracking
 - Plugin operation performance metrics
 - Dependency health monitoring
@@ -42,6 +48,7 @@ This directory contains standardized Grafana dashboard templates for Marty Micro
 ## Installation Instructions
 
 ### Prerequisites
+
 - Grafana instance with Prometheus and Loki data sources configured
 - OpenTelemetry metrics being collected by Prometheus
 - Logs flowing to Loki (optional for some dashboards)
@@ -49,6 +56,7 @@ This directory contains standardized Grafana dashboard templates for Marty Micro
 ### Import Steps
 
 1. **Via Grafana UI**:
+
    ```bash
    # Navigate to Grafana -> Dashboards -> Import
    # Upload the JSON file or paste the contents
@@ -56,6 +64,7 @@ This directory contains standardized Grafana dashboard templates for Marty Micro
    ```
 
 2. **Via API**:
+
    ```bash
    curl -X POST \
      -H "Content-Type: application/json" \
@@ -65,6 +74,7 @@ This directory contains standardized Grafana dashboard templates for Marty Micro
    ```
 
 3. **Via Provisioning** (Recommended for automated deployments):
+
    ```yaml
    # /etc/grafana/provisioning/dashboards/mmf-dashboards.yaml
    apiVersion: 1
@@ -91,6 +101,7 @@ The dashboards expect the following data source variables:
 ## Metrics Requirements
 
 ### Standard MMF Service Metrics
+
 The dashboards expect these metrics to be available:
 
 ```prometheus
@@ -135,6 +146,7 @@ plugin_requests_total{service_name, plugin_name}
 ```
 
 ### Log Requirements (Loki)
+
 For the plugin troubleshooting dashboard:
 
 ```json
@@ -151,17 +163,21 @@ For the plugin troubleshooting dashboard:
 ## Customization
 
 ### Adding Custom Panels
+
 1. Export the dashboard as JSON
 2. Add your custom panel configuration
 3. Re-import the dashboard
 
 ### Service-Specific Customizations
+
 Each dashboard supports service filtering via the `$service` template variable. You can:
+
 - Create service-specific copies
 - Add service-specific thresholds
 - Include service-specific alerting rules
 
 ### Alerting Integration
+
 The dashboards include threshold configurations that can be used with Grafana alerting:
 
 - Response time thresholds: 50ms (warning), 200ms (critical)
@@ -171,16 +187,19 @@ The dashboards include threshold configurations that can be used with Grafana al
 ## Best Practices
 
 ### Dashboard Organization
+
 - Use folder structure: `MMF/Service Overview`, `MMF/Debugging`, etc.
 - Tag dashboards consistently: `marty-msf`, `microservices`, `opentelemetry`
 - Set appropriate refresh intervals (30s-5m depending on use case)
 
 ### Performance Considerations
+
 - Use appropriate time ranges (1h for operations, 24h for trends)
 - Limit the number of series in high-cardinality queries
 - Use recording rules for complex calculations
 
 ### Team Access
+
 - Service Overview: Operations team, on-call engineers
 - Tracing Analysis: Development teams, debugging specialists
 - Plugin Troubleshooting: Plugin developers, framework team
@@ -205,7 +224,9 @@ The dashboards include threshold configurations that can be used with Grafana al
    - Ensure proper trace context propagation
 
 ### Support
+
 For issues with the dashboards:
+
 1. Check the MMF documentation
 2. Verify your observability implementation against the unified observability module
 3. Open an issue in the MMF repository with dashboard export and error details

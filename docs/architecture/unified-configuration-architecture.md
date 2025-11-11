@@ -50,16 +50,19 @@ The Unified Configuration System is designed as a multi-layer architecture that 
 ## Key Design Principles
 
 ### 1. Cloud Agnostic
+
 - **Multi-Cloud Support**: Works seamlessly across AWS, GCP, Azure, and self-hosted environments
 - **Automatic Detection**: Automatically detects the hosting environment and selects appropriate backends
 - **Fallback Strategies**: Configurable fallback chains for high availability
 
 ### 2. Flexible Backend Architecture
+
 - **Pluggable Backends**: Easy to add new secret management systems
 - **Optional Dependencies**: Cloud SDKs are optional dependencies, loaded only when needed
 - **Backend Health Monitoring**: Continuous health checking of all configured backends
 
 ### 3. Developer Experience
+
 - **Secret References**: Simple `${SECRET:key}` syntax in configuration files
 - **Type Safety**: Pydantic models for configuration validation
 - **Hierarchical Configuration**: Environment-specific overrides (base → environment → secrets)
@@ -111,12 +114,14 @@ Based on the detected environment, the system recommends appropriate backends:
 ## Configuration Loading Strategy
 
 ### Hierarchical Loading
+
 1. **Base Configuration**: `config/base.yaml`
 2. **Environment Override**: `config/{environment}.yaml`
 3. **Environment Variables**: Service-specific prefixes
 4. **Secret Resolution**: Replace `${SECRET:key}` references
 
 ### Example Configuration Flow
+
 ```yaml
 # base.yaml
 database:
@@ -134,16 +139,19 @@ database:
 ### Cloud-Native Backends
 
 #### AWS Secrets Manager
+
 - **Authentication**: IAM roles, profiles, or environment variables
 - **Features**: Automatic rotation, versioning, cross-region replication
 - **Dependency**: `boto3` (optional)
 
 #### GCP Secret Manager
+
 - **Authentication**: Service accounts, ADC, or environment variables
 - **Features**: Versioning, IAM integration, audit logging
 - **Dependency**: `google-cloud-secret-manager` (optional)
 
 #### Azure Key Vault
+
 - **Authentication**: Managed identity, service principal, or Azure CLI
 - **Features**: Hardware security modules, certificate management
 - **Dependency**: `azure-keyvault-secrets` (optional)
@@ -151,11 +159,13 @@ database:
 ### Self-Hosted Backends
 
 #### HashiCorp Vault
+
 - **Authentication**: Multiple methods (AppRole, Kubernetes, AWS IAM, etc.)
 - **Features**: Dynamic secrets, encryption-as-a-service, audit logging
 - **Integration**: Uses existing MMF Vault client
 
 #### Kubernetes Secrets
+
 - **Authentication**: Service account tokens
 - **Features**: Namespace isolation, automatic mounting
 - **Dependency**: `kubernetes` client (optional)
@@ -163,11 +173,13 @@ database:
 ### Development Backends
 
 #### File Backend
+
 - **Storage**: Local filesystem with restricted permissions
 - **Use Case**: Local development, testing
 - **Security**: File permissions (0600)
 
 #### Environment Variables
+
 - **Storage**: Process environment
 - **Use Case**: Development, simple deployments
 - **Prefix**: Service-specific prefixes
@@ -175,16 +187,19 @@ database:
 ## Security Considerations
 
 ### Secret Protection
+
 - **In-Memory Caching**: TTL-based caching with automatic expiration
 - **Encryption at Rest**: Relies on backend encryption (Vault, cloud services)
 - **Audit Logging**: Access tracking for compliance
 
 ### Access Control
+
 - **Least Privilege**: Each backend uses minimal required permissions
 - **Authentication**: Uses platform-native authentication mechanisms
 - **Authorization**: Backend-specific access controls
 
 ### Secret Rotation
+
 - **Automatic Detection**: Identifies secrets needing rotation
 - **Configurable Intervals**: Per-secret rotation schedules
 - **Health Monitoring**: Tracks secret freshness and backend health
@@ -192,6 +207,7 @@ database:
 ## Usage Patterns
 
 ### Auto-Detection Pattern (Recommended)
+
 ```python
 config_manager = create_unified_config_manager(
     service_name="my-service",
@@ -201,6 +217,7 @@ config_manager = create_unified_config_manager(
 ```
 
 ### Explicit Configuration Pattern
+
 ```python
 config_manager = create_unified_config_manager(
     service_name="my-service",
@@ -213,6 +230,7 @@ config_manager = create_unified_config_manager(
 ```
 
 ### Multi-Cloud Pattern
+
 ```python
 config_manager = create_unified_config_manager(
     service_name="multi-cloud-service",
@@ -228,11 +246,13 @@ config_manager = create_unified_config_manager(
 ## Integration Points
 
 ### Service Templates
+
 - **FastAPI Services**: Startup event integration
 - **gRPC Services**: Async initialization patterns
 - **Background Jobs**: Configuration loading in workers
 
 ### Framework Integration
+
 - **Observability**: Configuration metrics and health checks
 - **Plugin System**: Plugin-specific configuration loading
 - **Database Connections**: Secret-based connection strings
@@ -240,16 +260,19 @@ config_manager = create_unified_config_manager(
 ## Monitoring and Operations
 
 ### Health Checks
+
 - Backend connectivity monitoring
 - Secret freshness tracking
 - Configuration validation status
 
 ### Metrics
+
 - Secret access patterns
 - Backend response times
 - Configuration reload frequencies
 
 ### Alerting
+
 - Backend failures
 - Secret expiration warnings
 - Configuration validation errors
@@ -257,12 +280,14 @@ config_manager = create_unified_config_manager(
 ## Future Enhancements
 
 ### Planned Features
+
 - **Configuration Hot Reloading**: Runtime configuration updates
 - **Secret Encryption**: Client-side encryption for additional security
 - **Configuration Versioning**: Track configuration changes over time
 - **GUI Management**: Web interface for configuration management
 
 ### Additional Backends
+
 - **Consul**: HashiCorp Consul KV store integration
 - **etcd**: etcd key-value store support
 - **Database**: Database-backed configuration storage

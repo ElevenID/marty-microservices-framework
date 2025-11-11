@@ -94,7 +94,7 @@ class IstioSecurityManager(AbstractServiceMeshSecurityManager):
                 "policies_applied": self.mesh_status["policies_applied"],
                 "policy_status": policy_status,
                 "mtls_status": mtls_status,
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
             return status
@@ -110,20 +110,11 @@ class IstioSecurityManager(AbstractServiceMeshSecurityManager):
                 peer_auth_policy = {
                     "apiVersion": "security.istio.io/v1beta1",
                     "kind": "PeerAuthentication",
-                    "metadata": {
-                        "name": f"{service}-mtls",
-                        "namespace": self.namespace
-                    },
+                    "metadata": {"name": f"{service}-mtls", "namespace": self.namespace},
                     "spec": {
-                        "selector": {
-                            "matchLabels": {
-                                "app": service
-                            }
-                        },
-                        "mtls": {
-                            "mode": "STRICT"
-                        }
-                    }
+                        "selector": {"matchLabels": {"app": service}},
+                        "mtls": {"mode": "STRICT"},
+                    },
                 }
 
                 if not await self._apply_k8s_resource(peer_auth_policy):
@@ -148,18 +139,11 @@ class IstioSecurityManager(AbstractServiceMeshSecurityManager):
             auth_policy = {
                 "apiVersion": "security.istio.io/v1beta1",
                 "kind": "AuthorizationPolicy",
-                "metadata": {
-                    "name": f"{service_name}-authz",
-                    "namespace": self.namespace
-                },
+                "metadata": {"name": f"{service_name}-authz", "namespace": self.namespace},
                 "spec": {
-                    "selector": {
-                        "matchLabels": {
-                            "app": service_name
-                        }
-                    },
-                    "rules": self._convert_to_istio_auth_rules(rules)
-                }
+                    "selector": {"matchLabels": {"app": service_name}},
+                    "rules": self._convert_to_istio_auth_rules(rules),
+                },
             }
 
             return await self._apply_k8s_resource(auth_policy)
@@ -177,24 +161,17 @@ class IstioSecurityManager(AbstractServiceMeshSecurityManager):
             req_auth_policy = {
                 "apiVersion": "security.istio.io/v1beta1",
                 "kind": "RequestAuthentication",
-                "metadata": {
-                    "name": f"{service_name}-jwt",
-                    "namespace": self.namespace
-                },
+                "metadata": {"name": f"{service_name}-jwt", "namespace": self.namespace},
                 "spec": {
-                    "selector": {
-                        "matchLabels": {
-                            "app": service_name
-                        }
-                    },
+                    "selector": {"matchLabels": {"app": service_name}},
                     "jwtRules": [
                         {
                             "issuer": jwt_config.get("issuer"),
                             "jwksUri": jwt_config.get("jwks_uri"),
-                            "audiences": jwt_config.get("audiences", [])
+                            "audiences": jwt_config.get("audiences", []),
                         }
-                    ]
-                }
+                    ],
+                },
             }
 
             return await self._apply_k8s_resource(req_auth_policy)
@@ -213,20 +190,8 @@ class IstioSecurityManager(AbstractServiceMeshSecurityManager):
                 peer_auth_policy = {
                     "apiVersion": "security.istio.io/v1beta1",
                     "kind": "PeerAuthentication",
-                    "metadata": {
-                        "name": f"{service}-peer-auth",
-                        "namespace": self.namespace
-                    },
-                    "spec": {
-                        "selector": {
-                            "matchLabels": {
-                                "app": service
-                            }
-                        },
-                        "mtls": {
-                            "mode": mode
-                        }
-                    }
+                    "metadata": {"name": f"{service}-peer-auth", "namespace": self.namespace},
+                    "spec": {"selector": {"matchLabels": {"app": service}}, "mtls": {"mode": mode}},
                 }
 
                 if not await self._apply_k8s_resource(peer_auth_policy):
@@ -247,16 +212,9 @@ class IstioSecurityManager(AbstractServiceMeshSecurityManager):
             envoy_filter = {
                 "apiVersion": "networking.istio.io/v1alpha3",
                 "kind": "EnvoyFilter",
-                "metadata": {
-                    "name": f"{service_name}-rate-limit",
-                    "namespace": self.namespace
-                },
+                "metadata": {"name": f"{service_name}-rate-limit", "namespace": self.namespace},
                 "spec": {
-                    "workloadSelector": {
-                        "labels": {
-                            "app": service_name
-                        }
-                    },
+                    "workloadSelector": {"labels": {"app": service_name}},
                     "configPatches": [
                         {
                             "applyTo": "HTTP_FILTER",
@@ -268,7 +226,7 @@ class IstioSecurityManager(AbstractServiceMeshSecurityManager):
                                             "name": "envoy.filters.network.http_connection_manager"
                                         }
                                     }
-                                }
+                                },
                             },
                             "patch": {
                                 "operation": "INSERT_BEFORE",
@@ -281,30 +239,34 @@ class IstioSecurityManager(AbstractServiceMeshSecurityManager):
                                             "stat_prefix": "local_rate_limiter",
                                             "token_bucket": {
                                                 "max_tokens": rate_limit.get("max_tokens", 100),
-                                                "tokens_per_fill": rate_limit.get("tokens_per_fill", 10),
-                                                "fill_interval": rate_limit.get("fill_interval", "60s")
+                                                "tokens_per_fill": rate_limit.get(
+                                                    "tokens_per_fill", 10
+                                                ),
+                                                "fill_interval": rate_limit.get(
+                                                    "fill_interval", "60s"
+                                                ),
                                             },
                                             "filter_enabled": {
                                                 "runtime_key": "local_rate_limit_enabled",
                                                 "default_value": {
                                                     "numerator": 100,
-                                                    "denominator": "HUNDRED"
-                                                }
+                                                    "denominator": "HUNDRED",
+                                                },
                                             },
                                             "filter_enforced": {
                                                 "runtime_key": "local_rate_limit_enforced",
                                                 "default_value": {
                                                     "numerator": 100,
-                                                    "denominator": "HUNDRED"
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                                                    "denominator": "HUNDRED",
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
                         }
-                    ]
-                }
+                    ],
+                },
             }
 
             return await self._apply_k8s_resource(envoy_filter)
@@ -317,22 +279,27 @@ class IstioSecurityManager(AbstractServiceMeshSecurityManager):
         """Apply Kubernetes resource using kubectl"""
         try:
             # Create temporary file for the resource
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
                 yaml.dump(resource, f, default_flow_style=False)
                 temp_file = f.name
 
             try:
                 # Apply resource using kubectl
                 result = await asyncio.create_subprocess_exec(
-                    self.kubectl_cmd, 'apply', '-f', temp_file,
+                    self.kubectl_cmd,
+                    "apply",
+                    "-f",
+                    temp_file,
                     stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
+                    stderr=asyncio.subprocess.PIPE,
                 )
 
                 stdout, stderr = await result.communicate()
 
                 if result.returncode == 0:
-                    logger.info(f"Successfully applied {resource['kind']}: {resource['metadata']['name']}")
+                    logger.info(
+                        f"Successfully applied {resource['kind']}: {resource['metadata']['name']}"
+                    )
                     return True
                 else:
                     logger.error(f"Failed to apply resource: {stderr.decode()}")
@@ -350,9 +317,12 @@ class IstioSecurityManager(AbstractServiceMeshSecurityManager):
         """Check if Istio is installed in the cluster"""
         try:
             result = await asyncio.create_subprocess_exec(
-                self.kubectl_cmd, 'get', 'namespace', self.istio_namespace,
+                self.kubectl_cmd,
+                "get",
+                "namespace",
+                self.istio_namespace,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
 
             await result.communicate()
@@ -369,10 +339,15 @@ class IstioSecurityManager(AbstractServiceMeshSecurityManager):
 
             for policy_type in policy_types:
                 result = await asyncio.create_subprocess_exec(
-                    self.kubectl_cmd, 'get', policy_type, '-n', self.namespace,
-                    '-o', 'json',
+                    self.kubectl_cmd,
+                    "get",
+                    policy_type,
+                    "-n",
+                    self.namespace,
+                    "-o",
+                    "json",
                     stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
+                    stderr=asyncio.subprocess.PIPE,
                 )
 
                 stdout, _ = await result.communicate()
@@ -394,11 +369,7 @@ class IstioSecurityManager(AbstractServiceMeshSecurityManager):
         try:
             # This would typically use istioctl or Istio APIs
             # For now, return basic status
-            return {
-                "enabled": True,
-                "mode": "STRICT",
-                "services_covered": 0
-            }
+            return {"enabled": True, "mode": "STRICT", "services_covered": 0}
 
         except Exception as e:
             logger.error(f"Failed to get mTLS status: {e}")
@@ -422,10 +393,9 @@ class IstioSecurityManager(AbstractServiceMeshSecurityManager):
 
                 if "roles" in principal:
                     for role in principal["roles"]:
-                        when_conditions.append({
-                            "key": "request.auth.claims[roles]",
-                            "values": [role]
-                        })
+                        when_conditions.append(
+                            {"key": "request.auth.claims[roles]", "values": [role]}
+                        )
 
                 if when_conditions:
                     istio_rule["when"] = when_conditions
@@ -446,18 +416,15 @@ class IstioSecurityManager(AbstractServiceMeshSecurityManager):
         return {
             "authorization": {
                 "template": "istio_authorization_policy.yaml",
-                "required_fields": ["service", "rules"]
+                "required_fields": ["service", "rules"],
             },
             "authentication": {
                 "template": "istio_request_authentication.yaml",
-                "required_fields": ["service", "jwt"]
+                "required_fields": ["service", "jwt"],
             },
-            "mtls": {
-                "template": "istio_peer_authentication.yaml",
-                "required_fields": ["services"]
-            },
+            "mtls": {"template": "istio_peer_authentication.yaml", "required_fields": ["services"]},
             "rate_limit": {
                 "template": "istio_envoy_filter.yaml",
-                "required_fields": ["service", "rate_limit"]
-            }
+                "required_fields": ["service", "rate_limit"],
+            },
         }

@@ -28,26 +28,28 @@ logger = logging.getLogger(__name__)
 
 class LoadTestType(Enum):
     """Types of load tests"""
-    SPIKE = "spike"           # Sudden traffic increase
-    RAMP_UP = "ramp_up"      # Gradual traffic increase
-    SUSTAINED = "sustained"   # Constant high load
-    STRESS = "stress"        # Beyond normal capacity
-    VOLUME = "volume"        # Large amounts of data
+
+    SPIKE = "spike"  # Sudden traffic increase
+    RAMP_UP = "ramp_up"  # Gradual traffic increase
+    SUSTAINED = "sustained"  # Constant high load
+    STRESS = "stress"  # Beyond normal capacity
+    VOLUME = "volume"  # Large amounts of data
     ENDURANCE = "endurance"  # Long duration testing
 
 
 @dataclass
 class LoadTestScenario:
     """Configuration for a load test scenario"""
+
     name: str
     test_type: LoadTestType
 
     # Load parameters
     initial_users: int = 1
     max_users: int = 100
-    ramp_up_duration: int = 60     # seconds
-    test_duration: int = 300       # seconds
-    ramp_down_duration: int = 30   # seconds
+    ramp_up_duration: int = 60  # seconds
+    test_duration: int = 300  # seconds
+    ramp_down_duration: int = 30  # seconds
 
     # Request parameters
     target_url: str = "http://localhost:8000"
@@ -57,14 +59,14 @@ class LoadTestScenario:
     request_data: dict[str, Any] | None = None
 
     # Timing parameters
-    think_time_min: float = 0.1    # seconds between requests
+    think_time_min: float = 0.1  # seconds between requests
     think_time_max: float = 2.0
     request_timeout: float = 30.0
 
     # Success criteria
-    max_error_rate: float = 0.05   # 5%
+    max_error_rate: float = 0.05  # 5%
     max_response_time_p95: float = 2.0  # seconds
-    min_throughput: float = 10.0   # requests per second
+    min_throughput: float = 10.0  # requests per second
 
     # Resilience validation
     validate_circuit_breakers: bool = True
@@ -120,6 +122,7 @@ class LoadTestMetrics:
 @dataclass
 class UserSession:
     """Individual user session for load testing"""
+
     user_id: int
     session_start: float
     requests_made: int = 0
@@ -148,7 +151,7 @@ class LoadTester:
             config = ResilienceConfig(
                 enable_connection_pools=self.scenario.validate_connection_pools,
                 enable_circuit_breaker=self.scenario.validate_circuit_breakers,
-                enable_bulkhead=self.scenario.validate_bulkheads
+                enable_bulkhead=self.scenario.validate_bulkheads,
             )
             self.resilience_service = ResilienceService(config)
             await self.resilience_service.initialize()
@@ -200,7 +203,9 @@ class LoadTester:
         """Gradually increase user load"""
         logger.info("Starting ramp-up phase")
 
-        users_per_second = (self.scenario.max_users - self.scenario.initial_users) / self.scenario.ramp_up_duration
+        users_per_second = (
+            self.scenario.max_users - self.scenario.initial_users
+        ) / self.scenario.ramp_up_duration
 
         # Start initial users
         for i in range(self.scenario.initial_users):
@@ -208,7 +213,11 @@ class LoadTester:
 
         # Gradually add more users
         for second in range(self.scenario.ramp_up_duration):
-            users_to_add = int(users_per_second * (second + 1)) - len(self.user_sessions) + self.scenario.initial_users
+            users_to_add = (
+                int(users_per_second * (second + 1))
+                - len(self.user_sessions)
+                + self.scenario.initial_users
+            )
 
             for _ in range(users_to_add):
                 user_id = len(self.user_sessions)
@@ -242,10 +251,7 @@ class LoadTester:
 
     async def _start_user_session(self, user_id: int):
         """Start a user session"""
-        session = UserSession(
-            user_id=user_id,
-            session_start=time.time()
-        )
+        session = UserSession(user_id=user_id, session_start=time.time())
         self.user_sessions.append(session)
 
         # Create and start user task
@@ -257,7 +263,9 @@ class LoadTester:
         try:
             while self._running:
                 # Select request path
-                path = self.scenario.request_paths[session.requests_made % len(self.scenario.request_paths)]
+                path = self.scenario.request_paths[
+                    session.requests_made % len(self.scenario.request_paths)
+                ]
                 url = f"{self.scenario.target_url}{path}"
 
                 # Make request
@@ -280,8 +288,9 @@ class LoadTester:
 
                 # Think time between requests
                 think_time = self.scenario.think_time_min + (
-                    (self.scenario.think_time_max - self.scenario.think_time_min) *
-                    (session.user_id % 100) / 100
+                    (self.scenario.think_time_max - self.scenario.think_time_min)
+                    * (session.user_id % 100)
+                    / 100
                 )
                 await asyncio.sleep(think_time)
 
@@ -300,7 +309,7 @@ class LoadTester:
                     url,
                     headers=self.scenario.request_headers,
                     json=self.scenario.request_data,
-                    timeout=aiohttp.ClientTimeout(total=self.scenario.request_timeout)
+                    timeout=aiohttp.ClientTimeout(total=self.scenario.request_timeout),
                 ) as response:
                     # Record status code
                     status = response.status
@@ -318,10 +327,12 @@ class LoadTester:
                         url,
                         headers=self.scenario.request_headers,
                         json=self.scenario.request_data,
-                        timeout=aiohttp.ClientTimeout(total=self.scenario.request_timeout)
+                        timeout=aiohttp.ClientTimeout(total=self.scenario.request_timeout),
                     ) as response:
                         status = response.status
-                        self.metrics.status_codes[status] = self.metrics.status_codes.get(status, 0) + 1
+                        self.metrics.status_codes[status] = (
+                            self.metrics.status_codes.get(status, 0) + 1
+                        )
                         await response.read()
                         return 200 <= status < 400
 
@@ -330,7 +341,9 @@ class LoadTester:
             return False
         except Exception as e:
             logger.debug(f"Request failed: {e}")
-            self.metrics.status_codes[0] = self.metrics.status_codes.get(0, 0) + 1  # Connection error
+            self.metrics.status_codes[0] = (
+                self.metrics.status_codes.get(0, 0) + 1
+            )  # Connection error
             return False
 
     async def _calculate_final_metrics(self):
@@ -375,7 +388,9 @@ class LoadTester:
             # Extract relevant resilience metrics from pool manager
             pass
 
-        logger.info(f"Test completed: {total_requests} requests, {self.metrics.error_rate:.2%} error rate")
+        logger.info(
+            f"Test completed: {total_requests} requests, {self.metrics.error_rate:.2%} error rate"
+        )
 
     async def _generate_report(self):
         """Generate load test report"""
@@ -385,7 +400,7 @@ class LoadTester:
                 "test_type": self.scenario.test_type.value,
                 "max_users": self.scenario.max_users,
                 "test_duration": self.scenario.test_duration,
-                "target_url": self.scenario.target_url
+                "target_url": self.scenario.target_url,
             },
             "metrics": {
                 "total_requests": self.metrics.total_requests,
@@ -398,20 +413,21 @@ class LoadTester:
                     "avg": self.metrics.avg_response_time,
                     "p50": self.metrics.p50_response_time,
                     "p95": self.metrics.p95_response_time,
-                    "p99": self.metrics.p99_response_time
+                    "p99": self.metrics.p99_response_time,
                 },
                 "throughput": {
                     "requests_per_second": self.metrics.requests_per_second,
-                    "duration": self.metrics.duration
+                    "duration": self.metrics.duration,
                 },
-                "status_codes": self.metrics.status_codes
+                "status_codes": self.metrics.status_codes,
             },
             "validation": {
                 "error_rate_pass": self.metrics.error_rate <= self.scenario.max_error_rate,
-                "response_time_pass": self.metrics.p95_response_time <= self.scenario.max_response_time_p95,
-                "throughput_pass": self.metrics.requests_per_second >= self.scenario.min_throughput
+                "response_time_pass": self.metrics.p95_response_time
+                <= self.scenario.max_response_time_p95,
+                "throughput_pass": self.metrics.requests_per_second >= self.scenario.min_throughput,
             },
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         # Save report
@@ -419,7 +435,7 @@ class LoadTester:
         filename = f"{self.scenario.name}_{self.scenario.test_type.value}_{timestamp}.json"
         filepath = Path(self.scenario.output_directory) / filename
 
-        async with aiofiles.open(filepath, 'w') as f:
+        async with aiofiles.open(filepath, "w") as f:
             await f.write(json.dumps(report_data, indent=2))
 
         logger.info(f"Load test report saved to: {filepath}")
@@ -464,29 +480,34 @@ class LoadTestSuite:
             "suite_summary": {
                 "total_scenarios": len(self.scenarios),
                 "total_requests": sum(r.total_requests for r in self.results),
-                "overall_error_rate": sum(r.failed_requests for r in self.results) / max(sum(r.total_requests for r in self.results), 1),
-                "avg_throughput": statistics.mean([r.requests_per_second for r in self.results if r.requests_per_second > 0])
+                "overall_error_rate": sum(r.failed_requests for r in self.results)
+                / max(sum(r.total_requests for r in self.results), 1),
+                "avg_throughput": statistics.mean(
+                    [r.requests_per_second for r in self.results if r.requests_per_second > 0]
+                ),
             },
-            "scenario_results": []
+            "scenario_results": [],
         }
 
         for i, result in enumerate(self.results):
             scenario = self.scenarios[i]
-            suite_data["scenario_results"].append({
-                "scenario_name": scenario.name,
-                "test_type": scenario.test_type.value,
-                "passed": (
-                    result.error_rate <= scenario.max_error_rate and
-                    result.p95_response_time <= scenario.max_response_time_p95 and
-                    result.requests_per_second >= scenario.min_throughput
-                ),
-                "metrics": {
-                    "requests": result.total_requests,
-                    "error_rate": result.error_rate,
-                    "p95_response_time": result.p95_response_time,
-                    "throughput": result.requests_per_second
+            suite_data["scenario_results"].append(
+                {
+                    "scenario_name": scenario.name,
+                    "test_type": scenario.test_type.value,
+                    "passed": (
+                        result.error_rate <= scenario.max_error_rate
+                        and result.p95_response_time <= scenario.max_response_time_p95
+                        and result.requests_per_second >= scenario.min_throughput
+                    ),
+                    "metrics": {
+                        "requests": result.total_requests,
+                        "error_rate": result.error_rate,
+                        "p95_response_time": result.p95_response_time,
+                        "throughput": result.requests_per_second,
+                    },
                 }
-            })
+            )
 
         # Save suite report
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -496,14 +517,16 @@ class LoadTestSuite:
         output_dir = self.scenarios[0].output_directory if self.scenarios else "./load_test_results"
         filepath = Path(output_dir) / filename
 
-        async with aiofiles.open(filepath, 'w') as f:
+        async with aiofiles.open(filepath, "w") as f:
             await f.write(json.dumps(suite_data, indent=2))
 
         logger.info(f"Load test suite report saved to: {filepath}")
 
 
 # Pre-configured test scenarios for common resilience validation
-def create_resilience_test_scenarios(base_url: str = "http://localhost:8000") -> list[LoadTestScenario]:
+def create_resilience_test_scenarios(
+    base_url: str = "http://localhost:8000",
+) -> list[LoadTestScenario]:
     """Create a set of test scenarios for resilience validation"""
 
     scenarios = [
@@ -518,9 +541,8 @@ def create_resilience_test_scenarios(base_url: str = "http://localhost:8000") ->
             target_url=base_url,
             request_paths=["/health", "/api/users", "/api/products"],
             max_error_rate=0.1,  # Allow higher error rate for spike
-            validate_circuit_breakers=True
+            validate_circuit_breakers=True,
         ),
-
         # Sustained load test
         LoadTestScenario(
             name="sustained_load_test",
@@ -532,9 +554,8 @@ def create_resilience_test_scenarios(base_url: str = "http://localhost:8000") ->
             target_url=base_url,
             request_paths=["/api/data", "/api/search"],
             max_error_rate=0.05,
-            validate_connection_pools=True
+            validate_connection_pools=True,
         ),
-
         # Stress test - beyond normal capacity
         LoadTestScenario(
             name="stress_test",
@@ -546,8 +567,8 @@ def create_resilience_test_scenarios(base_url: str = "http://localhost:8000") ->
             target_url=base_url,
             request_paths=["/api/heavy-computation", "/api/database-query"],
             max_error_rate=0.15,  # Higher error tolerance
-            validate_bulkheads=True
-        )
+            validate_bulkheads=True,
+        ),
     ]
 
     return scenarios

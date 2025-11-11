@@ -17,11 +17,7 @@ class TestAuthenticatedUser:
 
     def test_create_minimal_user(self):
         """Test creating a user with minimal required fields."""
-        user = AuthenticatedUser(
-            user_id="test-123",
-            username="testuser",
-            auth_method="password"
-        )
+        user = AuthenticatedUser(user_id="test-123", username="testuser", auth_method="password")
 
         assert user.user_id == "test-123"
         assert user.username == "testuser"
@@ -40,7 +36,7 @@ class TestAuthenticatedUser:
             permissions={"read", "write", "delete"},
             session_id="session-789",
             auth_method="jwt",
-            metadata={"department": "IT", "level": "senior"}
+            metadata={"department": "IT", "level": "senior"},
         )
 
         assert user.user_id == "user-456"
@@ -56,37 +52,21 @@ class TestAuthenticatedUser:
         """Test user_id validation."""
         # Empty user_id should raise ValueError
         with pytest.raises(ValueError, match="User ID cannot be empty"):
-            AuthenticatedUser(
-                user_id="",
-                username="testuser",
-                auth_method="password"
-            )
+            AuthenticatedUser(user_id="", username="testuser", auth_method="password")
 
         # Non-string user_id should raise TypeError
         with pytest.raises(TypeError, match="User ID must be a string"):
-            AuthenticatedUser(
-                user_id=123,
-                username="testuser",
-                auth_method="password"
-            )
+            AuthenticatedUser(user_id=123, username="testuser", auth_method="password")
 
     def test_username_validation(self):
         """Test username validation."""
         # Empty username should raise ValueError
         with pytest.raises(ValueError, match="Username cannot be empty"):
-            AuthenticatedUser(
-                user_id="test-123",
-                username="",
-                auth_method="password"
-            )
+            AuthenticatedUser(user_id="test-123", username="", auth_method="password")
 
         # Non-string username should raise TypeError
         with pytest.raises(TypeError, match="Username must be a string"):
-            AuthenticatedUser(
-                user_id="test-123",
-                username=None,
-                auth_method="password"
-            )
+            AuthenticatedUser(user_id="test-123", username=None, auth_method="password")
 
     def test_email_validation(self):
         """Test email validation."""
@@ -95,7 +75,7 @@ class TestAuthenticatedUser:
             user_id="test-123",
             username="testuser",
             email="test@example.com",
-            auth_method="password"
+            auth_method="password",
         )
         assert user.email == "test@example.com"
 
@@ -105,7 +85,7 @@ class TestAuthenticatedUser:
                 user_id="test-123",
                 username="testuser",
                 email="invalid-email",
-                auth_method="password"
+                auth_method="password",
             )
 
     def test_roles_normalization(self):
@@ -115,16 +95,13 @@ class TestAuthenticatedUser:
             user_id="test-123",
             username="testuser",
             roles=["admin", "user", "admin"],  # Duplicate should be removed
-            auth_method="password"
+            auth_method="password",
         )
         assert user.roles == {"admin", "user"}
 
         # Set input should remain unchanged
         user = AuthenticatedUser(
-            user_id="test-123",
-            username="testuser",
-            roles={"admin", "user"},
-            auth_method="password"
+            user_id="test-123", username="testuser", roles={"admin", "user"}, auth_method="password"
         )
         assert user.roles == {"admin", "user"}
 
@@ -134,7 +111,7 @@ class TestAuthenticatedUser:
             user_id="test-123",
             username="testuser",
             permissions=["read", "write", "read"],  # Duplicate should be removed
-            auth_method="password"
+            auth_method="password",
         )
         assert user.permissions == {"read", "write"}
 
@@ -143,20 +120,14 @@ class TestAuthenticatedUser:
         # Without timezone
         naive_time = datetime(2023, 1, 1, 12, 0, 0)
         user = AuthenticatedUser(
-            user_id="test-123",
-            username="testuser",
-            auth_method="password",
-            created_at=naive_time
+            user_id="test-123", username="testuser", auth_method="password", created_at=naive_time
         )
         assert user.created_at.tzinfo == timezone.utc
 
         # With timezone
         aware_time = datetime(2023, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
         user = AuthenticatedUser(
-            user_id="test-123",
-            username="testuser",
-            auth_method="password",
-            created_at=aware_time
+            user_id="test-123", username="testuser", auth_method="password", created_at=aware_time
         )
         assert user.created_at.tzinfo == timezone.utc
 
@@ -164,20 +135,14 @@ class TestAuthenticatedUser:
         """Test that expires_at is timezone-aware when provided."""
         naive_time = datetime(2023, 1, 1, 12, 0, 0)
         user = AuthenticatedUser(
-            user_id="test-123",
-            username="testuser",
-            auth_method="password",
-            expires_at=naive_time
+            user_id="test-123", username="testuser", auth_method="password", expires_at=naive_time
         )
         assert user.expires_at.tzinfo == timezone.utc
 
     def test_has_role(self):
         """Test the has_role method."""
         user = AuthenticatedUser(
-            user_id="test-123",
-            username="testuser",
-            roles={"admin", "user"},
-            auth_method="password"
+            user_id="test-123", username="testuser", roles={"admin", "user"}, auth_method="password"
         )
 
         assert user.has_role("admin") is True
@@ -190,7 +155,7 @@ class TestAuthenticatedUser:
             user_id="test-123",
             username="testuser",
             permissions={"read", "write"},
-            auth_method="password"
+            auth_method="password",
         )
 
         assert user.has_permission("read") is True
@@ -202,29 +167,19 @@ class TestAuthenticatedUser:
         # Future expiration
         future_time = datetime.now(timezone.utc).replace(year=2030)
         user = AuthenticatedUser(
-            user_id="test-123",
-            username="testuser",
-            auth_method="password",
-            expires_at=future_time
+            user_id="test-123", username="testuser", auth_method="password", expires_at=future_time
         )
         assert user.is_expired() is False
 
         # Past expiration
         past_time = datetime.now(timezone.utc).replace(year=2020)
         user = AuthenticatedUser(
-            user_id="test-123",
-            username="testuser",
-            auth_method="password",
-            expires_at=past_time
+            user_id="test-123", username="testuser", auth_method="password", expires_at=past_time
         )
         assert user.is_expired() is True
 
         # No expiration
-        user = AuthenticatedUser(
-            user_id="test-123",
-            username="testuser",
-            auth_method="password"
-        )
+        user = AuthenticatedUser(user_id="test-123", username="testuser", auth_method="password")
         assert user.is_expired() is False
 
     def test_to_dict(self):
@@ -236,7 +191,7 @@ class TestAuthenticatedUser:
             roles={"admin"},
             permissions={"read"},
             auth_method="password",
-            metadata={"key": "value"}
+            metadata={"key": "value"},
         )
 
         result = user.to_dict()
@@ -251,11 +206,7 @@ class TestAuthenticatedUser:
 
     def test_immutability(self):
         """Test that the user object is immutable."""
-        user = AuthenticatedUser(
-            user_id="test-123",
-            username="testuser",
-            auth_method="password"
-        )
+        user = AuthenticatedUser(user_id="test-123", username="testuser", auth_method="password")
 
         # Should not be able to modify attributes
         with pytest.raises(AttributeError):
@@ -270,24 +221,15 @@ class TestAuthenticatedUser:
         fixed_time = datetime(2023, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
 
         user1 = AuthenticatedUser(
-            user_id="test-123",
-            username="testuser",
-            auth_method="password",
-            created_at=fixed_time
+            user_id="test-123", username="testuser", auth_method="password", created_at=fixed_time
         )
 
         user2 = AuthenticatedUser(
-            user_id="test-123",
-            username="testuser",
-            auth_method="password",
-            created_at=fixed_time
+            user_id="test-123", username="testuser", auth_method="password", created_at=fixed_time
         )
 
         user3 = AuthenticatedUser(
-            user_id="test-456",
-            username="testuser",
-            auth_method="password",
-            created_at=fixed_time
+            user_id="test-456", username="testuser", auth_method="password", created_at=fixed_time
         )
 
         assert user1 == user2
@@ -295,11 +237,7 @@ class TestAuthenticatedUser:
 
     def test_repr(self):
         """Test string representation."""
-        user = AuthenticatedUser(
-            user_id="test-123",
-            username="testuser",
-            auth_method="password"
-        )
+        user = AuthenticatedUser(user_id="test-123", username="testuser", auth_method="password")
 
         repr_str = repr(user)
         assert "test-123" in repr_str

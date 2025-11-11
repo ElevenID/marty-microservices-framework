@@ -34,7 +34,6 @@ from marty_msf.framework.resilience.retry import (
 
 # Import resilience strategy components
 try:
-
     RESILIENCE_IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"Resilience imports not available: {e}")
@@ -228,7 +227,6 @@ async def test_static_fallback_execution():
 def test_discover_resilience_strategy_classes():
     """Discover all resilience strategy-related classes."""
     try:
-
         # Find strategy-related classes in fallback module
         fallback_classes = []
         for name in dir(fallback_module):

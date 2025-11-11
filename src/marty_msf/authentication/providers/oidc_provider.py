@@ -125,7 +125,7 @@ class OIDCProvider(IIdentityProvider):
                 public_key,
                 algorithms=["RS256"],
                 issuer=self.issuer_url,
-                audience=self.client_id
+                audience=self.client_id,
             )
 
             # Create security principal from token claims
@@ -138,10 +138,10 @@ class OIDCProvider(IIdentityProvider):
                     "preferred_username": payload.get("preferred_username"),
                     "groups": payload.get("groups", []),
                     "roles": payload.get("roles", []),
-                    "token_type": "oidc_jwt"
+                    "token_type": "oidc_jwt",
                 },
                 identity_provider="oidc",
-                expires_at=datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
+                expires_at=datetime.fromtimestamp(payload["exp"], tz=timezone.utc),
             )
 
             # Map OIDC roles/groups to framework roles
@@ -166,14 +166,14 @@ class OIDCProvider(IIdentityProvider):
                 "grant_type": "refresh_token",
                 "refresh_token": refresh_token,
                 "client_id": self.client_id,
-                "client_secret": self.client_secret
+                "client_secret": self.client_secret,
             }
 
             async with aiohttp.ClientSession() as session:
                 async with session.post(
                     self.token_endpoint,
                     data=data,
-                    headers={"Content-Type": "application/x-www-form-urlencoded"}
+                    headers={"Content-Type": "application/x-www-form-urlencoded"},
                 ) as response:
                     if response.status == 200:
                         token_response = await response.json()
@@ -205,14 +205,18 @@ class OIDCProvider(IIdentityProvider):
         # Store state for validation
         self.state_store[state] = {
             "created_at": time.time(),
-            "expires_at": time.time() + 600  # 10 minutes
+            "expires_at": time.time() + 600,  # 10 minutes
         }
 
         # Generate PKCE challenge (recommended for security)
-        code_verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode('utf-8').rstrip('=')
-        code_challenge = base64.urlsafe_b64encode(
-            hashlib.sha256(code_verifier.encode('utf-8')).digest()
-        ).decode('utf-8').rstrip('=')
+        code_verifier = (
+            base64.urlsafe_b64encode(secrets.token_bytes(32)).decode("utf-8").rstrip("=")
+        )
+        code_challenge = (
+            base64.urlsafe_b64encode(hashlib.sha256(code_verifier.encode("utf-8")).digest())
+            .decode("utf-8")
+            .rstrip("=")
+        )
 
         # Store code verifier for later use
         self.state_store[state]["code_verifier"] = code_verifier
@@ -224,14 +228,16 @@ class OIDCProvider(IIdentityProvider):
             "scope": "openid profile email",
             "state": state,
             "code_challenge": code_challenge,
-            "code_challenge_method": "S256"
+            "code_challenge_method": "S256",
         }
 
         return f"{self.authorization_endpoint}?{urlencode(params)}"
 
     # Private methods
 
-    async def _handle_authorization_code_flow(self, credentials: dict[str, Any]) -> SecurityPrincipal | None:
+    async def _handle_authorization_code_flow(
+        self, credentials: dict[str, Any]
+    ) -> SecurityPrincipal | None:
         """Handle OIDC authorization code flow"""
         authorization_code = credentials["authorization_code"]
         state = credentials.get("state")
@@ -253,7 +259,7 @@ class OIDCProvider(IIdentityProvider):
             "code": authorization_code,
             "redirect_uri": self.redirect_uri,
             "client_id": self.client_id,
-            "client_secret": self.client_secret
+            "client_secret": self.client_secret,
         }
 
         if code_verifier:
@@ -263,7 +269,7 @@ class OIDCProvider(IIdentityProvider):
             async with session.post(
                 self.token_endpoint,
                 data=data,
-                headers={"Content-Type": "application/x-www-form-urlencoded"}
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
             ) as response:
                 if response.status == 200:
                     token_response = await response.json()
@@ -286,14 +292,14 @@ class OIDCProvider(IIdentityProvider):
             "password": password,
             "client_id": self.client_id,
             "client_secret": self.client_secret,
-            "scope": "openid profile email"
+            "scope": "openid profile email",
         }
 
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 self.token_endpoint,
                 data=data,
-                headers={"Content-Type": "application/x-www-form-urlencoded"}
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
             ) as response:
                 if response.status == 200:
                     token_response = await response.json()
@@ -305,7 +311,9 @@ class OIDCProvider(IIdentityProvider):
                     logger.error(f"Password flow authentication failed: {response.status}")
                     return None
 
-    async def _handle_client_credentials_flow(self, credentials: dict[str, Any]) -> SecurityPrincipal | None:
+    async def _handle_client_credentials_flow(
+        self, credentials: dict[str, Any]
+    ) -> SecurityPrincipal | None:
         """Handle OIDC client credentials flow (for service-to-service authentication)"""
         client_id = credentials["client_id"]
         client_secret = credentials["client_secret"]
@@ -314,14 +322,14 @@ class OIDCProvider(IIdentityProvider):
             "grant_type": "client_credentials",
             "client_id": client_id,
             "client_secret": client_secret,
-            "scope": credentials.get("scope", "")
+            "scope": credentials.get("scope", ""),
         }
 
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 self.token_endpoint,
                 data=data,
-                headers={"Content-Type": "application/x-www-form-urlencoded"}
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
             ) as response:
                 if response.status == 200:
                     token_response = await response.json()
@@ -333,9 +341,9 @@ class OIDCProvider(IIdentityProvider):
                         type="service",
                         attributes={
                             "client_id": client_id,
-                            "token_type": "oidc_client_credentials"
+                            "token_type": "oidc_client_credentials",
                         },
-                        identity_provider="oidc"
+                        identity_provider="oidc",
                     )
 
                     return principal

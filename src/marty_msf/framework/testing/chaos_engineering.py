@@ -384,7 +384,6 @@ class ResourceExhaustionAction(ChaosAction):
         """Stress I/O resources."""
 
         def io_stress():
-
             with tempfile.NamedTemporaryFile(delete=False) as f:
                 temp_file = f.name
 

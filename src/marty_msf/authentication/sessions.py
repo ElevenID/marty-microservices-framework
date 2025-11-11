@@ -43,7 +43,9 @@ class InMemorySessionManager:
         self._sessions: dict[str, dict[str, Any]] = {}
         self._lock = RLock()
 
-    def create_session(self, principal: SecurityPrincipal, metadata: dict[str, Any] | None = None) -> str:
+    def create_session(
+        self, principal: SecurityPrincipal, metadata: dict[str, Any] | None = None
+    ) -> str:
         """
         Create a new session for a principal.
 
@@ -62,7 +64,7 @@ class InMemorySessionManager:
                 "principal": principal,
                 "created_at": time.time(),
                 "expires_at": expires_at,
-                "metadata": metadata or {}
+                "metadata": metadata or {},
             }
 
             self._sessions[session_id] = session_data
@@ -116,7 +118,8 @@ class InMemorySessionManager:
         """Remove expired sessions from storage."""
         current_time = time.time()
         expired_sessions = [
-            session_id for session_id, session_data in self._sessions.items()
+            session_id
+            for session_id, session_data in self._sessions.items()
             if current_time > session_data["expires_at"]
         ]
 
@@ -141,7 +144,9 @@ class NoOpSessionManager:
     stateless applications or testing scenarios.
     """
 
-    def create_session(self, principal: SecurityPrincipal, metadata: dict[str, Any] | None = None) -> str:
+    def create_session(
+        self, principal: SecurityPrincipal, metadata: dict[str, Any] | None = None
+    ) -> str:
         """Create a session (returns dummy ID)."""
         return "noop-session"
 

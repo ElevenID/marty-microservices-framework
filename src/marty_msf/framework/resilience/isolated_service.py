@@ -92,7 +92,11 @@ class ResilienceManagerService(BaseService):
         if self._resilience_manager:
             return await self._resilience_manager.apply_resilience(func, *args, **kwargs)
         else:
-            return await func(*args, **kwargs) if asyncio.iscoroutinefunction(func) else func(*args, **kwargs)
+            return (
+                await func(*args, **kwargs)
+                if asyncio.iscoroutinefunction(func)
+                else func(*args, **kwargs)
+            )
 
     def apply_resilience_patterns_sync(self, func, *args, **kwargs):
         """Apply resilience patterns to a synchronous function."""

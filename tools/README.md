@@ -5,6 +5,7 @@ This directory contains improved tools for analyzing and maintaining clean depen
 ## Tools Overview
 
 ### 1. `dependency_analyzer.py` - Main Analysis Tool
+
 **The primary tool for developers to analyze project dependencies**
 
 ```bash
@@ -26,6 +27,7 @@ python tools/dependency_analyzer.py --coupling --export md --output report.md
 ```
 
 **Features:**
+
 - ✅ Real-time analysis of current codebase
 - ✅ Smart caching (auto-refresh after 5 minutes)
 - ✅ Multiple analysis modes (quick/full/focused)
@@ -34,6 +36,7 @@ python tools/dependency_analyzer.py --coupling --export md --output report.md
 - ✅ Actionable recommendations
 
 ### 2. `check_circular_deps_fast.py` - Pre-commit Hook
+
 **Fast circular dependency checker for git pre-commit hooks**
 
 ```bash
@@ -42,6 +45,7 @@ python tools/check_circular_deps_fast.py
 ```
 
 **Features:**
+
 - ✅ Only analyzes changed files (fast)
 - ✅ Includes immediate dependencies
 - ✅ Blocks commits with circular dependencies
@@ -49,6 +53,7 @@ python tools/check_circular_deps_fast.py
 - ✅ Integrated with pre-commit framework
 
 ### 3. `circular_deps_detailed.py` - Detailed Analysis
+
 **Comprehensive circular dependency analysis with architectural insights**
 
 ```bash
@@ -60,6 +65,7 @@ python tools/circular_deps_detailed.py --force
 ```
 
 **Features:**
+
 - ✅ Auto-refreshes stale cached data
 - ✅ Detailed architectural recommendations
 - ✅ Coupling analysis and refactoring plans
@@ -67,6 +73,7 @@ python tools/circular_deps_detailed.py --force
 - ✅ Tier-based priority recommendations
 
 ### 4. `analyze_project_imports.py` - Core Analysis Engine
+
 **The foundational import analysis engine**
 
 ```bash
@@ -81,6 +88,7 @@ python tools/analyze_project_imports.py --quiet
 ```
 
 **Features:**
+
 - ✅ Real-time import parsing
 - ✅ Intelligent caching system
 - ✅ Comprehensive module statistics
@@ -126,14 +134,16 @@ Default coupling score interpretations:
 
 The tools provide specific, actionable recommendations:
 
-### For Circular Dependencies:
+### For Circular Dependencies
+
 - Extract shared interfaces to common modules
 - Use dependency injection patterns
 - Implement lazy loading (imports inside functions)
 - Create abstraction layers
 - Consider event-driven architecture
 
-### For High Coupling:
+### For High Coupling
+
 - Apply Single Responsibility Principle
 - Extract shared functionality to utilities
 - Use interfaces and abstract base classes
@@ -142,7 +152,8 @@ The tools provide specific, actionable recommendations:
 
 ## Usage Patterns
 
-### For Daily Development:
+### For Daily Development
+
 ```bash
 # Quick check before committing
 python tools/dependency_analyzer.py --quick
@@ -151,14 +162,16 @@ python tools/dependency_analyzer.py --quick
 python tools/dependency_analyzer.py --full --export md
 ```
 
-### For Code Reviews:
+### For Code Reviews
+
 ```bash
 # Focus on specific concerns
 python tools/dependency_analyzer.py --circular
 python tools/dependency_analyzer.py --coupling --threshold 8
 ```
 
-### For Architectural Planning:
+### For Architectural Planning
+
 ```bash
 # Comprehensive analysis with export
 python tools/dependency_analyzer.py --full --export json --output architecture_analysis.json
@@ -186,6 +199,7 @@ Parse errors are tracked and reported in the analysis metadata.
 ## Output Formats
 
 ### JSON Export
+
 ```json
 {
   "summary": {
@@ -202,9 +216,11 @@ Parse errors are tracked and reported in the analysis metadata.
 ```
 
 ### Markdown Export
+
 Clean, readable reports suitable for documentation or code reviews.
 
 ### CSV Export
+
 Module statistics suitable for spreadsheet analysis or further data processing.
 
 ## Continuous Integration
@@ -222,24 +238,28 @@ fi
 
 ## Troubleshooting
 
-### Common Issues:
+### Common Issues
 
 1. **"Command not found" error**
+
    ```bash
    chmod +x tools/*.py
    ```
 
 2. **Stale cache issues**
+
    ```bash
    python tools/dependency_analyzer.py --quick --force
    ```
 
 3. **Git repository issues**
+
    ```bash
    git status  # Ensure you're in a git repository
    ```
 
 4. **Import path issues**
+
    ```bash
    # Run from project root directory
    cd /path/to/marty-microservices-framework

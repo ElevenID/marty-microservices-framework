@@ -19,7 +19,6 @@ from marty_msf.framework.messaging.routing import (
 def test_import_routing_strategies():
     """Test that routing strategies can be imported."""
     try:
-
         assert issubclass(RoutingType, Enum)
         assert issubclass(MatchType, Enum)
         assert RoutingConfig is not None
@@ -31,7 +30,6 @@ def test_import_routing_strategies():
 def test_routing_type_enum():
     """Test RoutingType enum values."""
     try:
-
         # Test enum members exist
         assert hasattr(RoutingType, "DIRECT")
         assert hasattr(RoutingType, "TOPIC")
@@ -57,7 +55,6 @@ def test_routing_type_enum():
 def test_match_type_enum():
     """Test MatchType enum values."""
     try:
-
         # Test enum members exist
         assert hasattr(MatchType, "EXACT")
         assert hasattr(MatchType, "WILDCARD")
@@ -79,7 +76,6 @@ def test_match_type_enum():
 def test_routing_config_creation():
     """Test RoutingConfig creation and default values."""
     try:
-
         # Test default configuration
         config = RoutingConfig()
         assert config.allow_multiple_targets
@@ -105,7 +101,6 @@ def test_routing_config_creation():
 def test_routing_rule_creation():
     """Test RoutingRule creation."""
     try:
-
         # Test basic routing rule creation
         rule = RoutingRule(
             name="test-rule",
@@ -132,7 +127,6 @@ def test_routing_rule_creation():
 def test_routing_strategies_iteration():
     """Test that routing strategies can be iterated."""
     try:
-
         # Test RoutingType iteration
         routing_types = list(RoutingType)
         assert len(routing_types) == 6
@@ -162,7 +156,6 @@ def test_routing_strategies_iteration():
 def test_routing_strategy_validation():
     """Test routing strategy validation and constraints."""
     try:
-
         # Test routing type values are strings
         for routing_type in RoutingType:
             assert isinstance(routing_type.value, str)
@@ -186,7 +179,6 @@ def test_routing_strategy_validation():
 def test_routing_engine_creation():
     """Test RoutingEngine creation with configuration."""
     try:
-
         # Test engine creation with default config
         config = RoutingConfig()
         engine = RoutingEngine(config)

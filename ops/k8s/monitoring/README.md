@@ -5,18 +5,21 @@ This directory contains a comprehensive monitoring and observability stack desig
 ## Components
 
 ### Core Monitoring
+
 - **Prometheus**: Metrics collection and storage
 - **Grafana**: Visualization and dashboards
 - **Jaeger**: Distributed tracing
 - **AlertManager**: Alert routing and management
 
 ### Phase 2 Infrastructure Monitoring
+
 - **Redis Exporter**: Cache metrics and performance
 - **RabbitMQ Exporter**: Message queue metrics
 - **PostgreSQL Exporter**: Database and event store metrics
 - **Custom Exporters**: Phase 2 component-specific metrics
 
 ### Log Management
+
 - **Fluent Bit**: Log collection and forwarding
 - **Elasticsearch**: Log storage and indexing
 - **Kibana**: Log visualization and analysis
@@ -24,6 +27,7 @@ This directory contains a comprehensive monitoring and observability stack desig
 ## Dashboards
 
 ### Phase 2 Infrastructure Dashboards
+
 1. **Cache Performance**: Redis metrics, hit/miss ratios, memory usage
 2. **Message Queue Health**: RabbitMQ queues, throughput, latency
 3. **Event Streaming**: Event processing rates, stream health
@@ -31,6 +35,7 @@ This directory contains a comprehensive monitoring and observability stack desig
 5. **Configuration Management**: Configuration changes, secret access
 
 ### Application Dashboards
+
 1. **Service Overview**: Per-service metrics and health
 2. **Performance**: Response times, throughput, errors
 3. **Infrastructure**: Resource usage, scaling metrics
@@ -39,6 +44,7 @@ This directory contains a comprehensive monitoring and observability stack desig
 ## Alerting Rules
 
 ### Critical Alerts
+
 - Service down/unhealthy
 - Cache hit ratio below threshold
 - Message queue depth exceeding limits
@@ -46,6 +52,7 @@ This directory contains a comprehensive monitoring and observability stack desig
 - Resource exhaustion
 
 ### Warning Alerts
+
 - Performance degradation
 - Configuration drift
 - Security anomalies
@@ -54,6 +61,7 @@ This directory contains a comprehensive monitoring and observability stack desig
 ## Usage
 
 Deploy the monitoring stack:
+
 ```bash
 kubectl apply -f monitoring/namespace.yaml
 kubectl apply -f monitoring/prometheus/
@@ -63,11 +71,13 @@ kubectl apply -f monitoring/alertmanager/
 ```
 
 Import dashboards:
+
 ```bash
 kubectl apply -f monitoring/dashboards/
 ```
 
 Configure alerts:
+
 ```bash
 kubectl apply -f monitoring/alerts/
 ```

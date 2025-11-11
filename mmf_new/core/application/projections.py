@@ -81,9 +81,7 @@ class ProjectionManager:
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
 
-    async def rebuild_projection(
-        self, projection_name: str, events: list[DomainEvent]
-    ) -> None:
+    async def rebuild_projection(self, projection_name: str, events: list[DomainEvent]) -> None:
         """Rebuild projection from events."""
         projection = self._projections.get(projection_name)
         if not projection:

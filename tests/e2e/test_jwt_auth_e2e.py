@@ -59,13 +59,9 @@ class JWTAuthE2EManager:
                         {
                             "containerPort": self.service_port,
                             "hostPort": self.service_port,
-                            "protocol": "TCP"
+                            "protocol": "TCP",
                         },
-                        {
-                            "containerPort": 443,
-                            "hostPort": 8443,
-                            "protocol": "TCP"
-                        }
+                        {"containerPort": 443, "hostPort": 8443, "protocol": "TCP"},
                     ],
                     "kubeadmConfigPatches": [
                         """kind: InitConfiguration
@@ -73,9 +69,9 @@ nodeRegistration:
   kubeletExtraArgs:
     node-labels: "ingress-ready=true"
 """
-                    ]
+                    ],
                 }
-            ]
+            ],
         }
 
         with open(self.config_file, "w") as f:
@@ -89,7 +85,7 @@ nodeRegistration:
         namespace_manifest = {
             "apiVersion": "v1",
             "kind": "Namespace",
-            "metadata": {"name": self.namespace}
+            "metadata": {"name": self.namespace},
         }
 
         # JWT Auth Service Deployment
@@ -99,7 +95,7 @@ nodeRegistration:
             "metadata": {
                 "name": "jwt-auth-service",
                 "namespace": self.namespace,
-                "labels": {"app": "jwt-auth-service"}
+                "labels": {"app": "jwt-auth-service"},
             },
             "spec": {
                 "replicas": 1,
@@ -107,18 +103,20 @@ nodeRegistration:
                 "template": {
                     "metadata": {"labels": {"app": "jwt-auth-service"}},
                     "spec": {
-                        "containers": [{
-                            "name": "jwt-auth",
-                            "image": "python:3.14-slim",
-                            "ports": [{"containerPort": 8000}],
-                            "env": [
-                                {"name": "JWT_SECRET_KEY", "value": "test-secret-key-for-e2e"},
-                                {"name": "ENVIRONMENT", "value": "testing"},
-                                {"name": "JWT_ISSUER", "value": "marty-e2e-test"},
-                                {"name": "JWT_AUDIENCE", "value": "marty-e2e-services"}
-                            ],
-                            "command": ["/bin/bash", "-c"],
-                            "args": ["""
+                        "containers": [
+                            {
+                                "name": "jwt-auth",
+                                "image": "python:3.14-slim",
+                                "ports": [{"containerPort": 8000}],
+                                "env": [
+                                    {"name": "JWT_SECRET_KEY", "value": "test-secret-key-for-e2e"},
+                                    {"name": "ENVIRONMENT", "value": "testing"},
+                                    {"name": "JWT_ISSUER", "value": "marty-e2e-test"},
+                                    {"name": "JWT_AUDIENCE", "value": "marty-e2e-services"},
+                                ],
+                                "command": ["/bin/bash", "-c"],
+                                "args": [
+                                    """
                                 set -e
                                 echo "Installing dependencies..."
                                 pip install fastapi[all] uvicorn pyjwt python-multipart pydantic
@@ -281,43 +279,42 @@ EOF
                                 echo "Starting JWT auth service..."
                                 cd /app
                                 python jwt_auth_app.py
-                            """],
-                            "readinessProbe": {
-                                "httpGet": {"path": "/health", "port": 8000},
-                                "initialDelaySeconds": 10,
-                                "periodSeconds": 5
-                            },
-                            "livenessProbe": {
-                                "httpGet": {"path": "/health", "port": 8000},
-                                "initialDelaySeconds": 15,
-                                "periodSeconds": 10
+                            """
+                                ],
+                                "readinessProbe": {
+                                    "httpGet": {"path": "/health", "port": 8000},
+                                    "initialDelaySeconds": 10,
+                                    "periodSeconds": 5,
+                                },
+                                "livenessProbe": {
+                                    "httpGet": {"path": "/health", "port": 8000},
+                                    "initialDelaySeconds": 15,
+                                    "periodSeconds": 10,
+                                },
                             }
-                        }]
-                    }
-                }
-            }
+                        ]
+                    },
+                },
+            },
         }
 
         # Service
         service_manifest = {
             "apiVersion": "v1",
             "kind": "Service",
-            "metadata": {
-                "name": "jwt-auth-service",
-                "namespace": self.namespace
-            },
+            "metadata": {"name": "jwt-auth-service", "namespace": self.namespace},
             "spec": {
                 "selector": {"app": "jwt-auth-service"},
                 "ports": [{"port": 80, "targetPort": 8000, "nodePort": self.service_port}],
-                "type": "NodePort"
-            }
+                "type": "NodePort",
+            },
         }
 
         # Write manifests to files
         manifests = [
             ("namespace.yaml", namespace_manifest),
             ("deployment.yaml", deployment_manifest),
-            ("service.yaml", service_manifest)
+            ("service.yaml", service_manifest),
         ]
 
         for filename, manifest in manifests:
@@ -343,20 +340,24 @@ EOF
             self.create_cluster_config()
 
             try:
-                subprocess.run([
-                    "kind", "create", "cluster",
-                    "--name", self.cluster_name,
-                    "--config", str(self.config_file)
-                ], check=True)
+                subprocess.run(
+                    [
+                        "kind",
+                        "create",
+                        "cluster",
+                        "--name",
+                        self.cluster_name,
+                        "--config",
+                        str(self.config_file),
+                    ],
+                    check=True,
+                )
                 print(f"✅ Kind cluster '{self.cluster_name}' created successfully")
             except subprocess.CalledProcessError as e:
                 raise Exception(f"Failed to create Kind cluster: {e}")
 
         # Load kubeconfig
-        subprocess.run([
-            "kind", "export", "kubeconfig",
-            "--name", self.cluster_name
-        ], check=True)
+        subprocess.run(["kind", "export", "kubeconfig", "--name", self.cluster_name], check=True)
 
     def deploy_services(self):
         """Deploy JWT authentication services to the cluster."""
@@ -367,9 +368,7 @@ EOF
         # Apply manifests
         for manifest_file in self.manifests_dir.glob("*.yaml"):
             try:
-                subprocess.run([
-                    "kubectl", "apply", "-f", str(manifest_file)
-                ], check=True)
+                subprocess.run(["kubectl", "apply", "-f", str(manifest_file)], check=True)
                 print(f"✅ Applied {manifest_file.name}")
             except subprocess.CalledProcessError as e:
                 print(f"❌ Failed to apply {manifest_file.name}: {e}")
@@ -381,12 +380,18 @@ EOF
 
         # Wait for deployment to be ready
         try:
-            subprocess.run([
-                "kubectl", "wait", "--for=condition=available",
-                "--timeout=300s",
-                "deployment/jwt-auth-service",
-                "-n", self.namespace
-            ], check=True)
+            subprocess.run(
+                [
+                    "kubectl",
+                    "wait",
+                    "--for=condition=available",
+                    "--timeout=300s",
+                    "deployment/jwt-auth-service",
+                    "-n",
+                    self.namespace,
+                ],
+                check=True,
+            )
             print("✅ Deployment is ready")
         except subprocess.CalledProcessError as e:
             print(f"❌ Deployment failed to become ready: {e}")
@@ -567,14 +572,11 @@ class JWTAuthE2ETests:
             try:
                 await page.goto(f"{self.service_url}/docs")
                 title = await page.title()
-                results["api_docs_access"] = {
-                    "status": "passed",
-                    "title": title
-                }
+                results["api_docs_access"] = {"status": "passed", "title": title}
             except Exception:
                 results["api_docs_access"] = {
                     "status": "skipped",
-                    "reason": "API docs not available"
+                    "reason": "API docs not available",
                 }
 
             await page.close()

@@ -608,7 +608,6 @@ class APIGateway:
 
             # Decode basic auth (simplified)
             try:
-
                 encoded_credentials = auth_header[6:]
                 decoded_credentials = base64.b64decode(encoded_credentials).decode("utf-8")
                 username, password = decoded_credentials.split(":", 1)
@@ -761,13 +760,11 @@ class APIGateway:
                     endpoints.extend([endpoint] * int(weight * 10))
 
                 if endpoints:
-
                     return random.choice(endpoints)
 
             return random.choice(service.endpoints)
 
         if service.load_balancing == LoadBalancingStrategy.RANDOM:
-
             return random.choice(service.endpoints)
 
         # Default to first endpoint

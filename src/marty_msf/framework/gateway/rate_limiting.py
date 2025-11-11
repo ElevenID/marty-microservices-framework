@@ -54,7 +54,6 @@ class RestrictedUnpickler(pickle.Unpickler):
             return getattr(builtins, name)
         # Allow datetime objects which are commonly used in rate limiting
         if module == "datetime" and name in {"datetime", "date", "time", "timedelta"}:
-
             return getattr(datetime, name)
         # Allow rate limiting state classes
         if module.endswith("rate_limiting") and name in {"RateLimitState"}:
@@ -240,7 +239,6 @@ class RedisRateLimitStorage(RateLimitStorage):
     def set_state(self, key: str, state: RateLimitState, ttl: int | None = None):
         """Set state in Redis."""
         try:
-
             data = pickle.dumps(state)
             redis_key = self._make_key(key)
             if ttl:

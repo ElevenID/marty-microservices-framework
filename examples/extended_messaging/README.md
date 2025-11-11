@@ -5,23 +5,27 @@ This directory contains comprehensive examples showing how to use the extended m
 ## Examples Overview
 
 ### 1. Backend Comparison Examples
+
 - **NATS Example**: High-performance, low-latency messaging
 - **AWS SNS Example**: Cloud-native pub/sub and broadcast messaging
 - **RabbitMQ Example**: Traditional message queuing with complex routing
 - **Kafka Example**: High-throughput stream processing
 
 ### 2. Pattern Examples
+
 - **Pub/Sub Pattern**: Event notifications and reactive architectures
 - **Request/Response Pattern**: Synchronous communication patterns
 - **Stream Processing**: Real-time data processing pipelines
 - **Point-to-Point**: Task queues and command processing
 
 ### 3. Integration Examples
+
 - **Saga Pattern Integration**: Distributed transaction coordination
 - **Multi-Backend Setup**: Using multiple backends simultaneously
 - **Pattern Selection**: Choosing the right pattern for your use case
 
 ### 4. Real-World Use Cases
+
 - **E-commerce Order Processing**: Complete order workflow with Saga
 - **User Registration**: Multi-service user onboarding
 - **Payment Processing**: Secure payment workflows
@@ -122,21 +126,25 @@ subscription_id = await event_bus.process_stream(
 ### When to Use Each Pattern
 
 #### Publish/Subscribe
+
 - **Use when**: Multiple services need to react to the same event
 - **Examples**: User registration, order status changes, system notifications
 - **Backends**: NATS, AWS SNS, RabbitMQ
 
 #### Request/Response
+
 - **Use when**: You need immediate response from another service
 - **Examples**: User authentication, payment authorization, data validation
 - **Backends**: NATS, RabbitMQ
 
 #### Stream Processing
+
 - **Use when**: Processing continuous data flows with ordering requirements
 - **Examples**: Real-time analytics, log processing, financial transactions
 - **Backends**: Kafka, NATS JetStream
 
 #### Point-to-Point
+
 - **Use when**: Task processing with guaranteed delivery to single consumer
 - **Examples**: Background jobs, email sending, report generation
 - **Backends**: AWS SQS, RabbitMQ

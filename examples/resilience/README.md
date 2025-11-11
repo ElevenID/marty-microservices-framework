@@ -25,6 +25,7 @@ python examples/resilience/example_resilient_service.py
 ```
 
 **Features:**
+
 - HTTP connection pooling for external API calls
 - Redis connection pooling with caching
 - Circuit breaker protection
@@ -34,6 +35,7 @@ python examples/resilience/example_resilient_service.py
 - Comprehensive logging and metrics
 
 **Endpoints:**
+
 - `GET /health` - Health check
 - `GET /health/detailed` - Detailed health information
 - `GET /api/external-data` - External API call with circuit breaker
@@ -56,11 +58,13 @@ python examples/resilience/run_load_tests.py
 ```
 
 **Test Types:**
+
 - **Individual Tests**: Custom spike testing scenarios
 - **Resilience Suite**: Pre-configured test scenarios covering all patterns
 - **Endurance Tests**: Long-duration stability testing
 
 **Validation:**
+
 - Error rate thresholds
 - Response time percentiles (P95, P99)
 - Throughput requirements
@@ -71,12 +75,14 @@ python examples/resilience/run_load_tests.py
 ## Quick Start
 
 1. **Start the Example Service:**
+
    ```bash
    cd /path/to/marty-microservices-framework
    python examples/resilience/example_resilient_service.py
    ```
 
 2. **Test Basic Functionality:**
+
    ```bash
    # Health check
    curl http://localhost:8000/health
@@ -93,11 +99,13 @@ python examples/resilience/run_load_tests.py
    ```
 
 3. **Run Load Tests:**
+
    ```bash
    python examples/resilience/run_load_tests.py
    ```
 
 4. **Monitor Health:**
+
    ```bash
    # Detailed health information
    curl http://localhost:8000/health/detailed
@@ -111,6 +119,7 @@ python examples/resilience/run_load_tests.py
 ### Connection Pooling
 
 The example service shows how to:
+
 - Configure HTTP connection pools with health checking
 - Set up Redis connection pools with cluster support
 - Manage pool lifecycle and monitoring
@@ -206,21 +215,25 @@ app.add_middleware(
 The load testing framework provides several pre-configured scenarios:
 
 ### Basic Load Test
+
 - Gradual ramp-up to moderate load
 - Validates basic functionality under load
 - Checks response times and error rates
 
 ### Spike Test
+
 - Sudden increase in load
 - Tests circuit breaker activation
 - Validates connection pool behavior
 
 ### Endurance Test
+
 - Long-duration sustained load
 - Checks for memory leaks and performance degradation
 - Validates system stability over time
 
 ### Chaos Test
+
 - Introduces random failures
 - Tests recovery mechanisms
 - Validates overall system resilience
@@ -343,11 +356,14 @@ To test circuit breaker behavior:
 
 1. Start the example service
 2. Call the error-prone endpoint multiple times:
+
    ```bash
    # This will cause failures and eventually trip the circuit breaker
    for i in {1..10}; do curl http://localhost:8000/api/error-prone; echo; done
    ```
+
 3. Monitor the health endpoint to see circuit breaker status:
+
    ```bash
    curl http://localhost:8000/health/detailed
    ```
@@ -442,6 +458,7 @@ logging.getLogger("marty_msf.framework.resilience").setLevel(logging.DEBUG)
 To integrate the resilience framework into existing services:
 
 1. **Add Dependencies**
+
    ```python
    from marty_msf.framework.resilience import (
        ConnectionPoolManager,
@@ -450,6 +467,7 @@ To integrate the resilience framework into existing services:
    ```
 
 2. **Configure Connection Pools**
+
    ```python
    pool_manager = ConnectionPoolManager()
    await pool_manager.create_http_pool("api", base_url="https://api.example.com")
@@ -457,11 +475,13 @@ To integrate the resilience framework into existing services:
    ```
 
 3. **Add Middleware**
+
    ```python
    app.add_middleware(ResilienceMiddleware)
    ```
 
 4. **Use Pools in Handlers**
+
    ```python
    @app.get("/data")
    async def get_data():
@@ -471,6 +491,7 @@ To integrate the resilience framework into existing services:
    ```
 
 5. **Monitor and Test**
+
    ```python
    # Add health checks
    @app.get("/health")

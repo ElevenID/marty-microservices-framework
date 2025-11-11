@@ -2,6 +2,7 @@
 """
 Analyze internal project imports to identify architectural issues.
 """
+
 import ast
 import json
 import os
@@ -37,10 +38,10 @@ class ImportAnalyzer:
         python_files = []
         for root, dirs, files in os.walk(self.src_path):
             # Skip __pycache__ directories
-            dirs[:] = [d for d in dirs if d != '__pycache__']
+            dirs[:] = [d for d in dirs if d != "__pycache__"]
 
             for file in files:
-                if file.endswith('.py'):
+                if file.endswith(".py"):
                     python_files.append(Path(root) / file)
         return python_files
 
@@ -49,11 +50,11 @@ class ImportAnalyzer:
         try:
             relative_path = file_path.relative_to(self.project_root / "src")
             parts = list(relative_path.parts)
-            if parts[-1] == '__init__.py':
+            if parts[-1] == "__init__.py":
                 parts = parts[:-1]
             else:
                 parts[-1] = parts[-1][:-3]  # Remove .py extension
-            return '.'.join(parts)
+            return ".".join(parts)
         except ValueError:
             return str(file_path)
 
@@ -61,7 +62,7 @@ class ImportAnalyzer:
         """Parse imports from a Python file."""
         imports = set()
         try:
-            with open(file_path, encoding='utf-8') as f:
+            with open(file_path, encoding="utf-8") as f:
                 content = f.read()
 
             tree = ast.parse(content)
@@ -78,14 +79,16 @@ class ImportAnalyzer:
                     elif node.level > 0:  # Relative import
                         # Handle relative imports
                         current_module = self.get_module_name(file_path)
-                        current_parts = current_module.split('.')
+                        current_parts = current_module.split(".")
 
                         if node.level <= len(current_parts):
-                            base_parts = current_parts[:-node.level] if node.level > 0 else current_parts
+                            base_parts = (
+                                current_parts[: -node.level] if node.level > 0 else current_parts
+                            )
                             if node.module:
-                                full_module = '.'.join(base_parts + [node.module])
+                                full_module = ".".join(base_parts + [node.module])
                             else:
-                                full_module = '.'.join(base_parts)
+                                full_module = ".".join(base_parts)
 
                             if full_module.startswith(self.project_name):
                                 imports.add(full_module)
@@ -158,10 +161,10 @@ class ImportAnalyzer:
         stats = {}
         for module, deps in self.module_dependencies.items():
             stats[module] = {
-                'imports_count': len(deps),
-                'imported_by_count': len(self.reverse_dependencies[module]),
-                'imports': list(deps),
-                'imported_by': list(self.reverse_dependencies[module])
+                "imports_count": len(deps),
+                "imported_by_count": len(self.reverse_dependencies[module]),
+                "imports": list(deps),
+                "imported_by": list(self.reverse_dependencies[module]),
             }
         return stats
 
@@ -174,32 +177,36 @@ class ImportAnalyzer:
         # Find highly coupled modules
         highly_coupled = []
         for module, stats in module_stats.items():
-            total_coupling = stats['imports_count'] + stats['imported_by_count']
+            total_coupling = stats["imports_count"] + stats["imported_by_count"]
             if total_coupling > 5:  # Threshold for high coupling
-                highly_coupled.append({
-                    'module': module,
-                    'coupling_score': total_coupling,
-                    'imports': stats['imports_count'],
-                    'imported_by': stats['imported_by_count']
-                })
+                highly_coupled.append(
+                    {
+                        "module": module,
+                        "coupling_score": total_coupling,
+                        "imports": stats["imports_count"],
+                        "imported_by": stats["imported_by_count"],
+                    }
+                )
 
-        highly_coupled.sort(key=lambda x: x['coupling_score'], reverse=True)
+        highly_coupled.sort(key=lambda x: x["coupling_score"], reverse=True)
 
         # Find potential architectural layers
         layers = self.identify_layers()
 
         report = {
-            'summary': {
-                'total_modules': len(self.module_dependencies),
-                'total_internal_imports': sum(len(deps) for deps in self.module_dependencies.values()),
-                'circular_dependencies_count': len(circular_deps),
-                'highly_coupled_modules_count': len(highly_coupled)
+            "summary": {
+                "total_modules": len(self.module_dependencies),
+                "total_internal_imports": sum(
+                    len(deps) for deps in self.module_dependencies.values()
+                ),
+                "circular_dependencies_count": len(circular_deps),
+                "highly_coupled_modules_count": len(highly_coupled),
             },
-            'circular_dependencies': circular_deps,
-            'highly_coupled_modules': highly_coupled[:10],  # Top 10
-            'module_statistics': module_stats,
-            'architectural_layers': layers,
-            'recommendations': self.generate_recommendations(circular_deps, highly_coupled)
+            "circular_dependencies": circular_deps,
+            "highly_coupled_modules": highly_coupled[:10],  # Top 10
+            "module_statistics": module_stats,
+            "architectural_layers": layers,
+            "recommendations": self.generate_recommendations(circular_deps, highly_coupled),
         }
 
         return report
@@ -207,34 +214,42 @@ class ImportAnalyzer:
     def identify_layers(self) -> dict:
         """Identify potential architectural layers based on import patterns."""
         layers = {
-            'core': [],
-            'domain': [],
-            'services': [],
-            'api': [],
-            'infrastructure': [],
-            'utils': [],
-            'other': []
+            "core": [],
+            "domain": [],
+            "services": [],
+            "api": [],
+            "infrastructure": [],
+            "utils": [],
+            "other": [],
         }
 
         for module in self.module_dependencies.keys():
-            parts = module.split('.')
+            parts = module.split(".")
             if len(parts) > 1:
                 second_level = parts[1]
 
-                if 'core' in second_level or 'base' in second_level:
-                    layers['core'].append(module)
-                elif 'domain' in second_level or 'model' in second_level:
-                    layers['domain'].append(module)
-                elif 'service' in second_level:
-                    layers['services'].append(module)
-                elif 'api' in second_level or 'handler' in second_level or 'controller' in second_level:
-                    layers['api'].append(module)
-                elif 'infrastructure' in second_level or 'repo' in second_level or 'database' in second_level:
-                    layers['infrastructure'].append(module)
-                elif 'util' in second_level or 'helper' in second_level or 'tool' in second_level:
-                    layers['utils'].append(module)
+                if "core" in second_level or "base" in second_level:
+                    layers["core"].append(module)
+                elif "domain" in second_level or "model" in second_level:
+                    layers["domain"].append(module)
+                elif "service" in second_level:
+                    layers["services"].append(module)
+                elif (
+                    "api" in second_level
+                    or "handler" in second_level
+                    or "controller" in second_level
+                ):
+                    layers["api"].append(module)
+                elif (
+                    "infrastructure" in second_level
+                    or "repo" in second_level
+                    or "database" in second_level
+                ):
+                    layers["infrastructure"].append(module)
+                elif "util" in second_level or "helper" in second_level or "tool" in second_level:
+                    layers["utils"].append(module)
                 else:
-                    layers['other'].append(module)
+                    layers["other"].append(module)
 
         return layers
 
@@ -243,42 +258,54 @@ class ImportAnalyzer:
         recommendations = []
 
         if circular_deps:
-            recommendations.append(f"🔄 CRITICAL: Found {len(circular_deps)} circular dependencies that need immediate attention")
-            recommendations.append("   - Consider using dependency injection or interfaces to break cycles")
+            recommendations.append(
+                f"🔄 CRITICAL: Found {len(circular_deps)} circular dependencies that need immediate attention"
+            )
+            recommendations.append(
+                "   - Consider using dependency injection or interfaces to break cycles"
+            )
             recommendations.append("   - Move shared code to a common module")
 
         if highly_coupled:
-            recommendations.append(f"⚠️  HIGH COUPLING: {len(highly_coupled)} modules are highly coupled")
-            recommendations.append("   - Consider splitting large modules into smaller, focused modules")
+            recommendations.append(
+                f"⚠️  HIGH COUPLING: {len(highly_coupled)} modules are highly coupled"
+            )
+            recommendations.append(
+                "   - Consider splitting large modules into smaller, focused modules"
+            )
             recommendations.append("   - Apply Single Responsibility Principle")
 
         # Check for potential God modules
-        god_modules = [m for m in highly_coupled if m['coupling_score'] > 15]
+        god_modules = [m for m in highly_coupled if m["coupling_score"] > 15]
         if god_modules:
-            recommendations.append(f"🏛️  GOD MODULES: {len(god_modules)} modules may be doing too much")
+            recommendations.append(
+                f"🏛️  GOD MODULES: {len(god_modules)} modules may be doing too much"
+            )
             for god in god_modules[:3]:
                 recommendations.append(f"   - {god['module']} (coupling: {god['coupling_score']})")
 
-        recommendations.extend([
-            "📋 GENERAL RECOMMENDATIONS:",
-            "   - Follow layered architecture: API → Services → Domain → Infrastructure",
-            "   - Use dependency inversion for external dependencies",
-            "   - Consider using events/messaging for loose coupling",
-            "   - Implement proper abstractions and interfaces"
-        ])
+        recommendations.extend(
+            [
+                "📋 GENERAL RECOMMENDATIONS:",
+                "   - Follow layered architecture: API → Services → Domain → Infrastructure",
+                "   - Use dependency inversion for external dependencies",
+                "   - Consider using events/messaging for loose coupling",
+                "   - Implement proper abstractions and interfaces",
+            ]
+        )
 
         return recommendations
 
-def main():
 
+def main():
     # Check if we should force regeneration or use cached data
-    force_regenerate = '--force' in sys.argv or '--real-time' in sys.argv
-    quiet_mode = '--quiet' in sys.argv
+    force_regenerate = "--force" in sys.argv or "--real-time" in sys.argv
+    quiet_mode = "--quiet" in sys.argv
 
     analyzer = ImportAnalyzer(".", "marty_msf", real_time=True)
 
     # Check if cached analysis exists and is recent
-    cache_file = Path('internal_import_analysis.json')
+    cache_file = Path("internal_import_analysis.json")
     should_regenerate = force_regenerate
 
     if not should_regenerate and cache_file.exists():
@@ -297,24 +324,24 @@ def main():
         if not quiet_mode:
             print("🔍 Analyzing project imports in real-time...")
         report = analyzer.generate_report()
-        report['metadata'] = {
-            'generated_at': datetime.now().isoformat(),
-            'analysis_type': 'real_time',
-            'parse_errors': analyzer.parse_errors,
-            'skipped_files': analyzer.skipped_files
+        report["metadata"] = {
+            "generated_at": datetime.now().isoformat(),
+            "analysis_type": "real_time",
+            "parse_errors": analyzer.parse_errors,
+            "skipped_files": analyzer.skipped_files,
         }
 
         # Save detailed report to JSON
-        with open('internal_import_analysis.json', 'w', encoding='utf-8') as f:
+        with open("internal_import_analysis.json", "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2)
     else:
         if not quiet_mode:
             print("📋 Using cached analysis (use --force to regenerate)")
-        with open('internal_import_analysis.json', encoding='utf-8') as f:
-            report = json.load(f)    # Print summary report
-    print("="*80)
+        with open("internal_import_analysis.json", encoding="utf-8") as f:
+            report = json.load(f)  # Print summary report
+    print("=" * 80)
     print("MARTY MICROSERVICES FRAMEWORK - IMPORT ARCHITECTURE ANALYSIS")
-    print("="*80)
+    print("=" * 80)
 
     print("\n📊 SUMMARY:")
     print(f"   Total Modules: {report['summary']['total_modules']}")
@@ -322,43 +349,46 @@ def main():
     print(f"   Circular Dependencies: {report['summary']['circular_dependencies_count']}")
     print(f"   Highly Coupled Modules: {report['summary']['highly_coupled_modules_count']}")
 
-    if report['circular_dependencies']:
+    if report["circular_dependencies"]:
         print(f"\n🔄 CIRCULAR DEPENDENCIES ({len(report['circular_dependencies'])}):")
-        for i, cycle in enumerate(report['circular_dependencies'][:5], 1):
+        for i, cycle in enumerate(report["circular_dependencies"][:5], 1):
             print(f"   {i}. {' → '.join(cycle)}")
-        if len(report['circular_dependencies']) > 5:
+        if len(report["circular_dependencies"]) > 5:
             print(f"   ... and {len(report['circular_dependencies']) - 5} more")
 
-    if report['highly_coupled_modules']:
+    if report["highly_coupled_modules"]:
         print("\n⚠️  HIGHLY COUPLED MODULES:")
-        for module in report['highly_coupled_modules'][:5]:
-            print(f"   {module['module']} (coupling: {module['coupling_score']}, "
-                  f"imports: {module['imports']}, imported_by: {module['imported_by']})")
+        for module in report["highly_coupled_modules"][:5]:
+            print(
+                f"   {module['module']} (coupling: {module['coupling_score']}, "
+                f"imports: {module['imports']}, imported_by: {module['imported_by']})"
+            )
 
     print("\n🏗️  ARCHITECTURAL LAYERS:")
-    for layer, modules in report['architectural_layers'].items():
+    for layer, modules in report["architectural_layers"].items():
         if modules:
             print(f"   {layer.upper()}: {len(modules)} modules")
 
     print("\n💡 RECOMMENDATIONS:")
-    for rec in report['recommendations']:
+    for rec in report["recommendations"]:
         print(f"   {rec}")
 
     # Show analysis metadata if available
-    if 'metadata' in report and not quiet_mode:
+    if "metadata" in report and not quiet_mode:
         print("\n📊 ANALYSIS METADATA:")
-        meta = report['metadata']
-        if 'generated_at' in meta:
+        meta = report["metadata"]
+        if "generated_at" in meta:
             print(f"   Generated: {meta['generated_at']}")
-        if 'parse_errors' in meta and meta['parse_errors']:
+        if "parse_errors" in meta and meta["parse_errors"]:
             print(f"   Parse Errors: {len(meta['parse_errors'])} files")
-            for file_path, error in meta['parse_errors'][:3]:  # Show first 3
+            for file_path, error in meta["parse_errors"][:3]:  # Show first 3
                 print(f"     - {file_path}: {error}")
-            if len(meta['parse_errors']) > 3:
+            if len(meta["parse_errors"]) > 3:
                 print(f"     ... and {len(meta['parse_errors']) - 3} more")
 
     print("\n📁 DETAILED REPORT: internal_import_analysis.json")
-    print("="*80)
+    print("=" * 80)
+
 
 if __name__ == "__main__":
     main()

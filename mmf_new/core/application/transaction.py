@@ -65,9 +65,7 @@ class TransactionManager:
                     yield new_session
 
     @asynccontextmanager
-    async def _managed_transaction(
-        self, session: AsyncSession, config: TransactionConfig
-    ):
+    async def _managed_transaction(self, session: AsyncSession, config: TransactionConfig):
         """Internal managed transaction with configuration."""
         transaction_id = id(session)
         try:
@@ -97,9 +95,7 @@ class TransactionManager:
             # Rollback on any error
             try:
                 await session.rollback()
-                logger.debug(
-                    "Transaction %s rolled back due to error: %s", transaction_id, e
-                )
+                logger.debug("Transaction %s rolled back due to error: %s", transaction_id, e)
             except Exception as rollback_error:
                 logger.error("Error during rollback: %s", rollback_error)
             raise
@@ -139,9 +135,7 @@ class TransactionManager:
                     )
                     await asyncio.sleep(delay)
                     continue
-                logger.error(
-                    "Transaction failed after %d attempts", config.max_retries + 1
-                )
+                logger.error("Transaction failed after %d attempts", config.max_retries + 1)
                 raise
             except Exception as e:
                 # Non-retryable error
@@ -165,10 +159,7 @@ class TransactionManager:
         async with self.transaction(config) as session:
             for operation in operations:
                 # Add session to the operation if it expects it
-                if (
-                    hasattr(operation, "__code__")
-                    and "session" in operation.__code__.co_varnames
-                ):
+                if hasattr(operation, "__code__") and "session" in operation.__code__.co_varnames:
                     result = await operation(session=session)
                 else:
                     result = await operation()
@@ -182,17 +173,13 @@ class TransactionManager:
     ) -> list[Any]:
         """Execute operations with savepoints for partial rollback."""
         if savepoint_names and len(savepoint_names) != len(operations):
-            raise ValueError(
-                "Number of savepoint names must match number of operations"
-            )
+            raise ValueError("Number of savepoint names must match number of operations")
 
         results = []
         async with self.db_manager.get_session() as session:
             async with session.begin():
                 for i, operation in enumerate(operations):
-                    savepoint_name = (
-                        savepoint_names[i] if savepoint_names else f"sp_{i}"
-                    )
+                    savepoint_name = savepoint_names[i] if savepoint_names else f"sp_{i}"
                     # Create savepoint
                     savepoint = await session.begin_nested()
 
@@ -209,9 +196,7 @@ class TransactionManager:
 
                         # Commit the savepoint after successful operation
                         await savepoint.commit()
-                        logger.debug(
-                            "Savepoint %s completed successfully", savepoint_name
-                        )
+                        logger.debug("Savepoint %s completed successfully", savepoint_name)
                     except Exception as e:
                         # Rollback to savepoint
                         await savepoint.rollback()
@@ -251,9 +236,7 @@ def transactional(config: TransactionConfig | None = None, retry: bool = True):
                 db_manager = args[0].db_manager
 
             if not db_manager:
-                raise ValueError(
-                    "No database manager found for transactional decorator"
-                )
+                raise ValueError("No database manager found for transactional decorator")
 
             transaction_manager = TransactionManager(db_manager)
 
@@ -264,10 +247,7 @@ def transactional(config: TransactionConfig | None = None, retry: bool = True):
             else:
                 async with transaction_manager.transaction(config) as session:
                     # Add session to kwargs if not already present
-                    if (
-                        "session" not in kwargs
-                        and "session" in func.__code__.co_varnames
-                    ):
+                    if "session" not in kwargs and "session" in func.__code__.co_varnames:
                         kwargs["session"] = session
                     return await func(*args, **kwargs)
 
@@ -276,9 +256,7 @@ def transactional(config: TransactionConfig | None = None, retry: bool = True):
     return decorator
 
 
-def handle_database_errors(
-    func: Callable[..., Awaitable[T]]
-) -> Callable[..., Awaitable[T]]:
+def handle_database_errors(func: Callable[..., Awaitable[T]]) -> Callable[..., Awaitable[T]]:
     """Decorator for handling common database errors."""
 
     @wraps(func)
@@ -295,17 +273,12 @@ def handle_database_errors(
             error_message = str(e).lower()
 
             # Check for deadlock
-            if any(
-                keyword in error_message for keyword in ["deadlock", "lock timeout"]
-            ):
+            if any(keyword in error_message for keyword in ["deadlock", "lock timeout"]):
                 logger.warning("Deadlock detected: %s", e)
                 raise DeadlockError(f"Database deadlock: {e}") from e
 
             # Check for connection issues
-            if any(
-                keyword in error_message
-                for keyword in ["connection", "timeout", "network"]
-            ):
+            if any(keyword in error_message for keyword in ["connection", "timeout", "network"]):
                 logger.error("Connection error: %s", e)
                 raise RetryableError(f"Database connection error: {e}") from e
 
@@ -329,9 +302,7 @@ async def execute_in_transaction(
 ) -> T:
     """Execute a function in a transaction."""
     transaction_manager = TransactionManager(db_manager)
-    return await transaction_manager.retry_transaction(
-        func, *args, config=config, **kwargs
-    )
+    return await transaction_manager.retry_transaction(func, *args, config=config, **kwargs)
 
 
 async def execute_bulk_operations(

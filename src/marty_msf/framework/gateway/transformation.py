@@ -766,7 +766,6 @@ class TransformationMiddleware:
         except Exception as e:
             logger.error(f"Request transformation failed: {e}")
             if self.engine.config.fail_on_error:
-
                 return GatewayResponse(
                     status_code=500,
                     body="Request transformation failed",

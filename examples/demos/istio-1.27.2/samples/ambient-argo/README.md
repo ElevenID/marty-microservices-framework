@@ -5,15 +5,17 @@ This repo contains a reference architecture for operating Istio Ambient Mesh wit
 ## :boom: DISCLAIMER
 
 Istio Ambient Mesh is still in Alpha, and is not suitable for production use.  Likewise, this reference architecture is of Alpha quality, and includes several rough edges, including:
- * Cluster-Scoped upgrades cause known traffic loss, and have wide blast radius.
- * The tag chart is forked from the primary istio repo, and needs to be merged and published
- * CRDs are not currently upgraded
+
+* Cluster-Scoped upgrades cause known traffic loss, and have wide blast radius.
+* The tag chart is forked from the primary istio repo, and needs to be merged and published
+* CRDs are not currently upgraded
 
 ## Getting Started
 
 This reference architecture assumes that you have an ArgoCD installation with:
- * A [connected cluster](https://argo-cd.readthedocs.io/en/stable/user-guide/commands/argocd_cluster/) named `ambient-cluster`
- * A connection to your repository (for private repos)
+
+* A [connected cluster](https://argo-cd.readthedocs.io/en/stable/user-guide/commands/argocd_cluster/) named `ambient-cluster`
+* A connection to your repository (for private repos)
 
 To deploy Istio, supporting software, and the bookinfo sample application, copy this folder to the root of your repo and run:
 

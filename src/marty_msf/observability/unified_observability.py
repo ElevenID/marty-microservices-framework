@@ -34,14 +34,12 @@ from marty_msf.observability.monitoring import (
 
 # OpenTelemetry imports for tracing
 try:
-
     TRACING_AVAILABLE = True
 except ImportError:
     TRACING_AVAILABLE = False
 
 # Prometheus client
 try:
-
     PROMETHEUS_AVAILABLE = True
 except ImportError:
     PROMETHEUS_AVAILABLE = False

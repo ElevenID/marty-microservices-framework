@@ -249,7 +249,6 @@ class TestEndToEnd:
             # Wait for services to start
             await asyncio.sleep(10)
 
-
             # Test user service
             async with httpx.AsyncClient() as client:
                 user_response = await client.post(
@@ -536,7 +535,6 @@ class TestEndToEnd:
         try:
             await asyncio.sleep(5)
 
-
             # Generate some traffic for metrics
             async with httpx.AsyncClient() as client:
                 for _i in range(10):
@@ -790,7 +788,6 @@ class TestEndToEnd:
             await asyncio.sleep(5)
 
             # Performance test using concurrent requests
-
 
             async def make_request(client, url):
                 start_time = time.time()

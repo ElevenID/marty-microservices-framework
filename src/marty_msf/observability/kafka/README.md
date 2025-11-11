@@ -5,11 +5,13 @@ This directory contains Kafka event streaming infrastructure for microservices c
 ## Components
 
 ### Event Bus (`event_bus.py`)
+
 - **EventBus**: Main class for Kafka interaction
 - **EventMessage**: Standard event format with correlation IDs
 - **KafkaConfig**: Configuration settings for Kafka connections
 
 ### Key Features
+
 - Async event publishing and consumption
 - Automatic retries and error handling
 - Dead letter queue support
@@ -19,6 +21,7 @@ This directory contains Kafka event streaming infrastructure for microservices c
 ## Usage
 
 ### Basic Setup
+
 ```python
 from marty_msf.observability.kafka import EventBus, KafkaConfig, event_bus_context
 
@@ -44,6 +47,7 @@ async with event_bus_context(config, "my-service") as event_bus:
 ```
 
 ### Service Events
+
 ```python
 from marty_msf.observability.kafka import publish_service_event
 
@@ -55,6 +59,7 @@ await publish_service_event(
 ```
 
 ### Domain Events
+
 ```python
 from marty_msf.observability.kafka import publish_domain_event
 
@@ -69,15 +74,18 @@ await publish_domain_event(
 ## Event Patterns
 
 ### Topic Naming Convention
+
 - Service events: `service.{service_name}.events`
 - Domain events: `domain.{domain}.events`
 - Integration events: `integration.{external_system}.events`
 
 ### Event Types
+
 - Use dot notation: `entity.action` (e.g., `user.created`, `order.cancelled`)
 - Include service context: `service.action` (e.g., `service.started`, `service.healthcheck`)
 
 ### Correlation IDs
+
 - Include correlation IDs for request tracing
 - Pass through correlation IDs in downstream events
 - Use for distributed transaction tracking
@@ -85,6 +93,7 @@ await publish_domain_event(
 ## Monitoring
 
 The event bus includes structured logging for:
+
 - Event publishing metrics
 - Consumer lag monitoring
 - Error tracking and dead letter queue metrics

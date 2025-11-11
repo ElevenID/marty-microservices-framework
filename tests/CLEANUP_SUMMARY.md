@@ -3,46 +3,55 @@
 ## Files Removed
 
 ### Original Test Scripts (Moved to New Locations)
+
 1. ✅ **`deploy/e2e-test.sh`** → Moved to `tests/e2e/kind/automated/e2e-test.sh`
 2. ✅ **`scripts/test-e2e.sh`** → Moved to `tests/e2e/kind/test-e2e.sh`
 
 ### Duplicate Configuration Files (Removed)
+
 3. ✅ **`tests/e2e/kind/config/e2e-config.env`** → Using original in `deploy/e2e-config.env`
 4. ✅ **`tests/e2e/kind/config/kind-config.yaml`** → Using original in `deploy/kind-config.yaml`
 5. ✅ **`tests/e2e/kind/config/` directory** → Removed entirely
 
 ### Cache and Temporary Files
+
 6. ✅ **Python cache directories** (`__pycache__`) → Removed from tests directory
 7. ✅ **Compiled Python files** (`.pyc`) → Removed from tests directory
 
 ## References Updated
 
 ### GitHub Actions
+
 - ✅ **`.github/workflows/e2e-tests.yml`**: Updated to use `tests/e2e/kind/automated/e2e-test.sh`
 
 ### Makefile Targets
+
 - ✅ **`test-e2e-quick`**: Updated to use `tests/e2e/kind/test-e2e.sh`
 - ✅ **`test-e2e-smoke`**: Updated to use `tests/e2e/kind/test-e2e.sh`
 - ✅ **`test-e2e-dev`**: Updated to use `tests/e2e/kind/test-e2e.sh`
 - ✅ **`test-e2e-clean`**: Updated to use `tests/e2e/kind/test-e2e.sh`
 
 ### Documentation Files
+
 - ✅ **`docs/E2E_TESTING_FRAMEWORK.md`**: Updated all references to new script locations
 - ✅ **`docs/E2E_TESTING_QUICK_REFERENCE.md`**: Updated all references to new script locations
 
 ### Test Scripts
+
 - ✅ **`tests/e2e/kind/test-e2e.sh`**: Updated internal references to use `automated/e2e-test.sh`
 - ✅ **`tests/e2e/kind/automated/e2e-test.sh`**: Updated to use relative paths to `deploy/` directory
 
 ## Configuration Strategy
 
 ### Centralized Configuration
+
 - **Configuration files remain in `deploy/` directory** since they're used by multiple systems:
   - `deploy/deploy.sh` (general deployment)
   - `tests/e2e/kind/automated/e2e-test.sh` (testing)
 - **Test scripts use relative paths** to access configurations from their new locations
 
 ### Path Resolution
+
 - **From `tests/e2e/kind/automated/`**: Use `../../../../deploy/` to access config files
 - **From `tests/e2e/kind/`**: Use `../../../deploy/` to access config files (if needed)
 
@@ -80,6 +89,7 @@
 ## Verification Commands
 
 ### Test New Structure
+
 ```bash
 # Test unified runner
 ./tests/run_tests.sh --help
@@ -93,6 +103,7 @@ make test-all
 ```
 
 ### Verify Cleanup
+
 ```bash
 # These files should not exist
 ls deploy/e2e-test.sh               # Should not exist

@@ -28,7 +28,6 @@ from marty_msf.framework.mesh.service_mesh import (
 
 # Core deployment imports
 try:
-
     DEPLOYMENT_AVAILABLE = True
 except ImportError as e:
     print(f"Deployment imports not available: {e}")
@@ -36,7 +35,6 @@ except ImportError as e:
 
 # Service discovery and mesh imports
 try:
-
     SERVICE_MESH_AVAILABLE = True
 except ImportError as e:
     print(f"Service mesh imports not available: {e}")

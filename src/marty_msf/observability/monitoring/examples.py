@@ -42,7 +42,6 @@ from marty_msf.framework.monitoring.core import (
 
 # Database example
 try:
-
     SQLALCHEMY_AVAILABLE = True
 except ImportError:
     SQLALCHEMY_AVAILABLE = False
@@ -191,110 +190,108 @@ async def business_metrics_example():
 
 # Example 3: FastAPI Integration
 def create_fastapi_monitoring_example():
-        """Create FastAPI application with comprehensive monitoring."""
+    """Create FastAPI application with comprehensive monitoring."""
 
-        print("\n=== FastAPI Monitoring Integration Example ===")
+    print("\n=== FastAPI Monitoring Integration Example ===")
 
-        app = FastAPI(title="Monitoring Example API")
+    app = FastAPI(title="Monitoring Example API")
 
-        # Initialize monitoring
-        monitoring_manager = initialize_monitoring(
-            service_name="fastapi-example", use_prometheus=True
+    # Initialize monitoring
+    monitoring_manager = initialize_monitoring(service_name="fastapi-example", use_prometheus=True)
+
+    # Initialize custom metrics
+    custom_metrics = initialize_custom_metrics()
+
+    # Configure monitoring middleware
+    config = MonitoringMiddlewareConfig()
+    config.collect_request_metrics = True
+    config.collect_response_metrics = True
+    config.collect_error_metrics = True
+    config.slow_request_threshold_seconds = 0.5
+    config.enable_tracing = True
+
+    # Setup monitoring middleware
+    setup_fastapi_monitoring(app, config)
+
+    @app.on_event("startup")
+    async def startup():
+        # Add health checks
+        monitoring_manager.add_health_check(
+            ExternalServiceHealthCheck("external_service", "https://httpbin.org/status/200")
         )
 
-        # Initialize custom metrics
+        # Start custom metrics monitoring
+        await custom_metrics.start_monitoring()
+
+        print("FastAPI monitoring initialized")
+
+    @app.on_event("shutdown")
+    async def shutdown():
+        await custom_metrics.stop_monitoring()
+        print("FastAPI monitoring shutdown")
+
+    @app.get("/api/users/{user_id}")
+    async def get_user(user_id: str):
+        # Simulate processing time
+        processing_time = 0.1 if user_id != "slow" else 1.5
+        await asyncio.sleep(processing_time)
+
+        # Record business metrics
+        await record_response_time_sla(processing_time * 1000, 1000)  # Convert to ms
+
+        if user_id == "error":
+            await record_error_rate(True)
+            raise HTTPException(status_code=500, detail="Simulated error")
+
+        await record_error_rate(False)
+        return {"id": user_id, "name": f"User {user_id}"}
+
+    @app.post("/api/users")
+    async def create_user(user_data: builtins.dict[str, Any]):
+        # Simulate user registration
+        await record_user_registration("api", "direct")
+
+        # Simulate transaction
+        success = user_data.get("email") != "invalid@example.com"
+        await record_transaction_result(success)
+
+        if not success:
+            raise HTTPException(status_code=400, detail="Invalid user data")
+
+        return {"id": "new_user", "status": "created"}
+
+    @app.post("/api/orders")
+    async def create_order(order_data: builtins.dict[str, Any]):
+        # Simulate order processing
+        processing_time = 20.0 + (len(order_data.get("items", [])) * 5)
+
+        # Record business metric
         custom_metrics = initialize_custom_metrics()
+        custom_metrics.record_business_metric(
+            "order_processing_time",
+            processing_time,
+            {
+                "order_type": order_data.get("type", "standard"),
+                "priority": "normal",
+            },
+        )
 
-        # Configure monitoring middleware
-        config = MonitoringMiddlewareConfig()
-        config.collect_request_metrics = True
-        config.collect_response_metrics = True
-        config.collect_error_metrics = True
-        config.slow_request_threshold_seconds = 0.5
-        config.enable_tracing = True
+        # Simulate revenue
+        amount = order_data.get("total", 100.0)
+        await record_revenue(amount, "USD", "api")
 
-        # Setup monitoring middleware
-        setup_fastapi_monitoring(app, config)
+        return {"id": "order_123", "status": "processing"}
 
-        @app.on_event("startup")
-        async def startup():
-            # Add health checks
-            monitoring_manager.add_health_check(
-                ExternalServiceHealthCheck("external_service", "https://httpbin.org/status/200")
-            )
+    print("FastAPI monitoring example application created")
+    print("Available endpoints:")
+    print("  GET /health - Health check")
+    print("  GET /health/detailed - Detailed health check")
+    print("  GET /metrics - Prometheus metrics")
+    print("  GET /api/users/{user_id} - Get user (try 'slow' or 'error')")
+    print("  POST /api/users - Create user")
+    print("  POST /api/orders - Create order")
 
-            # Start custom metrics monitoring
-            await custom_metrics.start_monitoring()
-
-            print("FastAPI monitoring initialized")
-
-        @app.on_event("shutdown")
-        async def shutdown():
-            await custom_metrics.stop_monitoring()
-            print("FastAPI monitoring shutdown")
-
-        @app.get("/api/users/{user_id}")
-        async def get_user(user_id: str):
-            # Simulate processing time
-            processing_time = 0.1 if user_id != "slow" else 1.5
-            await asyncio.sleep(processing_time)
-
-            # Record business metrics
-            await record_response_time_sla(processing_time * 1000, 1000)  # Convert to ms
-
-            if user_id == "error":
-                await record_error_rate(True)
-                raise HTTPException(status_code=500, detail="Simulated error")
-
-            await record_error_rate(False)
-            return {"id": user_id, "name": f"User {user_id}"}
-
-        @app.post("/api/users")
-        async def create_user(user_data: builtins.dict[str, Any]):
-            # Simulate user registration
-            await record_user_registration("api", "direct")
-
-            # Simulate transaction
-            success = user_data.get("email") != "invalid@example.com"
-            await record_transaction_result(success)
-
-            if not success:
-                raise HTTPException(status_code=400, detail="Invalid user data")
-
-            return {"id": "new_user", "status": "created"}
-
-        @app.post("/api/orders")
-        async def create_order(order_data: builtins.dict[str, Any]):
-            # Simulate order processing
-            processing_time = 20.0 + (len(order_data.get("items", [])) * 5)
-
-            # Record business metric
-            custom_metrics = initialize_custom_metrics()
-            custom_metrics.record_business_metric(
-                "order_processing_time",
-                processing_time,
-                {
-                    "order_type": order_data.get("type", "standard"),
-                    "priority": "normal",
-                },
-            )
-
-            # Simulate revenue
-            amount = order_data.get("total", 100.0)
-            await record_revenue(amount, "USD", "api")
-
-            return {"id": "order_123", "status": "processing"}
-
-        print("FastAPI monitoring example application created")
-        print("Available endpoints:")
-        print("  GET /health - Health check")
-        print("  GET /health/detailed - Detailed health check")
-        print("  GET /metrics - Prometheus metrics")
-        print("  GET /api/users/{user_id} - Get user (try 'slow' or 'error')")
-        print("  POST /api/users - Create user")
-        print("  POST /api/orders - Create order")
-
-        return app
+    return app
 
 
 # Create the FastAPI app

@@ -16,17 +16,20 @@ OPA (Open Policy Agent) is the industry standard for policy as code. It provides
 ### Local Development
 
 1. **Start OPA using Docker Compose:**
+
    ```bash
    cd ops/dev
    docker-compose -f docker-compose.opa.yml up -d
    ```
 
 2. **Verify OPA is running:**
+
    ```bash
    curl http://localhost:8181/health
    ```
 
 3. **Test a policy evaluation:**
+
    ```bash
    curl -X POST http://localhost:8181/v1/data/authz/allow \
      -H "Content-Type: application/json" \
@@ -43,16 +46,19 @@ OPA (Open Policy Agent) is the industry standard for policy as code. It provides
 ### Kubernetes Deployment
 
 1. **Apply the OPA deployment:**
+
    ```bash
    kubectl apply -f ops/k8s/opa-deployment.yaml
    ```
 
 2. **Verify deployment:**
+
    ```bash
    kubectl get pods -n marty-services -l app=opa-policy-engine
    ```
 
 3. **Access OPA service:**
+
    ```bash
    kubectl port-forward -n marty-services svc/opa-policy-engine 8181:8181
    ```
@@ -89,23 +95,29 @@ async def protected_endpoint(current_user: dict):
 The default policy (`authz.rego`) includes:
 
 ### 1. Admin Access
+
 - Admins can perform any action on any resource
 
 ### 2. Resource Owner Access
+
 - Users can read/update their own resources
 
 ### 3. Public Resource Access
+
 - Anyone can read public resources
 
 ### 4. Role-Based Access
+
 - Different roles have different permissions on resource types
 
 ### 5. Service-to-Service
+
 - Inter-service communication policies
 
 ## Policy Examples
 
-### Allow user to read their own profile:
+### Allow user to read their own profile
+
 ```rego
 allow if {
     input.principal.id == input.resource_owner
@@ -114,7 +126,8 @@ allow if {
 }
 ```
 
-### Role-based permissions:
+### Role-based permissions
+
 ```rego
 allow if {
     some role in input.principal.roles
@@ -125,13 +138,16 @@ allow if {
 ## Monitoring
 
 ### Health Checks
+
 - **Liveness**: `GET /health`
 - **Readiness**: `GET /health?bundle=true`
 
 ### Metrics
+
 OPA exposes Prometheus metrics at `/metrics`
 
 ### Decision Logs
+
 All authorization decisions are logged for audit purposes.
 
 ## Security Considerations
@@ -146,6 +162,7 @@ All authorization decisions are logged for audit purposes.
 ### Testing Policies Locally
 
 1. **Install OPA CLI:**
+
    ```bash
    curl -L -o opa https://openpolicyagent.org/downloads/v0.67.1/opa_darwin_amd64
    chmod +x opa
@@ -153,12 +170,14 @@ All authorization decisions are logged for audit purposes.
    ```
 
 2. **Test policies:**
+
    ```bash
    cd ops/dev/policies
    opa test .
    ```
 
 3. **Evaluate specific input:**
+
    ```bash
    opa eval -d authz.rego "data.authz.allow" --input input.json
    ```

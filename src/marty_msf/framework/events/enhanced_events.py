@@ -67,9 +67,11 @@ def register_event(event_class: type[BaseEvent]) -> type[BaseEvent]:
 
 def register_plugin_event(plugin_id: str):
     """Decorator to register an event class for a plugin."""
+
     def decorator(event_class: type[BaseEvent]) -> type[BaseEvent]:
         EVENT_REGISTRY.register_plugin_event(plugin_id, event_class)
         return event_class
+
     return decorator
 
 
@@ -78,12 +80,7 @@ def register_plugin_event(plugin_id: str):
 class GenericEvent(BaseEvent):
     """Generic event for simple use cases."""
 
-    def __init__(
-        self,
-        event_type: str | None = None,
-        data: dict[str, Any] | None = None,
-        **kwargs
-    ):
+    def __init__(self, event_type: str | None = None, data: dict[str, Any] | None = None, **kwargs):
         super().__init__(**kwargs)
         if event_type:
             self.event_type = event_type
@@ -95,7 +92,7 @@ class GenericEvent(BaseEvent):
             "event_type": self.event_type,
             "timestamp": self.timestamp.isoformat(),
             "data": self.data,
-            "metadata": self.metadata.__dict__
+            "metadata": self.metadata.__dict__,
         }
 
     @classmethod
@@ -105,7 +102,7 @@ class GenericEvent(BaseEvent):
             event_id=data["event_id"],
             event_type=data["event_type"],
             timestamp=datetime.fromisoformat(data["timestamp"]),
-            **metadata_data
+            **metadata_data,
         )
 
         return cls(
@@ -113,7 +110,7 @@ class GenericEvent(BaseEvent):
             timestamp=datetime.fromisoformat(data["timestamp"]),
             event_type=data["event_type"],
             data=data.get("data", {}),
-            metadata=metadata
+            metadata=metadata,
         )
 
 
@@ -122,11 +119,7 @@ class DomainEvent(BaseEvent):
     """Base class for domain events."""
 
     def __init__(
-        self,
-        aggregate_id: str,
-        aggregate_type: str,
-        aggregate_version: int = 1,
-        **kwargs
+        self, aggregate_id: str, aggregate_type: str, aggregate_version: int = 1, **kwargs
     ):
         super().__init__(**kwargs)
         self.aggregate_id = aggregate_id
@@ -141,7 +134,7 @@ class DomainEvent(BaseEvent):
             "aggregate_id": self.aggregate_id,
             "aggregate_type": self.aggregate_type,
             "aggregate_version": self.aggregate_version,
-            "metadata": self.metadata.__dict__
+            "metadata": self.metadata.__dict__,
         }
 
     @classmethod
@@ -151,7 +144,7 @@ class DomainEvent(BaseEvent):
             event_id=data["event_id"],
             event_type=data["event_type"],
             timestamp=datetime.fromisoformat(data["timestamp"]),
-            **metadata_data
+            **metadata_data,
         )
 
         return cls(
@@ -160,7 +153,7 @@ class DomainEvent(BaseEvent):
             aggregate_id=data["aggregate_id"],
             aggregate_type=data["aggregate_type"],
             aggregate_version=data.get("aggregate_version", 1),
-            metadata=metadata
+            metadata=metadata,
         )
 
 
@@ -173,7 +166,7 @@ class IntegrationEvent(BaseEvent):
         source_service: str,
         target_service: str | None = None,
         payload: dict[str, Any] | None = None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.source_service = source_service
@@ -192,7 +185,7 @@ class IntegrationEvent(BaseEvent):
             "source_service": self.source_service,
             "target_service": self.target_service,
             "payload": self.payload,
-            "metadata": self.metadata.__dict__
+            "metadata": self.metadata.__dict__,
         }
 
     @classmethod
@@ -202,7 +195,7 @@ class IntegrationEvent(BaseEvent):
             event_id=data["event_id"],
             event_type=data["event_type"],
             timestamp=datetime.fromisoformat(data["timestamp"]),
-            **metadata_data
+            **metadata_data,
         )
 
         return cls(
@@ -211,7 +204,7 @@ class IntegrationEvent(BaseEvent):
             source_service=data["source_service"],
             target_service=data.get("target_service"),
             payload=data.get("payload", {}),
-            metadata=metadata
+            metadata=metadata,
         )
 
 
@@ -225,7 +218,7 @@ class SystemEvent(BaseEvent):
         action: str,
         status: str,
         details: dict[str, Any] | None = None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.component = component
@@ -242,7 +235,7 @@ class SystemEvent(BaseEvent):
             "action": self.action,
             "status": self.status,
             "details": self.details,
-            "metadata": self.metadata.__dict__
+            "metadata": self.metadata.__dict__,
         }
 
     @classmethod
@@ -252,7 +245,7 @@ class SystemEvent(BaseEvent):
             event_id=data["event_id"],
             event_type=data["event_type"],
             timestamp=datetime.fromisoformat(data["timestamp"]),
-            **metadata_data
+            **metadata_data,
         )
 
         return cls(
@@ -262,7 +255,7 @@ class SystemEvent(BaseEvent):
             action=data["action"],
             status=data["status"],
             details=data.get("details", {}),
-            metadata=metadata
+            metadata=metadata,
         )
 
 
@@ -275,7 +268,7 @@ class PluginEvent(BaseEvent):
         plugin_id: str,
         plugin_action: str,
         plugin_data: dict[str, Any] | None = None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.plugin_id = plugin_id
@@ -290,7 +283,7 @@ class PluginEvent(BaseEvent):
             "plugin_id": self.plugin_id,
             "plugin_action": self.plugin_action,
             "plugin_data": self.plugin_data,
-            "metadata": self.metadata.__dict__
+            "metadata": self.metadata.__dict__,
         }
 
     @classmethod
@@ -300,7 +293,7 @@ class PluginEvent(BaseEvent):
             event_id=data["event_id"],
             event_type=data["event_type"],
             timestamp=datetime.fromisoformat(data["timestamp"]),
-            **metadata_data
+            **metadata_data,
         )
 
         return cls(
@@ -309,7 +302,7 @@ class PluginEvent(BaseEvent):
             plugin_id=data["plugin_id"],
             plugin_action=data["plugin_action"],
             plugin_data=data.get("plugin_data", {}),
-            metadata=metadata
+            metadata=metadata,
         )
 
 
@@ -324,7 +317,7 @@ class WorkflowEvent(BaseEvent):
         workflow_step: str | None = None,
         workflow_status: str | None = None,
         workflow_data: dict[str, Any] | None = None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.workflow_id = workflow_id
@@ -343,7 +336,7 @@ class WorkflowEvent(BaseEvent):
             "workflow_step": self.workflow_step,
             "workflow_status": self.workflow_status,
             "workflow_data": self.workflow_data,
-            "metadata": self.metadata.__dict__
+            "metadata": self.metadata.__dict__,
         }
 
     @classmethod
@@ -353,7 +346,7 @@ class WorkflowEvent(BaseEvent):
             event_id=data["event_id"],
             event_type=data["event_type"],
             timestamp=datetime.fromisoformat(data["timestamp"]),
-            **metadata_data
+            **metadata_data,
         )
 
         return cls(
@@ -364,7 +357,7 @@ class WorkflowEvent(BaseEvent):
             workflow_step=data.get("workflow_step"),
             workflow_status=data.get("workflow_status"),
             workflow_data=data.get("workflow_data", {}),
-            metadata=metadata
+            metadata=metadata,
         )
 
 
@@ -377,7 +370,7 @@ def create_domain_event(
     correlation_id: str | None = None,
     causation_id: str | None = None,
     user_id: str | None = None,
-    tenant_id: str | None = None
+    tenant_id: str | None = None,
 ) -> DomainEvent:
     """Create a domain event with metadata."""
     metadata = EventMetadata(
@@ -387,14 +380,14 @@ def create_domain_event(
         correlation_id=correlation_id,
         causation_id=causation_id,
         user_id=user_id,
-        tenant_id=tenant_id
+        tenant_id=tenant_id,
     )
 
     event = DomainEvent(
         aggregate_id=aggregate_id,
         aggregate_type=aggregate_type,
         aggregate_version=aggregate_version,
-        metadata=metadata
+        metadata=metadata,
     )
 
     if event_type:
@@ -409,7 +402,7 @@ def create_integration_event(
     event_type: str | None = None,
     payload: dict[str, Any] | None = None,
     correlation_id: str | None = None,
-    priority: EventPriority = EventPriority.NORMAL
+    priority: EventPriority = EventPriority.NORMAL,
 ) -> IntegrationEvent:
     """Create an integration event with metadata."""
     metadata = EventMetadata(
@@ -418,14 +411,14 @@ def create_integration_event(
         timestamp=datetime.now(timezone.utc),
         correlation_id=correlation_id,
         source_service=source_service,
-        priority=priority
+        priority=priority,
     )
 
     event = IntegrationEvent(
         source_service=source_service,
         target_service=target_service,
         payload=payload,
-        metadata=metadata
+        metadata=metadata,
     )
 
     if event_type:
@@ -439,21 +432,18 @@ def create_plugin_event(
     plugin_action: str,
     event_type: str | None = None,
     plugin_data: dict[str, Any] | None = None,
-    correlation_id: str | None = None
+    correlation_id: str | None = None,
 ) -> PluginEvent:
     """Create a plugin event with metadata."""
     metadata = EventMetadata(
         event_id=str(uuid4()),
         event_type=event_type or "PluginEvent",
         timestamp=datetime.now(timezone.utc),
-        correlation_id=correlation_id
+        correlation_id=correlation_id,
     )
 
     event = PluginEvent(
-        plugin_id=plugin_id,
-        plugin_action=plugin_action,
-        plugin_data=plugin_data,
-        metadata=metadata
+        plugin_id=plugin_id, plugin_action=plugin_action, plugin_data=plugin_data, metadata=metadata
     )
 
     if event_type:
@@ -469,14 +459,14 @@ def create_workflow_event(
     workflow_step: str | None = None,
     workflow_status: str | None = None,
     workflow_data: dict[str, Any] | None = None,
-    correlation_id: str | None = None
+    correlation_id: str | None = None,
 ) -> WorkflowEvent:
     """Create a workflow event with metadata."""
     metadata = EventMetadata(
         event_id=str(uuid4()),
         event_type=event_type or "WorkflowEvent",
         timestamp=datetime.now(timezone.utc),
-        correlation_id=correlation_id
+        correlation_id=correlation_id,
     )
 
     event = WorkflowEvent(
@@ -485,7 +475,7 @@ def create_workflow_event(
         workflow_step=workflow_step,
         workflow_status=workflow_status,
         workflow_data=workflow_data,
-        metadata=metadata
+        metadata=metadata,
     )
 
     if event_type:

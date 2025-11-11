@@ -41,6 +41,7 @@ from .traffic_management import (
 KUBERNETES_AVAILABLE = importlib.util.find_spec("kubernetes") is not None
 METRICS_AVAILABLE = importlib.util.find_spec("prometheus_client") is not None
 
+
 class Environment(Enum):
     """Deployment environment types"""
 

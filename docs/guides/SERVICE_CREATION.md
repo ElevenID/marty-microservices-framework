@@ -33,6 +33,7 @@ cd my-new-service
 ## Essential Patterns
 
 ### Configuration
+
 ```python
 from marty_msf.framework.config import create_service_config
 
@@ -41,6 +42,7 @@ config = create_service_config("your_service")
 ```
 
 ### Database Integration
+
 ```python
 from marty_msf.framework.database import DatabaseManager
 
@@ -49,6 +51,7 @@ db_manager = DatabaseManager(config.database.your_service)
 ```
 
 ### Observability
+
 ```python
 from marty_msf.observability import init_observability
 from marty_msf.framework.logging import UnifiedServiceLogger
@@ -59,6 +62,7 @@ logger = UnifiedServiceLogger("your-service")
 ```
 
 ### Service Discovery
+
 ```python
 from marty_msf.framework.discovery import ServiceDiscoveryManager, ServiceInstance
 
@@ -92,26 +96,31 @@ my-service/
 ## Best Practices
 
 ### Configuration
+
 - Use environment-specific config files
 - Keep secrets in environment variables
 - Validate configuration on startup
 
 ### Error Handling
+
 - Use structured logging with correlation IDs
 - Implement circuit breakers for external calls
 - Return consistent error formats
 
 ### Testing
+
 - Write tests before implementation
 - Test with real dependencies when possible
 - Include integration tests for critical paths
 
 ### Security
+
 - Enable authentication by default
 - Use TLS for all communications
 - Validate all inputs
 
 ### Observability
+
 - Include correlation IDs in all logs
 - Export metrics for monitoring
 - Implement health checks

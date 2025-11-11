@@ -17,7 +17,6 @@ from .factories import register_observability_services, set_framework_metrics_cl
 logger = logging.getLogger(__name__)
 
 
-
 class FrameworkMetrics:
     """Framework metrics helper for standardized custom metrics."""
 

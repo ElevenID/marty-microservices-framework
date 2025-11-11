@@ -9,6 +9,7 @@ This document describes the comprehensive end-to-end testing framework for the M
 ✅ **21 out of 23 tests passing** (91.3% success rate)
 
 ### Successful Tests
+
 - Health Check
 - Users List
 - Valid Authentication
@@ -32,6 +33,7 @@ This document describes the comprehensive end-to-end testing framework for the M
 - Service IP Discovery
 
 ### Expected Failures
+
 1. **Empty Credentials test**: Service returns detailed validation error (working as designed)
 2. **Resource Monitoring**: Metrics server not available in KIND (expected limitation)
 
@@ -40,6 +42,7 @@ This document describes the comprehensive end-to-end testing framework for the M
 ### 1. Core Test Scripts
 
 #### `tests/e2e/kind/automated/e2e-test.sh`
+
 - **Purpose**: Main end-to-end test runner
 - **Features**:
   - Complete infrastructure setup (KIND cluster, NGINX ingress)
@@ -50,6 +53,7 @@ This document describes the comprehensive end-to-end testing framework for the M
 - **Duration**: ~3-5 minutes for full suite
 
 #### `tests/e2e/kind/test-e2e.sh`
+
 - **Purpose**: Local development test runner
 - **Features**:
   - Multiple test modes (full, quick, smoke, clean)
@@ -57,6 +61,7 @@ This document describes the comprehensive end-to-end testing framework for the M
   - Option to keep clusters for debugging
   - Verbose output mode
 - **Usage Examples**:
+
   ```bash
   ./tests/e2e/kind/test-e2e.sh                    # Full test suite
   ./tests/e2e/kind/test-e2e.sh -m quick -k        # Quick tests, keep cluster
@@ -67,6 +72,7 @@ This document describes the comprehensive end-to-end testing framework for the M
 ### 2. CI/CD Integration
 
 #### `.github/workflows/e2e-tests.yml`
+
 - **Purpose**: GitHub Actions workflow for automated testing
 - **Triggers**:
   - Push to main/develop branches
@@ -81,6 +87,7 @@ This document describes the comprehensive end-to-end testing framework for the M
 ### 3. Configuration and Reporting
 
 #### `deploy/e2e-config.env` (Configuration)
+
 - **Purpose**: Centralized test configuration
 - **Contains**:
   - Cluster and image settings
@@ -90,6 +97,7 @@ This document describes the comprehensive end-to-end testing framework for the M
   - Future load/security test configs
 
 #### `scripts/generate-report.sh`
+
 - **Purpose**: Test report generation (HTML and JSON)
 - **Features**:
   - Detailed test results with timestamps
@@ -103,21 +111,25 @@ This document describes the comprehensive end-to-end testing framework for the M
 The e2e tests validate the complete hexagonal architecture implementation:
 
 ### ✅ Domain Layer
+
 - Value objects (UserId, Credentials, Principal)
 - Business logic isolation
 - Domain events
 
 ### ✅ Application Layer
+
 - Use cases (AuthenticatePrincipalUseCase)
 - Port definitions (inbound/outbound)
 - Business rule enforcement
 
 ### ✅ Infrastructure Layer
+
 - HTTP adapter (FastAPI)
 - Repository implementations (InMemoryUserRepository)
 - Event bus (InMemoryEventBus)
 
 ### ✅ Cross-Cutting Concerns
+
 - Containerization (Docker)
 - Orchestration (Kubernetes)
 - Service discovery
@@ -148,6 +160,7 @@ The e2e tests validate the complete hexagonal architecture implementation:
 ## Infrastructure Validation
 
 ### Kubernetes Resources
+
 - ✅ **Namespace**: mmf-system created
 - ✅ **Deployment**: 2 replica pods running
 - ✅ **Service**: ClusterIP with 2 endpoints
@@ -155,6 +168,7 @@ The e2e tests validate the complete hexagonal architecture implementation:
 - ✅ **ConfigMap**: Application configuration
 
 ### Network Connectivity
+
 - ✅ **Pod-to-Pod**: Service discovery working
 - ✅ **Service-to-Pod**: Load balancing functional
 - ✅ **Ingress-to-Service**: External access available
@@ -163,6 +177,7 @@ The e2e tests validate the complete hexagonal architecture implementation:
 ## Performance Characteristics
 
 Based on test runs:
+
 - **Cluster Creation**: ~30-45 seconds
 - **Image Build**: ~20-30 seconds
 - **Application Deployment**: ~15-20 seconds
@@ -172,16 +187,19 @@ Based on test runs:
 ## Development Workflow
 
 ### For Developers
+
 1. **Run local tests**: `./tests/e2e/kind/test-e2e.sh -m quick`
 2. **Keep cluster for debugging**: `./tests/e2e/kind/test-e2e.sh -k`
 3. **Clean up when done**: `./tests/e2e/kind/test-e2e.sh -m clean`
 
 ### For CI/CD
+
 1. **Automatic on PR**: Tests run automatically
 2. **Branch protection**: Main branch requires passing tests
 3. **Artifact collection**: Logs preserved on failures
 
 ### For Production Readiness
+
 1. **Full test suite**: Validates complete system
 2. **Infrastructure as Code**: Kubernetes manifests tested
 3. **Service contracts**: API compatibility verified
@@ -189,6 +207,7 @@ Based on test runs:
 ## Future Enhancements
 
 ### Planned Additions
+
 - [ ] Load testing with configurable user simulation
 - [ ] Security testing (authentication, authorization, input validation)
 - [ ] Performance benchmarking with SLA validation
@@ -197,6 +216,7 @@ Based on test runs:
 - [ ] Database persistence testing
 
 ### Configuration Expansion
+
 - [ ] Multiple environment configs (dev, staging, prod)
 - [ ] Service mesh integration testing
 - [ ] Monitoring and observability validation
@@ -205,12 +225,14 @@ Based on test runs:
 ## Troubleshooting
 
 ### Common Issues
+
 1. **KIND cluster fails to create**: Check Docker daemon is running
 2. **Image build fails**: Verify Dockerfile and requirements.txt
 3. **Tests timeout**: Increase timeout values in config
 4. **Port conflicts**: Use different cluster names
 
 ### Debug Commands
+
 ```bash
 # Check cluster status
 kubectl cluster-info --context kind-mmf-e2e-test
@@ -230,6 +252,7 @@ kubectl get ingress -n mmf-system
 The MMF e2e testing framework provides comprehensive validation of the hexagonal architecture implementation in a production-like Kubernetes environment. With 21/23 tests passing and full automation through GitHub Actions, it ensures the system is ready for migration from the legacy monolithic structure.
 
 The framework demonstrates that:
+
 - ✅ Hexagonal architecture works correctly in Kubernetes
 - ✅ Domain logic is properly isolated and testable
 - ✅ Infrastructure concerns are cleanly separated

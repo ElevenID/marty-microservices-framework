@@ -17,6 +17,7 @@ In MMF, treat a plugin as a domain bundle rather than a single service. A plugin
 - Testing: Co-locate domain tests (unit/integration) with the plugin; test services together when they share domain logic.
 
 When to create a new plugin vs. add a service:
+
 - Create a new plugin when you need a separate domain boundary, distinct deployment cadence/ownership, or non-overlapping dependencies/security posture.
 - Add a new service to an existing plugin when the functionality is part of the same domain model, reuses the same infra and policies, or benefits from shared configuration and tests.
 
@@ -56,6 +57,7 @@ MMF supports two distinct types of plugins that serve different purposes:
 Service plugins are domain bundles that provide business logic and services. They are the primary extension mechanism for adding domain-specific functionality to MMF applications.
 
 **Characteristics:**
+
 - **Location**: Top-level `plugins/<domain-plugin>/` directories
 - **Registration**: Via entry points in `pyproject.toml`
 - **Interface**: Implement the `MMFPlugin` base class
@@ -64,6 +66,7 @@ Service plugins are domain bundles that provide business logic and services. The
 - **Lifecycle**: Managed by MMF's PluginManager
 
 **Example:**
+
 ```python
 # plugins/payment_processing/plugin.py
 from marty_msf.framework.plugins.core import MMFPlugin
@@ -84,6 +87,7 @@ class PaymentProcessingPlugin(MMFPlugin):
 ```
 
 **Entry Point Registration:**
+
 ```toml
 [project.entry-points."mmf.plugins"]
 payment_processing = "plugins.payment_processing:PaymentProcessingPlugin"
@@ -94,6 +98,7 @@ payment_processing = "plugins.payment_processing:PaymentProcessingPlugin"
 Gateway plugins are middleware-like components that handle cross-cutting concerns at the API gateway level. They process requests and responses for all traffic flowing through the gateway.
 
 **Characteristics:**
+
 - **Location**: Gateway configuration and middleware directories
 - **Registration**: Via gateway configuration, not entry points
 - **Interface**: Implement gateway middleware interfaces
@@ -102,6 +107,7 @@ Gateway plugins are middleware-like components that handle cross-cutting concern
 - **Lifecycle**: Managed by the API Gateway
 
 **Example:**
+
 ```python
 # Gateway middleware plugin
 class AuthenticationGatewayPlugin:
@@ -142,12 +148,14 @@ src/plugins/marty/
 ### Infrastructure Consolidation
 
 **Before (Standalone Marty):**
+
 - 20+ microservices with custom infrastructure
 - Duplicate database, security, observability implementations
 - Inconsistent patterns across services
 - High maintenance overhead
 
 **After (MMF Plugin):**
+
 - Single plugin with 4 service implementations
 - Unified MMF infrastructure (database, security, observability)
 - Consistent patterns and best practices
@@ -433,6 +441,7 @@ async def handle_certificate_revocation(self, event):
 ### Step 1: Analyze Current Service
 
 Identify components to migrate:
+
 - Business logic (keep)
 - Infrastructure code (replace with MMF)
 - Custom patterns (standardize with MMF)
@@ -684,6 +693,7 @@ spec:
 ### Common Issues
 
 1. **Plugin Loading Failures**:
+
    ```bash
    # Check plugin discovery paths
    export MMF_PLUGIN_DISCOVERY_PATHS=/correct/path
@@ -693,6 +703,7 @@ spec:
    ```
 
 2. **Configuration Errors**:
+
    ```bash
    # Validate configuration
    mmf-cli config validate --plugin=marty
@@ -702,6 +713,7 @@ spec:
    ```
 
 3. **Service Health Issues**:
+
    ```bash
    # Check service health
    curl http://localhost:8080/health

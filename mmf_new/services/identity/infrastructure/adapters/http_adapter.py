@@ -47,9 +47,7 @@ class IdentityServiceApp:
         self.event_bus = InMemoryEventBus()
 
         # Initialize use case
-        self.auth_usecase = AuthenticatePrincipalUseCase(
-            self.user_repository, self.event_bus
-        )
+        self.auth_usecase = AuthenticatePrincipalUseCase(self.user_repository, self.event_bus)
 
         # Add some test users
         self.user_repository.add_user("admin", "admin123")
@@ -76,10 +74,7 @@ class IdentityServiceApp:
                 # Execute use case
                 result = self.auth_usecase.execute(credentials)
 
-                if (
-                    result.status == AuthenticationStatus.SUCCESS
-                    and result.authenticated_user
-                ):
+                if result.status == AuthenticationStatus.SUCCESS and result.authenticated_user:
                     return AuthenticationResponse(
                         success=True,
                         user_id=result.authenticated_user.user_id,
@@ -93,14 +88,10 @@ class IdentityServiceApp:
                         ),
                     )
                 else:
-                    return AuthenticationResponse(
-                        success=False, error_message=result.error_message
-                    )
+                    return AuthenticationResponse(success=False, error_message=result.error_message)
 
             except Exception as e:
-                raise HTTPException(
-                    status_code=500, detail=f"Internal server error: {str(e)}"
-                )
+                raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
         @self.app.get("/events")
         async def get_events():

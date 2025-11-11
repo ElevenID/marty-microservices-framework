@@ -5,21 +5,25 @@ The Enterprise Security Framework provides comprehensive security capabilities f
 ## 🔐 Features
 
 ### **Multi-Factor Authentication**
+
 - **JWT Authentication**: Secure token-based authentication with configurable expiration
 - **API Key Authentication**: Header or query parameter API key validation
 - **Mutual TLS (mTLS)**: Certificate-based authentication for high-security environments
 
 ### **Role-Based Access Control (RBAC)**
+
 - **Granular Permissions**: Resource-level permissions with read/write/delete/admin levels
 - **Role Inheritance**: Hierarchical role system with permission inheritance
 - **Decorators**: Simple `@require_permission` and `@require_role` decorators
 
 ### **Advanced Rate Limiting**
+
 - **Multiple Backends**: In-memory and Redis-based rate limiting
 - **Flexible Rules**: Per-endpoint, per-user, and global rate limits
 - **Sliding Window**: Accurate rate limiting using sliding window algorithm
 
 ### **Security Middleware**
+
 - **FastAPI Integration**: Drop-in middleware for FastAPI applications
 - **gRPC Support**: Security interceptors for gRPC services
 - **Security Headers**: Automatic security header injection

@@ -29,13 +29,11 @@ from sklearn.preprocessing import StandardScaler
 
 # External dependencies (optional)
 try:
-
     ML_AVAILABLE = True
 except ImportError:
     ML_AVAILABLE = False
 
 try:
-
     METRICS_AVAILABLE = True
 except ImportError:
     METRICS_AVAILABLE = False

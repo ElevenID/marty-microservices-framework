@@ -52,25 +52,16 @@ async def example_service_calls():
     try:
         # These calls automatically get appropriate resilience patterns
         user = await resilient_internal_call(
-            fetch_user_profile,
-            "user123",
-            name="user_service_get_profile"
+            fetch_user_profile, "user123", name="user_service_get_profile"
         )
 
         weather = await resilient_external_call(
-            fetch_weather_data,
-            "London",
-            name="weather_api_get_data"
+            fetch_weather_data, "London", name="weather_api_get_data"
         )
 
-        orders = await resilient_database_call(
-            get_user_orders,
-            "user123",
-            name="orders_db_query"
-        )
+        orders = await resilient_database_call(get_user_orders, "user123", name="orders_db_query")
 
-        logger.info("Successfully retrieved: user=%s, weather=%s, orders=%s",
-                   user, weather, orders)
+        logger.info("Successfully retrieved: user=%s, weather=%s, orders=%s", user, weather, orders)
 
     except Exception as e:
         logger.error("Service calls failed: %s", e)
@@ -85,27 +76,23 @@ async def example_custom_resilience():
         # Circuit breaker settings
         circuit_breaker_failure_threshold=3,
         circuit_breaker_recovery_timeout=30.0,
-
         # Retry settings
         retry_max_attempts=5,
         retry_base_delay=0.5,
         retry_exponential_base=1.5,
-
         # Timeout settings
         timeout_seconds=15.0,
-
         # Enable bulkhead for this use case
         bulkhead_enabled=True,
         bulkhead_max_concurrent=10,
-
         # Strategy-specific overrides
         strategy_overrides={
             ResilienceStrategy.EXTERNAL_SERVICE: {
                 "timeout_seconds": 30.0,
                 "retry_max_attempts": 3,
-                "circuit_breaker_failure_threshold": 5
+                "circuit_breaker_failure_threshold": 5,
             }
-        }
+        },
     )
 
     # Create manager with custom config
@@ -124,7 +111,7 @@ async def example_custom_resilience():
             unreliable_external_call,
             "test_data",
             name="external_processor",
-            strategy=ResilienceStrategy.EXTERNAL_SERVICE
+            strategy=ResilienceStrategy.EXTERNAL_SERVICE,
         )
 
         logger.info("Custom resilience call succeeded: %s", result)
@@ -145,10 +132,7 @@ def example_decorator_usage():
     manager = create_resilience_manager_with_defaults()
 
     # Apply resilience patterns using decorator
-    @manager.resilient_call(
-        name="payment_service",
-        strategy=ResilienceStrategy.EXTERNAL_SERVICE
-    )
+    @manager.resilient_call(name="payment_service", strategy=ResilienceStrategy.EXTERNAL_SERVICE)
     async def process_payment(amount: float, currency: str) -> dict[str, Any]:
         # Simulate payment processing
         await asyncio.sleep(0.2)
@@ -156,10 +140,7 @@ def example_decorator_usage():
             raise Exception("Amount too large for processing")
         return {"transaction_id": "txn_123", "status": "completed"}
 
-    @manager.resilient_call(
-        name="user_cache",
-        strategy=ResilienceStrategy.CACHE
-    )
+    @manager.resilient_call(name="user_cache", strategy=ResilienceStrategy.CACHE)
     async def get_cached_user(user_id: str) -> dict[str, Any] | None:
         # Simulate cache lookup
         await asyncio.sleep(0.01)
@@ -184,10 +165,7 @@ async def example_migration_from_old_decorator():
     # NEW WAY (consolidated manager):
     manager = get_resilience_manager()
 
-    @manager.resilient_call(
-        name="migrated_service",
-        strategy=ResilienceStrategy.INTERNAL_SERVICE
-    )
+    @manager.resilient_call(name="migrated_service", strategy=ResilienceStrategy.INTERNAL_SERVICE)
     async def new_service_call(request_id: str) -> dict[str, Any]:
         """Service call with comprehensive resilience patterns."""
         await asyncio.sleep(0.1)
@@ -228,20 +206,19 @@ def get_resilience_config_for_environment(env: str) -> ConsolidatedResilienceCon
             timeout_seconds=15.0,  # Tight timeouts
             bulkhead_enabled=True,
             bulkhead_max_concurrent=100,
-
             # Production-specific strategy overrides
             strategy_overrides={
                 ResilienceStrategy.DATABASE: {
                     "timeout_seconds": 5.0,
                     "retry_max_attempts": 2,
-                    "circuit_breaker_failure_threshold": 2
+                    "circuit_breaker_failure_threshold": 2,
                 },
                 ResilienceStrategy.CACHE: {
                     "timeout_seconds": 1.0,
                     "retry_max_attempts": 1,
-                    "circuit_breaker_failure_threshold": 5
-                }
-            }
+                    "circuit_breaker_failure_threshold": 5,
+                },
+            },
         )
 
     else:
@@ -282,8 +259,10 @@ async def main():
     # Example 5: Environment configuration
     logger.info("\n5. Environment-specific configuration:")
     prod_config = get_resilience_config_for_environment("production")
-    logger.info("Production config created with %d failure threshold",
-               prod_config.circuit_breaker_failure_threshold)
+    logger.info(
+        "Production config created with %d failure threshold",
+        prod_config.circuit_breaker_failure_threshold,
+    )
 
     logger.info("\n=== Examples completed ===")
 

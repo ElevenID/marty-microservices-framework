@@ -471,7 +471,6 @@ class IntelligentCaching:
     async def initialize_distributed_cache(self, redis_url: str = "redis://localhost:6379"):
         """Initialize distributed cache (Redis)."""
         try:
-
             self.distributed_cache = redis.from_url(redis_url)
         except Exception as e:
             print(f"Failed to initialize distributed cache: {e}")

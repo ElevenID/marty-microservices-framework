@@ -20,7 +20,9 @@ petstore_domain/
 The `plugins/` directory contains configurations for plugins used in this domain:
 
 ### marty.yaml
+
 Configuration for the Marty Trust PKI plugin, demonstrating:
+
 - Trust anchor and PKD integration
 - Document signing services
 - Certificate management
@@ -28,7 +30,9 @@ Configuration for the Marty Trust PKI plugin, demonstrating:
 - MMF database integration
 
 ### production_payment_service.yaml
+
 Configuration for a production payment service plugin, demonstrating:
+
 - Payment provider integration (Stripe)
 - Fraud detection settings
 - Audit logging
@@ -47,6 +51,7 @@ These plugin configurations demonstrate the MMF plugin configuration loading str
 ## Usage
 
 This example demonstrates:
+
 - How to structure a business domain using MMF
 - Plugin configuration patterns
 - Integration with MMF's unified systems
@@ -55,6 +60,7 @@ This example demonstrates:
 ## Framework Integration
 
 The plugin configurations use MMF's unified configuration system features:
+
 - Secret references with `${SECRET:key}` syntax
 - Environment-specific overrides
 - Database integration patterns

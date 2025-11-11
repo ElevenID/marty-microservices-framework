@@ -107,7 +107,6 @@ class PluginConfigProvider(ConfigProvider):
         plugin_config_file = self.config_dir / f"{self.plugin_name}.yaml"
 
         if plugin_config_file.exists():
-
             with open(plugin_config_file) as f:
                 config = yaml.safe_load(f) or {}
 
@@ -126,7 +125,6 @@ class PluginConfigProvider(ConfigProvider):
             # Load existing config if it exists
             existing_config = {}
             if plugin_config_file.exists():
-
                 with open(plugin_config_file) as f:
                     existing_config = yaml.safe_load(f) or {}
 

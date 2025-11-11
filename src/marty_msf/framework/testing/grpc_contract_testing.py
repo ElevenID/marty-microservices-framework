@@ -106,7 +106,7 @@ class GRPCContractBuilder:
             provider=provider,
             version=version,
             service_name=service_name,
-            package_name=""
+            package_name="",
         )
 
     def with_package(self, package_name: str) -> "GRPCContractBuilder":
@@ -141,7 +141,7 @@ class GRPCInteractionBuilder:
         self.interaction = GRPCContractInteraction(
             description=description,
             request=GRPCContractRequest(method_name="", service_name="", request_type=""),
-            response=GRPCContractResponse(response_type="")
+            response=GRPCContractResponse(response_type=""),
         )
 
     def given(self, state: str) -> "GRPCInteractionBuilder":
@@ -149,10 +149,14 @@ class GRPCInteractionBuilder:
         self.interaction.given.append(state)
         return self
 
-    def upon_calling(self, method_name: str, service_name: str | None = None) -> "GRPCInteractionBuilder":
+    def upon_calling(
+        self, method_name: str, service_name: str | None = None
+    ) -> "GRPCInteractionBuilder":
         """Set the gRPC method being called."""
         self.interaction.request.method_name = method_name
-        self.interaction.request.service_name = service_name or self.contract_builder.contract.service_name
+        self.interaction.request.service_name = (
+            service_name or self.contract_builder.contract.service_name
+        )
         return self
 
     def with_request(self, request_type: str, **request_data) -> "GRPCInteractionBuilder":
@@ -176,7 +180,9 @@ class GRPCInteractionBuilder:
         self.interaction.request.streaming = streaming_type
         return self
 
-    def will_respond_with(self, response_type: str, status: str = "OK", **response_data) -> "GRPCInteractionBuilder":
+    def will_respond_with(
+        self, response_type: str, status: str = "OK", **response_data
+    ) -> "GRPCInteractionBuilder":
         """Configure the expected response."""
         self.interaction.response.response_type = response_type
         self.interaction.response.status_code = status
@@ -222,7 +228,7 @@ class GRPCContractValidator:
                     test_id=f"grpc_contract_{contract.consumer}_{contract.provider}",
                     status=TestStatus.FAILED,
                     errors=errors,
-                    duration_ms=0
+                    duration_ms=0,
                 )
 
             # Validate each interaction
@@ -248,7 +254,7 @@ class GRPCContractValidator:
                 status=status,
                 errors=errors,
                 warnings=warnings,
-                duration_ms=sum(r.duration_ms for r in interaction_results)
+                duration_ms=sum(r.duration_ms for r in interaction_results),
             )
 
         except Exception as e:
@@ -257,10 +263,12 @@ class GRPCContractValidator:
                 test_id=f"grpc_contract_{contract.consumer}_{contract.provider}",
                 status=TestStatus.ERROR,
                 errors=[str(e)],
-                duration_ms=0
+                duration_ms=0,
             )
 
-    async def _check_service_availability(self, channel: grpc.aio.Channel, service_name: str) -> bool:
+    async def _check_service_availability(
+        self, channel: grpc.aio.Channel, service_name: str
+    ) -> bool:
         """Check if the gRPC service is available using reflection."""
         try:
             stub = reflection_pb2_grpc.ServerReflectionStub(channel)
@@ -269,7 +277,7 @@ class GRPCContractValidator:
 
             response_stream = stub.ServerReflectionInfo(iter([request]))
             async for response in response_stream:
-                if response.HasField('list_services_response'):
+                if response.HasField("list_services_response"):
                     services = [s.name for s in response.list_services_response.service]
                     return service_name in services
 
@@ -278,9 +286,12 @@ class GRPCContractValidator:
             logger.warning(f"Could not check service availability using reflection: {e}")
             return True  # Assume available if reflection fails
 
-    async def _validate_interaction(self, channel: grpc.aio.Channel,
-                                  interaction: GRPCContractInteraction,
-                                  contract: GRPCContract) -> TestResult:
+    async def _validate_interaction(
+        self,
+        channel: grpc.aio.Channel,
+        interaction: GRPCContractInteraction,
+        contract: GRPCContract,
+    ) -> TestResult:
         """Validate a single gRPC interaction."""
         start_time = datetime.now()
         errors = []
@@ -313,7 +324,7 @@ class GRPCContractValidator:
                 status=TestStatus.PASSED if not errors else TestStatus.FAILED,
                 errors=errors,
                 warnings=warnings,
-                duration_ms=duration_ms
+                duration_ms=duration_ms,
             )
 
         except Exception as e:
@@ -322,7 +333,7 @@ class GRPCContractValidator:
                 test_id=f"grpc_interaction_{interaction.request.method_name}",
                 status=TestStatus.ERROR,
                 errors=[str(e)],
-                duration_ms=duration_ms
+                duration_ms=duration_ms,
             )
 
 
@@ -357,24 +368,24 @@ class GRPCContractRepository:
                             "request_data": i.request.request_data,
                             "metadata": i.request.metadata,
                             "timeout": i.request.timeout,
-                            "streaming": i.request.streaming
+                            "streaming": i.request.streaming,
                         },
                         "response": {
                             "response_type": i.response.response_type,
                             "response_data": i.response.response_data,
                             "status_code": i.response.status_code,
                             "error_message": i.response.error_message,
-                            "response_metadata": i.response.response_metadata
+                            "response_metadata": i.response.response_metadata,
                         },
-                        "metadata": i.metadata
+                        "metadata": i.metadata,
                     }
                     for i in contract.interactions
                 ],
                 "metadata": contract.metadata,
-                "created_date": contract.created_date
+                "created_date": contract.created_date,
             }
 
-            with open(filepath, 'w') as f:
+            with open(filepath, "w") as f:
                 json.dump(contract_dict, f, indent=2)
 
             logger.info(f"Saved gRPC contract: {filename}")
@@ -384,7 +395,9 @@ class GRPCContractRepository:
             logger.error(f"Error saving gRPC contract: {e}")
             return False
 
-    def load_contract(self, consumer: str, provider: str, version: str | None = None) -> GRPCContract | None:
+    def load_contract(
+        self, consumer: str, provider: str, version: str | None = None
+    ) -> GRPCContract | None:
         """Load a gRPC contract from storage."""
         try:
             # Find matching contract file
@@ -412,7 +425,7 @@ class GRPCContractRepository:
                 package_name=contract_dict["package_name"],
                 proto_file=contract_dict.get("proto_file"),
                 metadata=contract_dict.get("metadata", {}),
-                created_date=contract_dict.get("created_date", "")
+                created_date=contract_dict.get("created_date", ""),
             )
 
             # Reconstruct interactions
@@ -424,7 +437,7 @@ class GRPCContractRepository:
                     request_data=i_dict["request"]["request_data"],
                     metadata=i_dict["request"]["metadata"],
                     timeout=i_dict["request"]["timeout"],
-                    streaming=i_dict["request"]["streaming"]
+                    streaming=i_dict["request"]["streaming"],
                 )
 
                 response = GRPCContractResponse(
@@ -432,7 +445,7 @@ class GRPCContractRepository:
                     response_data=i_dict["response"]["response_data"],
                     status_code=i_dict["response"]["status_code"],
                     error_message=i_dict["response"]["error_message"],
-                    response_metadata=i_dict["response"]["response_metadata"]
+                    response_metadata=i_dict["response"]["response_metadata"],
                 )
 
                 interaction = GRPCContractInteraction(
@@ -440,7 +453,7 @@ class GRPCContractRepository:
                     request=request,
                     response=response,
                     given=i_dict["given"],
-                    metadata=i_dict["metadata"]
+                    metadata=i_dict["metadata"],
                 )
 
                 contract.interactions.append(interaction)
@@ -451,7 +464,9 @@ class GRPCContractRepository:
             logger.error(f"Error loading gRPC contract: {e}")
             return None
 
-    def list_contracts(self, consumer: str | None = None, provider: str | None = None) -> list[dict[str, str]]:
+    def list_contracts(
+        self, consumer: str | None = None, provider: str | None = None
+    ) -> list[dict[str, str]]:
         """List available gRPC contracts."""
         contracts = []
 
@@ -462,15 +477,18 @@ class GRPCContractRepository:
                 contract_provider = parts[2]
                 contract_version = "_".join(parts[3:])
 
-                if (consumer is None or contract_consumer == consumer) and \
-                   (provider is None or contract_provider == provider):
-                    contracts.append({
-                        "consumer": contract_consumer,
-                        "provider": contract_provider,
-                        "version": contract_version,
-                        "file": str(filepath),
-                        "type": "grpc"
-                    })
+                if (consumer is None or contract_consumer == consumer) and (
+                    provider is None or contract_provider == provider
+                ):
+                    contracts.append(
+                        {
+                            "consumer": contract_consumer,
+                            "provider": contract_provider,
+                            "version": contract_version,
+                            "file": str(filepath),
+                            "type": "grpc",
+                        }
+                    )
 
         return contracts
 
@@ -478,15 +496,20 @@ class GRPCContractRepository:
 class EnhancedContractManager:
     """Enhanced contract manager supporting both REST and gRPC contracts."""
 
-    def __init__(self, repository: ContractRepository | None = None,
-                 grpc_repository: GRPCContractRepository | None = None):
+    def __init__(
+        self,
+        repository: ContractRepository | None = None,
+        grpc_repository: GRPCContractRepository | None = None,
+    ):
         self.repository = repository or ContractRepository()
         self.grpc_repository = grpc_repository or GRPCContractRepository(
             Path.cwd() / "contracts" / "grpc"
         )
 
     # REST contract methods (delegate to existing manager)
-    def create_contract(self, consumer: str, provider: str, version: str = "1.0.0") -> ContractBuilder:
+    def create_contract(
+        self, consumer: str, provider: str, version: str = "1.0.0"
+    ) -> ContractBuilder:
         """Create a new REST contract builder."""
         return ContractBuilder(consumer, provider, version)
 
@@ -495,8 +518,9 @@ class EnhancedContractManager:
         self.repository.save_contract(contract)
 
     # gRPC contract methods
-    def create_grpc_contract(self, consumer: str, provider: str, service_name: str,
-                           version: str = "1.0.0") -> GRPCContractBuilder:
+    def create_grpc_contract(
+        self, consumer: str, provider: str, service_name: str, version: str = "1.0.0"
+    ) -> GRPCContractBuilder:
         """Create a new gRPC contract builder."""
         return GRPCContractBuilder(consumer, provider, service_name, version)
 
@@ -504,9 +528,14 @@ class EnhancedContractManager:
         """Save a gRPC contract to repository."""
         self.grpc_repository.save_contract(contract)
 
-    async def verify_grpc_contract(self, consumer: str, provider: str, server_address: str,
-                                 version: str | None = None,
-                                 verification_level: VerificationLevel = VerificationLevel.STRICT) -> TestResult:
+    async def verify_grpc_contract(
+        self,
+        consumer: str,
+        provider: str,
+        server_address: str,
+        version: str | None = None,
+        verification_level: VerificationLevel = VerificationLevel.STRICT,
+    ) -> TestResult:
         """Verify a gRPC contract against a running service."""
         contract = self.grpc_repository.load_contract(consumer, provider, version)
 
@@ -515,13 +544,15 @@ class EnhancedContractManager:
                 test_id=f"grpc_contract_{consumer}_{provider}",
                 status=TestStatus.ERROR,
                 errors=[f"gRPC contract not found: {consumer} -> {provider} (version: {version})"],
-                duration_ms=0
+                duration_ms=0,
             )
 
         validator = GRPCContractValidator(verification_level)
         return await validator.validate_contract(contract, server_address)
 
-    def list_all_contracts(self, consumer: str | None = None, provider: str | None = None) -> list[dict[str, str]]:
+    def list_all_contracts(
+        self, consumer: str | None = None, provider: str | None = None
+    ) -> list[dict[str, str]]:
         """List all contracts (both REST and gRPC)."""
         rest_contracts = self.repository.list_contracts(consumer or "", provider or "")
         grpc_contracts = self.grpc_repository.list_contracts(consumer or "", provider or "")
@@ -532,9 +563,9 @@ class EnhancedContractManager:
 
         return rest_contracts + grpc_contracts
 
-    async def verify_all_contracts_for_provider(self, provider: str,
-                                              rest_url: str = None,
-                                              grpc_address: str = None) -> list[TestResult]:
+    async def verify_all_contracts_for_provider(
+        self, provider: str, rest_url: str = None, grpc_address: str = None
+    ) -> list[TestResult]:
         """Verify all contracts for a provider (both REST and gRPC)."""
         results = []
 
@@ -548,9 +579,7 @@ class EnhancedContractManager:
             grpc_contracts = self.grpc_repository.list_contracts(provider=provider)
             for contract_info in grpc_contracts:
                 contract = self.grpc_repository.load_contract(
-                    contract_info["consumer"],
-                    contract_info["provider"],
-                    contract_info["version"]
+                    contract_info["consumer"], contract_info["provider"], contract_info["version"]
                 )
                 if contract:
                     validator = GRPCContractValidator()
@@ -561,12 +590,16 @@ class EnhancedContractManager:
 
 
 # Utility functions for gRPC contract creation
-def grpc_contract(consumer: str, provider: str, service_name: str, version: str = "1.0.0") -> GRPCContractBuilder:
+def grpc_contract(
+    consumer: str, provider: str, service_name: str, version: str = "1.0.0"
+) -> GRPCContractBuilder:
     """Create a gRPC contract builder (convenience function)."""
     return GRPCContractBuilder(consumer, provider, service_name, version)
 
 
-async def generate_contract_from_proto(proto_file: Path, consumer: str, provider: str) -> GRPCContract:
+async def generate_contract_from_proto(
+    proto_file: Path, consumer: str, provider: str
+) -> GRPCContract:
     """Generate a gRPC contract from a protobuf file."""
     # This is a simplified implementation
     # In practice, you'd parse the proto file to extract service definitions
@@ -575,11 +608,11 @@ async def generate_contract_from_proto(proto_file: Path, consumer: str, provider
         content = proto_file.read_text()
 
         # Extract service name (simplified parsing)
-        service_match = re.search(r'service\s+(\w+)', content)
+        service_match = re.search(r"service\s+(\w+)", content)
         service_name = service_match.group(1) if service_match else "UnknownService"
 
         # Extract package
-        package_match = re.search(r'package\s+([^;]+);', content)
+        package_match = re.search(r"package\s+([^;]+);", content)
         package_name = package_match.group(1) if package_match else ""
 
         contract = GRPCContract(
@@ -588,11 +621,11 @@ async def generate_contract_from_proto(proto_file: Path, consumer: str, provider
             version="1.0.0",
             service_name=service_name,
             package_name=package_name,
-            proto_file=str(proto_file)
+            proto_file=str(proto_file),
         )
 
         # Extract methods (simplified)
-        method_pattern = r'rpc\s+(\w+)\s*\(([^)]+)\)\s*returns\s*\(([^)]+)\)'
+        method_pattern = r"rpc\s+(\w+)\s*\(([^)]+)\)\s*returns\s*\(([^)]+)\)"
         methods = re.findall(method_pattern, content)
 
         for method_name, input_type, output_type in methods:
@@ -601,11 +634,9 @@ async def generate_contract_from_proto(proto_file: Path, consumer: str, provider
                 request=GRPCContractRequest(
                     method_name=method_name,
                     service_name=service_name,
-                    request_type=input_type.strip()
+                    request_type=input_type.strip(),
                 ),
-                response=GRPCContractResponse(
-                    response_type=output_type.strip()
-                )
+                response=GRPCContractResponse(response_type=output_type.strip()),
             )
             contract.interactions.append(interaction)
 
@@ -625,8 +656,9 @@ class UnifiedContractManager(ContractManager):
         super().__init__(repository or ContractRepository())
         self.enhanced_manager = EnhancedContractManager(repository)
 
-    def create_grpc_contract(self, consumer: str, provider: str, service_name: str,
-                           version: str = "1.0.0") -> GRPCContractBuilder:
+    def create_grpc_contract(
+        self, consumer: str, provider: str, service_name: str, version: str = "1.0.0"
+    ) -> GRPCContractBuilder:
         """Create a new gRPC contract builder."""
         return self.enhanced_manager.create_grpc_contract(consumer, provider, service_name, version)
 
@@ -634,8 +666,9 @@ class UnifiedContractManager(ContractManager):
         """Save a gRPC contract."""
         self.enhanced_manager.save_grpc_contract(contract)
 
-    async def verify_grpc_contract(self, consumer: str, provider: str, server_address: str,
-                                 version: str | None = None) -> TestResult:
+    async def verify_grpc_contract(
+        self, consumer: str, provider: str, server_address: str, version: str | None = None
+    ) -> TestResult:
         """Verify a gRPC contract."""
         return await self.enhanced_manager.verify_grpc_contract(
             consumer, provider, server_address, version

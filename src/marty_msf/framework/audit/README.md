@@ -216,6 +216,7 @@ destination = FileAuditDestination(
 ```
 
 Features:
+
 - Automatic log rotation
 - Compression of old files
 - Encryption of sensitive fields
@@ -234,6 +235,7 @@ destination = DatabaseAuditDestination(
 ```
 
 Features:
+
 - Batch processing for performance
 - Structured queries
 - Automatic table creation
@@ -252,6 +254,7 @@ destination = SIEMAuditDestination(
 ```
 
 Features:
+
 - REST API integration
 - Batch uploading
 - Retry logic
@@ -281,6 +284,7 @@ setup_fastapi_audit_middleware(app, config)
 ```
 
 Automatically logs:
+
 - HTTP requests and responses
 - Authentication events
 - Slow requests
@@ -338,6 +342,7 @@ builder.sensitive_detail("credit_card", "4111-1111-1111-1111")
 ### Anomaly Detection
 
 Built-in detection for:
+
 - Multiple authentication failures
 - Large data exports
 - Unusual access patterns
@@ -347,6 +352,7 @@ Built-in detection for:
 ### Access Control
 
 Audit logs are protected with:
+
 - File permissions (600)
 - Database access controls
 - Encrypted sensitive fields
@@ -409,6 +415,7 @@ config.flush_interval_seconds = 30
 ```
 
 Benefits:
+
 - Non-blocking event logging
 - Batch processing
 - Queue management
@@ -421,6 +428,7 @@ config.batch_size = 100
 ```
 
 Features:
+
 - Efficient database writes
 - Reduced I/O operations
 - Configurable batch sizes
@@ -516,12 +524,14 @@ See the `examples.py` file for comprehensive integration examples including:
 ## Dependencies
 
 Required packages:
+
 - `cryptography` - For encryption features
 - `sqlalchemy` - For database destinations
 - `fastapi` - For FastAPI middleware (optional)
 - `grpc` - For gRPC interceptor (optional)
 
 Install with:
+
 ```bash
 pip install cryptography sqlalchemy
 # Optional dependencies

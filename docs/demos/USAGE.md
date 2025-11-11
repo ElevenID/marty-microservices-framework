@@ -3,6 +3,7 @@
 ## Quick Start Commands
 
 ### 1. Run Complete Demo
+
 ```bash
 # Navigate to project root
 cd /path/to/marty-microservices-framework
@@ -15,6 +16,7 @@ python docs/demos/experience_polish_demo.py --scenario complete_journey --with-m
 ```
 
 ### 2. Start Jupyter Analytics
+
 ```bash
 # Install Jupyter dependencies
 pip install jupyter plotly pandas numpy
@@ -24,6 +26,7 @@ jupyter notebook docs/demos/experience-polish-analytics.ipynb
 ```
 
 ### 3. Deploy Operational Infrastructure
+
 ```bash
 # Apply scaling configurations
 kubectl apply -f docs/demos/operational-scaling/hpa-vpa-manifests.yaml
@@ -36,6 +39,7 @@ kubectl apply -f docs/demos/operational-scaling/grafana-dashboard.yaml
 ```
 
 ### 4. Start ML Advisor Service
+
 ```bash
 # Launch the ML recommendation sidecar
 python docs/demos/ml_pet_advisor.py
@@ -47,16 +51,19 @@ curl http://localhost:8001/recommend/user/123
 ## Demo Scenarios
 
 ### Error Injection and Recovery
+
 ```bash
 python docs/demos/experience_polish_demo.py --scenario error_recovery --inject-payment-failure
 ```
 
 ### Load Testing
+
 ```bash
 python docs/demos/experience_polish_demo.py --scenario stress_test --concurrent-users 50
 ```
 
 ### Scaling Demonstration
+
 ```bash
 python docs/demos/experience_polish_demo.py --scenario scaling_test --burst-load
 ```
@@ -64,14 +71,17 @@ python docs/demos/experience_polish_demo.py --scenario scaling_test --burst-load
 ## Monitoring Access
 
 ### Grafana Dashboard
+
 - Import: `docs/demos/operational-scaling/grafana-dashboard.yaml`
-- Access: http://localhost:3000 (after port-forward)
+- Access: <http://localhost:3000> (after port-forward)
 
 ### Prometheus Alerts
+
 - Rules: Included in grafana-dashboard.yaml
 - Thresholds: Error rate >5%, Latency >1s P95
 
 ## File Structure
+
 ```
 docs/demos/
 ├── README.md                           # This comprehensive guide

@@ -55,14 +55,14 @@ class JSONMessageSerializer(IMessageSerializer):
     def serialize(self, data: Any) -> bytes:
         """Serialize data to JSON bytes."""
         try:
-            return json.dumps(data, default=str).encode('utf-8')
+            return json.dumps(data, default=str).encode("utf-8")
         except (TypeError, ValueError) as e:
             raise MessagingError(f"Failed to serialize data: {e}") from e
 
     def deserialize(self, data: bytes) -> Any:
         """Deserialize JSON bytes to data."""
         try:
-            return json.loads(data.decode('utf-8'))
+            return json.loads(data.decode("utf-8"))
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
             raise MessagingError(f"Failed to deserialize data: {e}") from e
 
@@ -144,7 +144,9 @@ class MemoryMessageExchange(IMessageExchange):
         self._declared = False
         return True
 
-    async def bind(self, destination: str, routing_key: str = "", arguments: dict[str, Any] | None = None) -> bool:
+    async def bind(
+        self, destination: str, routing_key: str = "", arguments: dict[str, Any] | None = None
+    ) -> bool:
         """Bind exchange to destination."""
         if destination not in self.bindings:
             self.bindings[destination] = []
@@ -210,7 +212,12 @@ class MemoryMessageBackend(IMessageBackend):
 class MessageProducer(IMessageProducer):
     """Message producer implementation."""
 
-    def __init__(self, config: ProducerConfig, backend: IMessageBackend, serializer: IMessageSerializer | None = None):
+    def __init__(
+        self,
+        config: ProducerConfig,
+        backend: IMessageBackend,
+        serializer: IMessageSerializer | None = None,
+    ):
         self.config = config
         self.backend = backend
         self.serializer = serializer or JSONMessageSerializer()
@@ -247,7 +254,9 @@ class MessageProducer(IMessageProducer):
 
             # For memory backend, we'll simulate publishing
             # In real implementation, this would use the backend's publish mechanism
-            self.logger.debug(f"Published message {message.id} to {message.exchange}/{message.routing_key}")
+            self.logger.debug(
+                f"Published message {message.id} to {message.exchange}/{message.routing_key}"
+            )
             message.status = MessageStatus.PROCESSED
             return True
 
@@ -268,7 +277,12 @@ class MessageProducer(IMessageProducer):
 class MessageConsumer(IMessageConsumer):
     """Message consumer implementation."""
 
-    def __init__(self, config: ConsumerConfig, backend: IMessageBackend, serializer: IMessageSerializer | None = None):
+    def __init__(
+        self,
+        config: ConsumerConfig,
+        backend: IMessageBackend,
+        serializer: IMessageSerializer | None = None,
+    ):
         self.config = config
         self.backend = backend
         self.serializer = serializer or JSONMessageSerializer()
@@ -405,7 +419,9 @@ class DLQManager(IDLQManager):
             message.retry_count += 1
             message.status = MessageStatus.RETRY
             del self.dlq_messages[message.id]
-            self.logger.info(f"Retrying message {message.id} from DLQ (attempt {message.retry_count})")
+            self.logger.info(
+                f"Retrying message {message.id} from DLQ (attempt {message.retry_count})"
+            )
 
     async def get_dlq_messages(self, limit: int = 100) -> list[Message]:
         """Get messages from DLQ."""
@@ -440,7 +456,9 @@ class MiddlewareChain:
         self.middleware[stage].append(middleware)
         self.middleware[stage].sort(key=lambda m: m.get_priority())
 
-    async def process(self, message: Message, stage: MiddlewareStage, context: dict[str, Any] | None = None) -> Message:
+    async def process(
+        self, message: Message, stage: MiddlewareStage, context: dict[str, Any] | None = None
+    ) -> Message:
         """Process message through middleware chain for a specific stage."""
         if context is None:
             context = {}
@@ -562,14 +580,12 @@ class MessagingManager(IMessagingManager):
 
 # --- Bootstrap Functions ---
 
+
 def create_messaging_manager(config: MessagingConfig | None = None) -> MessagingManager:
     """Create a fully configured messaging manager."""
     if config is None:
         # Create default memory backend config
-        backend_config = BackendConfig(
-            type=BackendType.MEMORY,
-            connection_url="memory://localhost"
-        )
+        backend_config = BackendConfig(type=BackendType.MEMORY, connection_url="memory://localhost")
         config = MessagingConfig(backend=backend_config)
 
     return MessagingManager(config)
@@ -583,6 +599,7 @@ async def setup_messaging_system(config: MessagingConfig | None = None) -> Messa
 
 
 # --- Compatibility Classes ---
+
 
 class MessageQueue:
     """Compatibility wrapper for message queue operations."""

@@ -39,6 +39,7 @@ This document outlines the consolidated event bus strategy for the Marty Microse
 **Decision**: Use Enhanced Event Bus as the single primary event bus implementation.
 
 **Rationale**:
+
 - Most comprehensive feature set (outbox, DLQ, retries, plugins)
 - Kafka-native with proper transactional guarantees
 - Already implements industry-standard patterns
@@ -51,11 +52,13 @@ This document outlines the consolidated event bus strategy for the Marty Microse
 **Decision**: Consolidate Event Publisher functionality into Enhanced Event Bus.
 
 **Rationale**:
+
 - Eliminate code duplication and maintenance overhead
 - Provide single point of integration for all event publishing
 - Maintain backwards compatibility through adapter pattern
 
 **Implementation**:
+
 ```python
 # New unified interface
 class UnifiedEventBus(EnhancedEventBus):
@@ -76,12 +79,14 @@ class UnifiedEventBus(EnhancedEventBus):
 **Decision**: Make transactional outbox pattern the default for all database-integrated scenarios.
 
 **Rationale**:
+
 - Ensures ACID compliance for business operations + event publishing
 - Eliminates dual-write problem
 - Provides reliable event delivery guarantees
 - Industry best practice for microservices
 
 **Configuration**:
+
 ```python
 # Default transactional mode
 event_bus = UnifiedEventBus(
@@ -102,6 +107,7 @@ event_bus_direct = UnifiedEventBus(
 **Decision**: Implement event classification with automatic routing.
 
 **Event Categories**:
+
 1. **Domain Events** - Business logic changes within bounded contexts
 2. **Integration Events** - Cross-service communication
 3. **System Events** - Infrastructure and operational events
@@ -109,6 +115,7 @@ event_bus_direct = UnifiedEventBus(
 5. **Notification Events** - User and system notifications
 
 **Routing Strategy**:
+
 ```python
 # Automatic topic generation based on event classification
 domain_event → topic: "domain.{service}.{aggregate_type}.{event_type}"
@@ -123,6 +130,7 @@ notification_event → topic: "notifications.{channel}.{type}"
 **Decision**: Maintain plugin integration through Enhanced Event Bus subscription model.
 
 **Implementation**:
+
 - Plugins subscribe to events through EventFilter criteria
 - Framework automatically routes relevant events to plugin handlers
 - Plugin handlers can be sync or async
@@ -133,12 +141,14 @@ notification_event → topic: "notifications.{channel}.{type}"
 **Decision**: Implement comprehensive error handling with DLQ support.
 
 **Error Handling Hierarchy**:
+
 1. **Immediate Retry** - Transient failures (network, temporary service unavailability)
 2. **Exponential Backoff** - Persistent but potentially recoverable failures
 3. **Dead Letter Queue** - Permanent failures requiring manual intervention
 4. **Error Notifications** - Alert operations team for critical failures
 
 **DLQ Processing**:
+
 - Manual retry capability through management API
 - Error analysis and categorization
 - Automatic cleanup of old processed events
@@ -148,6 +158,7 @@ notification_event → topic: "notifications.{channel}.{type}"
 **Decision**: Built-in observability with metrics, tracing, and health checks.
 
 **Observability Features**:
+
 - Event publishing metrics (throughput, latency, failures)
 - Outbox processing metrics (queue depth, processing time)
 - Distributed tracing integration
@@ -159,6 +170,7 @@ notification_event → topic: "notifications.{channel}.{type}"
 **Decision**: Environment-based configuration with sensible defaults.
 
 **Configuration Hierarchy**:
+
 1. Framework defaults (development-friendly)
 2. Environment variables (container/k8s deployment)
 3. Configuration files (complex scenarios)
@@ -169,6 +181,7 @@ notification_event → topic: "notifications.{channel}.{type}"
 ### Phase 1: Consolidation (Sprint 1-2)
 
 1. **Enhance Event Bus Integration**
+
    ```python
    # Add unified publishing methods to Enhanced Event Bus
    class EnhancedEventBus:
@@ -178,6 +191,7 @@ notification_event → topic: "notifications.{channel}.{type}"
    ```
 
 2. **Create Compatibility Layer**
+
    ```python
    # Backwards compatibility for existing EventPublisher usage
    class EventPublisherAdapter:
@@ -189,6 +203,7 @@ notification_event → topic: "notifications.{channel}.{type}"
    ```
 
 3. **Update Framework Exports**
+
    ```python
    # src/marty_msf/framework/events/__init__.py
    from .enhanced_event_bus import EnhancedEventBus as UnifiedEventBus
@@ -229,6 +244,7 @@ notification_event → topic: "notifications.{channel}.{type}"
    - Plugin support available
 
 2. **Add Unified Publishing Methods**
+
    ```python
    # Add to Enhanced Event Bus
    async def publish_audit_event(self, event_type: AuditEventType, action: str, **kwargs)
@@ -237,6 +253,7 @@ notification_event → topic: "notifications.{channel}.{type}"
    ```
 
 3. **Create Event Classification System**
+
    ```python
    class EventCategory(Enum):
        DOMAIN = "domain"
@@ -263,6 +280,7 @@ notification_event → topic: "notifications.{channel}.{type}"
 ## Configuration Examples
 
 ### Development Configuration
+
 ```python
 # Simple development setup
 event_bus = UnifiedEventBus(
@@ -273,6 +291,7 @@ event_bus = UnifiedEventBus(
 ```
 
 ### Production Configuration
+
 ```python
 # Production setup with full reliability
 event_bus = UnifiedEventBus(
@@ -295,6 +314,7 @@ event_bus = UnifiedEventBus(
 ```
 
 ### Testing Configuration
+
 ```python
 # Testing with in-memory capabilities
 event_bus = UnifiedEventBus(

@@ -48,7 +48,7 @@ warnings.warn(
     "Use the new modular security structure: security_core, authentication, "
     "authorization, audit_compliance, security_infra, threat_management",
     DeprecationWarning,
-    stacklevel=2
+    stacklevel=2,
 )
 
 logger = logging.getLogger(__name__)
@@ -71,24 +71,32 @@ logger = logging.getLogger(__name__)
 # These will gradually be phased out
 __all__ = [
     # Core interfaces and configuration (from security_core)
-    "SecurityConfig", "SecurityHardeningFramework", "SecurityServiceFactory",
-
+    "SecurityConfig",
+    "SecurityHardeningFramework",
+    "SecurityServiceFactory",
     # Authentication (from authentication)
-    "AuthenticatedUser", "JWTAuthenticator", "APIKeyAuthenticator", "MTLSAuthenticator",
-
+    "AuthenticatedUser",
+    "JWTAuthenticator",
+    "APIKeyAuthenticator",
+    "MTLSAuthenticator",
     # Authorization (from authorization)
-    "requires_auth", "requires_role", "requires_permission",
-
+    "requires_auth",
+    "requires_role",
+    "requires_permission",
     # Events and monitoring (from audit_compliance)
-    "SecurityEvent", "SecurityEventCollector", "SecurityMonitoringSystem",
-
+    "SecurityEvent",
+    "SecurityEventCollector",
+    "SecurityMonitoringSystem",
     # Middleware (from security_infra)
     # "SecurityMiddleware", "AuthMiddleware", "RateLimitMiddleware",
-
     # Rate limiting and threat management (from threat_management)
-    "RateLimiter", "SecurityScanner",
-
+    "RateLimiter",
+    "SecurityScanner",
     # Exceptions (from security_core)
-    "SecurityError", "AuthenticationError", "AuthorizationError",
-    "PermissionDeniedError", "RoleRequiredError", "RateLimitExceededError",
+    "SecurityError",
+    "AuthenticationError",
+    "AuthorizationError",
+    "PermissionDeniedError",
+    "RoleRequiredError",
+    "RateLimitExceededError",
 ]

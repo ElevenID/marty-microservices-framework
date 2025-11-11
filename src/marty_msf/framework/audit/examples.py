@@ -30,14 +30,12 @@ from marty_msf.framework.audit import (
 
 # FastAPI example
 try:
-
     FASTAPI_AVAILABLE = True
 except ImportError:
     FASTAPI_AVAILABLE = False
 
 # Database example
 try:
-
     SQLALCHEMY_AVAILABLE = True
 except ImportError:
     SQLALCHEMY_AVAILABLE = False

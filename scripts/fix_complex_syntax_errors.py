@@ -22,9 +22,19 @@ class ComplexSyntaxFixer:
 
         # Exclusions for safety
         self.exclusions = {
-            '.venv', 'node_modules', '__pycache__', '.git', '.pytest_cache',
-            '.mypy_cache', '.ruff_cache', 'site-packages', 'dist', 'build',
-            '.tox', 'htmlcov', '.coverage'
+            ".venv",
+            "node_modules",
+            "__pycache__",
+            ".git",
+            ".pytest_cache",
+            ".mypy_cache",
+            ".ruff_cache",
+            "site-packages",
+            "dist",
+            "build",
+            ".tox",
+            "htmlcov",
+            ".coverage",
         }
 
     def should_exclude_path(self, path: Path) -> bool:
@@ -34,7 +44,7 @@ class ComplexSyntaxFixer:
 
     def extract_imports_and_code(self, content: str) -> tuple[list[str], list[str], str]:
         """Extract imports, try-except blocks, and remaining code."""
-        lines = content.split('\n')
+        lines = content.split("\n")
         imports = []
         try_blocks = []
         remaining_lines = []
@@ -45,7 +55,12 @@ class ComplexSyntaxFixer:
             stripped = line.strip()
 
             # Skip empty lines and comments at the start
-            if not stripped or stripped.startswith('#') or stripped.startswith('"""') or stripped.startswith("'''"):
+            if (
+                not stripped
+                or stripped.startswith("#")
+                or stripped.startswith('"""')
+                or stripped.startswith("'''")
+            ):
                 remaining_lines.append(line)
                 i += 1
                 continue
@@ -59,7 +74,7 @@ class ComplexSyntaxFixer:
                 continue
 
             # Handle try-except blocks that might contain imports
-            if stripped.startswith('try:'):
+            if stripped.startswith("try:"):
                 try_start = i
                 i += 1
 
@@ -72,7 +87,7 @@ class ComplexSyntaxFixer:
                     current_line = lines[i].rstrip()
                     current_stripped = current_line.strip()
 
-                    if current_stripped.startswith('except'):
+                    if current_stripped.startswith("except"):
                         in_try = False
                         except_content.append(current_line)
                         i += 1
@@ -82,7 +97,11 @@ class ComplexSyntaxFixer:
                             next_line = lines[i].rstrip()
                             next_stripped = next_line.strip()
 
-                            if next_stripped and not next_line.startswith(' ') and not next_line.startswith('\t'):
+                            if (
+                                next_stripped
+                                and not next_line.startswith(" ")
+                                and not next_line.startswith("\t")
+                            ):
                                 break
 
                             except_content.append(next_line)
@@ -103,7 +122,7 @@ class ComplexSyntaxFixer:
                     if try_content:
                         try_block.extend(try_content)
                     else:
-                        try_block.append('    pass')  # Add pass to empty try
+                        try_block.append("    pass")  # Add pass to empty try
                     try_block.extend(except_content)
                     try_blocks.extend(try_block)
 
@@ -113,13 +132,13 @@ class ComplexSyntaxFixer:
             remaining_lines.append(line)
             i += 1
 
-        return imports, try_blocks, '\n'.join(remaining_lines)
+        return imports, try_blocks, "\n".join(remaining_lines)
 
     def is_import_line(self, line: str) -> bool:
         """Check if line is an import statement."""
-        return (line.startswith('import ') or
-                line.startswith('from ') or
-                line.startswith('__import__'))
+        return (
+            line.startswith("import ") or line.startswith("from ") or line.startswith("__import__")
+        )
 
     def fix_file_content(self, content: str) -> str | None:
         """Fix syntax errors in file content."""
@@ -130,7 +149,7 @@ class ComplexSyntaxFixer:
         except SyntaxError:
             pass
 
-        lines = content.split('\n')
+        lines = content.split("\n")
 
         # Find module docstring and preserve it
         docstring_lines = []
@@ -138,7 +157,7 @@ class ComplexSyntaxFixer:
 
         for i, line in enumerate(lines):
             stripped = line.strip()
-            if not stripped or stripped.startswith('#'):
+            if not stripped or stripped.startswith("#"):
                 docstring_lines.append(line)
                 continue
             elif stripped.startswith('"""') or stripped.startswith("'''"):
@@ -163,7 +182,7 @@ class ComplexSyntaxFixer:
                 break
 
         # Extract imports and code from the remaining content
-        remaining_content = '\n'.join(lines[code_start_idx:])
+        remaining_content = "\n".join(lines[code_start_idx:])
         imports, try_blocks, other_code = self.extract_imports_and_code(remaining_content)
 
         # Remove duplicates while preserving order
@@ -181,25 +200,25 @@ class ComplexSyntaxFixer:
         if docstring_lines:
             result_lines.extend(docstring_lines)
             if unique_imports or try_blocks or other_code.strip():
-                result_lines.append('')  # Blank line after docstring
+                result_lines.append("")  # Blank line after docstring
 
         # Add imports
         if unique_imports:
             result_lines.extend(unique_imports)
             if try_blocks or other_code.strip():
-                result_lines.append('')  # Blank line after imports
+                result_lines.append("")  # Blank line after imports
 
         # Add try blocks
         if try_blocks:
             result_lines.extend(try_blocks)
             if other_code.strip():
-                result_lines.append('')  # Blank line after try blocks
+                result_lines.append("")  # Blank line after try blocks
 
         # Add remaining code
         if other_code.strip():
             result_lines.append(other_code)
 
-        result = '\n'.join(result_lines)
+        result = "\n".join(result_lines)
 
         # Final cleanup
         result = self.clean_extra_newlines(result)
@@ -215,10 +234,10 @@ class ComplexSyntaxFixer:
     def clean_extra_newlines(self, content: str) -> str:
         """Clean excessive newlines."""
         # Replace multiple consecutive newlines with at most 2
-        content = re.sub(r'\n{3,}', '\n\n', content)
+        content = re.sub(r"\n{3,}", "\n\n", content)
 
         # Ensure file ends with exactly one newline
-        content = content.rstrip('\n') + '\n'
+        content = content.rstrip("\n") + "\n"
 
         return content
 
@@ -227,13 +246,13 @@ class ComplexSyntaxFixer:
         self.files_processed += 1
 
         try:
-            with open(file_path, encoding='utf-8') as f:
+            with open(file_path, encoding="utf-8") as f:
                 original_content = f.read()
 
             fixed_content = self.fix_file_content(original_content)
 
             if fixed_content is not None and fixed_content != original_content:
-                with open(file_path, 'w', encoding='utf-8') as f:
+                with open(file_path, "w", encoding="utf-8") as f:
                     f.write(fixed_content)
 
                 print(f"✅ Fixed: {file_path}")

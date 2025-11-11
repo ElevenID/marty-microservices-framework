@@ -18,5 +18,5 @@ __all__ = [
     "ConnectionPoolManager",
     "PoolConfig",
     "PoolHealthChecker",
-    "HealthCheckConfig"
+    "HealthCheckConfig",
 ]

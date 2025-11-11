@@ -15,20 +15,24 @@ All MMF workflows have been updated to trigger on **`main`** and **`dev`** branc
 
 ### 🚦 Trigger Behavior
 
-#### For `main` branch:
+#### For `main` branch
+
 - ✅ Push to `main` → Runs **MMF E2E Tests**
 - ✅ PR to `main` → Runs **MMF PR Validation** + **MMF Comprehensive E2E** + **MMF E2E Tests**
 
-#### For `dev` branch:
+#### For `dev` branch
+
 - ✅ Push to `dev` → Runs **MMF E2E Tests**
 - ✅ PR to `dev` → Runs **MMF PR Validation** + **MMF Comprehensive E2E** + **MMF E2E Tests**
 
-#### Manual Testing:
+#### Manual Testing
+
 - 🔧 **MMF Quick E2E** → Available anytime via workflow dispatch
 
 ### 📁 Path Filtering
 
 All automatic workflows only run when these paths change:
+
 - `mmf/**` - Your MMF microservices code
 - `tests/**` - Testing infrastructure
 - `pyproject.toml` - Python dependencies
@@ -44,6 +48,7 @@ All automatic workflows only run when these paths change:
 ### ✅ Summary
 
 Your workflows now support:
+
 - **`main`** - Production/release branch
 - **`dev`** - Development/integration branch
 - **Manual dispatch** - On-demand testing

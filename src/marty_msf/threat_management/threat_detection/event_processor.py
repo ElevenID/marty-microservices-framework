@@ -25,7 +25,6 @@ from prometheus_client import Counter, Gauge, Histogram
 
 # External dependencies
 try:
-
     REDIS_AVAILABLE = True
 
     STREAMING_AVAILABLE = True

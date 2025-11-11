@@ -7,6 +7,7 @@ MMF provides comprehensive observability with monitoring, tracing, and logging c
 ## Quick Setup
 
 ### Deploy Infrastructure
+
 ```bash
 # Deploy observability stack
 kubectl apply -f ops/k8s/observability/
@@ -20,6 +21,7 @@ kubectl port-forward -n observability service/jaeger 16686:16686
 ```
 
 ### Enable in Service
+
 ```python
 from marty_msf.observability import init_observability
 from marty_msf.framework.logging import UnifiedServiceLogger
@@ -35,30 +37,35 @@ logger = UnifiedServiceLogger("your-service")
 ## Components
 
 ### 1. Metrics (Prometheus)
+
 - **Application metrics**: Request rates, response times, error rates
 - **Business metrics**: Custom domain-specific metrics
 - **Infrastructure metrics**: CPU, memory, network usage
 - **SLI/SLO tracking**: Service level indicators and objectives
 
 ### 2. Distributed Tracing (Jaeger)
+
 - **Automatic instrumentation**: FastAPI, gRPC, HTTP clients, databases
 - **Correlation tracking**: Multi-dimensional request context
 - **Dependency mapping**: Service interaction visualization
 - **Performance analysis**: Bottleneck identification
 
 ### 3. Centralized Logging (ELK Stack)
+
 - **Structured logging**: JSON format with correlation IDs
 - **Log aggregation**: Centralized collection from all services
 - **Search and analysis**: Full-text search and filtering
 - **Alert integration**: Log-based alerting
 
 ### 4. Dashboards (Grafana)
+
 - **Service overview**: High-level health and performance
 - **Plugin debugging**: Plugin-specific troubleshooting
 - **Infrastructure monitoring**: System resource usage
 - **Business intelligence**: Domain-specific KPIs
 
 ### 5. SLO/SLI Framework
+
 - **SLI Collection**: Automated Service Level Indicator measurement
 - **Error Budget**: Budget tracking and burn rate analysis
 - **Compliance Reporting**: Automated SLO compliance assessment
@@ -454,12 +461,14 @@ groups:
 ### Common Issues
 
 1. **High Memory Usage in Elasticsearch**
+
    ```bash
    # Adjust JVM heap size
    ES_JAVA_OPTS="-Xms2g -Xmx2g"
    ```
 
 2. **Logstash Processing Delays**
+
    ```yaml
    # Increase pipeline workers
    pipeline.workers: 8
@@ -467,6 +476,7 @@ groups:
    ```
 
 3. **Prometheus High Cardinality**
+
    ```yaml
    # Limit metric cardinality
    metric_relabel_configs:
@@ -476,6 +486,7 @@ groups:
    ```
 
 4. **Jaeger Storage Issues**
+
    ```bash
    # Clean old traces
    curl -X DELETE "http://elasticsearch:9200/jaeger-*-$(date -d '7 days ago' +%Y-%m-%d)*"
@@ -585,6 +596,7 @@ Phase 2 Enhanced Observability is now complete! The system provides:
 **Ready for Phase 3: Advanced Security & Compliance** 🚀
 
 This phase will build upon the observability foundation to implement:
+
 - Zero-trust security architecture
 - Advanced threat detection
 - Compliance automation

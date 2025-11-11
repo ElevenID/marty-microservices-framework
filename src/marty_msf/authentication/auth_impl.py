@@ -65,27 +65,20 @@ class BasicAuthenticator:
 
             if not username or not password:
                 return AuthenticationResult(
-                    success=False,
-                    error_message="Username and password are required"
+                    success=False, error_message="Username and password are required"
                 )
 
             # Retrieve expected password hash from secret manager
             stored_hash = self.secret_manager.get_secret(f"user.{username}.password_hash")
             if not stored_hash:
                 logger.warning(f"Authentication failed - unknown user: {username}")
-                return AuthenticationResult(
-                    success=False,
-                    error_message="Invalid credentials"
-                )
+                return AuthenticationResult(success=False, error_message="Invalid credentials")
 
             # Verify password hash
             password_hash = self._hash_password(password)
             if password_hash != stored_hash:
                 logger.warning(f"Authentication failed - invalid password for user: {username}")
-                return AuthenticationResult(
-                    success=False,
-                    error_message="Invalid credentials"
-                )
+                return AuthenticationResult(success=False, error_message="Invalid credentials")
 
             # Retrieve user attributes
             user_data = self._get_user_data(username)
@@ -95,22 +88,17 @@ class BasicAuthenticator:
                 email=user_data.get("email"),
                 roles=user_data.get("roles", []),
                 attributes=user_data.get("attributes", {}),
-                metadata={"auth_method": self.auth_method.value}
+                metadata={"auth_method": self.auth_method.value},
             )
 
             logger.info(f"Authentication successful for user: {username}")
             return AuthenticationResult(
-                success=True,
-                user=user,
-                session_data={"auth_method": self.auth_method.value}
+                success=True, user=user, session_data={"auth_method": self.auth_method.value}
             )
 
         except Exception as e:
             logger.error(f"Authentication error: {e}")
-            return AuthenticationResult(
-                success=False,
-                error_message="Authentication failed"
-            )
+            return AuthenticationResult(success=False, error_message="Authentication failed")
 
     def validate_token(self, token: str) -> AuthenticationResult:
         """
@@ -123,8 +111,7 @@ class BasicAuthenticator:
             AuthenticationResult indicating failure (basic auth doesn't use tokens)
         """
         return AuthenticationResult(
-            success=False,
-            error_message="Token validation not supported by BasicAuthenticator"
+            success=False, error_message="Token validation not supported by BasicAuthenticator"
         )
 
     def _hash_password(self, password: str) -> str:
@@ -155,12 +142,7 @@ class BasicAuthenticator:
             roles_str = self.secret_manager.get_secret(f"user.{username}.roles")
             roles = roles_str.split(",") if roles_str else []
 
-            return {
-                "id": user_id,
-                "email": email,
-                "roles": roles,
-                "attributes": {}
-            }
+            return {"id": user_id, "email": email, "roles": roles, "attributes": {}}
         except Exception as e:
             logger.warning(f"Could not retrieve user data for {username}: {e}")
             return {"id": username, "roles": []}
@@ -196,10 +178,7 @@ class JwtAuthenticator:
         """
         token = credentials.get("token")
         if not token:
-            return AuthenticationResult(
-                success=False,
-                error_message="Token is required"
-            )
+            return AuthenticationResult(success=False, error_message="Token is required")
 
         return self.validate_token(token)
 
@@ -218,16 +197,12 @@ class JwtAuthenticator:
             jwt_secret = self.secret_manager.get_secret("jwt.secret")
             if not jwt_secret:
                 return AuthenticationResult(
-                    success=False,
-                    error_message="JWT secret not configured"
+                    success=False, error_message="JWT secret not configured"
                 )
 
             # Decode and validate token
             payload = jwt.decode(
-                token,
-                jwt_secret,
-                algorithms=["HS256"],
-                options={"verify_exp": True}
+                token, jwt_secret, algorithms=["HS256"], options={"verify_exp": True}
             )
 
             # Extract user information from token claims
@@ -240,38 +215,26 @@ class JwtAuthenticator:
                 metadata={
                     "auth_method": self.auth_method.value,
                     "token_issued_at": payload.get("iat"),
-                    "token_expires_at": payload.get("exp")
-                }
+                    "token_expires_at": payload.get("exp"),
+                },
             )
 
             logger.info(f"JWT validation successful for user: {user.username}")
             return AuthenticationResult(
                 success=True,
                 user=user,
-                session_data={
-                    "auth_method": self.auth_method.value,
-                    "token_claims": payload
-                }
+                session_data={"auth_method": self.auth_method.value, "token_claims": payload},
             )
 
         except jwt.ExpiredSignatureError:
             logger.warning("JWT token has expired")
-            return AuthenticationResult(
-                success=False,
-                error_message="Token has expired"
-            )
+            return AuthenticationResult(success=False, error_message="Token has expired")
         except jwt.InvalidTokenError as e:
             logger.warning(f"Invalid JWT token: {e}")
-            return AuthenticationResult(
-                success=False,
-                error_message="Invalid token"
-            )
+            return AuthenticationResult(success=False, error_message="Invalid token")
         except Exception as e:
             logger.error(f"JWT validation error: {e}")
-            return AuthenticationResult(
-                success=False,
-                error_message="Token validation failed"
-            )
+            return AuthenticationResult(success=False, error_message="Token validation failed")
 
 
 class EnvironmentAuthenticator:
@@ -308,8 +271,7 @@ class EnvironmentAuthenticator:
 
             if not username or not password:
                 return AuthenticationResult(
-                    success=False,
-                    error_message="Username and password are required"
+                    success=False, error_message="Username and password are required"
                 )
 
             # Check against environment variables
@@ -318,37 +280,30 @@ class EnvironmentAuthenticator:
 
             if not expected_username or not expected_password:
                 return AuthenticationResult(
-                    success=False,
-                    error_message="Authentication not configured"
+                    success=False, error_message="Authentication not configured"
                 )
 
             if username != expected_username or password != expected_password:
-                return AuthenticationResult(
-                    success=False,
-                    error_message="Invalid credentials"
-                )
+                return AuthenticationResult(success=False, error_message="Invalid credentials")
 
             # Create user with default attributes
             user = User(
                 id=username,
                 username=username,
                 email=os.getenv("AUTH_EMAIL"),
-                roles=os.getenv("AUTH_ROLES", "").split(",") if os.getenv("AUTH_ROLES") else ["user"],
-                metadata={"auth_method": self.auth_method.value}
+                roles=os.getenv("AUTH_ROLES", "").split(",")
+                if os.getenv("AUTH_ROLES")
+                else ["user"],
+                metadata={"auth_method": self.auth_method.value},
             )
 
             return AuthenticationResult(
-                success=True,
-                user=user,
-                session_data={"auth_method": self.auth_method.value}
+                success=True, user=user, session_data={"auth_method": self.auth_method.value}
             )
 
         except Exception as e:
             logger.error(f"Environment authentication error: {e}")
-            return AuthenticationResult(
-                success=False,
-                error_message="Authentication failed"
-            )
+            return AuthenticationResult(success=False, error_message="Authentication failed")
 
     def validate_token(self, token: str) -> AuthenticationResult:
         """
@@ -362,5 +317,5 @@ class EnvironmentAuthenticator:
         """
         return AuthenticationResult(
             success=False,
-            error_message="Token validation not supported by EnvironmentAuthenticator"
+            error_message="Token validation not supported by EnvironmentAuthenticator",
         )

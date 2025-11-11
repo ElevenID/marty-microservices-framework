@@ -188,7 +188,6 @@ class FileAuditDestination(AuditDestination):
     async def _compress_file(self, file_path: Path) -> None:
         """Compress rotated log file."""
         try:
-
             compressed_path = file_path.with_suffix(file_path.suffix + ".gz")
             with open(file_path, "rb") as f_in:
                 with gzip.open(compressed_path, "wb") as f_out:
@@ -409,7 +408,6 @@ class ConsoleAuditDestination(AuditDestination):
         self.include_details = include_details
         # Setup colored output if available
         try:
-
             init()
             self.colors = {
                 "INFO": Fore.WHITE,
@@ -503,7 +501,6 @@ class SIEMAuditDestination(AuditDestination):
         if not self._batch:
             return
         try:
-
             # Prepare payload
             events_data = [event.to_dict() for event in self._batch]
             payload = {

@@ -225,24 +225,18 @@ class DatabaseConfig:
 
         # Pool configuration
         pool_config = ConnectionPoolConfig(
-            min_size=int(
-                os.getenv(f"{prefix}POOL_MIN_SIZE")
-                or os.getenv("DB_POOL_MIN_SIZE", "1")
-            ),
+            min_size=int(os.getenv(f"{prefix}POOL_MIN_SIZE") or os.getenv("DB_POOL_MIN_SIZE", "1")),
             max_size=int(
-                os.getenv(f"{prefix}POOL_MAX_SIZE")
-                or os.getenv("DB_POOL_MAX_SIZE", "10")
+                os.getenv(f"{prefix}POOL_MAX_SIZE") or os.getenv("DB_POOL_MAX_SIZE", "10")
             ),
             max_overflow=int(
-                os.getenv(f"{prefix}POOL_MAX_OVERFLOW")
-                or os.getenv("DB_POOL_MAX_OVERFLOW", "20")
+                os.getenv(f"{prefix}POOL_MAX_OVERFLOW") or os.getenv("DB_POOL_MAX_OVERFLOW", "20")
             ),
             pool_timeout=int(
                 os.getenv(f"{prefix}POOL_TIMEOUT") or os.getenv("DB_POOL_TIMEOUT", "30")
             ),
             pool_recycle=int(
-                os.getenv(f"{prefix}POOL_RECYCLE")
-                or os.getenv("DB_POOL_RECYCLE", "3600")
+                os.getenv(f"{prefix}POOL_RECYCLE") or os.getenv("DB_POOL_RECYCLE", "3600")
             ),
             echo=os.getenv(f"{prefix}ECHO", "false").lower() == "true",
         )

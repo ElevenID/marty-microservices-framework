@@ -35,6 +35,7 @@
 ### Installation
 
 1. **Clone or generate the service:**
+
    ```bash
    # If using Marty CLI
    marty create {{ service_name }} --template=go-service
@@ -45,17 +46,20 @@
    ```
 
 2. **Install dependencies:**
+
    ```bash
    go mod tidy
    ```
 
 3. **Configuration:**
+
    ```bash
    cp .env.example .env
    # Edit .env with your configuration
    ```
 
 4. **Run the service:**
+
    ```bash
    # Development
    go run ./cmd/server
@@ -78,16 +82,19 @@ docker run -p {{ port }}:{{ port }} --env-file .env {{ service_name }}
 ## API Documentation
 
 ### Base URL
+
 ```
 http://localhost:{{ port }}
 ```
 
 ### Health Check
+
 ```http
 GET /health
 ```
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -106,27 +113,33 @@ GET /health
 ```
 
 ### Metrics
+
 ```http
 GET /metrics
 ```
+
 Prometheus metrics endpoint for monitoring.
 
 ### API Endpoints
 
 #### Root
+
 ```http
 GET /api/v1/
 ```
 
 #### Ping
+
 ```http
 GET /api/v1/ping
 ```
 
 {{- if include_auth }}
+
 #### Authentication
 
 ##### Login
+
 ```http
 POST /api/v1/auth/login
 Content-Type: application/json
@@ -138,6 +151,7 @@ Content-Type: application/json
 ```
 
 ##### Register
+
 ```http
 POST /api/v1/auth/register
 Content-Type: application/json
@@ -150,10 +164,12 @@ Content-Type: application/json
 ```
 
 ##### Get Profile (Protected)
+
 ```http
 GET /api/v1/profile
 Authorization: Bearer <jwt-token>
 ```
+
 {{- endif }}
 
 ## Configuration
@@ -209,6 +225,7 @@ The service can be configured using environment variables:
 ```
 
 {{- if include_database }}
+
 ## Database Architecture
 
 This service follows Marty's enterprise database patterns for service isolation and clean architecture:
@@ -216,6 +233,7 @@ This service follows Marty's enterprise database patterns for service isolation 
 ### Service-Specific Database Isolation
 
 Each service uses its own dedicated database following the naming convention:
+
 - Database name: `{service_name}_db`
 - Automatic configuration based on `SERVICE_NAME` environment variable
 - No direct GORM connections - all access through DatabaseManager
@@ -225,12 +243,14 @@ Each service uses its own dedicated database following the naming convention:
 The service uses Marty's database framework patterns:
 
 #### DatabaseManager (Singleton)
+
 - Thread-safe singleton implementation
 - Manages GORM connection and health checks
 - Provides service-specific database isolation
 - Handles connection lifecycle and recovery
 
 #### Configuration Management
+
 - Environment-based configuration with validation
 - Service-specific database naming
 - Connection pool settings
@@ -275,16 +295,19 @@ DATABASE_POOL_MAX_OPEN_CONNS=25
 DATABASE_POOL_MAX_IDLE_CONNS=5
 DATABASE_CONN_MAX_LIFETIME=300s
 ```
+
 {{- endif }}
 
 ## Development
 
 ### Running Tests
+
 ```bash
 go test ./...
 ```
 
 ### Building
+
 ```bash
 # Build for current platform
 go build -o bin/{{ service_name }} ./cmd/server
@@ -294,11 +317,13 @@ GOOS=linux GOARCH=amd64 go build -o bin/{{ service_name }}-linux ./cmd/server
 ```
 
 ### Adding New Routes
+
 1. Create handler functions in `internal/handlers/`
 2. Add routes in `internal/app/app.go` in the `setupRoutes()` method
 3. Add middleware if needed in `internal/middleware/`
 
 ### Database Migrations
+
 {{- if include_database }}
 Database migrations should be handled in `internal/database/migrations.go` or using a dedicated migration tool.
 {{- else }}
@@ -314,6 +339,7 @@ The service exposes several monitoring endpoints:
 - **Request IDs**: Every request gets a unique ID for tracing
 
 ### Key Metrics
+
 - `http_requests_total` - Total number of HTTP requests
 - `http_request_duration_seconds` - Request duration histogram
 
@@ -331,6 +357,7 @@ The service implements several security best practices:
 ## Deployment
 
 ### Docker Compose
+
 ```yaml
 version: '3.8'
 services:
@@ -360,6 +387,7 @@ services:
 ```
 
 ### Kubernetes
+
 Use the provided Kubernetes manifests or Helm charts for deployment.
 
 ## Contributing

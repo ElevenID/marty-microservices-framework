@@ -15,6 +15,7 @@ python quick_start_demo.py --verbose
 ```
 
 This demonstrates core capabilities in under 5 minutes:
+
 - Database operations (PostgreSQL)
 - Cache operations (Redis)
 - Message processing
@@ -87,6 +88,7 @@ python experience_polish_demo.py --scenario full --customers 3 --export-data
 ## 🎯 What Each Demo Shows
 
 ### Quick Start Demo
+
 - Basic CRUD operations
 - Caching strategies
 - Message handling
@@ -94,6 +96,7 @@ python experience_polish_demo.py --scenario full --customers 3 --export-data
 - Simple resilience
 
 ### Core Framework Demo
+
 - PostgreSQL integration with connection pooling
 - Redis caching with expiration policies
 - Message queue processing with retry logic
@@ -101,6 +104,7 @@ python experience_polish_demo.py --scenario full --customers 3 --export-data
 - Configuration management
 
 ### Resilience Demo
+
 - Circuit breaker patterns
 - Timeout and retry strategies
 - Bulkhead isolation
@@ -108,6 +112,7 @@ python experience_polish_demo.py --scenario full --customers 3 --export-data
 - Error recovery mechanisms
 
 ### API Documentation Demo
+
 - Automatic OpenAPI generation
 - Contract testing with validation
 - Interactive documentation UI
@@ -115,6 +120,7 @@ python experience_polish_demo.py --scenario full --customers 3 --export-data
 - API versioning strategies
 
 ### ML Integration Demo
+
 - Model serving infrastructure
 - Real-time inference pipelines
 - Recommendation engines
@@ -122,6 +128,7 @@ python experience_polish_demo.py --scenario full --customers 3 --export-data
 - A/B testing capabilities
 
 ### Service Mesh Demo
+
 - Istio service mesh integration
 - Distributed tracing with Jaeger
 - Traffic management policies
@@ -129,6 +136,7 @@ python experience_polish_demo.py --scenario full --customers 3 --export-data
 - Observability with Prometheus/Grafana
 
 ### Operational Scaling Demo
+
 - Load testing scenarios
 - Auto-scaling policies
 - Performance optimization
@@ -138,11 +146,13 @@ python experience_polish_demo.py --scenario full --customers 3 --export-data
 ## 🛠️ Prerequisites
 
 **Minimal (Quick Start & Feature Demos):**
+
 - Python 3.8+
 - Docker and Docker Compose
 - Basic services (PostgreSQL, Redis)
 
 **Full Experience (Petstore Domain):**
+
 - All minimal requirements
 - Kubernetes cluster (Kind/Minikube for local)
 - Optional: Istio for service mesh features
@@ -151,6 +161,7 @@ python experience_polish_demo.py --scenario full --customers 3 --export-data
 ## 📚 Documentation
 
 Each demo includes:
+
 - **README.md**: Setup and usage instructions
 - **API_INTEGRATION_README.md**: API documentation features
 - **IMPLEMENTATION_SUMMARY.md**: Technical implementation details

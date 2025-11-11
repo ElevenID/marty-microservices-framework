@@ -114,7 +114,6 @@ class ServiceMeshDiscovery(ServiceDiscoveryClient):
             instances = []
             for endpoint in endpoints:
                 try:
-
                     service_endpoint = ServiceEndpoint(
                         host=endpoint.get("host", "localhost"),
                         port=endpoint.get("port", 80),

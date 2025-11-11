@@ -46,7 +46,13 @@ class ResilienceManagerService(BaseService):
                 self.config = config
                 self._metrics = {"total_operations": 0, "success_count": 0, "failure_count": 0}
 
-            async def execute_resilient(self, func, strategy=ResilienceStrategy.INTERNAL_SERVICE, config_override=None, operation_name=None):
+            async def execute_resilient(
+                self,
+                func,
+                strategy=ResilienceStrategy.INTERNAL_SERVICE,
+                config_override=None,
+                operation_name=None,
+            ):
                 try:
                     result = await func() if asyncio.iscoroutinefunction(func) else func()
                     self._metrics["success_count"] += 1
@@ -93,7 +99,7 @@ class ResilienceManagerService(BaseService):
         """Shutdown the resilience manager service."""
         if self._resilience_manager:
             # Reset metrics and cleanup
-            if hasattr(self._resilience_manager, 'reset_metrics'):
+            if hasattr(self._resilience_manager, "reset_metrics"):
                 self._resilience_manager.reset_metrics()  # type: ignore
             self._resilience_manager = None
 

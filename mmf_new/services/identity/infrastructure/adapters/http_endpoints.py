@@ -190,11 +190,7 @@ async def validate_token(
                 email=result.user.email,
                 roles=list(result.user.roles),
                 permissions=list(result.user.permissions),
-                expires_at=(
-                    result.user.expires_at.isoformat()
-                    if result.user.expires_at
-                    else None
-                ),
+                expires_at=(result.user.expires_at.isoformat() if result.user.expires_at else None),
             )
         else:
             return ValidateTokenResponse(valid=False)

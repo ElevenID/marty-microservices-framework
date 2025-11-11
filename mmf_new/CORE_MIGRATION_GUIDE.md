@@ -9,6 +9,7 @@ The new core framework provides foundational components for building microservic
 ### 1. Domain Layer
 
 #### Entity Base Class
+
 ```python
 from mmf_new.core.domain.entity import Entity, AggregateRoot
 from uuid import UUID
@@ -26,6 +27,7 @@ class User(Entity):
 ```
 
 #### Repository Interface
+
 ```python
 from mmf_new.core.domain.repository import Repository
 from uuid import UUID
@@ -45,6 +47,7 @@ class UserRepository(Repository[User]):
 ### 2. Application Layer
 
 #### Use Cases
+
 ```python
 from mmf_new.core.application.base import UseCase, ValidationError
 from dataclasses import dataclass
@@ -88,6 +91,7 @@ class CreateUserUseCase(UseCase[CreateUserRequest, CreateUserResponse]):
 ### 3. Infrastructure Layer
 
 #### Database Configuration
+
 ```python
 from mmf_new.core.infrastructure.database import DatabaseConfig
 from mmf_new.core.infrastructure.sqlalchemy_manager import SQLAlchemyDatabaseManager
@@ -107,6 +111,7 @@ await db_manager.initialize()
 ```
 
 #### Repository Implementation
+
 ```python
 from mmf_new.core.infrastructure.sqlalchemy_manager import SQLAlchemyDatabaseManager
 from sqlalchemy import select

@@ -27,7 +27,6 @@ from ..api import ComplianceFramework
 
 # External dependencies
 try:
-
     ASYNC_AVAILABLE = True
     REDIS_AVAILABLE = True
 except ImportError:

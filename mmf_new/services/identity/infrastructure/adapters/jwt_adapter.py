@@ -92,9 +92,7 @@ class JWTTokenProvider(TokenProvider):
 
             # Calculate expiration time
             if expires_at is None:
-                expires_at = now + timedelta(
-                    minutes=self._config.access_token_expire_minutes
-                )
+                expires_at = now + timedelta(minutes=self._config.access_token_expire_minutes)
 
             # Ensure timezone awareness
             if expires_at.tzinfo is None:
@@ -134,9 +132,7 @@ class JWTTokenProvider(TokenProvider):
                 payload.update(additional_claims)
 
             # Create and return token
-            return jwt.encode(
-                payload, self._config.secret_key, algorithm=self._config.algorithm
-            )
+            return jwt.encode(payload, self._config.secret_key, algorithm=self._config.algorithm)
 
         except Exception as error:
             raise TokenCreationError(f"Failed to create JWT token: {error}") from error
@@ -230,9 +226,7 @@ class JWTTokenProvider(TokenProvider):
         except Exception as error:
             raise TokenValidationError(f"Token validation failed: {error}") from error
 
-    async def refresh_token(
-        self, token: str, new_expires_at: datetime | None = None
-    ) -> str:
+    async def refresh_token(self, token: str, new_expires_at: datetime | None = None) -> str:
         """
         Refresh an existing JWT token with new expiration.
 

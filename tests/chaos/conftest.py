@@ -21,6 +21,7 @@ import requests
 
 class ChaosType(Enum):
     """Types of chaos engineering experiments."""
+
     NETWORK_PARTITION = "network_partition"
     POD_FAILURE = "pod_failure"
     RESOURCE_EXHAUSTION = "resource_exhaustion"
@@ -32,6 +33,7 @@ class ChaosType(Enum):
 @dataclass
 class ChaosExperiment:
     """Container for chaos experiment configuration."""
+
     name: str
     chaos_type: ChaosType
     target: str
@@ -45,13 +47,13 @@ class ChaosExperiment:
 def chaos_config():
     """Configuration for chaos engineering experiments."""
     return {
-        'target_namespace': 'mmf-system',
-        'target_service': 'identity-service',
-        'experiment_duration': 60,  # seconds
-        'recovery_timeout': 300,    # seconds
-        'health_check_interval': 5,  # seconds
-        'success_threshold': 0.95,  # 95% success rate
-        'max_response_time': 5.0,   # seconds
+        "target_namespace": "mmf-system",
+        "target_service": "identity-service",
+        "experiment_duration": 60,  # seconds
+        "recovery_timeout": 300,  # seconds
+        "health_check_interval": 5,  # seconds
+        "success_threshold": 0.95,  # 95% success rate
+        "max_response_time": 5.0,  # seconds
     }
 
 
@@ -63,20 +65,20 @@ def kubernetes_chaos():
         """Kill a random pod matching the label selector."""
         try:
             # Get pods
-            result = subprocess.run([
-                'kubectl', 'get', 'pods', '-n', namespace,
-                '-l', label_selector, '-o', 'name'
-            ], capture_output=True, text=True, check=True)
+            result = subprocess.run(
+                ["kubectl", "get", "pods", "-n", namespace, "-l", label_selector, "-o", "name"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
 
-            pods = result.stdout.strip().split('\n')
-            if not pods or pods == ['']:
+            pods = result.stdout.strip().split("\n")
+            if not pods or pods == [""]:
                 return "No pods found"
 
             # Kill random pod
             target_pod = random.choice(pods)
-            subprocess.run([
-                'kubectl', 'delete', '-n', namespace, target_pod
-            ], check=True)
+            subprocess.run(["kubectl", "delete", "-n", namespace, target_pod], check=True)
 
             return f"Killed {target_pod}"
         except subprocess.CalledProcessError as e:
@@ -101,9 +103,9 @@ spec:
   egress: []
 """
         try:
-            proc = subprocess.Popen([
-                'kubectl', 'apply', '-f', '-'
-            ], stdin=subprocess.PIPE, text=True)
+            proc = subprocess.Popen(
+                ["kubectl", "apply", "-f", "-"], stdin=subprocess.PIPE, text=True
+            )
             proc.communicate(input=network_policy)
             return "Network partition created"
         except Exception as e:
@@ -112,10 +114,10 @@ spec:
     def remove_network_partition(namespace: str) -> str:
         """Remove network partition."""
         try:
-            subprocess.run([
-                'kubectl', 'delete', 'networkpolicy',
-                'chaos-network-partition', '-n', namespace
-            ], check=True)
+            subprocess.run(
+                ["kubectl", "delete", "networkpolicy", "chaos-network-partition", "-n", namespace],
+                check=True,
+            )
             return "Network partition removed"
         except subprocess.CalledProcessError:
             return "Network partition not found or already removed"
@@ -124,19 +126,19 @@ spec:
         """Inject CPU stress into a pod."""
         stress_command = f"stress --cpu 4 --timeout {duration}s"
         try:
-            subprocess.run([
-                'kubectl', 'exec', '-n', namespace, pod_name, '--',
-                'sh', '-c', stress_command
-            ], check=True)
+            subprocess.run(
+                ["kubectl", "exec", "-n", namespace, pod_name, "--", "sh", "-c", stress_command],
+                check=True,
+            )
             return f"CPU stress injected into {pod_name}"
         except subprocess.CalledProcessError as e:
             return f"Error injecting CPU stress: {e}"
 
     return {
-        'kill_pod': kill_random_pod,
-        'create_network_partition': create_network_partition,
-        'remove_network_partition': remove_network_partition,
-        'inject_cpu_stress': inject_cpu_stress
+        "kill_pod": kill_random_pod,
+        "create_network_partition": create_network_partition,
+        "remove_network_partition": remove_network_partition,
+        "inject_cpu_stress": inject_cpu_stress,
     }
 
 
@@ -153,46 +155,45 @@ def chaos_monitor():
 
         while time.time() < end_time:
             try:
-                response = requests.get(
-                    f"{service_url}/health",
-                    timeout=10
+                response = requests.get(f"{service_url}/health", timeout=10)
+                results.append(
+                    {
+                        "timestamp": time.time(),
+                        "status_code": response.status_code,
+                        "response_time": response.elapsed.total_seconds(),
+                        "success": response.status_code == 200,
+                    }
                 )
-                results.append({
-                    'timestamp': time.time(),
-                    'status_code': response.status_code,
-                    'response_time': response.elapsed.total_seconds(),
-                    'success': response.status_code == 200
-                })
             except Exception as e:
-                results.append({
-                    'timestamp': time.time(),
-                    'status_code': None,
-                    'response_time': None,
-                    'success': False,
-                    'error': str(e)
-                })
+                results.append(
+                    {
+                        "timestamp": time.time(),
+                        "status_code": None,
+                        "response_time": None,
+                        "success": False,
+                        "error": str(e),
+                    }
+                )
 
             time.sleep(interval)
 
         # Calculate metrics
         total_requests = len(results)
-        successful_requests = sum(1 for r in results if r['success'])
+        successful_requests = sum(1 for r in results if r["success"])
         success_rate = successful_requests / total_requests if total_requests > 0 else 0
 
-        response_times = [r['response_time'] for r in results if r['response_time']]
+        response_times = [r["response_time"] for r in results if r["response_time"]]
         avg_response_time = sum(response_times) / len(response_times) if response_times else 0
 
         return {
-            'total_requests': total_requests,
-            'successful_requests': successful_requests,
-            'success_rate': success_rate,
-            'avg_response_time': avg_response_time,
-            'results': results
+            "total_requests": total_requests,
+            "successful_requests": successful_requests,
+            "success_rate": success_rate,
+            "avg_response_time": avg_response_time,
+            "results": results,
         }
 
-    return {
-        'monitor_health': monitor_service_health
-    }
+    return {"monitor_health": monitor_service_health}
 
 
 @pytest.fixture
@@ -237,10 +238,7 @@ def fault_injection():
             requests.get = original_get
             requests.post = original_post
 
-    return {
-        'inject_latency': inject_latency,
-        'inject_errors': inject_errors
-    }
+    return {"inject_latency": inject_latency, "inject_errors": inject_errors}
 
 
 @pytest.fixture
@@ -272,6 +270,7 @@ def resilience_patterns():
 
     def test_retry_with_backoff(service_call, max_retries: int = 3, backoff_factor: float = 2.0):
         """Test retry with exponential backoff."""
+
         def retry_call():
             for attempt in range(max_retries + 1):
                 try:
@@ -279,7 +278,7 @@ def resilience_patterns():
                 except Exception as e:
                     if attempt == max_retries:
                         raise e
-                    time.sleep(backoff_factor ** attempt)
+                    time.sleep(backoff_factor**attempt)
 
         return retry_call
 
@@ -300,9 +299,9 @@ def resilience_patterns():
         return isolated_calls
 
     return {
-        'circuit_breaker': test_circuit_breaker,
-        'retry_with_backoff': test_retry_with_backoff,
-        'bulkhead_isolation': test_bulkhead_isolation
+        "circuit_breaker": test_circuit_breaker,
+        "retry_with_backoff": test_retry_with_backoff,
+        "bulkhead_isolation": test_bulkhead_isolation,
     }
 
 

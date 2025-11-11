@@ -131,16 +131,14 @@ class SecurityHardeningFramework:
                         action="add_standard",
                         result="failure",
                         threat_level=SecurityThreatLevel.LOW,
-                        details={"reason": f"Unknown compliance standard: {standard}"}
+                        details={"reason": f"Unknown compliance standard: {standard}"},
                     )
 
         # Initialize threat detection if configured
         self.threat_detection_enabled = self.config.get("threat_detection", {}).get("enabled", True)
 
     def authenticate_principal(
-        self,
-        credentials: dict[str, Any],
-        provider: str | None = None
+        self, credentials: dict[str, Any], provider: str | None = None
     ) -> SecurityPrincipal | None:
         """Authenticate a principal and create security context."""
         self.metrics["authentication_attempts"] += 1
@@ -156,7 +154,7 @@ class SecurityHardeningFramework:
                     type="user",
                     roles=set(auth_result.user.roles),
                     attributes=auth_result.user.attributes,
-                    identity_provider=provider or "local"
+                    identity_provider=provider or "local",
                 )
 
                 # Create session
@@ -171,7 +169,7 @@ class SecurityHardeningFramework:
                     action="authenticate",
                     result="success",
                     threat_level=SecurityThreatLevel.LOW,
-                    details={"provider": provider or "local"}
+                    details={"provider": provider or "local"},
                 )
 
                 return principal
@@ -186,8 +184,8 @@ class SecurityHardeningFramework:
                     threat_level=SecurityThreatLevel.MEDIUM,
                     details={
                         "reason": auth_result.error_message or "Authentication failed",
-                        "provider": provider or "local"
-                    }
+                        "provider": provider or "local",
+                    },
                 )
                 return None
 
@@ -199,7 +197,7 @@ class SecurityHardeningFramework:
                 action="authenticate",
                 result="error",
                 threat_level=SecurityThreatLevel.HIGH,
-                details={"error": str(e)}
+                details={"error": str(e)},
             )
             return None
 
@@ -208,7 +206,7 @@ class SecurityHardeningFramework:
         principal: SecurityPrincipal,
         resource: str,
         action: str,
-        context: dict[str, Any] | None = None
+        context: dict[str, Any] | None = None,
     ) -> SecurityDecision:
         """Authorize an action for a principal."""
         self.metrics["authorization_checks"] += 1
@@ -219,15 +217,12 @@ class SecurityHardeningFramework:
                 id=principal.id,
                 username=principal.id,
                 roles=list(principal.roles),
-                attributes=principal.attributes
+                attributes=principal.attributes,
             )
 
             # Create authorization context
             auth_context = AuthorizationContext(
-                user=user,
-                resource=resource,
-                action=action,
-                environment=context or {}
+                user=user, resource=resource, action=action, environment=context or {}
             )
 
             # Perform authorization
@@ -238,7 +233,7 @@ class SecurityHardeningFramework:
                 allowed=auth_result.allowed,
                 reason=auth_result.reason,
                 policies_evaluated=auth_result.policies_evaluated,
-                metadata=auth_result.metadata
+                metadata=auth_result.metadata,
             )
 
             # Log authorization event
@@ -248,11 +243,13 @@ class SecurityHardeningFramework:
                 resource=resource,
                 action=action,
                 result="success" if decision.allowed else "blocked",
-                threat_level=SecurityThreatLevel.LOW if decision.allowed else SecurityThreatLevel.MEDIUM,
+                threat_level=SecurityThreatLevel.LOW
+                if decision.allowed
+                else SecurityThreatLevel.MEDIUM,
                 details={
                     "reason": decision.reason,
-                    "policies_evaluated": decision.policies_evaluated
-                }
+                    "policies_evaluated": decision.policies_evaluated,
+                },
             )
 
             return decision
@@ -266,14 +263,14 @@ class SecurityHardeningFramework:
                 action=action,
                 result="error",
                 threat_level=SecurityThreatLevel.HIGH,
-                details={"error": str(e)}
+                details={"error": str(e)},
             )
 
             return SecurityDecision(
                 allowed=False,
                 reason=f"Authorization error: {str(e)}",
                 policies_evaluated=[],
-                metadata={"error": True}
+                metadata={"error": True},
             )
 
     def get_security_status(self) -> dict[str, Any]:
@@ -283,28 +280,28 @@ class SecurityHardeningFramework:
             component_status = {
                 "authenticator": {
                     "type": type(self.authenticator).__name__,
-                    "initialized": self._authenticator is not None
+                    "initialized": self._authenticator is not None,
                 },
                 "authorizer": {
                     "type": type(self.authorizer).__name__,
-                    "initialized": self._authorizer is not None
+                    "initialized": self._authorizer is not None,
                 },
                 "secret_manager": {
                     "type": type(self.secret_manager).__name__,
-                    "initialized": self._secret_manager is not None
+                    "initialized": self._secret_manager is not None,
                 },
                 "auditor": {
                     "type": type(self.auditor).__name__,
-                    "initialized": self._auditor is not None
+                    "initialized": self._auditor is not None,
                 },
                 "cache_manager": {
                     "type": type(self.cache_manager).__name__,
-                    "initialized": self._cache_manager is not None
+                    "initialized": self._cache_manager is not None,
                 },
                 "session_manager": {
                     "type": type(self.session_manager).__name__,
-                    "initialized": self._session_manager is not None
-                }
+                    "initialized": self._session_manager is not None,
+                },
             }
 
             # Security metrics
@@ -319,14 +316,16 @@ class SecurityHardeningFramework:
                 if event_type not in event_summary:
                     event_summary[event_type] = {"count": 0, "last_seen": None}
                 event_summary[event_type]["count"] += 1
-                if (event_summary[event_type]["last_seen"] is None or
-                    event.timestamp > event_summary[event_type]["last_seen"]):
+                if (
+                    event_summary[event_type]["last_seen"] is None
+                    or event.timestamp > event_summary[event_type]["last_seen"]
+                ):
                     event_summary[event_type]["last_seen"] = event.timestamp
 
             # Compliance status
             compliance_info = {
                 "standards": [s.value for s in self.compliance_standards],
-                "status": self.compliance_status.copy()
+                "status": self.compliance_status.copy(),
             }
 
             return {
@@ -337,7 +336,7 @@ class SecurityHardeningFramework:
                 "recent_events_summary": event_summary,
                 "compliance": compliance_info,
                 "threat_detection_enabled": self.threat_detection_enabled,
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
         except (ValueError, KeyError, AttributeError) as e:
@@ -345,14 +344,11 @@ class SecurityHardeningFramework:
                 "service": self.service_name,
                 "framework_status": "error",
                 "error": str(e),
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
     def get_security_events(
-        self,
-        event_type: str | None = None,
-        limit: int = 100,
-        since: datetime | None = None
+        self, event_type: str | None = None, limit: int = 100, since: datetime | None = None
     ) -> list[SecurityEvent]:
         """Get security events with optional filtering."""
         events = list(self.security_events)
@@ -374,7 +370,7 @@ class SecurityHardeningFramework:
             original_count = len(self.security_events)
             self.security_events = deque(
                 [e for e in self.security_events if e.timestamp >= before],
-                maxlen=self.security_events.maxlen
+                maxlen=self.security_events.maxlen,
             )
             return original_count - len(self.security_events)
         else:
@@ -393,7 +389,7 @@ class SecurityHardeningFramework:
             "secret_management_enabled": self._secret_manager is not None,
             "audit_logging_enabled": self._auditor is not None,
             "session_management_enabled": self._session_manager is not None,
-            "threat_detection_enabled": self.threat_detection_enabled
+            "threat_detection_enabled": self.threat_detection_enabled,
         }
 
         passed_checks = sum(checks.values())
@@ -406,7 +402,7 @@ class SecurityHardeningFramework:
             "passed": compliance_score >= 0.8,  # 80% threshold
             "checks": checks,
             "summary": f"{passed_checks}/{total_checks} checks passed",
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         # Update compliance status
@@ -423,8 +419,8 @@ class SecurityHardeningFramework:
             details={
                 "framework": framework.value,
                 "score": compliance_score,
-                "passed": result["passed"]
-            }
+                "passed": result["passed"],
+            },
         )
 
         return result
@@ -437,7 +433,7 @@ class SecurityHardeningFramework:
         action: str,
         result: str,
         threat_level: SecurityThreatLevel,
-        details: dict[str, Any] | None = None
+        details: dict[str, Any] | None = None,
     ) -> None:
         """Log security event for audit and monitoring."""
         # Map threat level to severity
@@ -445,15 +441,19 @@ class SecurityHardeningFramework:
             SecurityThreatLevel.LOW: SecurityEventSeverity.LOW,
             SecurityThreatLevel.MEDIUM: SecurityEventSeverity.MEDIUM,
             SecurityThreatLevel.HIGH: SecurityEventSeverity.HIGH,
-            SecurityThreatLevel.CRITICAL: SecurityEventSeverity.CRITICAL
+            SecurityThreatLevel.CRITICAL: SecurityEventSeverity.CRITICAL,
         }
 
         # Map event types
         event_type_mapping = {
-            "authentication": SecurityEventType.AUTHENTICATION_SUCCESS if result == "success" else SecurityEventType.AUTHENTICATION_FAILURE,
-            "authorization": SecurityEventType.AUTHORIZATION_FAILURE if result == "blocked" else SecurityEventType.POLICY_VIOLATION,
+            "authentication": SecurityEventType.AUTHENTICATION_SUCCESS
+            if result == "success"
+            else SecurityEventType.AUTHENTICATION_FAILURE,
+            "authorization": SecurityEventType.AUTHORIZATION_FAILURE
+            if result == "blocked"
+            else SecurityEventType.POLICY_VIOLATION,
             "compliance_scan": SecurityEventType.CONFIGURATION_CHANGE,
-            "configuration_error": SecurityEventType.CONFIGURATION_CHANGE
+            "configuration_error": SecurityEventType.CONFIGURATION_CHANGE,
         }
 
         mapped_event_type = event_type_mapping.get(event_type, SecurityEventType.SYSTEM_ANOMALY)
@@ -466,11 +466,7 @@ class SecurityHardeningFramework:
             user_id=principal_id,
             resource=resource,
             action=action,
-            raw_data={
-                "result": result,
-                "threat_level": threat_level.value,
-                **(details or {})
-            }
+            raw_data={"result": result, "threat_level": threat_level.value, **(details or {})},
         )
 
         self.security_events.append(event)
@@ -483,24 +479,26 @@ class SecurityHardeningFramework:
         # Also log to auditor if available
         try:
             if self._auditor:
-                self.auditor.audit_event(event_type, {
-                    "event_id": event.event_id,
-                    "principal_id": principal_id,
-                    "resource": resource,
-                    "action": action,
-                    "result": result,
-                    "threat_level": threat_level.value,
-                    "details": details or {},
-                    "service": self.service_name
-                })
+                self.auditor.audit_event(
+                    event_type,
+                    {
+                        "event_id": event.event_id,
+                        "principal_id": principal_id,
+                        "resource": resource,
+                        "action": action,
+                        "result": result,
+                        "threat_level": threat_level.value,
+                        "details": details or {},
+                        "service": self.service_name,
+                    },
+                )
         except (ValueError, KeyError, AttributeError):
             # Don't fail if audit logging fails
             pass
 
 
 def create_security_framework(
-    service_name: str,
-    config: dict[str, Any] | None = None
+    service_name: str, config: dict[str, Any] | None = None
 ) -> SecurityHardeningFramework:
     """
     Create security hardening framework instance.

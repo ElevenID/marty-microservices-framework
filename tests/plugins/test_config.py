@@ -28,7 +28,6 @@ framework_path = Path(__file__).parent.parent.parent / "src"
 sys.path.insert(0, str(framework_path))
 
 
-
 class TestPluginConfigSection:
     """Test basic plugin configuration section."""
 

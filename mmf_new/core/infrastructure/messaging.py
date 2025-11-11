@@ -57,9 +57,7 @@ class CommandBus:
             return result
 
         except Exception as e:
-            logger.error(
-                f"Error handling command {getattr(command, 'request_id', 'unknown')}: {e}"
-            )
+            logger.error(f"Error handling command {getattr(command, 'request_id', 'unknown')}: {e}")
             execution_time = (datetime.now() - start_time).total_seconds() * 1000
 
             return CommandResult(
@@ -102,9 +100,7 @@ class QueryBus:
                 cache_key = self._generate_cache_key(query)
                 if cache_key in self._cache:
                     cached_result = self._cache[cache_key]
-                    execution_time = (
-                        datetime.now() - start_time
-                    ).total_seconds() * 1000
+                    execution_time = (datetime.now() - start_time).total_seconds() * 1000
                     cached_result.execution_time_ms = execution_time
                     return cached_result
 
@@ -132,9 +128,7 @@ class QueryBus:
             return result
 
         except Exception as e:
-            logger.error(
-                f"Error handling query {getattr(query, 'request_id', 'unknown')}: {e}"
-            )
+            logger.error(f"Error handling query {getattr(query, 'request_id', 'unknown')}: {e}")
             execution_time = (datetime.now() - start_time).total_seconds() * 1000
 
             return QueryResult(

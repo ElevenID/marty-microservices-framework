@@ -44,7 +44,7 @@ class SecurityStatusReporter:
                 "metrics": {},
                 "health_checks": {},
                 "alerts": [],
-                "recommendations": []
+                "recommendations": [],
             }
 
             # Component status
@@ -76,7 +76,7 @@ class SecurityStatusReporter:
                 "metrics": {},
                 "health_checks": {},
                 "alerts": [],
-                "recommendations": []
+                "recommendations": [],
             }
 
     def _get_component_status(self) -> dict[str, Any]:
@@ -90,14 +90,14 @@ class SecurityStatusReporter:
                 "type": type(authenticator).__name__,
                 "status": "active",
                 "initialized": True,
-                "details": self._get_authenticator_details(authenticator)
+                "details": self._get_authenticator_details(authenticator),
             }
         except Exception as e:
             components["authenticator"] = {
                 "type": "unknown",
                 "status": "error",
                 "initialized": False,
-                "error": str(e)
+                "error": str(e),
             }
 
         # Authorizer status
@@ -107,14 +107,14 @@ class SecurityStatusReporter:
                 "type": type(authorizer).__name__,
                 "status": "active",
                 "initialized": True,
-                "details": self._get_authorizer_details(authorizer)
+                "details": self._get_authorizer_details(authorizer),
             }
         except Exception as e:
             components["authorizer"] = {
                 "type": "unknown",
                 "status": "error",
                 "initialized": False,
-                "error": str(e)
+                "error": str(e),
             }
 
         # Secret Manager status
@@ -124,14 +124,14 @@ class SecurityStatusReporter:
                 "type": type(secret_manager).__name__,
                 "status": "active",
                 "initialized": True,
-                "details": self._get_secret_manager_details(secret_manager)
+                "details": self._get_secret_manager_details(secret_manager),
             }
         except Exception as e:
             components["secret_manager"] = {
                 "type": "unknown",
                 "status": "error",
                 "initialized": False,
-                "error": str(e)
+                "error": str(e),
             }
 
         # Auditor status
@@ -141,14 +141,14 @@ class SecurityStatusReporter:
                 "type": type(auditor).__name__,
                 "status": "active",
                 "initialized": True,
-                "details": self._get_auditor_details(auditor)
+                "details": self._get_auditor_details(auditor),
             }
         except Exception as e:
             components["auditor"] = {
                 "type": "unknown",
                 "status": "error",
                 "initialized": False,
-                "error": str(e)
+                "error": str(e),
             }
 
         # Cache Manager status
@@ -158,14 +158,14 @@ class SecurityStatusReporter:
                 "type": type(cache_manager).__name__,
                 "status": "active",
                 "initialized": True,
-                "details": self._get_cache_manager_details(cache_manager)
+                "details": self._get_cache_manager_details(cache_manager),
             }
         except Exception as e:
             components["cache_manager"] = {
                 "type": "unknown",
                 "status": "error",
                 "initialized": False,
-                "error": str(e)
+                "error": str(e),
             }
 
         # Session Manager status
@@ -175,14 +175,14 @@ class SecurityStatusReporter:
                 "type": type(session_manager).__name__,
                 "status": "active",
                 "initialized": True,
-                "details": self._get_session_manager_details(session_manager)
+                "details": self._get_session_manager_details(session_manager),
             }
         except Exception as e:
             components["session_manager"] = {
                 "type": "unknown",
                 "status": "error",
                 "initialized": False,
-                "error": str(e)
+                "error": str(e),
             }
 
         return components
@@ -192,14 +192,14 @@ class SecurityStatusReporter:
         details = {"features": []}
 
         # Check for common authenticator features
-        if hasattr(authenticator, 'supported_methods'):
-            details["supported_methods"] = getattr(authenticator, 'supported_methods', [])
+        if hasattr(authenticator, "supported_methods"):
+            details["supported_methods"] = getattr(authenticator, "supported_methods", [])
 
-        if hasattr(authenticator, 'password_policy'):
+        if hasattr(authenticator, "password_policy"):
             details["password_policy_enabled"] = True
 
-        if hasattr(authenticator, 'multi_factor_enabled'):
-            details["multi_factor_enabled"] = getattr(authenticator, 'multi_factor_enabled', False)
+        if hasattr(authenticator, "multi_factor_enabled"):
+            details["multi_factor_enabled"] = getattr(authenticator, "multi_factor_enabled", False)
 
         return details
 
@@ -208,14 +208,14 @@ class SecurityStatusReporter:
         details = {"features": []}
 
         # Check for role-based features
-        if hasattr(authorizer, 'roles'):
-            details["roles_count"] = len(getattr(authorizer, 'roles', {}))
+        if hasattr(authorizer, "roles"):
+            details["roles_count"] = len(getattr(authorizer, "roles", {}))
 
-        if hasattr(authorizer, 'permissions'):
-            details["permissions_count"] = len(getattr(authorizer, 'permissions', {}))
+        if hasattr(authorizer, "permissions"):
+            details["permissions_count"] = len(getattr(authorizer, "permissions", {}))
 
-        if hasattr(authorizer, 'policies'):
-            details["policies_count"] = len(getattr(authorizer, 'policies', {}))
+        if hasattr(authorizer, "policies"):
+            details["policies_count"] = len(getattr(authorizer, "policies", {}))
 
         return details
 
@@ -224,11 +224,11 @@ class SecurityStatusReporter:
         details = {"features": []}
 
         # Check for encryption features
-        if hasattr(secret_manager, 'encryption_enabled'):
-            details["encryption_enabled"] = getattr(secret_manager, 'encryption_enabled', False)
+        if hasattr(secret_manager, "encryption_enabled"):
+            details["encryption_enabled"] = getattr(secret_manager, "encryption_enabled", False)
 
-        if hasattr(secret_manager, 'rotation_enabled'):
-            details["rotation_enabled"] = getattr(secret_manager, 'rotation_enabled', False)
+        if hasattr(secret_manager, "rotation_enabled"):
+            details["rotation_enabled"] = getattr(secret_manager, "rotation_enabled", False)
 
         return details
 
@@ -237,11 +237,11 @@ class SecurityStatusReporter:
         details = {"features": []}
 
         # Check for audit features
-        if hasattr(auditor, 'storage_backend'):
-            details["storage_backend"] = getattr(auditor, 'storage_backend', 'unknown')
+        if hasattr(auditor, "storage_backend"):
+            details["storage_backend"] = getattr(auditor, "storage_backend", "unknown")
 
-        if hasattr(auditor, 'retention_policy'):
-            details["retention_policy"] = getattr(auditor, 'retention_policy', {})
+        if hasattr(auditor, "retention_policy"):
+            details["retention_policy"] = getattr(auditor, "retention_policy", {})
 
         return details
 
@@ -250,7 +250,7 @@ class SecurityStatusReporter:
         details = {"features": []}
 
         # Check for cache metrics
-        if hasattr(cache_manager, 'get_cache_metrics'):
+        if hasattr(cache_manager, "get_cache_metrics"):
             try:
                 metrics = cache_manager.get_cache_metrics()
                 details["cache_metrics"] = metrics
@@ -264,11 +264,11 @@ class SecurityStatusReporter:
         details = {"features": []}
 
         # Check for session features
-        if hasattr(session_manager, 'active_sessions_count'):
-            details["active_sessions"] = getattr(session_manager, 'active_sessions_count', 0)
+        if hasattr(session_manager, "active_sessions_count"):
+            details["active_sessions"] = getattr(session_manager, "active_sessions_count", 0)
 
-        if hasattr(session_manager, 'session_timeout'):
-            details["session_timeout"] = getattr(session_manager, 'session_timeout', 'unknown')
+        if hasattr(session_manager, "session_timeout"):
+            details["session_timeout"] = getattr(session_manager, "session_timeout", "unknown")
 
         return details
 
@@ -278,7 +278,7 @@ class SecurityStatusReporter:
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "uptime": "unknown",
             "performance": {},
-            "usage": {}
+            "usage": {},
         }
 
         # Try to collect performance metrics
@@ -287,7 +287,7 @@ class SecurityStatusReporter:
             metrics["performance"] = {
                 "authentication_latency_ms": "unknown",
                 "authorization_latency_ms": "unknown",
-                "cache_hit_rate": "unknown"
+                "cache_hit_rate": "unknown",
             }
         except Exception:
             pass
@@ -297,7 +297,7 @@ class SecurityStatusReporter:
             metrics["usage"] = {
                 "authentication_requests_per_minute": "unknown",
                 "authorization_requests_per_minute": "unknown",
-                "active_sessions": "unknown"
+                "active_sessions": "unknown",
             }
         except Exception:
             pass
@@ -333,13 +333,13 @@ class SecurityStatusReporter:
                 "status": "healthy",
                 "response_time_ms": "unknown",
                 "last_check": datetime.now(timezone.utc).isoformat(),
-                "details": "Authenticator responded correctly to health check"
+                "details": "Authenticator responded correctly to health check",
             }
         except Exception as e:
             return {
                 "status": "unhealthy",
                 "error": str(e),
-                "last_check": datetime.now(timezone.utc).isoformat()
+                "last_check": datetime.now(timezone.utc).isoformat(),
             }
 
     def _check_authorizer_health(self) -> dict[str, Any]:
@@ -352,13 +352,13 @@ class SecurityStatusReporter:
                 "status": "healthy",
                 "response_time_ms": "unknown",
                 "last_check": datetime.now(timezone.utc).isoformat(),
-                "details": "Authorizer is accessible and responding"
+                "details": "Authorizer is accessible and responding",
             }
         except Exception as e:
             return {
                 "status": "unhealthy",
                 "error": str(e),
-                "last_check": datetime.now(timezone.utc).isoformat()
+                "last_check": datetime.now(timezone.utc).isoformat(),
             }
 
     def _check_secret_manager_health(self) -> dict[str, Any]:
@@ -375,13 +375,13 @@ class SecurityStatusReporter:
                 "status": "healthy",
                 "response_time_ms": "unknown",
                 "last_check": datetime.now(timezone.utc).isoformat(),
-                "details": "Secret manager is accessible and responding"
+                "details": "Secret manager is accessible and responding",
             }
         except Exception as e:
             return {
                 "status": "unhealthy",
                 "error": str(e),
-                "last_check": datetime.now(timezone.utc).isoformat()
+                "last_check": datetime.now(timezone.utc).isoformat(),
             }
 
     def _check_cache_manager_health(self) -> dict[str, Any]:
@@ -394,13 +394,13 @@ class SecurityStatusReporter:
                 "status": "healthy",
                 "response_time_ms": "unknown",
                 "last_check": datetime.now(timezone.utc).isoformat(),
-                "details": "Cache manager is accessible and responding"
+                "details": "Cache manager is accessible and responding",
             }
         except Exception as e:
             return {
                 "status": "unhealthy",
                 "error": str(e),
-                "last_check": datetime.now(timezone.utc).isoformat()
+                "last_check": datetime.now(timezone.utc).isoformat(),
             }
 
     def _generate_alerts(self, status: dict[str, Any]) -> list[dict[str, Any]]:
@@ -410,26 +410,30 @@ class SecurityStatusReporter:
         # Check for component errors
         for component_name, component_info in status.get("components", {}).items():
             if component_info.get("status") == "error":
-                alerts.append({
-                    "severity": "high",
-                    "type": "component_error",
-                    "component": component_name,
-                    "message": f"Security component {component_name} is in error state",
-                    "details": component_info.get("error", "Unknown error"),
-                    "timestamp": datetime.now(timezone.utc).isoformat()
-                })
+                alerts.append(
+                    {
+                        "severity": "high",
+                        "type": "component_error",
+                        "component": component_name,
+                        "message": f"Security component {component_name} is in error state",
+                        "details": component_info.get("error", "Unknown error"),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                    }
+                )
 
         # Check for health check failures
         for check_name, check_info in status.get("health_checks", {}).items():
             if check_info.get("status") == "unhealthy":
-                alerts.append({
-                    "severity": "medium",
-                    "type": "health_check_failure",
-                    "component": check_name,
-                    "message": f"Health check failed for {check_name}",
-                    "details": check_info.get("error", "Health check failed"),
-                    "timestamp": datetime.now(timezone.utc).isoformat()
-                })
+                alerts.append(
+                    {
+                        "severity": "medium",
+                        "type": "health_check_failure",
+                        "component": check_name,
+                        "message": f"Health check failed for {check_name}",
+                        "details": check_info.get("error", "Health check failed"),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                    }
+                )
 
         return alerts
 
@@ -441,23 +445,30 @@ class SecurityStatusReporter:
         components = status.get("components", {})
         for component_name, component_info in components.items():
             if not component_info.get("initialized", False):
-                recommendations.append({
-                    "priority": "high",
-                    "category": "initialization",
-                    "component": component_name,
-                    "message": f"Initialize {component_name} for complete security coverage",
-                    "action": f"Ensure {component_name} is properly configured and initialized"
-                })
+                recommendations.append(
+                    {
+                        "priority": "high",
+                        "category": "initialization",
+                        "component": component_name,
+                        "message": f"Initialize {component_name} for complete security coverage",
+                        "action": f"Ensure {component_name} is properly configured and initialized",
+                    }
+                )
 
         # Check for missing features
-        if components.get("secret_manager", {}).get("details", {}).get("encryption_enabled") is False:
-            recommendations.append({
-                "priority": "medium",
-                "category": "security",
-                "component": "secret_manager",
-                "message": "Enable encryption for secret manager",
-                "action": "Configure encryption for stored secrets to enhance security"
-            })
+        if (
+            components.get("secret_manager", {}).get("details", {}).get("encryption_enabled")
+            is False
+        ):
+            recommendations.append(
+                {
+                    "priority": "medium",
+                    "category": "security",
+                    "component": "secret_manager",
+                    "message": "Enable encryption for secret manager",
+                    "action": "Configure encryption for stored secrets to enhance security",
+                }
+            )
 
         return recommendations
 
@@ -484,7 +495,9 @@ class SecurityStatusReporter:
         return "healthy"
 
 
-def create_status_reporter(bootstrap: SecurityHardeningFramework | None = None) -> SecurityStatusReporter:
+def create_status_reporter(
+    bootstrap: SecurityHardeningFramework | None = None,
+) -> SecurityStatusReporter:
     """
     Create a security status reporter instance.
 

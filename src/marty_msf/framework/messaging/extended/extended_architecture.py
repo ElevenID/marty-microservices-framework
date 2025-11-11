@@ -18,17 +18,19 @@ from typing import Any, Union
 # Enhanced Backend Types
 class MessageBackendType(Enum):
     """Extended message backend types."""
+
     MEMORY = "memory"
     RABBITMQ = "rabbitmq"
     REDIS = "redis"
     AWS_SQS = "aws_sqs"
     AWS_SNS = "aws_sns"  # New
-    NATS = "nats"        # New
+    NATS = "nats"  # New
     KAFKA = "kafka"
 
 
 class MessagingPattern(Enum):
     """Core messaging patterns supported."""
+
     PUBLISH_SUBSCRIBE = "pub_sub"
     REQUEST_RESPONSE = "req_resp"
     STREAM_PROCESSING = "streaming"
@@ -38,6 +40,7 @@ class MessagingPattern(Enum):
 
 class DeliveryGuarantee(Enum):
     """Message delivery guarantees."""
+
     AT_MOST_ONCE = "at_most_once"
     AT_LEAST_ONCE = "at_least_once"
     EXACTLY_ONCE = "exactly_once"
@@ -46,6 +49,7 @@ class DeliveryGuarantee(Enum):
 @dataclass
 class MessagingPatternConfig:
     """Configuration for specific messaging patterns."""
+
     pattern: MessagingPattern
     delivery_guarantee: DeliveryGuarantee = DeliveryGuarantee.AT_LEAST_ONCE
     timeout: timedelta = timedelta(seconds=30)
@@ -63,6 +67,7 @@ class MessagingPatternConfig:
 @dataclass
 class MessageMetadata:
     """Enhanced message metadata."""
+
     message_id: str
     correlation_id: str | None = None
     causation_id: str | None = None
@@ -87,10 +92,7 @@ class MessageMetadata:
 class GenericMessage(ABC):
     """Generic message interface for all messaging patterns."""
 
-    def __init__(self,
-                 payload: Any,
-                 metadata: MessageMetadata,
-                 pattern: MessagingPattern):
+    def __init__(self, payload: Any, metadata: MessageMetadata, pattern: MessagingPattern):
         self.payload = payload
         self.metadata = metadata
         self.pattern = pattern
@@ -123,17 +125,18 @@ class EnhancedMessageBackend(ABC):
         """Disconnect from message backend."""
 
     @abstractmethod
-    async def publish(self,
-                     topic: str,
-                     message: GenericMessage,
-                     pattern_config: MessagingPatternConfig) -> bool:
+    async def publish(
+        self, topic: str, message: GenericMessage, pattern_config: MessagingPatternConfig
+    ) -> bool:
         """Publish message using specified pattern."""
 
     @abstractmethod
-    async def subscribe(self,
-                       topic: str,
-                       handler: Callable[[GenericMessage], Awaitable[bool]],
-                       pattern_config: MessagingPatternConfig) -> str:
+    async def subscribe(
+        self,
+        topic: str,
+        handler: Callable[[GenericMessage], Awaitable[bool]],
+        pattern_config: MessagingPatternConfig,
+    ) -> str:
         """Subscribe to topic with pattern configuration."""
 
     @abstractmethod
@@ -141,16 +144,13 @@ class EnhancedMessageBackend(ABC):
         """Unsubscribe from topic."""
 
     @abstractmethod
-    async def request(self,
-                     topic: str,
-                     message: GenericMessage,
-                     timeout: timedelta = timedelta(seconds=30)) -> GenericMessage:
+    async def request(
+        self, topic: str, message: GenericMessage, timeout: timedelta = timedelta(seconds=30)
+    ) -> GenericMessage:
         """Send request and wait for response."""
 
     @abstractmethod
-    async def reply(self,
-                   original_message: GenericMessage,
-                   response: GenericMessage) -> bool:
+    async def reply(self, original_message: GenericMessage, response: GenericMessage) -> bool:
         """Reply to a request message."""
 
     @abstractmethod
@@ -167,62 +167,72 @@ class UnifiedEventBus(ABC):
     """Unified event bus supporting all messaging patterns."""
 
     @abstractmethod
-    async def publish_event(self,
-                           event_type: str,
-                           data: Any,
-                           metadata: MessageMetadata | None = None) -> bool:
+    async def publish_event(
+        self, event_type: str, data: Any, metadata: MessageMetadata | None = None
+    ) -> bool:
         """Publish domain event (pub/sub pattern)."""
 
     @abstractmethod
-    async def send_command(self,
-                          command_type: str,
-                          data: Any,
-                          target_service: str,
-                          metadata: MessageMetadata | None = None) -> bool:
+    async def send_command(
+        self,
+        command_type: str,
+        data: Any,
+        target_service: str,
+        metadata: MessageMetadata | None = None,
+    ) -> bool:
         """Send command (point-to-point pattern)."""
 
     @abstractmethod
-    async def query(self,
-                   query_type: str,
-                   data: Any,
-                   target_service: str,
-                   timeout: timedelta = timedelta(seconds=30)) -> Any:
+    async def query(
+        self,
+        query_type: str,
+        data: Any,
+        target_service: str,
+        timeout: timedelta = timedelta(seconds=30),
+    ) -> Any:
         """Send query and wait for response (request/response pattern)."""
 
     @abstractmethod
-    async def stream_events(self,
-                           stream_name: str,
-                           events: list[Any],
-                           partition_key: str | None = None) -> bool:
+    async def stream_events(
+        self, stream_name: str, events: list[Any], partition_key: str | None = None
+    ) -> bool:
         """Stream events for processing (streaming pattern)."""
 
     @abstractmethod
-    async def subscribe_to_events(self,
-                                 event_types: list[str],
-                                 handler: Callable[[str, Any, MessageMetadata], Awaitable[bool]],
-                                 consumer_group: str | None = None) -> str:
+    async def subscribe_to_events(
+        self,
+        event_types: list[str],
+        handler: Callable[[str, Any, MessageMetadata], Awaitable[bool]],
+        consumer_group: str | None = None,
+    ) -> str:
         """Subscribe to domain events."""
 
     @abstractmethod
-    async def handle_commands(self,
-                             command_types: list[str],
-                             handler: Callable[[str, Any, MessageMetadata], Awaitable[bool]],
-                             service_name: str) -> str:
+    async def handle_commands(
+        self,
+        command_types: list[str],
+        handler: Callable[[str, Any, MessageMetadata], Awaitable[bool]],
+        service_name: str,
+    ) -> str:
         """Handle incoming commands."""
 
     @abstractmethod
-    async def handle_queries(self,
-                            query_types: list[str],
-                            handler: Callable[[str, Any, MessageMetadata], Awaitable[Any]],
-                            service_name: str) -> str:
+    async def handle_queries(
+        self,
+        query_types: list[str],
+        handler: Callable[[str, Any, MessageMetadata], Awaitable[Any]],
+        service_name: str,
+    ) -> str:
         """Handle incoming queries."""
 
     @abstractmethod
-    async def process_stream(self,
-                            stream_name: str,
-                            processor: Callable[[list[Any]], Awaitable[bool]],
-                            consumer_group: str,
-                            batch_size: int = 100) -> str:
+    async def process_stream(
+        self,
+        stream_name: str,
+        processor: Callable[[list[Any]], Awaitable[bool]],
+        consumer_group: str,
+        batch_size: int = 100,
+    ) -> str:
         """Process event stream."""
 
 
@@ -230,6 +240,7 @@ class UnifiedEventBus(ABC):
 @dataclass
 class NATSConfig:
     """NATS-specific configuration."""
+
     servers: list[str] | None = None
     user: str | None = None
     password: str | None = None
@@ -247,6 +258,7 @@ class NATSConfig:
 @dataclass
 class AWSSNSConfig:
     """AWS SNS-specific configuration."""
+
     region_name: str = "us-east-1"
     aws_access_key_id: str | None = None
     aws_secret_access_key: str | None = None
@@ -261,11 +273,13 @@ class PatternSelector:
     """Helper class to select appropriate messaging patterns."""
 
     @staticmethod
-    def recommend_pattern(use_case: str,
-                         durability_required: bool = True,
-                         ordering_required: bool = False,
-                         response_needed: bool = False,
-                         high_throughput: bool = False) -> MessagingPattern:
+    def recommend_pattern(
+        use_case: str,
+        durability_required: bool = True,
+        ordering_required: bool = False,
+        response_needed: bool = False,
+        high_throughput: bool = False,
+    ) -> MessagingPattern:
         """Recommend messaging pattern based on use case characteristics."""
 
         if response_needed:
@@ -286,37 +300,39 @@ class PatternSelector:
         return MessagingPattern.PUBLISH_SUBSCRIBE  # Default
 
     @staticmethod
-    def recommend_backend(pattern: MessagingPattern,
-                         scale_requirements: str = "medium",
-                         cloud_preference: str = "agnostic") -> MessageBackendType:
+    def recommend_backend(
+        pattern: MessagingPattern,
+        scale_requirements: str = "medium",
+        cloud_preference: str = "agnostic",
+    ) -> MessageBackendType:
         """Recommend backend based on pattern and requirements."""
 
         pattern_backend_map = {
             MessagingPattern.PUBLISH_SUBSCRIBE: {
                 "low": MessageBackendType.REDIS,
                 "medium": MessageBackendType.NATS,
-                "high": MessageBackendType.KAFKA
+                "high": MessageBackendType.KAFKA,
             },
             MessagingPattern.REQUEST_RESPONSE: {
                 "low": MessageBackendType.NATS,
                 "medium": MessageBackendType.RABBITMQ,
-                "high": MessageBackendType.NATS
+                "high": MessageBackendType.NATS,
             },
             MessagingPattern.STREAM_PROCESSING: {
                 "low": MessageBackendType.REDIS,
                 "medium": MessageBackendType.KAFKA,
-                "high": MessageBackendType.KAFKA
+                "high": MessageBackendType.KAFKA,
             },
             MessagingPattern.POINT_TO_POINT: {
                 "low": MessageBackendType.RABBITMQ,
                 "medium": MessageBackendType.AWS_SQS,
-                "high": MessageBackendType.RABBITMQ
+                "high": MessageBackendType.RABBITMQ,
             },
             MessagingPattern.BROADCAST: {
                 "low": MessageBackendType.REDIS,
                 "medium": MessageBackendType.AWS_SNS,
-                "high": MessageBackendType.NATS
-            }
+                "high": MessageBackendType.NATS,
+            },
         }
 
         if cloud_preference == "aws":
@@ -336,32 +352,24 @@ class SagaEventBus:
         self.unified_bus = unified_bus
         self.saga_subscriptions: dict[str, str] = {}
 
-    async def publish_saga_event(self,
-                                saga_id: str,
-                                event_type: str,
-                                event_data: Any,
-                                step_id: str | None = None) -> bool:
+    async def publish_saga_event(
+        self, saga_id: str, event_type: str, event_data: Any, step_id: str | None = None
+    ) -> bool:
         """Publish saga-related event."""
         metadata = MessageMetadata(
             message_id=f"saga-{saga_id}-{datetime.utcnow().isoformat()}",
             correlation_id=saga_id,
             message_type=event_type,
-            headers={
-                "saga_id": saga_id,
-                "step_id": step_id,
-                "event_category": "saga"
-            }
+            headers={"saga_id": saga_id, "step_id": step_id, "event_category": "saga"},
         )
 
         return await self.unified_bus.publish_event(
-            event_type=f"saga.{event_type}",
-            data=event_data,
-            metadata=metadata
+            event_type=f"saga.{event_type}", data=event_data, metadata=metadata
         )
 
-    async def subscribe_to_saga_events(self,
-                                      saga_id: str,
-                                      handler: Callable[[str, Any], Awaitable[bool]]) -> str:
+    async def subscribe_to_saga_events(
+        self, saga_id: str, handler: Callable[[str, Any], Awaitable[bool]]
+    ) -> str:
         """Subscribe to events for a specific saga."""
 
         async def saga_handler(event_type: str, data: Any, metadata: MessageMetadata) -> bool:
@@ -370,36 +378,33 @@ class SagaEventBus:
             return True  # Ignore events for other sagas
 
         subscription_id = await self.unified_bus.subscribe_to_events(
-            event_types=[f"saga.{saga_id}.*"],
-            handler=saga_handler
+            event_types=[f"saga.{saga_id}.*"], handler=saga_handler
         )
 
         self.saga_subscriptions[saga_id] = subscription_id
         return subscription_id
 
-    async def send_saga_command(self,
-                               saga_id: str,
-                               command_type: str,
-                               command_data: Any,
-                               target_service: str,
-                               step_id: str | None = None) -> bool:
+    async def send_saga_command(
+        self,
+        saga_id: str,
+        command_type: str,
+        command_data: Any,
+        target_service: str,
+        step_id: str | None = None,
+    ) -> bool:
         """Send command as part of saga execution."""
         metadata = MessageMetadata(
             message_id=f"saga-cmd-{saga_id}-{datetime.utcnow().isoformat()}",
             correlation_id=saga_id,
             message_type=command_type,
-            headers={
-                "saga_id": saga_id,
-                "step_id": step_id,
-                "command_category": "saga"
-            }
+            headers={"saga_id": saga_id, "step_id": step_id, "command_category": "saga"},
         )
 
         return await self.unified_bus.send_command(
             command_type=f"saga.{command_type}",
             data=command_data,
             target_service=target_service,
-            metadata=metadata
+            metadata=metadata,
         )
 
 
@@ -408,36 +413,36 @@ PATTERN_DECISION_MATRIX = {
     "user_registration": {
         "pattern": MessagingPattern.PUBLISH_SUBSCRIBE,
         "backend": MessageBackendType.NATS,
-        "reason": "Multiple services need to react to user registration (email, analytics, etc.)"
+        "reason": "Multiple services need to react to user registration (email, analytics, etc.)",
     },
     "order_processing": {
         "pattern": MessagingPattern.STREAM_PROCESSING,
         "backend": MessageBackendType.KAFKA,
-        "reason": "High throughput, ordering matters, complex processing pipeline"
+        "reason": "High throughput, ordering matters, complex processing pipeline",
     },
     "payment_authorization": {
         "pattern": MessagingPattern.REQUEST_RESPONSE,
         "backend": MessageBackendType.NATS,
-        "reason": "Immediate response required, critical operation"
+        "reason": "Immediate response required, critical operation",
     },
     "inventory_update": {
         "pattern": MessagingPattern.POINT_TO_POINT,
         "backend": MessageBackendType.AWS_SQS,
-        "reason": "Single consumer, guaranteed delivery, idempotent operation"
+        "reason": "Single consumer, guaranteed delivery, idempotent operation",
     },
     "system_alerts": {
         "pattern": MessagingPattern.BROADCAST,
         "backend": MessageBackendType.AWS_SNS,
-        "reason": "All services/operators need immediate notification"
+        "reason": "All services/operators need immediate notification",
     },
     "data_analytics": {
         "pattern": MessagingPattern.STREAM_PROCESSING,
         "backend": MessageBackendType.KAFKA,
-        "reason": "Continuous data flow, replay capability, multiple consumers"
+        "reason": "Continuous data flow, replay capability, multiple consumers",
     },
     "task_queue": {
         "pattern": MessagingPattern.POINT_TO_POINT,
         "backend": MessageBackendType.RABBITMQ,
-        "reason": "Worker pools, priority queues, complex routing"
-    }
+        "reason": "Worker pools, priority queues, complex routing",
+    },
 }

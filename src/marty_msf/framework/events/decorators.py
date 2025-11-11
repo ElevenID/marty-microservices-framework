@@ -72,6 +72,7 @@ def audit_event(
     Returns:
         Decorated function that publishes audit events
     """
+
     def decorator(func: F) -> F:
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
@@ -98,13 +99,13 @@ def audit_event(
                         "action": action,
                         "resource_type": resource_type,
                         "resource_id": resource_id,
-                        "outcome": "success"
+                        "outcome": "success",
                     }
 
                     if include_args:
                         event_data["arguments"] = {
                             "args": [str(arg) for arg in args],
-                            "kwargs": {k: str(v) for k, v in kwargs.items()}
+                            "kwargs": {k: str(v) for k, v in kwargs.items()},
                         }
 
                     if include_result:
@@ -118,8 +119,8 @@ def audit_event(
                             event_id=str(uuid.uuid4()),
                             event_type=f"audit.{event_type.value}",
                             timestamp=datetime.now(timezone.utc),
-                            priority=priority
-                        )
+                            priority=priority,
+                        ),
                     )
 
                     await event_bus.publish(event)
@@ -139,13 +140,13 @@ def audit_event(
                             "action": action,
                             "resource_type": resource_type,
                             "outcome": "failure",
-                            "error": str(e)
+                            "error": str(e),
                         }
 
                         if include_args:
                             event_data["arguments"] = {
                                 "args": [str(arg) for arg in args],
-                                "kwargs": {k: str(v) for k, v in kwargs.items()}
+                                "kwargs": {k: str(v) for k, v in kwargs.items()},
                             }
 
                         event = BaseEvent(
@@ -155,8 +156,8 @@ def audit_event(
                                 event_id=str(uuid.uuid4()),
                                 event_type=f"audit.{event_type.value}",
                                 timestamp=datetime.now(timezone.utc),
-                                priority=EventPriority.HIGH  # Failures are high priority
-                            )
+                                priority=EventPriority.HIGH,  # Failures are high priority
+                            ),
                         )
 
                         await event_bus.publish(event)
@@ -168,6 +169,7 @@ def audit_event(
                 raise
 
         return wrapper
+
     return decorator
 
 
@@ -191,6 +193,7 @@ def domain_event(
     Returns:
         Decorated function that publishes domain events
     """
+
     def decorator(func: F) -> F:
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
@@ -226,8 +229,8 @@ def domain_event(
                         event_type=f"domain.{aggregate_type}.{event_type}",
                         timestamp=datetime.now(timezone.utc),
                         correlation_id=aggregate_id,
-                        priority=priority
-                    )
+                        priority=priority,
+                    ),
                 )
 
                 await event_bus.publish(event)
@@ -238,6 +241,7 @@ def domain_event(
             return result
 
         return wrapper
+
     return decorator
 
 
@@ -257,6 +261,7 @@ def publish_on_success(
     Returns:
         Decorated function that publishes events on success
     """
+
     def decorator(func: F) -> F:
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
@@ -278,8 +283,8 @@ def publish_on_success(
                         event_id=str(uuid.uuid4()),
                         event_type=event_type,
                         timestamp=datetime.now(timezone.utc),
-                        priority=priority
-                    )
+                        priority=priority,
+                    ),
                 )
 
                 await event_bus.publish(event)
@@ -290,6 +295,7 @@ def publish_on_success(
             return result
 
         return wrapper
+
     return decorator
 
 
@@ -309,6 +315,7 @@ def publish_on_error(
     Returns:
         Decorated function that publishes events on error
     """
+
     def decorator(func: F) -> F:
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
@@ -325,7 +332,7 @@ def publish_on_error(
                         event_data = {
                             "method": func.__name__,
                             "error": str(e),
-                            "error_type": type(e).__name__
+                            "error_type": type(e).__name__,
                         }
 
                     event = BaseEvent(
@@ -335,8 +342,8 @@ def publish_on_error(
                             event_id=str(uuid.uuid4()),
                             event_type=event_type,
                             timestamp=datetime.now(timezone.utc),
-                            priority=priority
-                        )
+                            priority=priority,
+                        ),
                     )
 
                     await event_bus.publish(event)
@@ -348,6 +355,7 @@ def publish_on_error(
                 raise
 
         return wrapper
+
     return decorator
 
 

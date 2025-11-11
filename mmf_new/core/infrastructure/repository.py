@@ -64,12 +64,8 @@ class SQLAlchemyRepository(Repository[ModelType], Generic[ModelType]):
                 await session.refresh(entity)
                 return entity
             except IntegrityError as e:
-                logger.error(
-                    "Integrity error saving %s: %s", self.model_class.__name__, e
-                )
-                raise EntityConflictError(
-                    f"Entity conflicts with existing data: {e}"
-                ) from e
+                logger.error("Integrity error saving %s: %s", self.model_class.__name__, e)
+                raise EntityConflictError(f"Entity conflicts with existing data: {e}") from e
             except Exception as e:
                 logger.error("Error saving %s: %s", self.model_class.__name__, e)
                 raise RepositoryError(f"Error saving entity: {e}") from e
@@ -220,9 +216,7 @@ class SQLAlchemyRepository(Repository[ModelType], Generic[ModelType]):
                 raise RepositoryError(f"Error counting entities: {e}") from e
 
 
-class SQLAlchemyDomainRepository(
-    SQLAlchemyRepository[ModelType], DomainRepository[ModelType]
-):
+class SQLAlchemyDomainRepository(SQLAlchemyRepository[ModelType], DomainRepository[ModelType]):
     """SQLAlchemy implementation with domain-specific methods."""
 
     async def create(self, data: dict[str, Any]) -> ModelType:
@@ -244,9 +238,7 @@ class SQLAlchemyDomainRepository(
                 return entity
 
             except IntegrityError as e:
-                logger.error(
-                    "Integrity error creating %s: %s", self.model_class.__name__, e
-                )
+                logger.error("Integrity error creating %s: %s", self.model_class.__name__, e)
                 raise EntityConflictError(
                     f"Entity already exists or violates constraints: {e}"
                 ) from e
@@ -294,9 +286,7 @@ class SQLAlchemyDomainRepository(
                 return list(result.scalars().all())
 
             except Exception as e:
-                logger.error(
-                    "Error finding %s by criteria: %s", self.model_class.__name__, e
-                )
+                logger.error("Error finding %s by criteria: %s", self.model_class.__name__, e)
                 raise RepositoryError(f"Error finding entities by criteria: {e}") from e
 
     async def find_one_by_criteria(self, criteria: dict[str, Any]) -> ModelType | None:
@@ -365,12 +355,8 @@ class SQLAlchemyDomainRepository(
                 return list(result.scalars().all())
 
             except Exception as e:
-                logger.error(
-                    "Error finding %s with pagination: %s", self.model_class.__name__, e
-                )
-                raise RepositoryError(
-                    f"Error finding entities with pagination: {e}"
-                ) from e
+                logger.error("Error finding %s with pagination: %s", self.model_class.__name__, e)
+                raise RepositoryError(f"Error finding entities with pagination: {e}") from e
 
     async def count_by_criteria(self, criteria: dict[str, Any] | None = None) -> int:
         """Count entities matching criteria."""
@@ -413,12 +399,8 @@ class SQLAlchemyDomainRepository(
                 return result.scalar_one()
 
             except Exception as e:
-                logger.error(
-                    "Error counting %s by criteria: %s", self.model_class.__name__, e
-                )
-                raise RepositoryError(
-                    f"Error counting entities by criteria: {e}"
-                ) from e
+                logger.error("Error counting %s by criteria: %s", self.model_class.__name__, e)
+                raise RepositoryError(f"Error counting entities by criteria: {e}") from e
 
     async def bulk_create(self, entities_data: list[dict[str, Any]]) -> list[ModelType]:
         """Create multiple entities in bulk."""
@@ -439,12 +421,8 @@ class SQLAlchemyDomainRepository(
                 return entities
 
             except IntegrityError as e:
-                logger.error(
-                    "Integrity error bulk creating %s: %s", self.model_class.__name__, e
-                )
-                raise EntityConflictError(
-                    f"Bulk create violates constraints: {e}"
-                ) from e
+                logger.error("Integrity error bulk creating %s: %s", self.model_class.__name__, e)
+                raise EntityConflictError(f"Bulk create violates constraints: {e}") from e
             except Exception as e:
                 logger.error("Error bulk creating %s: %s", self.model_class.__name__, e)
                 raise RepositoryError(f"Error bulk creating entities: {e}") from e

@@ -300,21 +300,25 @@ Configure PyCharm to recognize Marty projects:
 ### Common Issues
 
 1. **Template not found**
+
    ```bash
    marty templates  # Check available templates
    ```
 
 2. **Permission denied**
+
    ```bash
    sudo chown -R $USER ~/.marty/  # Fix permissions
    ```
 
 3. **Docker build fails**
+
    ```bash
    marty build --no-cache  # Clear Docker cache
    ```
 
 4. **Service won't start**
+
    ```bash
    marty info --status     # Check service status
    marty run --debug       # Enable debug mode

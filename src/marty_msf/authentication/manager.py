@@ -91,10 +91,17 @@ class SecurityServiceFactory:
         bootstrap = create_security_framework(service_name, self.config)
         bootstrap.initialize_security()
 
-        logger.info("Core security services registered: %s",
-                   [ISecretManager.__name__, IAuthenticator.__name__,
-                    IAuthorizer.__name__, IAuditor.__name__,
-                    ICacheManager.__name__, ISessionManager.__name__])
+        logger.info(
+            "Core security services registered: %s",
+            [
+                ISecretManager.__name__,
+                IAuthenticator.__name__,
+                IAuthorizer.__name__,
+                IAuditor.__name__,
+                ICacheManager.__name__,
+                ISessionManager.__name__,
+            ],
+        )
 
     def _initialize_monitoring_services(self) -> None:
         """Initialize security monitoring services."""
@@ -109,16 +116,23 @@ class SecurityServiceFactory:
             event_collector=event_collector,
             analytics_engine=analytics_engine,
             siem_integration=siem_integration,
-            dashboard=dashboard
+            dashboard=dashboard,
         )
 
         # The monitoring system constructor already registers all components in DI
-        logger.info("Security monitoring services registered: %s",
-                    [type(monitoring_system).__name__])
-        logger.debug("Monitoring system components: %s",
-                   [SecurityEventCollector.__name__, SecurityAnalyticsEngine.__name__,
-                    SIEMIntegration.__name__, SecurityMonitoringDashboard.__name__,
-                    SecurityMonitoringSystem.__name__])
+        logger.info(
+            "Security monitoring services registered: %s", [type(monitoring_system).__name__]
+        )
+        logger.debug(
+            "Monitoring system components: %s",
+            [
+                SecurityEventCollector.__name__,
+                SecurityAnalyticsEngine.__name__,
+                SIEMIntegration.__name__,
+                SecurityMonitoringDashboard.__name__,
+                SecurityMonitoringSystem.__name__,
+            ],
+        )
 
     def get_core_security_services(self) -> tuple[IAuthenticator, IAuthorizer, ISecretManager]:
         """
@@ -128,11 +142,7 @@ class SecurityServiceFactory:
             Tuple of (authenticator, authorizer, secret_manager)
         """
         self._ensure_initialized()
-        return (
-            get_service(IAuthenticator),
-            get_service(IAuthorizer),
-            get_service(ISecretManager)
-        )
+        return (get_service(IAuthenticator), get_service(IAuthorizer), get_service(ISecretManager))
 
     def get_monitoring_system(self) -> SecurityMonitoringSystem:
         """
@@ -246,6 +256,7 @@ def reset_security_services() -> None:
 
 
 # Service health check functions
+
 
 def check_security_services_health() -> dict[str, bool | str]:
     """

@@ -101,7 +101,7 @@ class DependentService(BaseService):
         # Resolve all dependencies
         for _name, service_type in self._dependencies.items():
             service = get_service(service_type)
-            if hasattr(service, 'initialize') and not getattr(service, 'is_initialized', True):
+            if hasattr(service, "initialize") and not getattr(service, "is_initialized", True):
                 await service.initialize()
 
     async def _on_shutdown(self) -> None:

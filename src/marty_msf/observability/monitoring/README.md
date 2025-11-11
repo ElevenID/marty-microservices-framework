@@ -195,6 +195,7 @@ config.exclude_paths = ["/favicon.ico", "/robots.txt"]
 ### Default Service Metrics
 
 Automatically collected:
+
 - `requests_total` - Total number of requests
 - `request_duration_seconds` - Request duration histogram
 - `active_connections` - Number of active connections
@@ -231,6 +232,7 @@ await manager.collector.increment_counter(
 ### Built-in Health Checks
 
 #### Database Health Check
+
 ```python
 from marty_msf.framework.monitoring import DatabaseHealthCheck
 
@@ -239,6 +241,7 @@ manager.add_health_check(health_check)
 ```
 
 #### Redis Health Check
+
 ```python
 from marty_msf.framework.monitoring import RedisHealthCheck
 
@@ -247,6 +250,7 @@ manager.add_health_check(health_check)
 ```
 
 #### External Service Health Check
+
 ```python
 from marty_msf.framework.monitoring import ExternalServiceHealthCheck
 
@@ -458,6 +462,7 @@ The framework automatically provides monitoring endpoints:
 - `GET /health/detailed` - Detailed health information
 
 Example response:
+
 ```json
 {
   "service": "my-service",
@@ -489,6 +494,7 @@ Example response:
 - `GET /metrics` - Prometheus metrics
 
 Example output:
+
 ```
 # HELP microservice_requests_total Total number of requests
 # TYPE microservice_requests_total counter
@@ -568,6 +574,7 @@ async def shutdown():
 ### 1. Metric Naming
 
 Follow Prometheus naming conventions:
+
 ```python
 # Good
 user_registrations_total
@@ -583,6 +590,7 @@ payment_success_percentage
 ### 2. Label Usage
 
 Use labels for high-cardinality dimensions:
+
 ```python
 # Good - finite set of values
 labels={"method": "GET", "status": "200", "endpoint": "/api/users"}
@@ -640,6 +648,7 @@ AlertRule(
 ## 📦 Dependencies
 
 Required packages:
+
 ```bash
 # Core monitoring
 pip install prometheus_client
@@ -682,6 +691,7 @@ See `examples.py` for comprehensive usage examples:
 - Alerting and notifications
 
 Run examples:
+
 ```bash
 python -m framework.monitoring.examples
 ```
@@ -691,6 +701,7 @@ python -m framework.monitoring.examples
 ### Grafana Dashboards
 
 Use Prometheus metrics with Grafana:
+
 ```
 - Request rate: rate(microservice_requests_total[5m])
 - Error rate: rate(microservice_errors_total[5m]) / rate(microservice_requests_total[5m])
@@ -700,6 +711,7 @@ Use Prometheus metrics with Grafana:
 ### Alertmanager
 
 Configure Prometheus Alertmanager rules:
+
 ```yaml
 groups:
 - name: microservice_alerts

@@ -25,7 +25,6 @@ from prometheus_client import Counter, Histogram
 
 # External dependencies (optional)
 try:
-
     REDIS_AVAILABLE = True
 
     ANALYTICS_AVAILABLE = True

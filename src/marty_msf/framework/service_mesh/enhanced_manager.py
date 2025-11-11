@@ -26,7 +26,7 @@ class EnhancedServiceMeshManager:
         self,
         service_mesh_type: str = "istio",
         config: dict[str, Any] | None = None,
-        security_manager: Any | None = None
+        security_manager: Any | None = None,
     ):
         """
         Initialize EnhancedServiceMeshManager with security integration
@@ -57,15 +57,12 @@ class EnhancedServiceMeshManager:
                     ["istioctl", "version", "--remote=false"],
                     capture_output=True,
                     text=True,
-                    check=False
+                    check=False,
                 )
                 self.is_installed = result.returncode == 0
             elif self.service_mesh_type == "linkerd":
                 result = subprocess.run(
-                    ["linkerd", "version", "--client"],
-                    capture_output=True,
-                    text=True,
-                    check=False
+                    ["linkerd", "version", "--client"], capture_output=True, text=True, check=False
                 )
                 self.is_installed = result.returncode == 0
             else:
@@ -75,9 +72,7 @@ class EnhancedServiceMeshManager:
             self.is_installed = False
 
     async def deploy_service_mesh(
-        self,
-        namespace: str = "istio-system",
-        security_policies: list[dict[str, Any]] | None = None
+        self, namespace: str = "istio-system", security_policies: list[dict[str, Any]] | None = None
     ) -> bool:
         """
         Deploy service mesh with integrated security policies
@@ -123,18 +118,21 @@ class EnhancedServiceMeshManager:
         try:
             # Install Istio with security features enabled
             cmd = [
-                "istioctl", "install",
-                "--set", "values.global.meshConfig.defaultConfig.proxyStatsMatcher.inclusionRegexps=.*outlier_detection.*",
-                "--set", "values.pilot.env.EXTERNAL_ISTIOD=false",
-                "--set", "values.global.meshConfig.defaultConfig.discoveryRefreshDelay=10s",
-                "--set", "values.global.meshConfig.defaultConfig.proxyMetadata.ISTIO_META_DNS_CAPTURE=true",
-                "-y"
+                "istioctl",
+                "install",
+                "--set",
+                "values.global.meshConfig.defaultConfig.proxyStatsMatcher.inclusionRegexps=.*outlier_detection.*",
+                "--set",
+                "values.pilot.env.EXTERNAL_ISTIOD=false",
+                "--set",
+                "values.global.meshConfig.defaultConfig.discoveryRefreshDelay=10s",
+                "--set",
+                "values.global.meshConfig.defaultConfig.proxyMetadata.ISTIO_META_DNS_CAPTURE=true",
+                "-y",
             ]
 
             process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
 
             stdout, stderr = await process.communicate()
@@ -158,9 +156,7 @@ class EnhancedServiceMeshManager:
             # Pre-check
             check_cmd = ["linkerd", "check", "--pre"]
             process = await asyncio.create_subprocess_exec(
-                *check_cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                *check_cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
             stdout, stderr = await process.communicate()
 
@@ -171,9 +167,7 @@ class EnhancedServiceMeshManager:
             # Install Linkerd
             install_cmd = ["linkerd", "install"]
             process = await asyncio.create_subprocess_exec(
-                *install_cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                *install_cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
             stdout, stderr = await process.communicate()
 
@@ -184,7 +178,7 @@ class EnhancedServiceMeshManager:
                     *apply_cmd,
                     stdin=asyncio.subprocess.PIPE,
                     stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
+                    stderr=asyncio.subprocess.PIPE,
                 )
                 await apply_process.communicate(input=stdout)
 
@@ -202,11 +196,16 @@ class EnhancedServiceMeshManager:
     async def _enable_sidecar_injection(self, namespace: str) -> None:
         """Enable automatic sidecar injection for a namespace"""
         try:
-            cmd = ["kubectl", "label", "namespace", namespace, "istio-injection=enabled", "--overwrite"]
+            cmd = [
+                "kubectl",
+                "label",
+                "namespace",
+                namespace,
+                "istio-injection=enabled",
+                "--overwrite",
+            ]
             process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
             await process.communicate()
             logger.info(f"Enabled sidecar injection for namespace: {namespace}")
@@ -214,9 +213,7 @@ class EnhancedServiceMeshManager:
             logger.warning(f"Failed to enable sidecar injection: {e}")
 
     async def _apply_security_policies(
-        self,
-        security_policies: list[dict[str, Any]],
-        namespace: str
+        self, security_policies: list[dict[str, Any]], namespace: str
     ) -> None:
         """Apply security policies through the unified security framework"""
         if not self.security_manager:
@@ -242,10 +239,7 @@ class EnhancedServiceMeshManager:
             logger.error(f"Failed to apply security policies: {e}")
 
     async def enforce_runtime_policies(
-        self,
-        service_name: str,
-        namespace: str,
-        policies: list[dict[str, Any]]
+        self, service_name: str, namespace: str, policies: list[dict[str, Any]]
     ) -> bool:
         """
         Enforce runtime security policies for a specific service
@@ -278,12 +272,14 @@ class EnhancedServiceMeshManager:
                         "metadata": {
                             **policy.get("metadata", {}),
                             "target_service": service_name,
-                            "namespace": namespace
-                        }
+                            "namespace": namespace,
+                        },
                     }
 
                     await mesh_security.apply_traffic_policies([enhanced_policy], namespace)
-                    logger.info(f"Applied runtime policy for service {service_name}: {policy.get('metadata', {}).get('name', 'unnamed')}")
+                    logger.info(
+                        f"Applied runtime policy for service {service_name}: {policy.get('metadata', {}).get('name', 'unnamed')}"
+                    )
 
                 except Exception as policy_error:
                     logger.error(f"Failed to apply policy for {service_name}: {policy_error}")
@@ -324,33 +320,31 @@ class EnhancedServiceMeshManager:
 
         try:
             # Get access logs from Envoy sidecars
-            cmd = [
-                "kubectl", "logs",
-                "-l", "app=istio-proxy",
-                "-n", namespace,
-                "--tail=100"
-            ]
+            cmd = ["kubectl", "logs", "-l", "app=istio-proxy", "-n", namespace, "--tail=100"]
 
             process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
 
             stdout, stderr = await process.communicate()
 
             if process.returncode == 0:
                 # Parse access logs for security events
-                log_lines = stdout.decode().split('\n')
+                log_lines = stdout.decode().split("\n")
                 for line in log_lines:
-                    if any(indicator in line.lower() for indicator in ['denied', 'unauthorized', 'forbidden']):
-                        events.append({
-                            "timestamp": "now",  # Parse actual timestamp
-                            "type": "security_violation",
-                            "source": "istio",
-                            "message": line.strip(),
-                            "namespace": namespace
-                        })
+                    if any(
+                        indicator in line.lower()
+                        for indicator in ["denied", "unauthorized", "forbidden"]
+                    ):
+                        events.append(
+                            {
+                                "timestamp": "now",  # Parse actual timestamp
+                                "type": "security_violation",
+                                "source": "istio",
+                                "message": line.strip(),
+                                "namespace": namespace,
+                            }
+                        )
 
         except Exception as e:
             logger.error(f"Failed to get Istio security events: {e}")
@@ -366,9 +360,7 @@ class EnhancedServiceMeshManager:
             cmd = ["linkerd", "stat", "deploy", "-n", namespace, "--output", "json"]
 
             process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
 
             stdout, stderr = await process.communicate()
@@ -379,24 +371,22 @@ class EnhancedServiceMeshManager:
                 for stat in stats_data.get("rows", []):
                     # Check for security-related metrics
                     if stat.get("meshed", "") == "-":
-                        events.append({
-                            "timestamp": "now",
-                            "type": "mesh_injection_missing",
-                            "source": "linkerd",
-                            "message": f"Service {stat.get('name')} is not meshed",
-                            "namespace": namespace
-                        })
+                        events.append(
+                            {
+                                "timestamp": "now",
+                                "type": "mesh_injection_missing",
+                                "source": "linkerd",
+                                "message": f"Service {stat.get('name')} is not meshed",
+                                "namespace": namespace,
+                            }
+                        )
 
         except Exception as e:
             logger.error(f"Failed to get Linkerd security events: {e}")
 
         return events
 
-    def generate_deployment_script(
-        self,
-        service_name: str,
-        config: dict | None = None
-    ) -> str:
+    def generate_deployment_script(self, service_name: str, config: dict | None = None) -> str:
         """
         Generate deployment script with enhanced security integration
 
@@ -446,7 +436,7 @@ spec:
     matchLabels:
       app: {service_name}
   mtls:
-    mode: {security_config.get('mtls_mode', 'STRICT')}
+    mode: {security_config.get("mtls_mode", "STRICT")}
 ---
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
@@ -460,10 +450,10 @@ spec:
   rules:
   - from:
     - source:
-        principals: {json.dumps(security_config.get('allowed_principals', ['*']))}
+        principals: {json.dumps(security_config.get("allowed_principals", ["*"]))}
   - to:
     - operation:
-        methods: {json.dumps(security_config.get('allowed_methods', ['GET', 'POST']))}
+        methods: {json.dumps(security_config.get("allowed_methods", ["GET", "POST"]))}
 EOF
 
 # Apply rate limiting if configured
@@ -499,9 +489,9 @@ spec:
           value:
             stat_prefix: local_rate_limiter
             token_bucket:
-              max_tokens: {security_config['rate_limiting'].get('max_tokens', 100)}
-              tokens_per_fill: {security_config['rate_limiting'].get('tokens_per_fill', 100)}
-              fill_interval: {security_config['rate_limiting'].get('fill_interval', '60s')}
+              max_tokens: {security_config["rate_limiting"].get("max_tokens", 100)}
+              tokens_per_fill: {security_config["rate_limiting"].get("tokens_per_fill", 100)}
+              fill_interval: {security_config["rate_limiting"].get("fill_interval", "60s")}
 EOF
 """
 
@@ -511,12 +501,12 @@ kubectl wait --for=condition=available --timeout=300s deployment/{service_name}
 
 echo "✅ {service_name} deployed successfully with Istio security integration"
 echo "🔒 Security features enabled:"
-echo "  - mTLS: {security_config.get('mtls_mode', 'STRICT')}"
+echo "  - mTLS: {security_config.get("mtls_mode", "STRICT")}"
 echo "  - Authorization policies: ✓"
 """
 
         if security_config.get("rate_limiting"):
-            script += "echo \"  - Rate limiting: ✓\"\n"
+            script += 'echo "  - Rate limiting: ✓"\n'
 
         script += """
 echo ""
@@ -556,7 +546,7 @@ spec:
   podSelector:
     matchLabels:
       app: {service_name}
-  port: {config.get('port', 8080)}
+  port: {config.get("port", 8080)}
 ---
 apiVersion: policy.linkerd.io/v1beta1
 kind: ServerAuthorization
@@ -568,7 +558,7 @@ spec:
     name: {service_name}-server
   requiredRoutes:
   - pathRegex: ".*"
-    methods: {json.dumps(security_config.get('allowed_methods', ['GET', 'POST']))}
+    methods: {json.dumps(security_config.get("allowed_methods", ["GET", "POST"]))}
 EOF
 """
 
@@ -582,7 +572,7 @@ echo "  - Automatic mTLS: ✓"
 """
 
         if security_config.get("authorization_policies"):
-            script += "echo \"  - Authorization policies: ✓\"\n"
+            script += 'echo "  - Authorization policies: ✓"\n'
 
         script += """
 echo ""
@@ -608,7 +598,7 @@ linkerd stat deploy
             "namespace_secured": False,
             "mtls_enabled": False,
             "policies_applied": False,
-            "issues": []
+            "issues": [],
         }
 
         try:
@@ -641,9 +631,7 @@ linkerd stat deploy
             # Check sidecar injection
             cmd = ["kubectl", "get", "namespace", namespace, "-o", "json"]
             process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
             stdout, stderr = await process.communicate()
 
@@ -655,9 +643,7 @@ linkerd stat deploy
             # Check for PeerAuthentication policies
             cmd = ["kubectl", "get", "peerauthentication", "-n", namespace, "-o", "json"]
             process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
             stdout, stderr = await process.communicate()
 
@@ -668,9 +654,7 @@ linkerd stat deploy
             # Check for AuthorizationPolicy
             cmd = ["kubectl", "get", "authorizationpolicy", "-n", namespace, "-o", "json"]
             process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
             stdout, stderr = await process.communicate()
 
@@ -692,9 +676,7 @@ linkerd stat deploy
             # Check if services are meshed
             cmd = ["linkerd", "stat", "deploy", "-n", namespace, "--output", "json"]
             process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
             stdout, stderr = await process.communicate()
 
@@ -714,9 +696,7 @@ linkerd stat deploy
             # Check for ServerAuthorization policies
             cmd = ["kubectl", "get", "serverauthorization", "-n", namespace, "-o", "json"]
             process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
             stdout, stderr = await process.communicate()
 
@@ -733,9 +713,7 @@ linkerd stat deploy
     # Multi-Mesh Support Methods
 
     async def deploy_multi_mesh(
-        self,
-        mesh_configs: dict[str, dict[str, Any]],
-        namespace: str = "service-mesh"
+        self, mesh_configs: dict[str, dict[str, Any]], namespace: str = "service-mesh"
     ) -> dict[str, bool]:
         """
         Deploy multiple service mesh instances with cross-mesh communication
@@ -774,7 +752,7 @@ linkerd stat deploy
                             "type": mesh_config.get("type", "istio"),
                             "namespace": f"{namespace}-{mesh_name}",
                             "config": mesh_config,
-                            "status": "deployed"
+                            "status": "deployed",
                         }
                         logger.info(f"Successfully deployed mesh: {mesh_name}")
                     else:
@@ -793,7 +771,9 @@ linkerd stat deploy
             if self.policy_sync_enabled and len(successful_meshes) > 1:
                 await self._synchronize_cross_mesh_policies(successful_meshes)
 
-            logger.info(f"Multi-mesh deployment completed. Success: {len(successful_meshes)}/{len(mesh_configs)}")
+            logger.info(
+                f"Multi-mesh deployment completed. Success: {len(successful_meshes)}/{len(mesh_configs)}"
+            )
 
         except Exception as e:
             logger.error(f"Multi-mesh deployment failed: {e}")
@@ -801,10 +781,7 @@ linkerd stat deploy
         return deployment_results
 
     async def _deploy_single_mesh(
-        self,
-        mesh_name: str,
-        mesh_config: dict[str, Any],
-        namespace: str
+        self, mesh_name: str, mesh_config: dict[str, Any], namespace: str
     ) -> bool:
         """Deploy a single mesh instance"""
         try:
@@ -827,10 +804,7 @@ linkerd stat deploy
             return False
 
     async def _deploy_istio_instance(
-        self,
-        mesh_name: str,
-        mesh_config: dict[str, Any],
-        namespace: str
+        self, mesh_name: str, mesh_config: dict[str, Any], namespace: str
     ) -> bool:
         """Deploy a named Istio instance"""
         try:
@@ -841,14 +815,21 @@ linkerd stat deploy
 
             # Install Istio with multi-mesh configuration
             cmd = [
-                "istioctl", "install",
-                "--set", f"values.global.meshID={mesh_id}",
-                "--set", f"values.global.network={network_id}",
-                "--set", "values.pilot.env.EXTERNAL_ISTIOD=false",
-                "--set", f"values.global.meshConfig.defaultConfig.proxyMetadata.ISTIO_META_CLUSTER_ID={cluster_name}",
-                "--set", "values.pilot.env.ENABLE_CROSS_CLUSTER_WORKLOAD_ENTRY=true",
-                "--set", "values.global.meshConfig.enablePrometheusMerge=true",
-                "-y"
+                "istioctl",
+                "install",
+                "--set",
+                f"values.global.meshID={mesh_id}",
+                "--set",
+                f"values.global.network={network_id}",
+                "--set",
+                "values.pilot.env.EXTERNAL_ISTIOD=false",
+                "--set",
+                f"values.global.meshConfig.defaultConfig.proxyMetadata.ISTIO_META_CLUSTER_ID={cluster_name}",
+                "--set",
+                "values.pilot.env.ENABLE_CROSS_CLUSTER_WORKLOAD_ENTRY=true",
+                "--set",
+                "values.global.meshConfig.enablePrometheusMerge=true",
+                "-y",
             ]
 
             if mesh_config.get("custom_values"):
@@ -856,9 +837,7 @@ linkerd stat deploy
                     cmd.extend(["--set", f"{key}={value}"])
 
             process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
 
             stdout, stderr = await process.communicate()
@@ -882,10 +861,7 @@ linkerd stat deploy
             return False
 
     async def _deploy_linkerd_instance(
-        self,
-        mesh_name: str,
-        mesh_config: dict[str, Any],
-        namespace: str
+        self, mesh_name: str, mesh_config: dict[str, Any], namespace: str
     ) -> bool:
         """Deploy a named Linkerd instance"""
         try:
@@ -894,15 +870,16 @@ linkerd stat deploy
 
             # Install Linkerd control plane in specific namespace
             cmd = [
-                "linkerd", "install",
-                "--control-plane-namespace", namespace,
-                "--identity-trust-domain", f"{mesh_name}.local"
+                "linkerd",
+                "install",
+                "--control-plane-namespace",
+                namespace,
+                "--identity-trust-domain",
+                f"{mesh_name}.local",
             ]
 
             process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
 
             stdout, stderr = await process.communicate()
@@ -910,16 +887,21 @@ linkerd stat deploy
             if process.returncode == 0:
                 # Apply the installation
                 kubectl_process = await asyncio.create_subprocess_exec(
-                    "kubectl", "apply", "-f", "-",
+                    "kubectl",
+                    "apply",
+                    "-f",
+                    "-",
                     stdin=asyncio.subprocess.PIPE,
                     stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
+                    stderr=asyncio.subprocess.PIPE,
                 )
 
                 await kubectl_process.communicate(input=stdout)
 
                 if kubectl_process.returncode == 0:
-                    logger.info(f"Linkerd instance '{mesh_name}' installed successfully in namespace {namespace}")
+                    logger.info(
+                        f"Linkerd instance '{mesh_name}' installed successfully in namespace {namespace}"
+                    )
 
                     # Wait for control plane to be ready
                     await asyncio.sleep(30)  # Give Linkerd time to start
@@ -932,7 +914,9 @@ linkerd stat deploy
                     logger.error(f"Failed to apply Linkerd installation for {mesh_name}")
                     return False
             else:
-                logger.error(f"Linkerd installation generation failed for {mesh_name}: {stderr.decode()}")
+                logger.error(
+                    f"Linkerd installation generation failed for {mesh_name}: {stderr.decode()}"
+                )
                 return False
 
         except Exception as e:
@@ -946,8 +930,7 @@ linkerd stat deploy
 
             # For Istio meshes, create cross-network gateways
             istio_meshes = [
-                name for name in mesh_names
-                if self.mesh_deployments[name]["type"] == "istio"
+                name for name in mesh_names if self.mesh_deployments[name]["type"] == "istio"
             ]
 
             if len(istio_meshes) > 1:
@@ -991,10 +974,13 @@ spec:
 
                 # Apply gateway configuration
                 process = await asyncio.create_subprocess_exec(
-                    "kubectl", "apply", "-f", "-",
+                    "kubectl",
+                    "apply",
+                    "-f",
+                    "-",
                     stdin=asyncio.subprocess.PIPE,
                     stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
+                    stderr=asyncio.subprocess.PIPE,
                 )
 
                 await process.communicate(input=gateway_yaml.encode())
@@ -1034,7 +1020,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: ServiceEntry
 metadata:
   name: cross-mesh-{target_mesh}
-  namespace: {source_info['namespace']}
+  namespace: {source_info["namespace"]}
 spec:
   hosts:
   - {target_mesh}.local
@@ -1052,10 +1038,13 @@ spec:
 """
 
                 process = await asyncio.create_subprocess_exec(
-                    "kubectl", "apply", "-f", "-",
+                    "kubectl",
+                    "apply",
+                    "-f",
+                    "-",
                     stdin=asyncio.subprocess.PIPE,
                     stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
+                    stderr=asyncio.subprocess.PIPE,
                 )
 
                 await process.communicate(input=service_entry_yaml.encode())
@@ -1078,7 +1067,7 @@ spec:
             logger.info(f"Synchronizing security policies across {len(mesh_names)} meshes")
 
             # Get unified security policies from the security manager
-            if hasattr(self.security_manager, 'get_security_policies'):
+            if hasattr(self.security_manager, "get_security_policies"):
                 unified_policies = await self.security_manager.get_security_policies()
             else:
                 unified_policies = []
@@ -1098,9 +1087,7 @@ spec:
             logger.error(f"Failed to synchronize cross-mesh policies: {e}")
 
     async def _convert_policies_for_mesh(
-        self,
-        unified_policies: list[dict[str, Any]],
-        mesh_name: str
+        self, unified_policies: list[dict[str, Any]], mesh_name: str
     ) -> list[dict[str, Any]]:
         """Convert unified security policies to mesh-specific format"""
         mesh_info = self.mesh_deployments[mesh_name]
@@ -1121,9 +1108,7 @@ spec:
         return mesh_policies
 
     async def _convert_to_istio_policy(
-        self,
-        unified_policy: dict[str, Any],
-        mesh_name: str
+        self, unified_policy: dict[str, Any], mesh_name: str
     ) -> dict[str, Any] | None:
         """Convert unified policy to Istio AuthorizationPolicy format"""
         try:
@@ -1136,18 +1121,16 @@ spec:
                 "kind": "AuthorizationPolicy",
                 "metadata": {
                     "name": f"{unified_policy.get('name', 'policy')}-{mesh_name}",
-                    "namespace": namespace
+                    "namespace": namespace,
                 },
-                "spec": {
-                    "rules": []
-                }
+                "spec": {"rules": []},
             }
 
             # Convert rules
             for rule in unified_policy.get("rules", []):
                 istio_rule = {
                     "from": [{"source": {"principals": rule.get("principals", ["*"])}}],
-                    "to": [{"operation": {"methods": rule.get("methods", ["*"])}}]
+                    "to": [{"operation": {"methods": rule.get("methods", ["*"])}}],
                 }
 
                 if "paths" in rule:
@@ -1162,9 +1145,7 @@ spec:
             return None
 
     async def _convert_to_linkerd_policy(
-        self,
-        unified_policy: dict[str, Any],
-        mesh_name: str
+        self, unified_policy: dict[str, Any], mesh_name: str
     ) -> dict[str, Any] | None:
         """Convert unified policy to Linkerd ServerAuthorization format"""
         try:
@@ -1177,18 +1158,12 @@ spec:
                 "kind": "ServerAuthorization",
                 "metadata": {
                     "name": f"{unified_policy.get('name', 'policy')}-{mesh_name}",
-                    "namespace": namespace
+                    "namespace": namespace,
                 },
                 "spec": {
-                    "server": {
-                        "name": unified_policy.get("target_service", "default")
-                    },
-                    "client": {
-                        "meshTLS": {
-                            "identities": unified_policy.get("principals", ["*"])
-                        }
-                    }
-                }
+                    "server": {"name": unified_policy.get("target_service", "default")},
+                    "client": {"meshTLS": {"identities": unified_policy.get("principals", ["*"])}},
+                },
             }
 
             return linkerd_policy
@@ -1204,10 +1179,13 @@ spec:
                 policy_yaml = json.dumps(policy, indent=2)
 
                 process = await asyncio.create_subprocess_exec(
-                    "kubectl", "apply", "-f", "-",
+                    "kubectl",
+                    "apply",
+                    "-f",
+                    "-",
                     stdin=asyncio.subprocess.PIPE,
                     stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
+                    stderr=asyncio.subprocess.PIPE,
                 )
 
                 await process.communicate(input=policy_yaml.encode())
@@ -1239,9 +1217,7 @@ spec:
             # Check if namespace exists
             cmd = ["kubectl", "get", "namespace", namespace]
             process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
 
             stdout, stderr = await process.communicate()
@@ -1253,9 +1229,7 @@ spec:
             # Create namespace
             cmd = ["kubectl", "create", "namespace", namespace]
             process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
 
             stdout, stderr = await process.communicate()
@@ -1282,28 +1256,33 @@ apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
   name: allow-cross-mesh-{source_mesh}
-  namespace: {target_info['namespace']}
+  namespace: {target_info["namespace"]}
 spec:
   rules:
   - from:
     - source:
-        principals: ["cluster.local/ns/{self.mesh_deployments[source_mesh]['namespace']}/sa/*"]
+        principals: ["cluster.local/ns/{self.mesh_deployments[source_mesh]["namespace"]}/sa/*"]
   - to:
     - operation:
         methods: ["GET", "POST", "PUT", "DELETE"]
 """
 
                 process = await asyncio.create_subprocess_exec(
-                    "kubectl", "apply", "-f", "-",
+                    "kubectl",
+                    "apply",
+                    "-f",
+                    "-",
                     stdin=asyncio.subprocess.PIPE,
                     stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
+                    stderr=asyncio.subprocess.PIPE,
                 )
 
                 await process.communicate(input=policy_yaml.encode())
 
                 if process.returncode == 0:
-                    logger.info(f"Cross-mesh authorization policy created: {source_mesh} -> {target_mesh}")
+                    logger.info(
+                        f"Cross-mesh authorization policy created: {source_mesh} -> {target_mesh}"
+                    )
 
         except Exception as e:
             logger.error(f"Failed to create cross-mesh authorization policy: {e}")
@@ -1317,11 +1296,13 @@ spec:
                 name: {
                     "type": info["type"],
                     "namespace": info["namespace"],
-                    "status": info["status"]
+                    "status": info["status"],
                 }
                 for name, info in self.mesh_deployments.items()
             },
-            "cross_mesh_policies_count": sum(len(policies) for policies in self.cross_mesh_policies.values())
+            "cross_mesh_policies_count": sum(
+                len(policies) for policies in self.cross_mesh_policies.values()
+            ),
         }
 
     async def update_cross_mesh_policies(self, updated_policies: list[dict[str, Any]]) -> bool:

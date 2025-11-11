@@ -57,9 +57,7 @@ class FeatureStore(FeatureStoreInterface):
             logging.exception("Failed to register feature group: %s", e)
             return False
 
-    def get_online_features(
-        self, entity_id: str, feature_names: list[str]
-    ) -> dict[str, Any]:
+    def get_online_features(self, entity_id: str, feature_names: list[str]) -> dict[str, Any]:
         """Get online features for an entity."""
         with self._lock:
             entity_features = self.online_store.get(entity_id, {})
@@ -172,9 +170,7 @@ class FeatureStore(FeatureStoreInterface):
             self.feature_stats[feature_name] = stats
             return stats
 
-    def validate_features(
-        self, entity_id: str, features: dict[str, Any]
-    ) -> dict[str, list[str]]:
+    def validate_features(self, entity_id: str, features: dict[str, Any]) -> dict[str, list[str]]:
         """Validate features against registered schema."""
         validation_errors = defaultdict(list)
 

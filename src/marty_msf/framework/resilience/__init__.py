@@ -150,7 +150,6 @@ __all__ = [
     "timeout_async",
     "with_fallback",
     "with_timeout",
-
     # Connection pools and middleware
     "HTTPConnectionPool",
     "HTTPPoolConfig",
@@ -169,12 +168,10 @@ __all__ = [
     "close_all_pools",
     "get_resilience_service",
     "close_resilience_service",
-
     # Consolidated Resilience Manager (NEW)
     "ConsolidatedResilienceConfig",
     "ConsolidatedResilienceManager",
     "create_consolidated_resilience_manager",
-
     # API and Bootstrap Pattern (NEW)
     "IResilienceManager",
     "IResilienceService",

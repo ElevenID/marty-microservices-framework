@@ -60,9 +60,7 @@ class TestServiceManager:
 
         return bus
 
-    async def create_database_connection(
-        self, container: PostgresContainer
-    ) -> DatabaseConnection:
+    async def create_database_connection(self, container: PostgresContainer) -> DatabaseConnection:
         """Create a real database connection for testing."""
         connection_url = container.get_connection_url()
         db = DatabaseConnection(connection_url)
@@ -133,13 +131,9 @@ class MessageCapture:
 
         if data:
             matching_messages = [
-                msg
-                for msg in messages
-                if all(msg.data.get(k) == v for k, v in data.items())
+                msg for msg in messages if all(msg.data.get(k) == v for k, v in data.items())
             ]
-            assert (
-                len(matching_messages) > 0
-            ), f"No messages with matching data found: {data}"
+            assert len(matching_messages) > 0, f"No messages with matching data found: {data}"
 
     def assert_event_published(self, event_type: str, data: dict[str, Any] = None):
         """Assert that an event of given type was published."""
@@ -148,13 +142,9 @@ class MessageCapture:
 
         if data:
             matching_events = [
-                evt
-                for evt in events
-                if all(evt.data.get(k) == v for k, v in data.items())
+                evt for evt in events if all(evt.data.get(k) == v for k, v in data.items())
             ]
-            assert (
-                len(matching_events) > 0
-            ), f"No events with matching data found: {data}"
+            assert len(matching_events) > 0, f"No events with matching data found: {data}"
 
     def clear(self):
         """Clear all captured messages and events."""
@@ -186,9 +176,7 @@ class DatabaseTestHelper:
         # Build insert query from first record
         columns = list(data[0].keys())
         placeholders = ", ".join([f"${i + 1}" for i in range(len(columns))])
-        query = (
-            f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
-        )
+        query = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
 
         for record in data:
             values = [record[col] for col in columns]
@@ -197,22 +185,18 @@ class DatabaseTestHelper:
     async def assert_table_count(self, table_name: str, expected_count: int):
         """Assert the number of records in a table."""
         count = await self.db.fetch_val(f"SELECT COUNT(*) FROM {table_name}")
-        assert (
-            count == expected_count
-        ), f"Expected {expected_count} records in {table_name}, got {count}"
+        assert count == expected_count, (
+            f"Expected {expected_count} records in {table_name}, got {count}"
+        )
 
     async def assert_record_exists(self, table_name: str, conditions: dict[str, Any]):
         """Assert that a record exists with given conditions."""
-        where_clause = " AND ".join(
-            [f"{k} = ${i + 1}" for i, k in enumerate(conditions.keys())]
-        )
+        where_clause = " AND ".join([f"{k} = ${i + 1}" for i, k in enumerate(conditions.keys())])
         query = f"SELECT COUNT(*) FROM {table_name} WHERE {where_clause}"
         values = list(conditions.values())
 
         count = await self.db.fetch_val(query, *values)
-        assert (
-            count > 0
-        ), f"No record found in {table_name} with conditions {conditions}"
+        assert count > 0, f"No record found in {table_name} with conditions {conditions}"
 
     async def get_test_data(
         self, table_name: str, conditions: dict[str, Any] = None
@@ -276,16 +260,12 @@ class RedisTestHelper:
     async def assert_key_value(self, key: str, expected_value: Any):
         """Assert the value of a Redis key."""
         actual_value = await self.get_test_data(key)
-        assert (
-            actual_value == expected_value
-        ), f"Expected {expected_value}, got {actual_value}"
+        assert actual_value == expected_value, f"Expected {expected_value}, got {actual_value}"
 
     async def assert_list_length(self, key: str, expected_length: int):
         """Assert the length of a Redis list."""
         length = await self.redis.llen(key)
-        assert (
-            length == expected_length
-        ), f"Expected list length {expected_length}, got {length}"
+        assert length == expected_length, f"Expected list length {expected_length}, got {length}"
 
     async def cleanup_test_keys(self):
         """Clean up all test keys."""
@@ -333,9 +313,7 @@ class ConfigTestHelper:
                     os.environ[key] = original_value
 
     @staticmethod
-    def create_temp_config_file(
-        config_data: dict[str, Any], file_format: str = "yaml"
-    ) -> Path:
+    def create_temp_config_file(config_data: dict[str, Any], file_format: str = "yaml") -> Path:
         """Create a temporary configuration file."""
         suffix = f".{file_format}"
         temp_file = tempfile.NamedTemporaryFile(mode="w", suffix=suffix, delete=False)
@@ -376,18 +354,14 @@ class WorkflowTestHelper:
         actual_steps = [step["step"] for step in self.workflow_steps]
 
         for expected_step in expected_steps:
-            assert (
-                expected_step in actual_steps
-            ), f"Workflow step '{expected_step}' was not executed"
+            assert expected_step in actual_steps, (
+                f"Workflow step '{expected_step}' was not executed"
+            )
 
     def assert_step_order(self, step1: str, step2: str):
         """Assert that step1 happened before step2."""
-        step1_idx = next(
-            (i for i, s in enumerate(self.workflow_steps) if s["step"] == step1), None
-        )
-        step2_idx = next(
-            (i for i, s in enumerate(self.workflow_steps) if s["step"] == step2), None
-        )
+        step1_idx = next((i for i, s in enumerate(self.workflow_steps) if s["step"] == step1), None)
+        step2_idx = next((i for i, s in enumerate(self.workflow_steps) if s["step"] == step2), None)
 
         assert step1_idx is not None, f"Step '{step1}' not found"
         assert step2_idx is not None, f"Step '{step2}' not found"

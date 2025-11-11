@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 class AttributeType(Enum):
     """Types of attributes used in ABAC policies."""
+
     STRING = "string"
     INTEGER = "integer"
     BOOLEAN = "boolean"
@@ -32,6 +33,7 @@ class AttributeType(Enum):
 
 class PolicyEffect(Enum):
     """Policy evaluation effects."""
+
     ALLOW = "allow"
     DENY = "deny"
     AUDIT = "audit"  # Allow but log for audit
@@ -39,6 +41,7 @@ class PolicyEffect(Enum):
 
 class ConditionOperator(Enum):
     """Operators for attribute conditions."""
+
     EQUALS = "equals"
     NOT_EQUALS = "not_equals"
     GREATER_THAN = "greater_than"
@@ -134,7 +137,7 @@ class ABACPolicy:
     effect: PolicyEffect
     conditions: list[AttributeCondition] = field(default_factory=list)
     resource_pattern: str | None = None  # Pattern for resources this applies to
-    action_pattern: str | None = None    # Pattern for actions this applies to
+    action_pattern: str | None = None  # Pattern for actions this applies to
     priority: int = 100  # Lower number = higher priority
     is_active: bool = True
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -196,7 +199,7 @@ class ABACPolicy:
                     "attribute_path": c.attribute_path,
                     "operator": c.operator.value,
                     "value": c.value,
-                    "description": c.description
+                    "description": c.description,
                 }
                 for c in self.conditions
             ],
@@ -205,7 +208,7 @@ class ABACPolicy:
             "priority": self.priority,
             "is_active": self.is_active,
             "metadata": self.metadata,
-            "created_at": self.created_at.isoformat()
+            "created_at": self.created_at.isoformat(),
         }
 
 
@@ -213,10 +216,10 @@ class ABACPolicy:
 class ABACContext:
     """Context for ABAC policy evaluation."""
 
-    principal: dict[str, Any]      # Information about the principal (user/service)
-    resource: str                  # Resource being accessed
-    action: str                    # Action being performed
-    environment: dict[str, Any]    # Environmental context (time, location, etc.)
+    principal: dict[str, Any]  # Information about the principal (user/service)
+    resource: str  # Resource being accessed
+    action: str  # Action being performed
+    environment: dict[str, Any]  # Environmental context (time, location, etc.)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert context to dictionary for policy evaluation."""
@@ -224,7 +227,7 @@ class ABACContext:
             "principal": self.principal,
             "resource": self.resource,
             "action": self.action,
-            "environment": self.environment
+            "environment": self.environment,
         }
 
 
@@ -260,14 +263,14 @@ class ABACManager:
             name="Admin Full Access",
             description="Administrators have full access to all resources",
             effect=PolicyEffect.ALLOW,
-            priority=10
+            priority=10,
         )
         admin_policy.conditions.append(
             AttributeCondition(
                 attribute_path="principal.roles",
                 operator=ConditionOperator.CONTAINS,
                 value="admin",
-                description="User must have admin role"
+                description="User must have admin role",
             )
         )
         self.add_policy(admin_policy)
@@ -279,22 +282,24 @@ class ABACManager:
             description="Sensitive operations only allowed during business hours",
             effect=PolicyEffect.ALLOW,
             resource_pattern="/api/v1/sensitive/*",
-            priority=50
+            priority=50,
         )
-        business_hours_policy.conditions.extend([
-            AttributeCondition(
-                attribute_path="environment.business_hours",
-                operator=ConditionOperator.EQUALS,
-                value=True,
-                description="Must be during business hours"
-            ),
-            AttributeCondition(
-                attribute_path="principal.department",
-                operator=ConditionOperator.IN,
-                value=["finance", "admin"],
-                description="Must be in authorized department"
-            )
-        ])
+        business_hours_policy.conditions.extend(
+            [
+                AttributeCondition(
+                    attribute_path="environment.business_hours",
+                    operator=ConditionOperator.EQUALS,
+                    value=True,
+                    description="Must be during business hours",
+                ),
+                AttributeCondition(
+                    attribute_path="principal.department",
+                    operator=ConditionOperator.IN,
+                    value=["finance", "admin"],
+                    description="Must be in authorized department",
+                ),
+            ]
+        )
         self.add_policy(business_hours_policy)
 
         # High-value transaction policy
@@ -305,22 +310,24 @@ class ABACManager:
             effect=PolicyEffect.ALLOW,
             resource_pattern="/api/v1/transactions/*",
             action_pattern="POST",
-            priority=30
+            priority=30,
         )
-        high_value_transaction.conditions.extend([
-            AttributeCondition(
-                attribute_path="environment.transaction_amount",
-                operator=ConditionOperator.GREATER_THAN,
-                value=10000,
-                description="Transaction amount exceeds threshold"
-            ),
-            AttributeCondition(
-                attribute_path="principal.roles",
-                operator=ConditionOperator.CONTAINS,
-                value="finance_manager",
-                description="Must have finance manager role"
-            )
-        ])
+        high_value_transaction.conditions.extend(
+            [
+                AttributeCondition(
+                    attribute_path="environment.transaction_amount",
+                    operator=ConditionOperator.GREATER_THAN,
+                    value=10000,
+                    description="Transaction amount exceeds threshold",
+                ),
+                AttributeCondition(
+                    attribute_path="principal.roles",
+                    operator=ConditionOperator.CONTAINS,
+                    value="finance_manager",
+                    description="Must have finance manager role",
+                ),
+            ]
+        )
         self.add_policy(high_value_transaction)
 
         # Default deny policy (lowest priority)
@@ -329,7 +336,7 @@ class ABACManager:
             name="Default Deny",
             description="Default deny all access",
             effect=PolicyEffect.DENY,
-            priority=1000
+            priority=1000,
         )
         self.add_policy(default_deny)
 
@@ -399,7 +406,7 @@ class ABACManager:
                 decision=decision,
                 applicable_policies=matched_policies,
                 evaluation_time_ms=evaluation_time,
-                context_snapshot=evaluation_context
+                context_snapshot=evaluation_context,
             )
 
             # Cache result
@@ -408,32 +415,29 @@ class ABACManager:
 
             logger.debug(
                 "ABAC evaluation: %s for %s on %s (%sms, %d policies matched)",
-                decision.value, context.action, context.resource,
-                f"{evaluation_time:.2f}", len(matched_policies)
+                decision.value,
+                context.action,
+                context.resource,
+                f"{evaluation_time:.2f}",
+                len(matched_policies),
             )
 
             return result
 
         except (ValueError, TypeError, KeyError) as e:
             logger.error("ABAC evaluation failed: %s", e)
-            return PolicyEvaluationResult(
-                decision=PolicyEffect.DENY,
-                error=str(e)
-            )
+            return PolicyEvaluationResult(decision=PolicyEffect.DENY, error=str(e))
 
     def check_access(
         self,
         principal: dict[str, Any],
         resource: str,
         action: str,
-        environment: dict[str, Any] | None = None
+        environment: dict[str, Any] | None = None,
     ) -> bool:
         """Check if access should be allowed."""
         context = ABACContext(
-            principal=principal,
-            resource=resource,
-            action=action,
-            environment=environment or {}
+            principal=principal, resource=resource, action=action, environment=environment or {}
         )
 
         result = self.evaluate_access(context)
@@ -444,7 +448,7 @@ class ABACManager:
         principal: dict[str, Any],
         resource: str,
         action: str,
-        environment: dict[str, Any] | None = None
+        environment: dict[str, Any] | None = None,
     ):
         """Require access or raise AuthorizationError."""
         if not self.check_access(principal, resource, action, environment):
@@ -452,10 +456,7 @@ class ABACManager:
                 f"ABAC policy denied access to {action} on {resource}",
                 resource=resource,
                 action=action,
-                context={
-                    "principal": principal,
-                    "environment": environment or {}
-                }
+                context={"principal": principal, "environment": environment or {}},
             )
 
     def _get_applicable_policies(self, resource: str, action: str) -> list[ABACPolicy]:
@@ -493,7 +494,7 @@ class ABACManager:
                     action_pattern=policy_data.get("action_pattern"),
                     priority=policy_data.get("priority", 100),
                     is_active=policy_data.get("is_active", True),
-                    metadata=policy_data.get("metadata", {})
+                    metadata=policy_data.get("metadata", {}),
                 )
 
                 # Load conditions
@@ -502,7 +503,7 @@ class ABACManager:
                         attribute_path=condition_data["attribute_path"],
                         operator=ConditionOperator(condition_data["operator"]),
                         value=condition_data["value"],
-                        description=condition_data.get("description")
+                        description=condition_data.get("description"),
                     )
                     policy.conditions.append(condition)
 
@@ -541,9 +542,7 @@ class ABACManager:
         return sorted(policies, key=lambda p: p["priority"])
 
     def test_policy(
-        self,
-        policy_id: str,
-        test_contexts: list[dict[str, Any]]
+        self, policy_id: str, test_contexts: list[dict[str, Any]]
     ) -> list[dict[str, Any]]:
         """Test a policy against multiple contexts."""
         if policy_id not in self.policies:
@@ -558,26 +557,24 @@ class ABACManager:
                     principal=context_data.get("principal", {}),
                     resource=context_data.get("resource", ""),
                     action=context_data.get("action", ""),
-                    environment=context_data.get("environment", {})
+                    environment=context_data.get("environment", {}),
                 )
 
                 matches = policy.matches_request(context.resource, context.action)
                 evaluates = policy.evaluate(context.to_dict()) if matches else False
 
-                results.append({
-                    "test_case": i + 1,
-                    "context": context_data,
-                    "matches_request": matches,
-                    "conditions_pass": evaluates,
-                    "would_apply": matches and evaluates
-                })
+                results.append(
+                    {
+                        "test_case": i + 1,
+                        "context": context_data,
+                        "matches_request": matches,
+                        "conditions_pass": evaluates,
+                        "would_apply": matches and evaluates,
+                    }
+                )
 
             except (ValueError, KeyError, TypeError) as e:
-                results.append({
-                    "test_case": i + 1,
-                    "context": context_data,
-                    "error": str(e)
-                })
+                results.append({"test_case": i + 1, "context": context_data, "error": str(e)})
 
         return results
 
@@ -613,7 +610,7 @@ def reset_abac_manager():
 register_service(
     ABACManagerService,
     factory=LambdaFactory(ABACManagerService, lambda _: ABACManagerService()),
-    is_singleton=True
+    is_singleton=True,
 )
 
 
@@ -627,5 +624,5 @@ __all__ = [
     "PolicyEffect",
     "ConditionOperator",
     "get_abac_manager",
-    "reset_abac_manager"
+    "reset_abac_manager",
 ]

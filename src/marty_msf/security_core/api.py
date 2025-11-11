@@ -21,9 +21,11 @@ from typing import Any, Protocol, runtime_checkable
 
 # --- Core Data Models ---
 
+
 @dataclass
 class User:
     """Represents a user in the security system."""
+
     id: str
     username: str
     roles: list[str] = field(default_factory=list)
@@ -35,6 +37,7 @@ class User:
 @dataclass
 class AuthenticatedUser:
     """Represents an authenticated user with enhanced session information."""
+
     user_id: str
     username: str | None = None
     email: str | None = None
@@ -63,6 +66,7 @@ class AuthenticatedUser:
 @dataclass
 class AuthenticationResult:
     """Result of an authentication attempt."""
+
     success: bool
     user: AuthenticatedUser | None = None
     error: str | None = None
@@ -73,6 +77,7 @@ class AuthenticationResult:
 @dataclass
 class AuthorizationContext:
     """Context for authorization decisions."""
+
     user: User
     resource: str
     action: str
@@ -83,6 +88,7 @@ class AuthorizationContext:
 @dataclass
 class AuthorizationResult:
     """Result of an authorization decision."""
+
     allowed: bool
     reason: str
     policies_evaluated: list[str] = field(default_factory=list)
@@ -90,6 +96,7 @@ class AuthorizationResult:
 
 
 # --- Core Interfaces ---
+
 
 @runtime_checkable
 class IAuthenticator(Protocol):
@@ -209,6 +216,7 @@ class IAuditor(Protocol):
 
 # --- Security Exceptions ---
 
+
 class SecurityError(Exception):
     """Base exception for security-related errors."""
 
@@ -227,8 +235,10 @@ class SecretManagerError(SecurityError):
 
 # --- Enums ---
 
+
 class AuthenticationMethod(Enum):
     """Supported authentication methods."""
+
     PASSWORD = "password"
     TOKEN = "token"
     CERTIFICATE = "certificate"
@@ -239,6 +249,7 @@ class AuthenticationMethod(Enum):
 
 class PermissionAction(Enum):
     """Standard permission actions."""
+
     READ = "read"
     WRITE = "write"
     DELETE = "delete"
@@ -247,6 +258,7 @@ class PermissionAction(Enum):
 
 
 # --- Abstract Base Classes (Alternative to Protocols) ---
+
 
 class BaseAuthenticator(ABC):
     """Base class for authentication providers compatible with legacy code."""
@@ -334,10 +346,12 @@ class AbstractServiceMeshSecurityManager(ABC):
 
 # --- Additional Core Data Models ---
 
+
 @dataclass
 @dataclass
 class SecurityPrincipal:
     """Represents a security principal (user, service, device)."""
+
     id: str
     type: str  # user, service, device
     roles: set[str] = field(default_factory=set)
@@ -352,6 +366,7 @@ class SecurityPrincipal:
 @dataclass
 class SecurityContext:
     """Context for security decisions."""
+
     principal: SecurityPrincipal
     resource: str
     action: str
@@ -364,6 +379,7 @@ class SecurityContext:
 @dataclass
 class SecurityDecision:
     """Result of a security policy evaluation."""
+
     allowed: bool
     reason: str
     policies_evaluated: list[str] = field(default_factory=list)
@@ -376,6 +392,7 @@ class SecurityDecision:
 @dataclass
 class PolicyResult:
     """Result of a policy evaluation."""
+
     decision: bool
     confidence: float
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -385,6 +402,7 @@ class PolicyResult:
 @dataclass
 class ComplianceResult:
     """Result of a compliance scan."""
+
     framework: str
     passed: bool
     score: float
@@ -396,6 +414,7 @@ class ComplianceResult:
 @dataclass
 class AuditEvent:
     """Security audit event."""
+
     event_type: str
     principal_id: str | None
     resource: str | None
@@ -408,8 +427,10 @@ class AuditEvent:
 
 # --- Additional Enums ---
 
+
 class PolicyEngineType(Enum):
     """Types of policy engines."""
+
     BUILTIN = "builtin"
     OPA = "opa"
     OSO = "oso"
@@ -419,6 +440,7 @@ class PolicyEngineType(Enum):
 
 class ComplianceFramework(Enum):
     """Supported compliance frameworks."""
+
     GDPR = "gdpr"
     HIPAA = "hipaa"
     SOX = "sox"
@@ -429,6 +451,7 @@ class ComplianceFramework(Enum):
 
 class IdentityProviderType(Enum):
     """Supported identity provider types."""
+
     OIDC = "oidc"
     OAUTH2 = "oauth2"
     SAML = "saml"
@@ -438,6 +461,7 @@ class IdentityProviderType(Enum):
 
 class SecurityPolicyType(Enum):
     """Types of security policies."""
+
     RBAC = "rbac"
     ABAC = "abac"
     ACL = "acl"
@@ -445,6 +469,7 @@ class SecurityPolicyType(Enum):
 
 
 # --- Additional Interfaces ---
+
 
 @runtime_checkable
 class IPolicyEngine(Protocol):
@@ -488,7 +513,9 @@ class IPolicyEngine(Protocol):
 class IComplianceScanner(Protocol):
     """Interface for compliance scanners."""
 
-    def scan_compliance(self, framework: ComplianceFramework, context: dict[str, Any]) -> ComplianceResult:
+    def scan_compliance(
+        self, framework: ComplianceFramework, context: dict[str, Any]
+    ) -> ComplianceResult:
         """
         Scan for compliance with a specific framework.
 
@@ -527,7 +554,9 @@ class ICacheManager(Protocol):
         """
         ...
 
-    def set(self, key: str, value: Any, ttl: float | None = None, tags: set[str] | None = None) -> bool:
+    def set(
+        self, key: str, value: Any, ttl: float | None = None, tags: set[str] | None = None
+    ) -> bool:
         """
         Store a value in cache.
 
@@ -571,7 +600,9 @@ class ICacheManager(Protocol):
 class ISessionManager(Protocol):
     """Interface for session management."""
 
-    def create_session(self, principal: SecurityPrincipal, metadata: dict[str, Any] | None = None) -> str:
+    def create_session(
+        self, principal: SecurityPrincipal, metadata: dict[str, Any] | None = None
+    ) -> str:
         """
         Create a new session for a principal.
 

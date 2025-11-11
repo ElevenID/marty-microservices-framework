@@ -41,6 +41,7 @@ PersistenceBase = declarative_base()
 
 class EventStatus(Enum):
     """Event processing status for outbox pattern."""
+
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
@@ -51,6 +52,7 @@ class EventStatus(Enum):
 @dataclass
 class KafkaConfig:
     """Configuration for Kafka backend."""
+
     bootstrap_servers: list[str] = field(default_factory=lambda: ["localhost:9092"])
     security_protocol: str = "PLAINTEXT"
     sasl_mechanism: str | None = None
@@ -67,6 +69,7 @@ class KafkaConfig:
 @dataclass
 class OutboxConfig:
     """Configuration for transactional outbox pattern."""
+
     database_url: str
     batch_size: int = 100
     poll_interval: timedelta = field(default_factory=lambda: timedelta(seconds=5))
@@ -77,6 +80,7 @@ class OutboxConfig:
 
 class EventCategory(Enum):
     """Event category classification."""
+
     DOMAIN = "domain"
     INTEGRATION = "integration"
     AUDIT = "audit"
@@ -86,18 +90,21 @@ class EventCategory(Enum):
 
 class EventBusMode(Enum):
     """Event bus operational modes."""
-    DIRECT = "direct"           # Direct publishing to Kafka (no outbox)
+
+    DIRECT = "direct"  # Direct publishing to Kafka (no outbox)
     TRANSACTIONAL = "transactional"  # Outbox pattern for ACID compliance
-    TESTING = "testing"         # Special mode for testing scenarios
+    TESTING = "testing"  # Special mode for testing scenarios
 
 
 class EventBackendType(Enum):
     """Event backend type enumeration."""
+
     KAFKA = "kafka"
 
 
 class EventPriority(Enum):
     """Event processing priority."""
+
     LOW = 1
     NORMAL = 2
     HIGH = 3
@@ -106,6 +113,7 @@ class EventPriority(Enum):
 
 class DeliveryGuarantee(Enum):
     """Event delivery guarantees."""
+
     AT_MOST_ONCE = "at_most_once"
     AT_LEAST_ONCE = "at_least_once"
     EXACTLY_ONCE = "exactly_once"
@@ -114,6 +122,7 @@ class DeliveryGuarantee(Enum):
 @dataclass
 class EventMetadata:
     """Enhanced event metadata."""
+
     event_id: str
     event_type: str
     timestamp: datetime
@@ -134,6 +143,7 @@ class EventMetadata:
 @dataclass
 class EventFilter:
     """Enhanced event filtering criteria."""
+
     event_types: list[str] | None = None
     source_services: list[str] | None = None
     tenant_ids: list[str] | None = None
@@ -152,7 +162,7 @@ class BaseEvent:
         event_type: str | None = None,
         data: dict[str, Any] | None = None,
         metadata: EventMetadata | None = None,
-        **kwargs
+        **kwargs,
     ):
         self.event_type = event_type or self.__class__.__name__
         self.data = data or {}
@@ -163,7 +173,7 @@ class BaseEvent:
                 event_id=str(uuid.uuid4()),
                 event_type=self.event_type,
                 timestamp=datetime.now(timezone.utc),
-                **kwargs
+                **kwargs,
             )
         else:
             self.metadata = metadata
@@ -183,19 +193,28 @@ class BaseEvent:
         if event_filter.event_types and self.event_type not in event_filter.event_types:
             return False
 
-        if event_filter.source_services and self.metadata.source_service not in event_filter.source_services:
+        if (
+            event_filter.source_services
+            and self.metadata.source_service not in event_filter.source_services
+        ):
             return False
 
         if event_filter.tenant_ids and self.metadata.tenant_id not in event_filter.tenant_ids:
             return False
 
-        if event_filter.correlation_ids and self.metadata.correlation_id not in event_filter.correlation_ids:
+        if (
+            event_filter.correlation_ids
+            and self.metadata.correlation_id not in event_filter.correlation_ids
+        ):
             return False
 
         if event_filter.tags and not any(tag in self.metadata.tags for tag in event_filter.tags):
             return False
 
-        if event_filter.priority_min and self.metadata.priority.value < event_filter.priority_min.value:
+        if (
+            event_filter.priority_min
+            and self.metadata.priority.value < event_filter.priority_min.value
+        ):
             return False
 
         if event_filter.timestamp_range:
@@ -231,7 +250,7 @@ class BaseEvent:
                 "headers": self.metadata.headers,
                 "tags": self.metadata.tags,
                 "expiry": self.metadata.expiry.isoformat() if self.metadata.expiry else None,
-            }
+            },
         }
 
     @classmethod
@@ -240,7 +259,9 @@ class BaseEvent:
         metadata_dict = data.get("metadata", {})
 
         # Parse timestamps
-        timestamp = datetime.fromisoformat(metadata_dict.get("timestamp", datetime.now(timezone.utc).isoformat()))
+        timestamp = datetime.fromisoformat(
+            metadata_dict.get("timestamp", datetime.now(timezone.utc).isoformat())
+        )
         expiry = None
         if metadata_dict.get("expiry"):
             expiry = datetime.fromisoformat(metadata_dict["expiry"])
@@ -260,14 +281,10 @@ class BaseEvent:
             priority=EventPriority(metadata_dict.get("priority", EventPriority.NORMAL.value)),
             headers=metadata_dict.get("headers", {}),
             tags=metadata_dict.get("tags", []),
-            expiry=expiry
+            expiry=expiry,
         )
 
-        return cls(
-            event_type=data.get("event_type"),
-            data=data.get("data", {}),
-            metadata=metadata
-        )
+        return cls(event_type=data.get("event_type"), data=data.get("data", {}), metadata=metadata)
 
 
 class EventHandler(ABC, Generic[E]):
@@ -278,7 +295,7 @@ class EventHandler(ABC, Generic[E]):
         handler_id: str | None = None,
         priority: int = 0,
         max_concurrent: int = 1,
-        timeout: timedelta | None = None
+        timeout: timedelta | None = None,
     ):
         self.handler_id = handler_id or str(uuid.uuid4())
         self.priority = priority  # Higher numbers = higher priority
@@ -333,7 +350,7 @@ class PluginEventHandler(EventHandler[BaseEvent]):
         plugin_name: str,
         event_filter: EventFilter,
         handler_func: Callable[[BaseEvent], Any],
-        **kwargs
+        **kwargs,
     ):
         super().__init__(handler_id=f"plugin-{plugin_id}", **kwargs)
         self.plugin_id = plugin_id
@@ -366,7 +383,7 @@ class EventBus(ABC):
         self,
         event: BaseEvent,
         delivery_guarantee: DeliveryGuarantee = DeliveryGuarantee.AT_LEAST_ONCE,
-        delay: timedelta | None = None
+        delay: timedelta | None = None,
     ) -> None:
         """Publish an event with delivery guarantees."""
         ...
@@ -375,16 +392,14 @@ class EventBus(ABC):
     async def publish_batch(
         self,
         events: list[BaseEvent],
-        delivery_guarantee: DeliveryGuarantee = DeliveryGuarantee.AT_LEAST_ONCE
+        delivery_guarantee: DeliveryGuarantee = DeliveryGuarantee.AT_LEAST_ONCE,
     ) -> None:
         """Publish multiple events as a batch."""
         ...
 
     @abstractmethod
     async def subscribe(
-        self,
-        handler: EventHandler,
-        event_filter: EventFilter | None = None
+        self, handler: EventHandler, event_filter: EventFilter | None = None
     ) -> str:
         """Subscribe an event handler with optional filtering."""
         ...
@@ -417,7 +432,12 @@ class OutboxEvent(PersistenceBase):
     event_metadata = Column(Text, nullable=True)
     status = Column(String(50), nullable=False, default=EventStatus.PENDING.value, index=True)
     priority = Column(Integer, nullable=False, default=EventPriority.NORMAL.value, index=True)
-    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        index=True,
+    )
     scheduled_at = Column(DateTime(timezone=True), nullable=True, index=True)
     processed_at = Column(DateTime(timezone=True), nullable=True)
     expires_at = Column(DateTime(timezone=True), nullable=True, index=True)
@@ -441,7 +461,9 @@ class DeadLetterEvent(PersistenceBase):
     event_data = Column(Text, nullable=False)
     event_metadata = Column(Text, nullable=True)
     failure_reason = Column(Text, nullable=False)
-    failed_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    failed_at = Column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
     attempts_made = Column(Integer, nullable=False)
     can_retry = Column(Boolean, nullable=False, default=True)
     source_service = Column(String(255), nullable=True, index=True)
@@ -459,7 +481,7 @@ class EnhancedEventBus(EventBus):
         batch_size: int = 100,
         batch_timeout: timedelta = timedelta(seconds=5),
         enable_dlq: bool = True,
-        dlq_topic_suffix: str = ".dlq"
+        dlq_topic_suffix: str = ".dlq",
     ):
         """Initialize the enhanced event bus with Kafka support and optional outbox pattern."""
         self.kafka_config = kafka_config
@@ -519,7 +541,7 @@ class EnhancedEventBus(EventBus):
             source_service=event.metadata.source_service,
             tenant_id=event.metadata.tenant_id,
             expires_at=event.metadata.expiry,
-            max_attempts=self.outbox_config.max_retries if self.outbox_config else 3
+            max_attempts=self.outbox_config.max_retries if self.outbox_config else 3,
         )
         session.add(outbox_event)
         logger.debug(f"Saved event {event.event_id} to outbox")
@@ -528,7 +550,7 @@ class EnhancedEventBus(EventBus):
         self,
         event: BaseEvent,
         session: Session,
-        delivery_guarantee: DeliveryGuarantee = DeliveryGuarantee.AT_LEAST_ONCE
+        delivery_guarantee: DeliveryGuarantee = DeliveryGuarantee.AT_LEAST_ONCE,
     ) -> None:
         """Publish event using transactional outbox pattern."""
         if not self.outbox_config:
@@ -541,7 +563,9 @@ class EnhancedEventBus(EventBus):
         logger.info(f"Event {event.event_id} saved to outbox for transactional publishing")
 
     # ENHANCED UNIFIED PUBLISHING METHODS
-    async def publish_with_retry(self, event: BaseEvent, max_retries: int = 3, backoff_factor: float = 1.0) -> None:
+    async def publish_with_retry(
+        self, event: BaseEvent, max_retries: int = 3, backoff_factor: float = 1.0
+    ) -> None:
         """
         Publish event with automatic retry logic and exponential backoff.
         """
@@ -551,16 +575,20 @@ class EnhancedEventBus(EventBus):
                 return
             except Exception as e:
                 if attempt == max_retries:
-                    logger.error(f"Failed to publish event {event.event_id} after {max_retries} retries: {e}")
+                    logger.error(
+                        f"Failed to publish event {event.event_id} after {max_retries} retries: {e}"
+                    )
                     raise
 
-                wait_time = backoff_factor * (2 ** attempt)
-                logger.warning(f"Publish attempt {attempt + 1} failed for event {event.event_id}, retrying in {wait_time}s: {e}")
+                wait_time = backoff_factor * (2**attempt)
+                logger.warning(
+                    f"Publish attempt {attempt + 1} failed for event {event.event_id}, retrying in {wait_time}s: {e}"
+                )
                 await asyncio.sleep(wait_time)
 
-
-
-    async def publish_scheduled(self, event: BaseEvent, scheduled_for: datetime, session: Session | None = None) -> None:
+    async def publish_scheduled(
+        self, event: BaseEvent, scheduled_for: datetime, session: Session | None = None
+    ) -> None:
         """
         Schedule event for future publishing using the outbox pattern.
         """
@@ -595,7 +623,7 @@ class EnhancedEventBus(EventBus):
         aggregate_id: str,
         event_type: str,
         event_data: dict[str, Any],
-        version: int = 1
+        version: int = 1,
     ) -> None:
         """
         Publish domain event following DDD aggregate pattern.
@@ -606,14 +634,14 @@ class EnhancedEventBus(EventBus):
                 "aggregate_type": aggregate_type,
                 "aggregate_id": aggregate_id,
                 "version": version,
-                **event_data
+                **event_data,
             },
             metadata=EventMetadata(
                 event_id=str(uuid.uuid4()),
                 event_type=f"{aggregate_type}.{event_type}",
                 timestamp=datetime.now(timezone.utc),
-                correlation_id=aggregate_id
-            )
+                correlation_id=aggregate_id,
+            ),
         )
         await self.publish(event)
 
@@ -623,24 +651,20 @@ class EnhancedEventBus(EventBus):
         saga_type: str,
         event_type: str,
         event_data: dict[str, Any],
-        session: Session | None = None
+        session: Session | None = None,
     ) -> None:
         """
         Publish saga orchestration event with transactional guarantees.
         """
         event = BaseEvent(
             event_type=f"saga.{saga_type}.{event_type}",
-            data={
-                "saga_id": saga_id,
-                "saga_type": saga_type,
-                **event_data
-            },
+            data={"saga_id": saga_id, "saga_type": saga_type, **event_data},
             metadata=EventMetadata(
                 event_id=str(uuid.uuid4()),
                 event_type=f"saga.{saga_type}.{event_type}",
                 timestamp=datetime.now(timezone.utc),
-                correlation_id=saga_id
-            )
+                correlation_id=saga_id,
+            ),
         )
 
         if session:
@@ -657,13 +681,16 @@ class EnhancedEventBus(EventBus):
             try:
                 with self._session_factory() as session:
                     # Get pending events from outbox
-                    pending_events = session.query(OutboxEvent).filter(
-                        OutboxEvent.status == EventStatus.PENDING.value,
-                        OutboxEvent.attempts < OutboxEvent.max_attempts
-                    ).order_by(
-                        OutboxEvent.priority.desc(),
-                        OutboxEvent.created_at.asc()
-                    ).limit(self.outbox_config.batch_size).all()
+                    pending_events = (
+                        session.query(OutboxEvent)
+                        .filter(
+                            OutboxEvent.status == EventStatus.PENDING.value,
+                            OutboxEvent.attempts < OutboxEvent.max_attempts,
+                        )
+                        .order_by(OutboxEvent.priority.desc(), OutboxEvent.created_at.asc())
+                        .limit(self.outbox_config.batch_size)
+                        .all()
+                    )
 
                     for outbox_event in pending_events:
                         try:
@@ -673,7 +700,10 @@ class EnhancedEventBus(EventBus):
                             session.commit()
 
                             # Check if event has expired
-                            if outbox_event.expires_at and datetime.now(timezone.utc) > outbox_event.expires_at:
+                            if (
+                                outbox_event.expires_at
+                                and datetime.now(timezone.utc) > outbox_event.expires_at
+                            ):
                                 outbox_event.status = EventStatus.FAILED.value
                                 outbox_event.error_message = "Event expired"
                                 session.commit()
@@ -701,7 +731,9 @@ class EnhancedEventBus(EventBus):
                                 outbox_event.error_message = str(e)
                                 session.commit()
 
-                            logger.error(f"Failed to process outbox event {outbox_event.event_id}: {e}")
+                            logger.error(
+                                f"Failed to process outbox event {outbox_event.event_id}: {e}"
+                            )
 
                 # Wait before next batch
                 await asyncio.sleep(self.outbox_config.poll_interval.total_seconds())
@@ -710,7 +742,9 @@ class EnhancedEventBus(EventBus):
                 logger.error(f"Error in outbox processor: {e}")
                 await asyncio.sleep(self.outbox_config.retry_delay.total_seconds())
 
-    async def _move_to_dead_letter(self, outbox_event: OutboxEvent, failure_reason: str, session: Session) -> None:
+    async def _move_to_dead_letter(
+        self, outbox_event: OutboxEvent, failure_reason: str, session: Session
+    ) -> None:
         """Move failed event to dead letter queue."""
         if not self.outbox_config or not self.outbox_config.enable_dead_letter_queue:
             return
@@ -722,7 +756,7 @@ class EnhancedEventBus(EventBus):
             event_metadata=outbox_event.event_metadata,
             failure_reason=failure_reason,
             attempts_made=outbox_event.attempts,
-            source_service=outbox_event.source_service
+            source_service=outbox_event.source_service,
         )
         session.add(dead_letter)
 
@@ -740,10 +774,11 @@ class EnhancedEventBus(EventBus):
             return False
 
         with self._session_factory() as session:
-            dead_letter = session.query(DeadLetterEvent).filter(
-                DeadLetterEvent.id == dead_letter_id,
-                DeadLetterEvent.can_retry
-            ).first()
+            dead_letter = (
+                session.query(DeadLetterEvent)
+                .filter(DeadLetterEvent.id == dead_letter_id, DeadLetterEvent.can_retry)
+                .first()
+            )
 
             if not dead_letter:
                 return False
@@ -781,16 +816,18 @@ class EnhancedEventBus(EventBus):
 
             result = []
             for dl in dead_letters:
-                result.append({
-                    "id": dl.id,
-                    "original_event_id": dl.original_event_id,
-                    "event_type": dl.event_type,
-                    "failure_reason": dl.failure_reason,
-                    "failed_at": dl.failed_at.isoformat(),
-                    "attempts_made": dl.attempts_made,
-                    "can_retry": dl.can_retry,
-                    "source_service": dl.source_service
-                })
+                result.append(
+                    {
+                        "id": dl.id,
+                        "original_event_id": dl.original_event_id,
+                        "event_type": dl.event_type,
+                        "failure_reason": dl.failure_reason,
+                        "failed_at": dl.failed_at.isoformat(),
+                        "attempts_made": dl.attempts_made,
+                        "can_retry": dl.can_retry,
+                        "source_service": dl.source_service,
+                    }
+                )
 
             return result
 
@@ -811,11 +848,13 @@ class EnhancedEventBus(EventBus):
 
         # Add SASL configuration if provided
         if self.kafka_config.sasl_mechanism:
-            producer_config.update({
-                "sasl_mechanism": self.kafka_config.sasl_mechanism,
-                "sasl_plain_username": self.kafka_config.sasl_plain_username,
-                "sasl_plain_password": self.kafka_config.sasl_plain_password,
-            })
+            producer_config.update(
+                {
+                    "sasl_mechanism": self.kafka_config.sasl_mechanism,
+                    "sasl_plain_username": self.kafka_config.sasl_plain_username,
+                    "sasl_plain_password": self.kafka_config.sasl_plain_password,
+                }
+            )
 
         self._kafka_producer = AIOKafkaProducer(**producer_config)
         await self._kafka_producer.start()
@@ -846,11 +885,13 @@ class EnhancedEventBus(EventBus):
 
         # Add SASL configuration if provided
         if self.kafka_config.sasl_mechanism:
-            consumer_config.update({
-                "sasl_mechanism": self.kafka_config.sasl_mechanism,
-                "sasl_plain_username": self.kafka_config.sasl_plain_username,
-                "sasl_plain_password": self.kafka_config.sasl_plain_password,
-            })
+            consumer_config.update(
+                {
+                    "sasl_mechanism": self.kafka_config.sasl_mechanism,
+                    "sasl_plain_username": self.kafka_config.sasl_plain_username,
+                    "sasl_plain_password": self.kafka_config.sasl_plain_password,
+                }
+            )
 
         consumer = AIOKafkaConsumer(topic, **consumer_config)
         await consumer.start()
@@ -884,7 +925,7 @@ class EnhancedEventBus(EventBus):
             async for message in consumer:
                 try:
                     # Deserialize event
-                    event_data = json.loads(message.value.decode('utf-8'))
+                    event_data = json.loads(message.value.decode("utf-8"))
                     event = BaseEvent.from_dict(event_data)
 
                     # Process event with handlers
@@ -941,10 +982,12 @@ class EnhancedEventBus(EventBus):
             raise RuntimeError("Kafka producer not started")
 
         topic = await self._get_topic_name(event.event_type)
-        event_data = json.dumps(event.to_dict()).encode('utf-8')
+        event_data = json.dumps(event.to_dict()).encode("utf-8")
 
         try:
-            await self._kafka_producer.send_and_wait(topic, event_data, key=event.event_id.encode('utf-8'))
+            await self._kafka_producer.send_and_wait(
+                topic, event_data, key=event.event_id.encode("utf-8")
+            )
             logger.debug(f"Published event {event.event_id} to Kafka topic {topic}")
         except Exception as e:
             logger.error(f"Failed to publish event {event.event_id} to Kafka: {e}")
@@ -954,7 +997,7 @@ class EnhancedEventBus(EventBus):
         self,
         event: BaseEvent,
         delivery_guarantee: DeliveryGuarantee = DeliveryGuarantee.AT_LEAST_ONCE,
-        delay: timedelta | None = None
+        delay: timedelta | None = None,
     ) -> None:
         """Publish an event to Kafka."""
         if not self._running:
@@ -963,14 +1006,16 @@ class EnhancedEventBus(EventBus):
         if delay:
             # For delayed publishing, we could implement a scheduler
             # For now, just log a warning
-            logger.warning("Delayed publishing not yet implemented for Kafka backend, publishing immediately")
+            logger.warning(
+                "Delayed publishing not yet implemented for Kafka backend, publishing immediately"
+            )
 
         await self._publish_to_kafka(event)
 
     async def publish_batch(
         self,
         events: list[BaseEvent],
-        delivery_guarantee: DeliveryGuarantee = DeliveryGuarantee.AT_LEAST_ONCE
+        delivery_guarantee: DeliveryGuarantee = DeliveryGuarantee.AT_LEAST_ONCE,
     ) -> None:
         """Publish multiple events as a batch to Kafka."""
         if not self._running:
@@ -981,9 +1026,7 @@ class EnhancedEventBus(EventBus):
         await asyncio.gather(*tasks)
 
     async def subscribe(
-        self,
-        handler: EventHandler,
-        event_filter: EventFilter | None = None
+        self, handler: EventHandler, event_filter: EventFilter | None = None
     ) -> str:
         """Subscribe an event handler."""
         async with self._lock:
@@ -1039,14 +1082,14 @@ class EnhancedEventBus(EventBus):
         plugin_id: str,
         plugin_name: str,
         event_filter: EventFilter,
-        handler_func: Callable[[BaseEvent], Any]
+        handler_func: Callable[[BaseEvent], Any],
     ) -> str:
         """Subscribe a plugin to events."""
         plugin_handler = PluginEventHandler(
             plugin_id=plugin_id,
             plugin_name=plugin_name,
             event_filter=event_filter,
-            handler_func=handler_func
+            handler_func=handler_func,
         )
 
         self._plugin_handlers[plugin_id] = plugin_handler
@@ -1136,7 +1179,10 @@ class EnhancedEventBus(EventBus):
             "kafka_consumers_count": len(self._kafka_consumers),
             "active_topics": list(self._kafka_consumers.keys()),
             "outbox_enabled": self.outbox_config is not None,
-            "outbox_processor_running": self._outbox_processor_task is not None and not self._outbox_processor_task.done() if self._outbox_processor_task else False
+            "outbox_processor_running": self._outbox_processor_task is not None
+            and not self._outbox_processor_task.done()
+            if self._outbox_processor_task
+            else False,
         }
 
         return health

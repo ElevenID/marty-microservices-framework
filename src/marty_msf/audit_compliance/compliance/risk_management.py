@@ -23,7 +23,6 @@ from prometheus_client import Counter, Gauge, Histogram
 
 # External dependencies
 try:
-
     METRICS_AVAILABLE = True
 except ImportError:
     METRICS_AVAILABLE = False

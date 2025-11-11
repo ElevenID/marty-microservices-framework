@@ -27,6 +27,8 @@ from prometheus_client import Counter, Gauge, Histogram
 
 importlib.util.find_spec("kubernetes")
 importlib.util.find_spec("prometheus_client")
+
+
 class DeploymentStrategy(Enum):
     """Deployment strategy types"""
 

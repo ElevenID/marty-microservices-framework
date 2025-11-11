@@ -89,10 +89,7 @@ class JWTIntegrationE2ETest:
         @app.get("/optional")
         async def optional_endpoint(user: dict | None = Depends(get_current_user)):
             if user:
-                return {
-                    "message": "Authenticated user",
-                    "username": user["username"]
-                }
+                return {"message": "Authenticated user", "username": user["username"]}
             return {"message": "Anonymous user"}
 
         @app.get("/public")
@@ -122,7 +119,7 @@ class JWTIntegrationE2ETest:
         results["health_endpoint"] = {
             "status": "passed" if response.status_code == 200 else "failed",
             "status_code": response.status_code,
-            "data": response.json() if response.status_code == 200 else None
+            "data": response.json() if response.status_code == 200 else None,
         }
 
         return results
@@ -133,7 +130,7 @@ class JWTIntegrationE2ETest:
         return {
             "status": "passed" if response.status_code == 200 else "failed",
             "status_code": response.status_code,
-            "data": response.json() if response.status_code == 200 else None
+            "data": response.json() if response.status_code == 200 else None,
         }
 
     def test_protected_endpoint_without_auth(self):
@@ -143,7 +140,7 @@ class JWTIntegrationE2ETest:
             "status": "passed" if response.status_code == 401 else "failed",
             "status_code": response.status_code,
             "expected": 401,
-            "message": "Should reject access without authentication"
+            "message": "Should reject access without authentication",
         }
 
     def test_optional_endpoint_without_auth(self):
@@ -153,7 +150,7 @@ class JWTIntegrationE2ETest:
             data = response.json()
             return {
                 "status": "passed" if data["message"] == "Anonymous user" else "failed",
-                "data": data
+                "data": data,
             }
         return {"status": "failed", "status_code": response.status_code}
 
@@ -168,7 +165,7 @@ class JWTIntegrationE2ETest:
                 "status": "passed",
                 "algorithm": dev_config.algorithm,
                 "issuer": dev_config.issuer,
-                "excluded_paths_count": len(dev_config.excluded_paths)
+                "excluded_paths_count": len(dev_config.excluded_paths),
             }
         except Exception as e:
             results["dev_config"] = {"status": "failed", "error": str(e)}
@@ -179,7 +176,7 @@ class JWTIntegrationE2ETest:
             results["test_config"] = {
                 "status": "passed",
                 "verify_expiration": test_config.verify_expiration,
-                "verify_issuer": test_config.verify_issuer
+                "verify_issuer": test_config.verify_issuer,
             }
         except Exception as e:
             results["test_config"] = {"status": "failed", "error": str(e)}
@@ -190,7 +187,7 @@ class JWTIntegrationE2ETest:
             results["jwt_config_conversion"] = {
                 "status": "passed",
                 "secret_key_set": bool(jwt_config.secret_key),
-                "algorithm": jwt_config.algorithm
+                "algorithm": jwt_config.algorithm,
             }
         except Exception as e:
             results["jwt_config_conversion"] = {"status": "failed", "error": str(e)}
@@ -209,12 +206,12 @@ class JWTIntegrationE2ETest:
                 # Most excluded paths might not exist, but should not fail with auth errors
                 results[f"excluded_{path.replace('/', '_')}"] = {
                     "status": "passed" if response.status_code != 401 else "failed",
-                    "status_code": response.status_code
+                    "status_code": response.status_code,
                 }
             except Exception as e:
                 results[f"excluded_{path.replace('/', '_')}"] = {
                     "status": "failed",
-                    "error": str(e)
+                    "error": str(e),
                 }
 
         return results
@@ -229,7 +226,7 @@ class JWTIntegrationE2ETest:
             response = self.client.post("/auth/jwt/validate", json=invalid_token_data)
             results["invalid_token_validation"] = {
                 "status": "passed" if response.status_code in [200, 400, 401] else "failed",
-                "status_code": response.status_code
+                "status_code": response.status_code,
             }
         except Exception as e:
             results["invalid_token_validation"] = {"status": "failed", "error": str(e)}

@@ -8,7 +8,7 @@ class SecretStore(ABC):
     """Abstract interface for secret storage."""
 
     @abstractmethod
-    def get_secret(self, key: str) -> Optional[str]:
+    def get_secret(self, key: str) -> str | None:
         """Get a secret by key."""
 
     @abstractmethod

@@ -116,7 +116,6 @@ class ResilienceBootstrap:
             circuit_breaker_enabled=config.get("circuit_breaker_enabled", True),
             circuit_breaker_failure_threshold=config.get("circuit_breaker_failure_threshold", 5),
             circuit_breaker_recovery_timeout=config.get("circuit_breaker_recovery_timeout", 60.0),
-
             # Retry settings
             retry_enabled=config.get("retry_enabled", True),
             retry_max_attempts=config.get("retry_max_attempts", 3),
@@ -124,20 +123,16 @@ class ResilienceBootstrap:
             retry_backoff_multiplier=config.get("retry_backoff_multiplier", 2.0),
             retry_max_delay=config.get("retry_max_delay", 60.0),
             retry_jitter=config.get("retry_jitter", True),
-
             # Timeout settings
             timeout_enabled=config.get("timeout_enabled", True),
             timeout_duration=config.get("timeout_duration", 30.0),
-
             # Bulkhead settings
             bulkhead_enabled=config.get("bulkhead_enabled", False),
             bulkhead_max_concurrent=config.get("bulkhead_max_concurrent", 10),
-
             # Strategy
             strategy=config.get("strategy", "internal_service"),
-
             # Custom settings
-            custom_settings=config.get("custom_settings", {})
+            custom_settings=config.get("custom_settings", {}),
         )
 
 
@@ -166,9 +161,7 @@ def create_development_resilience_system() -> IResilienceManager:
             "retry_max_attempts": 2,  # Fewer retries for faster feedback
             "timeout_duration": 10.0,  # Shorter timeout for dev
         },
-        "resilience_service": {
-            "type": "manager_service"
-        }
+        "resilience_service": {"type": "manager_service"},
     }
 
     bootstrap = ResilienceBootstrap(config)
@@ -199,9 +192,7 @@ def create_production_resilience_system() -> IResilienceManager:
             "bulkhead_enabled": True,
             "bulkhead_max_concurrent": 100,
         },
-        "resilience_service": {
-            "type": "manager_service"
-        }
+        "resilience_service": {"type": "manager_service"},
     }
 
     bootstrap = ResilienceBootstrap(config)
@@ -223,9 +214,7 @@ def create_testing_resilience_system() -> IResilienceManager:
             "timeout_enabled": False,  # Disabled to avoid timing issues
             "bulkhead_enabled": False,  # Disabled for simplicity
         },
-        "resilience_service": {
-            "type": "manager_service"
-        }
+        "resilience_service": {"type": "manager_service"},
     }
 
     bootstrap = ResilienceBootstrap(config)

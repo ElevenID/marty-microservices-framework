@@ -46,5 +46,5 @@ def _create_opa_policy_service(config: dict[str, Any]) -> OPAPolicyServiceWrappe
 register_service(
     OPAPolicyServiceWrapper,
     factory=LambdaFactory(OPAPolicyServiceWrapper, _create_opa_policy_service),
-    is_singleton=True
+    is_singleton=True,
 )

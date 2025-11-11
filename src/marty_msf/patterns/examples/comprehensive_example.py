@@ -44,6 +44,7 @@ from ..patterns.saga.saga_patterns import SagaOrchestrator
 @dataclass
 class Order:
     """Order aggregate root."""
+
     order_id: str
     customer_id: str
     items: list[dict[str, Any]] = field(default_factory=list)
@@ -56,6 +57,7 @@ class Order:
 @dataclass
 class Payment:
     """Payment aggregate root."""
+
     payment_id: str
     order_id: str
     amount: int
@@ -67,6 +69,7 @@ class Payment:
 @dataclass
 class Inventory:
     """Inventory aggregate root."""
+
     product_id: str
     available_quantity: int
     reserved_quantity: int = 0
@@ -81,7 +84,7 @@ class CreateOrderCommand(BaseCommand):
         super().__init__(**kwargs)
         self.customer_id = customer_id
         self.items = items
-        self.total_amount = sum(item['price'] * item['quantity'] for item in items)
+        self.total_amount = sum(item["price"] * item["quantity"] for item in items)
 
     def validate(self):
         """Validate the create order command."""
@@ -95,11 +98,11 @@ class CreateOrderCommand(BaseCommand):
             errors.append("Order must have at least one item")
 
         for item in self.items:
-            if not item.get('product_id'):
+            if not item.get("product_id"):
                 errors.append("Product ID is required for all items")
-            if item.get('quantity', 0) <= 0:
+            if item.get("quantity", 0) <= 0:
                 errors.append("Item quantity must be positive")
-            if item.get('price', 0) <= 0:
+            if item.get("price", 0) <= 0:
                 errors.append("Item price must be positive")
 
         return ValidationResult(is_valid=len(errors) == 0, errors=errors)
@@ -108,7 +111,7 @@ class CreateOrderCommand(BaseCommand):
         return {
             "customer_id": self.customer_id,
             "items": self.items,
-            "total_amount": self.total_amount
+            "total_amount": self.total_amount,
         }
 
 
@@ -123,7 +126,6 @@ class ProcessPaymentCommand(BaseCommand):
         self.amount = amount
 
     def validate(self):
-
         errors = []
 
         if not self.order_id:
@@ -141,7 +143,7 @@ class ProcessPaymentCommand(BaseCommand):
         return {
             "order_id": self.order_id,
             "payment_method": self.payment_method,
-            "amount": self.amount
+            "amount": self.amount,
         }
 
 
@@ -155,7 +157,6 @@ class ReserveInventoryCommand(BaseCommand):
         self.reservations = reservations  # [{"product_id": "...", "quantity": 1}, ...]
 
     def validate(self):
-
         errors = []
 
         if not self.order_id:
@@ -165,18 +166,15 @@ class ReserveInventoryCommand(BaseCommand):
             errors.append("At least one reservation is required")
 
         for reservation in self.reservations:
-            if not reservation.get('product_id'):
+            if not reservation.get("product_id"):
                 errors.append("Product ID is required for reservations")
-            if reservation.get('quantity', 0) <= 0:
+            if reservation.get("quantity", 0) <= 0:
                 errors.append("Reservation quantity must be positive")
 
         return ValidationResult(is_valid=len(errors) == 0, errors=errors)
 
     def _get_command_data(self) -> dict[str, Any]:
-        return {
-            "order_id": self.order_id,
-            "reservations": self.reservations
-        }
+        return {"order_id": self.order_id, "reservations": self.reservations}
 
 
 # Queries for the E-commerce System
@@ -189,7 +187,6 @@ class GetOrderQuery(BaseQuery):
         self.order_id = order_id
 
     def validate(self):
-
         errors = []
 
         if not self.order_id:
@@ -210,7 +207,6 @@ class GetCustomerOrdersQuery(BaseQuery):
         self.customer_id = customer_id
 
     def validate(self):
-
         errors = []
 
         if not self.customer_id:
@@ -232,7 +228,6 @@ class CreateOrderCommandHandler(CommandHandler[CreateOrderCommand]):
         self.saga_orchestrator = saga_orchestrator
 
     async def _execute(self, command: CreateOrderCommand):
-
         try:
             # Create the order
             order = Order(
@@ -240,7 +235,7 @@ class CreateOrderCommandHandler(CommandHandler[CreateOrderCommand]):
                 customer_id=command.customer_id,
                 items=command.items,
                 total_amount=command.total_amount,
-                status="created"
+                status="created",
             )
 
             # Save order (this would be a real repository call)
@@ -249,9 +244,7 @@ class CreateOrderCommandHandler(CommandHandler[CreateOrderCommand]):
             # Start the order processing saga
             saga_steps = await self._create_order_saga_steps(order)
             saga_id = await self.saga_orchestrator.start_saga(
-                saga_type="order_processing",
-                steps=saga_steps,
-                context={"order_id": order.order_id}
+                saga_type="order_processing", steps=saga_steps, context={"order_id": order.order_id}
             )
 
             # Generate domain events
@@ -263,16 +256,14 @@ class CreateOrderCommandHandler(CommandHandler[CreateOrderCommand]):
                 result_data={
                     "order_id": order.order_id,
                     "saga_id": saga_id,
-                    "total_amount": order.total_amount
+                    "total_amount": order.total_amount,
                 },
-                events_generated=events
+                events_generated=events,
             )
 
         except Exception as e:
             return CommandResult(
-                command_id=command.command_id,
-                status=CommandStatus.FAILED,
-                errors=[str(e)]
+                command_id=command.command_id, status=CommandStatus.FAILED, errors=[str(e)]
             )
 
     async def _create_order_saga_steps(self, order: Order) -> list:
@@ -285,22 +276,22 @@ class CreateOrderCommandHandler(CommandHandler[CreateOrderCommand]):
                 "service_name": "inventory_service",
                 "action": "reserve",
                 "compensation_action": "release_reservation",
-                "data": {"order_id": order.order_id, "items": order.items}
+                "data": {"order_id": order.order_id, "items": order.items},
             },
             {
                 "step_name": "process_payment",
                 "service_name": "payment_service",
                 "action": "charge",
                 "compensation_action": "refund",
-                "data": {"order_id": order.order_id, "amount": order.total_amount}
+                "data": {"order_id": order.order_id, "amount": order.total_amount},
             },
             {
                 "step_name": "update_order_status",
                 "service_name": "order_service",
                 "action": "confirm",
                 "compensation_action": "cancel",
-                "data": {"order_id": order.order_id, "status": "confirmed"}
-            }
+                "data": {"order_id": order.order_id, "status": "confirmed"},
+            },
         ]
 
 
@@ -313,7 +304,6 @@ class ProcessPaymentCommandHandler(CommandHandler[ProcessPaymentCommand]):
         self.outbox_repository = outbox_repository
 
     async def _execute(self, command: ProcessPaymentCommand):
-
         try:
             # Create payment record
             payment = Payment(
@@ -321,7 +311,7 @@ class ProcessPaymentCommandHandler(CommandHandler[ProcessPaymentCommand]):
                 order_id=command.order_id,
                 amount=command.amount,
                 payment_method=command.payment_method,
-                status="processing"
+                status="processing",
             )
 
             # Simulate payment processing
@@ -341,11 +331,11 @@ class ProcessPaymentCommandHandler(CommandHandler[ProcessPaymentCommand]):
                     "order_id": payment.order_id,
                     "amount": payment.amount,
                     "status": payment.status,
-                    "processed_at": payment.processed_at.isoformat()
+                    "processed_at": payment.processed_at.isoformat(),
                 },
                 aggregate_id=payment.payment_id,
                 aggregate_type="payment",
-                correlation_id=command.correlation_id
+                correlation_id=command.correlation_id,
             )
 
             return CommandResult(
@@ -354,16 +344,14 @@ class ProcessPaymentCommandHandler(CommandHandler[ProcessPaymentCommand]):
                 result_data={
                     "payment_id": payment.payment_id,
                     "status": payment.status,
-                    "processed_at": payment.processed_at.isoformat()
+                    "processed_at": payment.processed_at.isoformat(),
                 },
-                events_generated=[f"payment_processed_{payment.payment_id}"]
+                events_generated=[f"payment_processed_{payment.payment_id}"],
             )
 
         except Exception as e:
             return CommandResult(
-                command_id=command.command_id,
-                status=CommandStatus.FAILED,
-                errors=[str(e)]
+                command_id=command.command_id, status=CommandStatus.FAILED, errors=[str(e)]
             )
 
     async def _process_payment_external(self, payment: Payment):
@@ -393,12 +381,12 @@ class GetOrderQueryHandler(QueryHandler[GetOrderQuery, dict]):
             "customer_id": f"customer_{query.order_id[:8]}",
             "items": [
                 {"product_id": "product_1", "quantity": 2, "price": 1000},
-                {"product_id": "product_2", "quantity": 1, "price": 1500}
+                {"product_id": "product_2", "quantity": 1, "price": 1500},
             ],
             "total_amount": 3500,
             "status": "confirmed",
             "created_at": datetime.now(timezone.utc).isoformat(),
-            "updated_at": datetime.now(timezone.utc).isoformat()
+            "updated_at": datetime.now(timezone.utc).isoformat(),
         }
 
         return order_data
@@ -416,21 +404,23 @@ class GetCustomerOrdersQueryHandler(QueryHandler[GetCustomerOrdersQuery, dict]):
 
         orders = []
         for i in range(query.page_size):
-            order_id = f"order_{query.customer_id}_{i+1}"
-            orders.append({
-                "order_id": order_id,
-                "customer_id": query.customer_id,
-                "total_amount": (i + 1) * 1000,
-                "status": "confirmed" if i % 2 == 0 else "pending",
-                "created_at": datetime.now(timezone.utc).isoformat()
-            })
+            order_id = f"order_{query.customer_id}_{i + 1}"
+            orders.append(
+                {
+                    "order_id": order_id,
+                    "customer_id": query.customer_id,
+                    "total_amount": (i + 1) * 1000,
+                    "status": "confirmed" if i % 2 == 0 else "pending",
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                }
+            )
 
         return {
             "orders": orders,
             "total_count": 100,  # Simulated total
             "page": query.page,
             "page_size": query.page_size,
-            "has_more": query.page * query.page_size < 100
+            "has_more": query.page * query.page_size < 100,
         }
 
 
@@ -449,10 +439,10 @@ class ECommerceDataConsistencyExample:
         """Initialize all components."""
         # Initialize repositories (mock implementations)
         self.repositories = {
-            'order': MockOrderRepository(),
-            'payment': MockPaymentRepository(),
-            'inventory': MockInventoryRepository(),
-            'outbox': MockOutboxRepository()
+            "order": MockOrderRepository(),
+            "payment": MockPaymentRepository(),
+            "inventory": MockInventoryRepository(),
+            "outbox": MockOutboxRepository(),
         }
 
         # Initialize saga orchestrator
@@ -465,24 +455,22 @@ class ECommerceDataConsistencyExample:
         # Initialize outbox processor
         message_broker = create_kafka_message_broker(None)  # Mock broker
         self.outbox_processor = EnhancedOutboxProcessor(
-            repository=self.repositories['outbox'],
+            repository=self.repositories["outbox"],
             message_broker=message_broker,
-            config=self.config.outbox
+            config=self.config.outbox,
         )
         await self.outbox_processor.start()
 
         # Initialize command/query handlers
         self.handlers = {
-            'create_order': CreateOrderCommandHandler(
-                self.repositories['order'],
-                self.saga_orchestrator
+            "create_order": CreateOrderCommandHandler(
+                self.repositories["order"], self.saga_orchestrator
             ),
-            'process_payment': ProcessPaymentCommandHandler(
-                self.repositories['payment'],
-                self.repositories['outbox']
+            "process_payment": ProcessPaymentCommandHandler(
+                self.repositories["payment"], self.repositories["outbox"]
             ),
-            'get_order': GetOrderQueryHandler(None),
-            'get_customer_orders': GetCustomerOrdersQueryHandler(None)
+            "get_order": GetOrderQueryHandler(None),
+            "get_customer_orders": GetCustomerOrdersQueryHandler(None),
         }
 
     async def _register_saga_handlers(self):
@@ -516,9 +504,13 @@ class ECommerceDataConsistencyExample:
 
         # Register step handlers
         self.saga_orchestrator.register_step_handler("reserve_inventory", reserve_inventory_handler)
-        self.saga_orchestrator.register_compensation_handler("reserve_inventory", compensate_inventory_handler)
+        self.saga_orchestrator.register_compensation_handler(
+            "reserve_inventory", compensate_inventory_handler
+        )
         self.saga_orchestrator.register_step_handler("process_payment", process_payment_handler)
-        self.saga_orchestrator.register_compensation_handler("process_payment", compensate_payment_handler)
+        self.saga_orchestrator.register_compensation_handler(
+            "process_payment", compensate_payment_handler
+        )
 
     async def demonstrate_order_flow(self):
         """Demonstrate complete order processing flow."""
@@ -531,28 +523,28 @@ class ECommerceDataConsistencyExample:
             customer_id="customer_123",
             items=[
                 {"product_id": "product_1", "quantity": 2, "price": 1000},
-                {"product_id": "product_2", "quantity": 1, "price": 1500}
-            ]
+                {"product_id": "product_2", "quantity": 1, "price": 1500},
+            ],
         )
 
-        order_result = await self.handlers['create_order'].handle(create_order_cmd)
+        order_result = await self.handlers["create_order"].handle(create_order_cmd)
         print(f"   Order created: {order_result.result_data}")
 
         # Step 2: Process payment (uses outbox pattern)
         print("\n2. Processing payment...")
         process_payment_cmd = ProcessPaymentCommand(
-            order_id=order_result.result_data['order_id'],
+            order_id=order_result.result_data["order_id"],
             payment_method="credit_card",
-            amount=order_result.result_data['total_amount']
+            amount=order_result.result_data["total_amount"],
         )
 
-        payment_result = await self.handlers['process_payment'].handle(process_payment_cmd)
+        payment_result = await self.handlers["process_payment"].handle(process_payment_cmd)
         print(f"   Payment processed: {payment_result.result_data}")
 
         # Step 3: Query order (CQRS read side)
         print("\n3. Querying order...")
-        get_order_query = GetOrderQuery(order_id=order_result.result_data['order_id'])
-        order_query_result = await self.handlers['get_order'].handle(get_order_query)
+        get_order_query = GetOrderQuery(order_id=order_result.result_data["order_id"])
+        order_query_result = await self.handlers["get_order"].handle(get_order_query)
         print(f"   Order details: {order_query_result.data}")
 
         # Step 4: Query customer orders (CQRS with pagination)
@@ -560,12 +552,14 @@ class ECommerceDataConsistencyExample:
         get_customer_orders_query = GetCustomerOrdersQuery(customer_id="customer_123")
         get_customer_orders_query.page_size = 5
 
-        customer_orders_result = await self.handlers['get_customer_orders'].handle(get_customer_orders_query)
+        customer_orders_result = await self.handlers["get_customer_orders"].handle(
+            get_customer_orders_query
+        )
         print(f"   Customer orders: {len(customer_orders_result.data['orders'])} orders")
 
         # Step 5: Check saga status
         print("\n5. Checking saga status...")
-        saga_id = order_result.result_data['saga_id']
+        saga_id = order_result.result_data["saga_id"]
         saga_status = await self.saga_orchestrator.get_saga_status(saga_id)
         print(f"   Saga status: {saga_status}")
 
@@ -587,7 +581,7 @@ class ECommerceDataConsistencyExample:
         # Create order that will trigger compensation
         _failed_order_cmd = CreateOrderCommand(
             customer_id="customer_error",
-            items=[{"product_id": "out_of_stock", "quantity": 10, "price": 2000}]
+            items=[{"product_id": "out_of_stock", "quantity": 10, "price": 2000}],
         )
 
         # This would trigger saga compensation in a real scenario
@@ -648,7 +642,7 @@ class MockInventoryRepository:
         self.inventory = {
             "product_1": Inventory("product_1", 100),
             "product_2": Inventory("product_2", 50),
-            "out_of_stock": Inventory("out_of_stock", 0)
+            "out_of_stock": Inventory("out_of_stock", 0),
         }
 
     async def reserve(self, product_id: str, quantity: int) -> bool:
@@ -673,12 +667,12 @@ class MockOutboxRepository(EnhancedOutboxRepository):
     async def enqueue_event(self, topic: str, event_type: str, payload: dict, **kwargs) -> str:
         event_id = str(uuid.uuid4())
         event = {
-            'event_id': event_id,
-            'topic': topic,
-            'event_type': event_type,
-            'payload': payload,
-            'created_at': datetime.now(timezone.utc),
-            **kwargs
+            "event_id": event_id,
+            "topic": topic,
+            "event_type": event_type,
+            "payload": payload,
+            "created_at": datetime.now(timezone.utc),
+            **kwargs,
         }
         self.events.append(event)
         print(f"   📨 Event {event_id} queued for topic {topic}")

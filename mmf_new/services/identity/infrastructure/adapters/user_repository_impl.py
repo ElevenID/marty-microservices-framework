@@ -57,9 +57,7 @@ class AuthenticatedUserRepository(Repository[AuthenticatedUser]):
         # This is a placeholder showing the interface
         return None
 
-    async def find_all(
-        self, skip: int = 0, limit: int = 100
-    ) -> list[AuthenticatedUser]:
+    async def find_all(self, skip: int = 0, limit: int = 100) -> list[AuthenticatedUser]:
         """Find all authenticated users with pagination.
 
         Args:

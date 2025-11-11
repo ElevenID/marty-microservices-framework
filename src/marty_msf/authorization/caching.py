@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class CacheEntry:
     """Represents a cache entry with metadata."""
+
     value: Any
     created_at: float = field(default_factory=time.time)
     last_accessed: float = field(default_factory=time.time)
@@ -65,7 +66,7 @@ class AdvancedCache:
         self,
         max_size: int = 1000,
         default_ttl: float = 300.0,  # 5 minutes
-        cleanup_interval: int = 100  # Cleanup every 100 operations
+        cleanup_interval: int = 100,  # Cleanup every 100 operations
     ):
         """
         Initialize the advanced cache.
@@ -122,11 +123,7 @@ class AdvancedCache:
             return entry.value
 
     def set(
-        self,
-        key: str,
-        value: Any,
-        ttl: float | None = None,
-        tags: set[str] | None = None
+        self, key: str, value: Any, ttl: float | None = None, tags: set[str] | None = None
     ) -> bool:
         """
         Store a value in the cache.
@@ -152,11 +149,7 @@ class AdvancedCache:
                     self._remove_entry(key, old_entry)
 
                 # Create new entry
-                entry = CacheEntry(
-                    value=value,
-                    ttl=effective_ttl,
-                    tags=effective_tags
-                )
+                entry = CacheEntry(value=value, ttl=effective_ttl, tags=effective_tags)
 
                 # Add to cache
                 self._cache[key] = entry
@@ -254,7 +247,7 @@ class AdvancedCache:
                 "hit_rate": hit_rate,
                 "evictions": self._evictions,
                 "operation_count": self._operation_count,
-                "tag_count": len(self._tags_to_keys)
+                "tag_count": len(self._tags_to_keys),
             }
 
     def _maybe_cleanup(self) -> None:
@@ -324,28 +317,28 @@ class SecurityCacheManager:
         # General cache for ICacheManager protocol implementation
         self.general_cache = AdvancedCache(
             max_size=cache_config.get("general_max_size", 1000),
-            default_ttl=cache_config.get("general_ttl", 300.0)
+            default_ttl=cache_config.get("general_ttl", 300.0),
         )
 
         # Create specialized caches
         self.policy_cache = AdvancedCache(
             max_size=cache_config.get("policy_max_size", 1000),
-            default_ttl=cache_config.get("policy_ttl", 300.0)
+            default_ttl=cache_config.get("policy_ttl", 300.0),
         )
 
         self.role_cache = AdvancedCache(
             max_size=cache_config.get("role_max_size", 500),
-            default_ttl=cache_config.get("role_ttl", 600.0)
+            default_ttl=cache_config.get("role_ttl", 600.0),
         )
 
         self.identity_cache = AdvancedCache(
             max_size=cache_config.get("identity_max_size", 200),
-            default_ttl=cache_config.get("identity_ttl", 300.0)
+            default_ttl=cache_config.get("identity_ttl", 300.0),
         )
 
         self.permission_cache = AdvancedCache(
             max_size=cache_config.get("permission_max_size", 800),
-            default_ttl=cache_config.get("permission_ttl", 300.0)
+            default_ttl=cache_config.get("permission_ttl", 300.0),
         )
 
     # ICacheManager protocol implementation methods
@@ -361,7 +354,9 @@ class SecurityCacheManager:
         """
         return self.general_cache.get(key)
 
-    def set(self, key: str, value: Any, ttl: float | None = None, tags: set[str] | None = None) -> bool:
+    def set(
+        self, key: str, value: Any, ttl: float | None = None, tags: set[str] | None = None
+    ) -> bool:
         """
         Store a value in the general cache.
 
@@ -399,8 +394,13 @@ class SecurityCacheManager:
             Number of entries invalidated
         """
         total_invalidated = 0
-        for cache in [self.general_cache, self.policy_cache, self.role_cache,
-                      self.identity_cache, self.permission_cache]:
+        for cache in [
+            self.general_cache,
+            self.policy_cache,
+            self.role_cache,
+            self.identity_cache,
+            self.permission_cache,
+        ]:
             total_invalidated += cache.invalidate_by_tags(tags)
         return total_invalidated
 
@@ -418,11 +418,7 @@ class SecurityCacheManager:
         return self.policy_cache.get(cache_key)
 
     def cache_policy_decision(
-        self,
-        cache_key: str,
-        decision: Any,
-        ttl: float | None = None,
-        tags: set[str] | None = None
+        self, cache_key: str, decision: Any, ttl: float | None = None, tags: set[str] | None = None
     ) -> bool:
         """Cache a policy decision."""
         return self.policy_cache.set(cache_key, decision, ttl, tags)
@@ -432,10 +428,7 @@ class SecurityCacheManager:
         return self.role_cache.get(f"roles:{principal_id}")
 
     def cache_effective_roles(
-        self,
-        principal_id: str,
-        roles: set[str],
-        ttl: float | None = None
+        self, principal_id: str, roles: set[str], ttl: float | None = None
     ) -> bool:
         """Cache effective roles for a principal."""
         tags = {f"principal:{principal_id}", "roles"}
@@ -447,11 +440,7 @@ class SecurityCacheManager:
         return self.permission_cache.get(cache_key)
 
     def cache_effective_permissions(
-        self,
-        principal_id: str,
-        resource: str,
-        permissions: set[str],
-        ttl: float | None = None
+        self, principal_id: str, resource: str, permissions: set[str], ttl: float | None = None
     ) -> bool:
         """Cache effective permissions."""
         cache_key = f"permissions:{principal_id}:{resource}"
@@ -463,7 +452,12 @@ class SecurityCacheManager:
         tags = {f"principal:{principal_id}"}
         total_invalidated = 0
 
-        for cache in [self.policy_cache, self.role_cache, self.identity_cache, self.permission_cache]:
+        for cache in [
+            self.policy_cache,
+            self.role_cache,
+            self.identity_cache,
+            self.permission_cache,
+        ]:
             total_invalidated += cache.invalidate_by_tags(tags)
 
         return total_invalidated
@@ -487,12 +481,13 @@ class SecurityCacheManager:
             "policies": [self.policy_cache],
             "roles": [self.role_cache],
             "identities": [self.identity_cache],
-            "permissions": [self.permission_cache]
+            "permissions": [self.permission_cache],
         }
 
-        caches_to_invalidate = cache_map.get(category, [
-            self.policy_cache, self.role_cache, self.identity_cache, self.permission_cache
-        ])
+        caches_to_invalidate = cache_map.get(
+            category,
+            [self.policy_cache, self.role_cache, self.identity_cache, self.permission_cache],
+        )
 
         for cache in caches_to_invalidate:
             total_invalidated += cache.invalidate_by_tags(tags)
@@ -514,7 +509,7 @@ class SecurityCacheManager:
             "policy_cache": self.policy_cache.get_metrics(),
             "role_cache": self.role_cache.get_metrics(),
             "identity_cache": self.identity_cache.get_metrics(),
-            "permission_cache": self.permission_cache.get_metrics()
+            "permission_cache": self.permission_cache.get_metrics(),
         }
 
 
@@ -535,7 +530,9 @@ class InMemoryCacheManager:
         with self._lock:
             return self._cache.get(key)
 
-    def set(self, key: str, value: Any, ttl: float | None = None, tags: set[str] | None = None) -> bool:
+    def set(
+        self, key: str, value: Any, ttl: float | None = None, tags: set[str] | None = None
+    ) -> bool:
         """Store a value in cache (TTL and tags ignored in this simple implementation)."""
         with self._lock:
             self._cache[key] = value

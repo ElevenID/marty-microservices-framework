@@ -11,6 +11,12 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Union
 
+from marty_msf.core.di_container import (
+    get_service,
+    get_service_optional,
+    register_instance,
+)
+
 from .http_pool import HTTPConnectionPool, HTTPPoolConfig
 from .redis_pool import RedisConnectionPool, RedisPoolConfig
 
@@ -19,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 class PoolType(Enum):
     """Types of connection pools"""
+
     HTTP = "http"
     REDIS = "redis"
     DATABASE = "database"  # Handled by existing database manager
@@ -28,6 +35,7 @@ class PoolType(Enum):
 @dataclass
 class PoolConfig:
     """Unified pool configuration"""
+
     name: str
     pool_type: PoolType
     enabled: bool = True
@@ -74,7 +82,7 @@ class ConnectionPoolManager:
             if self.monitoring_enabled:
                 self._start_monitoring()
 
-            logger.info(f"Connection pool manager initialized with {len(self._pools)} pools")
+            logger.info("Connection pool manager initialized with %d pools", len(self._pools))
 
     async def _create_pool(self, config: PoolConfig):
         """Create a specific type of pool"""
@@ -85,7 +93,7 @@ class ConnectionPoolManager:
                         name=config.name,
                         max_connections=config.max_connections,
                         health_check_interval=config.health_check_interval,
-                        enable_metrics=config.enable_metrics
+                        enable_metrics=config.enable_metrics,
                     )
                 pool = HTTPConnectionPool(config.http_config)
 
@@ -95,7 +103,7 @@ class ConnectionPoolManager:
                         name=config.name,
                         max_connections=config.max_connections,
                         health_check_interval=config.health_check_interval,
-                        enable_metrics=config.enable_metrics
+                        enable_metrics=config.enable_metrics,
                     )
                 pool = RedisConnectionPool(config.redis_config)
 
@@ -106,10 +114,10 @@ class ConnectionPoolManager:
             self._configs[config.name] = config
             self.total_pools_created += 1
 
-            logger.info(f"Created {config.pool_type.value} pool '{config.name}'")
+            logger.info("Created %s pool '%s'", config.pool_type.value, config.name)
 
         except Exception as e:
-            logger.error(f"Failed to create pool '{config.name}': {e}")
+            logger.error("Failed to create pool '%s': %s", config.name, e)
             raise
 
     async def get_pool(self, name: str) -> HTTPConnectionPool | RedisConnectionPool:
@@ -151,7 +159,7 @@ class ConnectionPoolManager:
         async with self._lock:
             pool = self._pools.get(name)
             if pool is None:
-                logger.warning(f"Pool '{name}' not found for removal")
+                logger.warning("Pool '%s' not found for removal", name)
                 return
 
             await pool.close()
@@ -159,7 +167,7 @@ class ConnectionPoolManager:
             del self._configs[name]
             self.total_pools_destroyed += 1
 
-            logger.info(f"Removed pool '{name}'")
+            logger.info("Removed pool '%s'", name)
 
     def list_pools(self) -> list[dict[str, Any]]:
         """List all pools with basic information"""
@@ -172,10 +180,10 @@ class ConnectionPoolManager:
                 "type": config.pool_type.value,
                 "enabled": config.enabled,
                 "tags": config.tags,
-                "status": "active" if pool else "inactive"
+                "status": "active" if pool else "inactive",
             }
 
-            if pool and hasattr(pool, 'get_metrics'):
+            if pool and hasattr(pool, "get_metrics"):
                 pool_info.update(pool.get_metrics())
 
             pools_info.append(pool_info)
@@ -190,13 +198,13 @@ class ConnectionPoolManager:
                 "total_pools": len(self._pools),
                 "total_pools_created": self.total_pools_created,
                 "total_pools_destroyed": self.total_pools_destroyed,
-                "monitoring_enabled": self.monitoring_enabled
+                "monitoring_enabled": self.monitoring_enabled,
             },
-            "pools": {}
+            "pools": {},
         }
 
         for name, pool in self._pools.items():
-            if hasattr(pool, 'get_metrics'):
+            if hasattr(pool, "get_metrics"):
                 metrics["pools"][name] = pool.get_metrics()
 
         return metrics
@@ -214,7 +222,7 @@ class ConnectionPoolManager:
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                logger.error(f"Pool monitoring error: {e}")
+                logger.error("Pool monitoring error: %s", e)
 
     async def _collect_metrics(self):
         """Collect and log metrics from all pools"""
@@ -222,43 +230,51 @@ class ConnectionPoolManager:
             metrics = self.get_metrics()
 
             # Log summary metrics
+            total_connections = sum(
+                pool.get("total_connections", 0) for pool in metrics["pools"].values()
+            )
             logger.info(
-                f"Pool Manager Metrics: {metrics['manager']['total_pools']} pools, "
-                f"{sum(pool.get('total_connections', 0) for pool in metrics['pools'].values())} total connections"
+                "Pool Manager Metrics: %d pools, %d total connections",
+                metrics["manager"]["total_pools"],
+                total_connections,
             )
 
             # Check for any unhealthy pools
             for pool_name, pool_metrics in metrics["pools"].items():
-                error_rate = pool_metrics.get('error_rate', 0)
+                error_rate = pool_metrics.get("error_rate", 0)
                 if error_rate > 0.1:  # More than 10% error rate
-                    logger.warning(f"High error rate in pool '{pool_name}': {error_rate:.2%}")
+                    logger.warning(
+                        "High error rate in pool '%s': %.2f%%", pool_name, error_rate * 100
+                    )
 
-                active_connections = pool_metrics.get('active_connections', 0)
-                max_connections = pool_metrics.get('max_connections', 1)
+                active_connections = pool_metrics.get("active_connections", 0)
+                max_connections = pool_metrics.get("max_connections", 1)
                 utilization = active_connections / max_connections
 
                 if utilization > 0.9:  # More than 90% utilization
-                    logger.warning(f"High utilization in pool '{pool_name}': {utilization:.2%}")
+                    logger.warning(
+                        "High utilization in pool '%s': %.2f%%", pool_name, utilization * 100
+                    )
 
-        except Exception as e:
-            logger.error(f"Error collecting pool metrics: {e}")
+        except (AttributeError, KeyError, TypeError, ValueError) as e:
+            logger.error("Error collecting pool metrics: %s", e)
 
     async def health_check(self) -> dict[str, Any]:
         """Perform health check on all pools"""
         results = {
             "manager_status": "healthy" if self._initialized else "unhealthy",
             "pools": {},
-            "overall_status": "healthy"
+            "overall_status": "healthy",
         }
 
         unhealthy_count = 0
 
         for name, pool in self._pools.items():
             try:
-                if hasattr(pool, 'get_metrics'):
+                if hasattr(pool, "get_metrics"):
                     metrics = pool.get_metrics()
-                    error_rate = metrics.get('error_rate', 0)
-                    active_connections = metrics.get('active_connections', 0)
+                    error_rate = metrics.get("error_rate", 0)
+                    active_connections = metrics.get("active_connections", 0)
 
                     if error_rate > 0.5 or active_connections == 0:
                         status = "unhealthy"
@@ -269,17 +285,19 @@ class ConnectionPoolManager:
                     results["pools"][name] = {
                         "status": status,
                         "error_rate": error_rate,
-                        "active_connections": active_connections
+                        "active_connections": active_connections,
                     }
                 else:
                     results["pools"][name] = {"status": "unknown"}
 
-            except Exception as e:
+            except (AttributeError, KeyError, TypeError, ValueError) as e:
                 results["pools"][name] = {"status": "error", "error": str(e)}
                 unhealthy_count += 1
 
         if unhealthy_count > 0:
-            results["overall_status"] = "degraded" if unhealthy_count < len(self._pools) else "unhealthy"
+            results["overall_status"] = (
+                "degraded" if unhealthy_count < len(self._pools) else "unhealthy"
+            )
 
         return results
 
@@ -301,8 +319,8 @@ class ConnectionPoolManager:
             for name, pool in list(self._pools.items()):
                 try:
                     await pool.close()
-                except Exception as e:
-                    logger.error(f"Error closing pool '{name}': {e}")
+                except (AttributeError, RuntimeError, OSError) as e:
+                    logger.error("Error closing pool '%s': %s", name, e)
 
             self._pools.clear()
             self._configs.clear()
@@ -311,36 +329,37 @@ class ConnectionPoolManager:
             logger.info("Connection pool manager closed")
 
 
-# Global pool manager instance
-_pool_manager: ConnectionPoolManager | None = None
-_manager_lock = asyncio.Lock()
+# DI Container integration functions
 
 
-async def get_pool_manager() -> ConnectionPoolManager:
-    """Get the global pool manager instance"""
-    global _pool_manager
-    async with _manager_lock:
-        if _pool_manager is None:
-            _pool_manager = ConnectionPoolManager()
-        return _pool_manager
+def get_pool_manager() -> ConnectionPoolManager:
+    """Get the pool manager instance from DI container"""
+    manager = get_service_optional(ConnectionPoolManager)
+    if manager is None:
+        manager = ConnectionPoolManager()
+        register_instance(ConnectionPoolManager, manager)
+    return manager
 
 
 async def initialize_pools(configs: list[PoolConfig]):
-    """Initialize the global pool manager with configurations"""
-    manager = await get_pool_manager()
+    """Initialize the pool manager with configurations"""
+    manager = get_pool_manager()
     await manager.initialize(configs)
 
 
 async def get_pool(name: str) -> HTTPConnectionPool | RedisConnectionPool:
-    """Get a pool by name from the global manager"""
-    manager = await get_pool_manager()
+    """Get a pool by name from the manager"""
+    manager = get_pool_manager()
     return await manager.get_pool(name)
 
 
 async def close_all_pools():
-    """Close all pools and shut down the global manager"""
-    global _pool_manager
-    async with _manager_lock:
-        if _pool_manager:
-            await _pool_manager.close()
-            _pool_manager = None
+    """Close all pools and shut down the manager"""
+    manager = get_service_optional(ConnectionPoolManager)
+    if manager:
+        await manager.close()
+
+
+def register_pool_manager(manager: ConnectionPoolManager):
+    """Register a pool manager instance in the DI container"""
+    register_instance(ConnectionPoolManager, manager)

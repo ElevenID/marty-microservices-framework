@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 class ACLPermission(Enum):
     """Standard ACL permissions"""
+
     READ = "read"
     WRITE = "write"
     DELETE = "delete"
@@ -41,7 +42,7 @@ class ACLEntry:
         principal: str,
         permissions: set[str],
         allow: bool = True,
-        conditions: dict[str, Any] | None = None
+        conditions: dict[str, Any] | None = None,
     ):
         self.resource_pattern = resource_pattern
         self.principal = principal  # user, role, or group
@@ -50,9 +51,7 @@ class ACLEntry:
         self.conditions = conditions or {}
 
         # Compile regex pattern for resource matching
-        self.compiled_pattern = re.compile(
-            resource_pattern.replace("*", ".*").replace("?", ".")
-        )
+        self.compiled_pattern = re.compile(resource_pattern.replace("*", ".*").replace("?", "."))
 
     def matches_resource(self, resource: str) -> bool:
         """Check if this ACL entry applies to the resource"""
@@ -134,7 +133,9 @@ class ACLEntry:
         request_method = context.request_metadata.get("request_method", "").upper()
         return request_method in [method.upper() for method in allowed_methods]
 
-    def _check_resource_attributes(self, required_attrs: dict[str, Any], context: SecurityContext) -> bool:
+    def _check_resource_attributes(
+        self, required_attrs: dict[str, Any], context: SecurityContext
+    ) -> bool:
         """Check if resource has required attributes"""
         resource_attrs = context.request_metadata.get("resource_attributes", {})
 
@@ -177,20 +178,22 @@ class ACLPolicyEngine(AbstractPolicyEngine):
                 return SecurityDecision(
                     allowed=False,
                     reason="No principal provided",
-                    metadata={"engine": "acl", "confidence": 1.0}
+                    metadata={"engine": "acl", "confidence": 1.0},
                 )
 
             # Get principal's roles and groups
             principal_roles = set(principal.roles)
-            principal_groups = set(getattr(principal, 'groups', []))
+            principal_groups = set(getattr(principal, "groups", []))
 
             # Find applicable ACL entries
             applicable_entries = []
             for entry in self.acl_entries:
-                if (entry.matches_resource(resource) and
-                    entry.matches_principal(principal.id, principal_roles, principal_groups) and
-                    action in entry.permissions and
-                    entry.evaluate_conditions(context)):
+                if (
+                    entry.matches_resource(resource)
+                    and entry.matches_principal(principal.id, principal_roles, principal_groups)
+                    and action in entry.permissions
+                    and entry.evaluate_conditions(context)
+                ):
                     applicable_entries.append(entry)
 
             # Evaluate ACL entries (deny takes precedence)
@@ -202,31 +205,37 @@ class ACLPolicyEngine(AbstractPolicyEngine):
             for entry in applicable_entries:
                 if entry.allow:
                     has_allow = True
-                    allow_reasons.append(f"Allow rule for {entry.principal} on {entry.resource_pattern}")
+                    allow_reasons.append(
+                        f"Allow rule for {entry.principal} on {entry.resource_pattern}"
+                    )
                 else:
                     has_deny = True
-                    deny_reasons.append(f"Deny rule for {entry.principal} on {entry.resource_pattern}")
+                    deny_reasons.append(
+                        f"Deny rule for {entry.principal} on {entry.resource_pattern}"
+                    )
 
             # Determine final decision
             if has_deny:
                 decision = SecurityDecision(
                     allowed=False,
                     reason=f"Access denied: {', '.join(deny_reasons)}",
-                    metadata={"engine": "acl", "confidence": 1.0}
+                    metadata={"engine": "acl", "confidence": 1.0},
                 )
             elif has_allow:
                 decision = SecurityDecision(
                     allowed=True,
                     reason=f"Access granted: {', '.join(allow_reasons)}",
-                    metadata={"engine": "acl", "confidence": 1.0}
+                    metadata={"engine": "acl", "confidence": 1.0},
                 )
             else:
                 # Check default permissions
                 default_allowed = self._check_default_permissions(resource, action, principal_roles)
                 decision = SecurityDecision(
                     allowed=default_allowed,
-                    reason="No explicit ACL rules found, using default permissions" if default_allowed else "No ACL rules grant access",
-                    metadata={"engine": "acl", "confidence": 0.8 if default_allowed else 1.0}
+                    reason="No explicit ACL rules found, using default permissions"
+                    if default_allowed
+                    else "No ACL rules grant access",
+                    metadata={"engine": "acl", "confidence": 0.8 if default_allowed else 1.0},
                 )
 
             # Add evaluation metadata
@@ -235,7 +244,7 @@ class ACLPolicyEngine(AbstractPolicyEngine):
                 "applicable_entries": len(applicable_entries),
                 "resource_type": self._get_resource_type(resource),
                 "principal_roles": list(principal_roles),
-                "principal_groups": list(principal_groups)
+                "principal_groups": list(principal_groups),
             }
 
             end_time = datetime.now(timezone.utc)
@@ -248,7 +257,7 @@ class ACLPolicyEngine(AbstractPolicyEngine):
             return SecurityDecision(
                 allowed=False,
                 reason=f"ACL evaluation error: {str(e)}",
-                metadata={"engine": "acl", "confidence": 1.0}
+                metadata={"engine": "acl", "confidence": 1.0},
             )
 
     async def load_policies(self, policies: list[dict[str, Any]]) -> bool:
@@ -281,7 +290,9 @@ class ACLPolicyEngine(AbstractPolicyEngine):
                 # Test regex compilation
                 re.compile(entry.resource_pattern)
             except re.error as e:
-                errors.append(f"ACL entry {i}: Invalid resource pattern '{entry.resource_pattern}': {e}")
+                errors.append(
+                    f"ACL entry {i}: Invalid resource pattern '{entry.resource_pattern}': {e}"
+                )
 
             # Validate permissions
             for perm in entry.permissions:
@@ -291,7 +302,10 @@ class ACLPolicyEngine(AbstractPolicyEngine):
             # Validate principal format
             if not entry.principal:
                 errors.append(f"ACL entry {i}: Empty principal")
-            elif entry.principal.startswith(("role:", "group:")) and len(entry.principal.split(":", 1)) != 2:
+            elif (
+                entry.principal.startswith(("role:", "group:"))
+                and len(entry.principal.split(":", 1)) != 2
+            ):
                 errors.append(f"ACL entry {i}: Invalid principal format '{entry.principal}'")
 
         # Check for conflicting rules
@@ -306,7 +320,7 @@ class ACLPolicyEngine(AbstractPolicyEngine):
         principal: str,
         permissions: set[str],
         allow: bool = True,
-        conditions: dict[str, Any] | None = None
+        conditions: dict[str, Any] | None = None,
     ) -> bool:
         """Add a new ACL entry"""
         try:
@@ -322,7 +336,8 @@ class ACLPolicyEngine(AbstractPolicyEngine):
         """Remove ACL entries matching resource pattern and principal"""
         original_count = len(self.acl_entries)
         self.acl_entries = [
-            entry for entry in self.acl_entries
+            entry
+            for entry in self.acl_entries
             if not (entry.resource_pattern == resource_pattern and entry.principal == principal)
         ]
         removed_count = original_count - len(self.acl_entries)
@@ -334,24 +349,28 @@ class ACLPolicyEngine(AbstractPolicyEngine):
         entries = []
         for entry in self.acl_entries:
             if resource_pattern is None or entry.resource_pattern == resource_pattern:
-                entries.append({
-                    "resource_pattern": entry.resource_pattern,
-                    "principal": entry.principal,
-                    "permissions": list(entry.permissions),
-                    "allow": entry.allow,
-                    "conditions": entry.conditions
-                })
+                entries.append(
+                    {
+                        "resource_pattern": entry.resource_pattern,
+                        "principal": entry.principal,
+                        "permissions": list(entry.permissions),
+                        "allow": entry.allow,
+                        "conditions": entry.conditions,
+                    }
+                )
         return entries
 
-    def get_effective_permissions(self, resource: str, principal_id: str, roles: set[str], groups: set[str]) -> set[str]:
+    def get_effective_permissions(
+        self, resource: str, principal_id: str, roles: set[str], groups: set[str]
+    ) -> set[str]:
         """Get effective permissions for a principal on a resource"""
         effective_permissions = set()
         denied_permissions = set()
 
         for entry in self.acl_entries:
-            if (entry.matches_resource(resource) and
-                entry.matches_principal(principal_id, roles, groups)):
-
+            if entry.matches_resource(resource) and entry.matches_principal(
+                principal_id, roles, groups
+            ):
                 if entry.allow:
                     effective_permissions.update(entry.permissions)
                 else:
@@ -390,7 +409,7 @@ class ACLPolicyEngine(AbstractPolicyEngine):
                 principal=entry_data["principal"],
                 permissions=set(entry_data["permissions"]),
                 allow=entry_data.get("allow", True),
-                conditions=entry_data.get("conditions")
+                conditions=entry_data.get("conditions"),
             )
             self.acl_entries.append(entry)
 
@@ -401,7 +420,7 @@ class ACLPolicyEngine(AbstractPolicyEngine):
             self.resource_types[resource_type] = {
                 "pattern": policy.get("pattern", f"{resource_type}:*"),
                 "default_permissions": set(policy.get("default_permissions", [])),
-                "attributes": policy.get("attributes", {})
+                "attributes": policy.get("attributes", {}),
             }
 
     def _load_default_permissions(self, policy: dict[str, Any]) -> None:

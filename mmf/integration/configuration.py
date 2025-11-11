@@ -43,12 +43,14 @@ class IntegrationConfig:
             # For development/testing, use a default key
             secret_key = "dev-secret-key-change-in-production"
 
-        return cls(
-            jwt_secret_key=secret_key,
+        return IntegrationConfig(
+            jwt_secret_key=secret_key,  # pragma: allowlist secret
             jwt_algorithm=os.getenv("JWT_ALGORITHM", "HS256"),
             jwt_access_token_expire_minutes=int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30")),
             jwt_issuer=os.getenv("JWT_ISSUER"),
             jwt_audience=os.getenv("JWT_AUDIENCE"),
             protected_paths=os.getenv("JWT_PROTECTED_PATHS", "/api/,/admin/").split(","),
-            exclude_paths=os.getenv("JWT_EXCLUDE_PATHS", "/auth/,/health,/docs,/openapi.json").split(","),
+            exclude_paths=os.getenv(
+                "JWT_EXCLUDE_PATHS", "/auth/,/health,/docs,/openapi.json"
+            ).split(","),
         )

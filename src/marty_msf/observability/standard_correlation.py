@@ -26,21 +26,21 @@ from marty_msf.framework.grpc import ServiceDefinition
 logger = logging.getLogger(__name__)
 
 # Context variables for correlation tracking
-_correlation_id: ContextVar[str | None] = ContextVar('correlation_id', default=None)
-_request_id: ContextVar[str | None] = ContextVar('request_id', default=None)
-_user_id: ContextVar[str | None] = ContextVar('user_id', default=None)
-_session_id: ContextVar[str | None] = ContextVar('session_id', default=None)
-_operation_id: ContextVar[str | None] = ContextVar('operation_id', default=None)
-_plugin_id: ContextVar[str | None] = ContextVar('plugin_id', default=None)
+_correlation_id: ContextVar[str | None] = ContextVar("correlation_id", default=None)
+_request_id: ContextVar[str | None] = ContextVar("request_id", default=None)
+_user_id: ContextVar[str | None] = ContextVar("user_id", default=None)
+_session_id: ContextVar[str | None] = ContextVar("session_id", default=None)
+_operation_id: ContextVar[str | None] = ContextVar("operation_id", default=None)
+_plugin_id: ContextVar[str | None] = ContextVar("plugin_id", default=None)
 
 # Standard headers for correlation
 STANDARD_HEADERS = {
-    'correlation_id': 'x-mmf-correlation-id',
-    'request_id': 'x-mmf-request-id',
-    'user_id': 'x-mmf-user-id',
-    'session_id': 'x-mmf-session-id',
-    'operation_id': 'x-mmf-operation-id',
-    'plugin_id': 'x-mmf-plugin-id'
+    "correlation_id": "x-mmf-correlation-id",
+    "request_id": "x-mmf-request-id",
+    "user_id": "x-mmf-user-id",
+    "session_id": "x-mmf-session-id",
+    "operation_id": "x-mmf-operation-id",
+    "plugin_id": "x-mmf-plugin-id",
 }
 
 
@@ -111,12 +111,12 @@ class CorrelationContext:
     def get_all() -> dict[str, str | None]:
         """Get all correlation values."""
         return {
-            'correlation_id': CorrelationContext.get_correlation_id(),
-            'request_id': CorrelationContext.get_request_id(),
-            'user_id': CorrelationContext.get_user_id(),
-            'session_id': CorrelationContext.get_session_id(),
-            'operation_id': CorrelationContext.get_operation_id(),
-            'plugin_id': CorrelationContext.get_plugin_id()
+            "correlation_id": CorrelationContext.get_correlation_id(),
+            "request_id": CorrelationContext.get_request_id(),
+            "user_id": CorrelationContext.get_user_id(),
+            "session_id": CorrelationContext.get_session_id(),
+            "operation_id": CorrelationContext.get_operation_id(),
+            "plugin_id": CorrelationContext.get_plugin_id(),
         }
 
     @staticmethod
@@ -125,14 +125,14 @@ class CorrelationContext:
         for key, header in STANDARD_HEADERS.items():
             value = headers.get(header) or headers.get(header.lower())
             if value:
-                getattr(CorrelationContext, f'set_{key}')(value)
+                getattr(CorrelationContext, f"set_{key}")(value)
 
     @staticmethod
     def to_headers() -> dict[str, str]:
         """Convert correlation values to headers."""
         headers = {}
         for key, header in STANDARD_HEADERS.items():
-            value = getattr(CorrelationContext, f'get_{key}')()
+            value = getattr(CorrelationContext, f"get_{key}")()
             if value:
                 headers[header] = value
         return headers
@@ -208,7 +208,8 @@ class StandardCorrelationInterceptor(grpc.ServerInterceptor):
                     # Add correlation headers to trailing metadata
                     correlation_headers = CorrelationContext.to_headers()
                     trailing_metadata = [
-                        (header, value) for header, value in correlation_headers.items()
+                        (header, value)
+                        for header, value in correlation_headers.items()
                         if value is not None
                     ]
                     if trailing_metadata:
@@ -230,17 +231,17 @@ class correlation_context:
     def __enter__(self):
         """Set correlation values."""
         for key, value in self.values.items():
-            if hasattr(CorrelationContext, f'set_{key}'):
-                current_value = getattr(CorrelationContext, f'get_{key}')()
+            if hasattr(CorrelationContext, f"set_{key}"):
+                current_value = getattr(CorrelationContext, f"get_{key}")()
                 self.tokens[key] = current_value
-                getattr(CorrelationContext, f'set_{key}')(value)
+                getattr(CorrelationContext, f"set_{key}")(value)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Restore previous correlation values."""
         for key, value in self.tokens.items():
             if value is not None:
-                getattr(CorrelationContext, f'set_{key}')(value)
+                getattr(CorrelationContext, f"set_{key}")(value)
 
 
 # Async context manager for correlation tracking
@@ -254,17 +255,17 @@ class async_correlation_context:
     async def __aenter__(self):
         """Set correlation values."""
         for key, value in self.values.items():
-            if hasattr(CorrelationContext, f'set_{key}'):
-                current_value = getattr(CorrelationContext, f'get_{key}')()
+            if hasattr(CorrelationContext, f"set_{key}"):
+                current_value = getattr(CorrelationContext, f"get_{key}")()
                 self.tokens[key] = current_value
-                getattr(CorrelationContext, f'set_{key}')(value)
+                getattr(CorrelationContext, f"set_{key}")(value)
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Restore previous correlation values."""
         for key, value in self.tokens.items():
             if value is not None:
-                getattr(CorrelationContext, f'set_{key}')(value)
+                getattr(CorrelationContext, f"set_{key}")(value)
 
 
 # Logging formatter for correlation
@@ -322,15 +323,15 @@ def inject_correlation_to_span(span: Any | None = None) -> None:
 
 # Export public API
 __all__ = [
-    'CorrelationContext',
-    'StandardCorrelationMiddleware',
-    'StandardCorrelationInterceptor',
-    'correlation_context',
-    'async_correlation_context',
-    'CorrelationFormatter',
-    'get_current_correlation',
-    'set_plugin_correlation',
-    'clear_correlation',
-    'inject_correlation_to_span',
-    'STANDARD_HEADERS'
+    "CorrelationContext",
+    "StandardCorrelationMiddleware",
+    "StandardCorrelationInterceptor",
+    "correlation_context",
+    "async_correlation_context",
+    "CorrelationFormatter",
+    "get_current_correlation",
+    "set_plugin_correlation",
+    "clear_correlation",
+    "inject_correlation_to_span",
+    "STANDARD_HEADERS",
 ]

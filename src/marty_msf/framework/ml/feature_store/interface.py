@@ -21,9 +21,7 @@ class FeatureStoreInterface(ABC):
         """Register a feature group."""
 
     @abstractmethod
-    def get_online_features(
-        self, entity_id: str, feature_names: list[str]
-    ) -> dict[str, Any]:
+    def get_online_features(self, entity_id: str, feature_names: list[str]) -> dict[str, Any]:
         """Get online features for an entity."""
 
     @abstractmethod
@@ -48,7 +46,5 @@ class FeatureStoreInterface(ABC):
         """Compute statistics for a feature."""
 
     @abstractmethod
-    def validate_features(
-        self, entity_id: str, features: dict[str, Any]
-    ) -> dict[str, list[str]]:
+    def validate_features(self, entity_id: str, features: dict[str, Any]) -> dict[str, list[str]]:
         """Validate features against registered schema."""

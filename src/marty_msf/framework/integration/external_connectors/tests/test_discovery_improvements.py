@@ -34,7 +34,6 @@ class TestDiscoveryImprovements(unittest.TestCase):
     def test_discovery_imports(self):
         """Test that discovery modules can be imported."""
         try:
-
             # Basic tests to ensure classes are properly defined
             self.assertTrue(hasattr(ServiceQuery, "service_name"))
             self.assertTrue(hasattr(DiscoveryResult, "instances"))
@@ -48,7 +47,6 @@ class TestDiscoveryImprovements(unittest.TestCase):
     def test_service_query_dataclass(self):
         """Test ServiceQuery dataclass functionality."""
         try:
-
             # Test basic instantiation
             query = ServiceQuery(service_name="test-service")
             self.assertEqual(query.service_name, "test-service")
@@ -75,7 +73,6 @@ class TestDiscoveryImprovements(unittest.TestCase):
     def test_discovery_result_cache_age(self):
         """Test that DiscoveryResult includes cache age information."""
         try:
-
             # Test DiscoveryResult structure
             test_query = ServiceQuery(service_name="test-service")
             result = DiscoveryResult(
@@ -98,7 +95,6 @@ class TestDiscoveryImprovements(unittest.TestCase):
     def test_server_side_discovery_http_client(self):
         """Test that ServerSideDiscovery has HTTP client capability."""
         try:
-
             # Create discovery config (mock)
             config = DiscoveryConfig()
 
@@ -122,7 +118,6 @@ class TestDiscoveryImprovements(unittest.TestCase):
     def test_service_mesh_discovery_integration(self):
         """Test that ServiceMeshDiscovery has mesh integration."""
         try:
-
             # Create discovery config and mesh config
             config = DiscoveryConfig()
             mesh_config = {
@@ -156,7 +151,6 @@ class TestDiscoveryImprovements(unittest.TestCase):
     def test_mock_kubernetes_client(self):
         """Test MockKubernetesClient functionality."""
         try:
-
             # Test client initialization
             mesh_config = {"type": "istio", "allow_stub": True}
             client = MockKubernetesClient(mesh_config)
@@ -174,7 +168,6 @@ class TestDiscoveryFunctionality(unittest.TestCase):
     def test_cache_functionality(self):
         """Test cache behavior and age calculation."""
         try:
-
             # Create cache config
             config = DiscoveryConfig()
             config.cache_strategy = CacheStrategy.TTL

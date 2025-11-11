@@ -111,9 +111,7 @@ class MetricsCollector:
         self.registry = registry or CollectorRegistry()
 
         # Service info metric
-        self.service_info = Info(
-            "mmf_service_info", "Service information", registry=self.registry
-        )
+        self.service_info = Info("mmf_service_info", "Service information", registry=self.registry)
         self.service_info.info({"service": service_name, "version": "1.0.0"})
 
         # Request metrics

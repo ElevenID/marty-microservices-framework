@@ -18,6 +18,7 @@ T = TypeVar("T")
 
 class ResilienceStrategy(Enum):
     """Resilience strategy for different call types."""
+
     INTERNAL_SERVICE = "internal_service"  # Internal microservice calls
     EXTERNAL_SERVICE = "external_service"  # External API calls
     DATABASE = "database"  # Database operations
@@ -93,32 +94,17 @@ class IResilienceManager(ABC):
     """Abstract interface for resilience managers."""
 
     @abstractmethod
-    async def execute_resilient(
-        self,
-        func: Callable[..., T],
-        *args: Any,
-        **kwargs: Any
-    ) -> T:
+    async def execute_resilient(self, func: Callable[..., T], *args: Any, **kwargs: Any) -> T:
         """Execute a function with resilience patterns applied."""
         pass
 
     @abstractmethod
-    def execute_resilient_sync(
-        self,
-        func: Callable[..., T],
-        *args: Any,
-        **kwargs: Any
-    ) -> T:
+    def execute_resilient_sync(self, func: Callable[..., T], *args: Any, **kwargs: Any) -> T:
         """Execute a synchronous function with resilience patterns applied."""
         pass
 
     @abstractmethod
-    async def apply_resilience(
-        self,
-        func: Any,
-        *args: Any,
-        **kwargs: Any
-    ) -> Any:
+    async def apply_resilience(self, func: Any, *args: Any, **kwargs: Any) -> Any:
         """Apply resilience patterns to a function call."""
         pass
 
@@ -170,22 +156,31 @@ class IResilienceService(ABC):
 # Exception classes
 class ResilienceError(Exception):
     """Base exception for resilience operations."""
+
     pass
 
 
 class CircuitBreakerOpenError(ResilienceError):
     """Raised when circuit breaker is open."""
+
     pass
 
 
 class BulkheadRejectedError(ResilienceError):
     """Raised when bulkhead rejects a request."""
+
     pass
 
 
 class ResilienceTimeoutError(ResilienceError):
     """Raised when operation times out."""
-    def __init__(self, message: str = "Operation timed out", timeout_seconds: float | None = None, operation: str = "operation"):
+
+    def __init__(
+        self,
+        message: str = "Operation timed out",
+        timeout_seconds: float | None = None,
+        operation: str = "operation",
+    ):
         super().__init__(message)
         self.timeout_seconds = timeout_seconds
         self.operation = operation
@@ -193,6 +188,7 @@ class ResilienceTimeoutError(ResilienceError):
 
 class RetryExhaustedError(ResilienceError):
     """Raised when all retry attempts are exhausted."""
+
     def __init__(self, message: str = "All retry attempts exhausted", attempts: int = 0):
         super().__init__(message)
         self.attempts = attempts
