@@ -30,6 +30,7 @@ from typing_extensions import Protocol
 
 T = TypeVar("T")
 ServiceType = TypeVar("ServiceType")
+_MISSING = object()  # Sentinel value for missing defaults
 
 
 class ServiceProtocol(Protocol):
@@ -110,9 +111,9 @@ class DIContainer(metaclass=SingletonMeta):
     def get(self, service_type: type[T]) -> T: ...
 
     @overload
-    def get(self, service_type: type[T], default: T | None) -> T | None: ...
+    def get(self, service_type: type[T], default: object = _MISSING) -> T | None: ...
 
-    def get(self, service_type: type[T], default: T | None = None) -> T | None:
+    def get(self, service_type: type[T], default: object = _MISSING) -> T | None:
         """
         Get a service instance of the specified type.
 
@@ -140,8 +141,8 @@ class DIContainer(metaclass=SingletonMeta):
                 return cast(T, instance)
 
             # Return default if provided
-            if default is not None:
-                return default
+            if default is not _MISSING:
+                return default  # type: ignore
 
             raise ValueError(f"No factory or instance registered for {service_type}")
 
