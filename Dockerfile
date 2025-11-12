@@ -39,5 +39,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Run the application using uv
-CMD ["uv", "run", "uvicorn", "mmf_new.services.identity.infrastructure.adapters.http_adapter:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the application using system Python
+CMD ["python", "-m", "uvicorn", "mmf_new.services.identity.infrastructure.adapters.http_adapter:app", "--host", "0.0.0.0", "--port", "8000"]
