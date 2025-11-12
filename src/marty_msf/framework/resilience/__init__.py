@@ -57,6 +57,7 @@ from .connection_pools import (
     HTTPPoolConfig,
     PoolConfig,
     PoolHealthChecker,
+    PoolType,
     RedisConnectionPool,
     RedisPoolConfig,
 )

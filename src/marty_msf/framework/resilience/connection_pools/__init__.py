@@ -7,7 +7,7 @@ with health checking, metrics, and automatic recovery.
 
 from .health import HealthCheckConfig, PoolHealthChecker
 from .http_pool import HTTPConnectionPool, HTTPPoolConfig
-from .manager import ConnectionPoolManager, PoolConfig
+from .manager import ConnectionPoolManager, PoolConfig, PoolType
 from .redis_pool import RedisConnectionPool, RedisPoolConfig
 
 __all__ = [
@@ -17,6 +17,7 @@ __all__ = [
     "RedisPoolConfig",
     "ConnectionPoolManager",
     "PoolConfig",
+    "PoolType",
     "PoolHealthChecker",
     "HealthCheckConfig",
 ]
