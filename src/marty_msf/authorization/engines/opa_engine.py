@@ -14,10 +14,7 @@ class OPAPolicyEngine(AbstractPolicyEngine):
     async def evaluate_policy(self, context: SecurityContext) -> SecurityDecision:
         """Evaluate policy using OPA"""
         # Placeholder implementation
-        return SecurityDecision(
-            allowed=False,
-            reason="OPA integration not yet implemented"
-        )
+        return SecurityDecision(allowed=False, reason="OPA integration not yet implemented")
 
     async def load_policies(self, policies: list[dict[str, Any]]) -> bool:
         """Load OPA policies"""

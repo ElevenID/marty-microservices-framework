@@ -17,12 +17,12 @@ import sys
 
 # Exclusion patterns - files that are allowed to use global variables
 EXCLUSION_PATTERNS = [
-    r'tests/.*_test\.py',
-    r'examples/.*\.py',
-    r'scripts/detect_globals\.py',
-    r'.*migration.*\.py',
-    r'.*legacy.*\.py',
-    r'src/marty_msf/core/di_container\.py',  # DI container itself needs globals
+    r"tests/.*_test\.py",
+    r"examples/.*\.py",
+    r"scripts/detect_globals\.py",
+    r".*migration.*\.py",
+    r".*legacy.*\.py",
+    r"src/marty_msf/core/di_container\.py",  # DI container itself needs globals
 ]
 
 
@@ -41,11 +41,11 @@ def get_staged_python_files() -> list[str]:
             ["git", "diff", "--cached", "--name-only", "--diff-filter=ACM"],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
-        files = result.stdout.strip().split('\n') if result.stdout.strip() else []
+        files = result.stdout.strip().split("\n") if result.stdout.strip() else []
         # Filter for Python files
-        python_files = [f for f in files if f.endswith('.py') and os.path.exists(f)]
+        python_files = [f for f in files if f.endswith(".py") and os.path.exists(f)]
         return python_files
     except subprocess.CalledProcessError:
         return []
@@ -55,16 +55,13 @@ def get_staged_file_content(file_path: str) -> str:
     """Get the staged content of a file (what will be committed)."""
     try:
         result = subprocess.run(
-            ["git", "show", f":{file_path}"],
-            capture_output=True,
-            text=True,
-            check=True
+            ["git", "show", f":{file_path}"], capture_output=True, text=True, check=True
         )
         return result.stdout
     except subprocess.CalledProcessError:
         # File might be newly added, read from filesystem
         try:
-            with open(file_path, encoding='utf-8') as f:
+            with open(file_path, encoding="utf-8") as f:
                 return f.read()
         except (OSError, UnicodeDecodeError):
             return ""
@@ -77,19 +74,19 @@ def find_global_statements_in_content(content: str) -> list[tuple[int, str]]:
     Returns:
         List of (line_number, line_content) tuples
     """
-    global_pattern = re.compile(r'^\s*global\s+\w+')
+    global_pattern = re.compile(r"^\s*global\s+\w+")
     results = []
 
     # Skip certain patterns that are acceptable
     skip_patterns = [
-        r'global variables throughout',  # Documentation comments
-        r'# global',  # Comments about globals
+        r"global variables throughout",  # Documentation comments
+        r"# global",  # Comments about globals
         r'""".*global.*"""',  # Docstring references
         r"'.*global.*'",  # String literals
         r'".*global.*"',  # String literals
     ]
 
-    lines = content.split('\n')
+    lines = content.split("\n")
     for line_num, line in enumerate(lines, 1):
         if global_pattern.match(line):
             # Check if this is an acceptable global usage
@@ -106,13 +103,20 @@ def find_global_statements_in_content(content: str) -> list[tuple[int, str]]:
                 start_idx = max(0, line_num - 3)
                 end_idx = min(len(lines), line_num + 3)
                 context_lines = lines[start_idx:end_idx]
-                context = '\n'.join(context_lines).lower()
+                context = "\n".join(context_lines).lower()
 
                 # Allow globals in migration scripts or compatibility layers
-                if any(keyword in context for keyword in [
-                    'migration', 'compatibility', 'backward compatibility',
-                    'legacy', 'deprecated', 'transitional'
-                ]):
+                if any(
+                    keyword in context
+                    for keyword in [
+                        "migration",
+                        "compatibility",
+                        "backward compatibility",
+                        "legacy",
+                        "deprecated",
+                        "transitional",
+                    ]
+                ):
                     continue
 
                 results.append((line_num, line.strip()))

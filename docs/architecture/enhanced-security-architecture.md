@@ -7,30 +7,35 @@ The Marty Microservices Framework features enterprise-grade security with unifie
 ## Security Architecture Principles
 
 ### 1. Unified Security Framework
+
 - **Principle**: Single, cohesive security system consolidating all capabilities
 - **Implementation**: Central UnifiedSecurityFramework class orchestrating all security operations
 - **Components**: Identity providers, policy engines, service mesh security, compliance scanning
 - **Benefits**: Reduced complexity, consistent security model, easier maintenance
 
 ### 2. Real-Time Service Mesh Security
+
 - **Principle**: Runtime policy enforcement at the service mesh level
 - **Implementation**: Dynamic policy application through Istio and Linkerd integration
 - **Components**: Enhanced service mesh managers, traffic policies, mTLS enforcement
 - **Benefits**: Zero-trust networking, runtime protection, automatic policy propagation
 
 ### 3. Zero Trust Security Model
+
 - **Principle**: Never trust, always verify
 - **Implementation**: Every request is authenticated and authorized
 - **Components**: mTLS, JWT verification, certificate-based authentication
 - **Benefits**: Reduced attack surface, improved compliance
 
 ### 4. Defense in Depth
+
 - **Principle**: Multiple layers of security controls
 - **Implementation**: API gateway, service mesh, application-level security
 - **Components**: Authentication, authorization, encryption, audit logging
 - **Benefits**: Redundant protection, graceful degradation
 
 ### 5. Policy as Code
+
 - **Principle**: Authorization policies defined as code
 - **Implementation**: Version-controlled policy definitions
 - **Components**: OPA Rego policies, Oso Polar policies, JSON rules
@@ -41,6 +46,7 @@ The Marty Microservices Framework features enterprise-grade security with unifie
 ### Core Components
 
 #### 1. Unified Security Framework
+
 Central orchestrator for all security operations:
 
 ```python
@@ -64,6 +70,7 @@ security_framework = await create_unified_security_framework({
 ```
 
 #### 2. Enhanced Service Mesh Manager
+
 Real-time security policy enforcement:
 
 ```python
@@ -87,6 +94,7 @@ await enhanced_manager.deploy_service_mesh(
 ### 1. Identity Provider Layer
 
 #### Pluggable Identity Providers
+
 ```python
 # OIDC Integration
 from marty_msf.security.providers.oidc_provider import OIDCProvider
@@ -99,6 +107,7 @@ oidc_provider = OIDCProvider({
 ```
 
 **Supported Providers:**
+
 - OIDC (OpenID Connect) - Enterprise SSO integration
 - OAuth2 - Standard OAuth2 flows
 - SAML - Enterprise SAML authentication
@@ -107,6 +116,7 @@ oidc_provider = OIDCProvider({
 ### 2. Policy Engine Layer
 
 #### Multi-Engine Policy Evaluation
+
 ```python
 # Builtin Policy Engine (No dependencies)
 from marty_msf.security.engines.builtin_engine import BuiltinPolicyEngine
@@ -117,6 +127,7 @@ builtin_engine = BuiltinPolicyEngine({
 ```
 
 **Supported Engines:**
+
 - **Builtin Engine**: Fast, dependency-free JSON-based policies
 - **OPA (Open Policy Agent)**: Industry-standard Rego policies
 - **Oso**: Python-native policy engine with Polar language
@@ -126,6 +137,7 @@ builtin_engine = BuiltinPolicyEngine({
 ### 3. Service Mesh Security Layer
 
 #### Real-Time Policy Enforcement
+
 ```python
 # Enhanced Service Mesh Security Manager
 from marty_msf.security.mesh.istio_security import IstioSecurityManager
@@ -151,6 +163,7 @@ await istio_security.apply_traffic_policies([
 ```
 
 **Capabilities:**
+
 - **Istio Integration**: PeerAuthentication, AuthorizationPolicy, EnvoyFilter configuration
 - **Linkerd Integration**: Server, ServerAuthorization policy management
 - **mTLS Enforcement**: Automatic mutual TLS between services
@@ -159,6 +172,7 @@ await istio_security.apply_traffic_policies([
 - **Runtime Monitoring**: Real-time security event monitoring
 
 #### Service Mesh Deployment Scripts
+
 Enhanced deployment scripts with integrated security:
 
 ```bash
@@ -188,6 +202,7 @@ EOF
 ### 4. Compliance and Audit Layer
 
 #### Unified Compliance Scanner
+
 ```python
 from marty_msf.security.compliance.unified_scanner import UnifiedComplianceScanner
 
@@ -204,6 +219,7 @@ scan_results = await compliance_scanner.scan_compliance(
 ```
 
 **Frameworks Supported:**
+
 - **GDPR**: General Data Protection Regulation
 - **HIPAA**: Health Insurance Portability and Accountability Act
 - **SOX**: Sarbanes-Oxley Act
@@ -274,6 +290,7 @@ async def monitor_security_events():
 ### 1. Service Mesh Integration Setup
 
 #### Istio Integration
+
 ```yaml
 # Istio configuration for MMF
 apiVersion: install.istio.io/v1alpha1
@@ -295,6 +312,7 @@ spec:
 ```
 
 #### Linkerd Integration
+
 ```yaml
 # Linkerd configuration for MMF
 apiVersion: policy.linkerd.io/v1beta1
@@ -313,6 +331,7 @@ spec:
 ### 2. Security Configuration
 
 #### Complete Security Setup
+
 ```python
 # Complete MMF security configuration
 security_config = {
@@ -363,18 +382,21 @@ security_config = {
 ## Security Features by Component
 
 ### Authentication Features
+
 - **Multi-Provider Support**: OIDC, OAuth2, SAML, Local
 - **Token Validation**: JWT validation with JWKS support
 - **Session Management**: Secure session handling with expiration
 - **Service Account Authentication**: Kubernetes service account integration
 
 ### Authorization Features
+
 - **RBAC (Role-Based Access Control)**: Role and permission management
 - **ABAC (Attribute-Based Access Control)**: Fine-grained attribute policies
 - **Policy Caching**: Performance optimization with secure caching
 - **Real-Time Evaluation**: Dynamic policy evaluation for each request
 
 ### Service Mesh Features
+
 - **Automatic mTLS**: Mutual TLS between all services
 - **Traffic Policies**: L4 and L7 traffic security policies
 - **Rate Limiting**: Request rate limiting and throttling
@@ -382,6 +404,7 @@ security_config = {
 - **Policy Enforcement**: Runtime security policy application
 
 ### Compliance Features
+
 - **Multi-Framework Support**: GDPR, HIPAA, SOX, PCI DSS compliance
 - **Automated Scanning**: Scheduled compliance violation detection
 - **Reporting**: Comprehensive compliance reports
@@ -394,12 +417,14 @@ security_config = {
 The enhanced security framework consolidates multiple existing implementations:
 
 #### Before (Scattered Implementations)
+
 - `src/marty_msf/authorization.py` - Basic RBAC
 - `src/marty_msf/authorization/manager.py` - Enhanced RBAC
 - `src/marty_msf/identity_access/` - Identity management
 - `src/marty_msf/gateway/auth.py` - Gateway authentication
 
 #### After (Unified Framework)
+
 - `src/marty_msf/security/unified_framework.py` - Central security orchestrator
 - `src/marty_msf/security/providers/` - Pluggable identity providers
 - `src/marty_msf/security/engines/` - Pluggable policy engines
@@ -417,18 +442,21 @@ The enhanced security framework consolidates multiple existing implementations:
 ## Best Practices
 
 ### Security Policy Design
+
 - **Principle of Least Privilege**: Grant minimal necessary permissions
 - **Defense in Depth**: Layer multiple security controls
 - **Fail Secure**: Default to deny when policies are unclear
 - **Audit Everything**: Log all security-related events
 
 ### Service Mesh Security
+
 - **Enable mTLS**: Always use mutual TLS between services
 - **Segment Networks**: Use namespaces and network policies
 - **Monitor Traffic**: Implement comprehensive traffic monitoring
 - **Regular Updates**: Keep service mesh components updated
 
 ### Compliance Management
+
 - **Continuous Monitoring**: Regular compliance scans
 - **Documentation**: Maintain compliance documentation
 - **Training**: Security awareness training for developers
@@ -437,12 +465,14 @@ The enhanced security framework consolidates multiple existing implementations:
 ## Performance Considerations
 
 ### Security Framework Performance
+
 - **Policy Caching**: 5-minute cache TTL for authorization decisions
 - **Async Operations**: All security operations are asynchronous
 - **Connection Pooling**: Efficient external service connections
 - **Metrics Collection**: Performance metrics for optimization
 
 ### Service Mesh Performance
+
 - **Resource Limits**: Appropriate CPU/memory limits for sidecars
 - **Proxy Configuration**: Optimized Envoy/Linkerd proxy settings
 - **Health Checking**: Comprehensive health check configuration
@@ -453,6 +483,7 @@ The enhanced security framework consolidates multiple existing implementations:
 ### Common Issues
 
 #### Authentication Failures
+
 ```bash
 # Check identity provider status
 kubectl logs -n security deployment/oidc-provider
@@ -463,6 +494,7 @@ curl -X POST https://auth.company.com/token/validate \
 ```
 
 #### Authorization Denials
+
 ```bash
 # Check policy evaluation logs
 kubectl logs -n security deployment/policy-engine
@@ -472,6 +504,7 @@ mmf-cli policy test --principal user:alice --resource /api/users --action GET
 ```
 
 #### Service Mesh Issues
+
 ```bash
 # Check Istio proxy status
 istioctl proxy-status
@@ -486,6 +519,7 @@ kubectl logs -n istio-system deployment/istiod | grep -i security
 ## Monitoring and Alerting
 
 ### Security Metrics
+
 - Authentication success/failure rates
 - Authorization decision latency
 - Policy evaluation performance
@@ -493,6 +527,7 @@ kubectl logs -n istio-system deployment/istiod | grep -i security
 - Compliance violation counts
 
 ### Recommended Alerts
+
 - High authentication failure rate (>5% over 5 minutes)
 - Authorization policy violations (any explicit deny)
 - Service mesh security events (unauthorized traffic)
@@ -502,6 +537,7 @@ kubectl logs -n istio-system deployment/istiod | grep -i security
 ## Future Enhancements
 
 ### Planned Features
+
 - **Machine Learning Security**: Anomaly detection for security events
 - **Advanced Threat Detection**: Behavioral analysis and threat hunting
 - **Zero-Trust Networking**: Complete network segmentation
@@ -509,6 +545,7 @@ kubectl logs -n istio-system deployment/istiod | grep -i security
 - **Enhanced Compliance**: Additional regulatory framework support
 
 This enhanced security architecture provides a robust, scalable, and maintainable security foundation for the Marty Microservices Framework, consolidating multiple security capabilities into a unified, production-ready system.
+
 ```python
 # Core component: VaultClient
 from marty_msf.security.secrets import VaultClient, VaultConfig
@@ -521,6 +558,7 @@ vault_client = VaultClient(VaultConfig(
 ```
 
 **Capabilities:**
+
 - Multiple authentication methods (Token, Kubernetes, AWS IAM, AppRole, UserPass)
 - Secret engines (KV v2, Database, PKI, Transit)
 - Certificate generation and management
@@ -528,12 +566,14 @@ vault_client = VaultClient(VaultConfig(
 - Automatic secret rotation
 
 **Infrastructure Requirements:**
+
 - HashiCorp Vault cluster (minimum 3 nodes for HA)
 - Vault Agent for local caching (optional)
 - Network connectivity to Vault API
 - Service accounts with appropriate roles
 
 #### Multi-Backend Secret Manager
+
 ```python
 # Enhanced secret manager with fallback
 secret_manager = SecretManager(
@@ -548,6 +588,7 @@ secret_manager = SecretManager(
 ```
 
 **Features:**
+
 - Backend preference ordering
 - Automatic failover
 - Secret metadata tracking
@@ -557,6 +598,7 @@ secret_manager = SecretManager(
 ### 2. Authorization Layer
 
 #### Policy Engine Architecture
+
 ```python
 # Multi-engine policy manager
 policy_manager = PolicyManager(
@@ -576,6 +618,7 @@ policy_manager = PolicyManager(
 **Policy Examples:**
 
 **RBAC (Role-Based Access Control):**
+
 ```json
 {
   "rules": [
@@ -590,6 +633,7 @@ policy_manager = PolicyManager(
 ```
 
 **ABAC (Attribute-Based Access Control):**
+
 ```rego
 allow if {
     input.action == "POST"
@@ -603,6 +647,7 @@ allow if {
 ### 3. Gateway Security Integration
 
 #### Enhanced Security Middleware
+
 ```python
 # FastAPI integration
 middleware = await create_enhanced_security_middleware(
@@ -614,6 +659,7 @@ middleware = await create_enhanced_security_middleware(
 ```
 
 **Security Pipeline:**
+
 1. **Request Authentication**
    - mTLS certificate validation
    - JWT token verification
@@ -632,6 +678,7 @@ middleware = await create_enhanced_security_middleware(
 ### 4. gRPC Security Interceptors
 
 #### Service-to-Service Security
+
 ```python
 # gRPC server with security
 server = grpc.aio.server(interceptors=[
@@ -642,6 +689,7 @@ server = grpc.aio.server(interceptors=[
 ```
 
 **Interceptor Functions:**
+
 - **Authentication**: Certificate and token validation
 - **Authorization**: Policy-based access control
 - **Secret Injection**: Automatic secret provisioning
@@ -652,6 +700,7 @@ server = grpc.aio.server(interceptors=[
 ### 1. HashiCorp Vault Deployment
 
 #### Production Deployment
+
 ```yaml
 # Minimum requirements
 Resources:
@@ -668,6 +717,7 @@ High Availability:
 ```
 
 #### Development Setup
+
 ```bash
 # Docker Compose for development
 docker-compose -f examples/security/vault-configs/docker-compose.yaml up -d
@@ -676,6 +726,7 @@ docker-compose -f examples/security/vault-configs/docker-compose.yaml up -d
 ### 2. Policy Engine Infrastructure
 
 #### Open Policy Agent (OPA)
+
 ```yaml
 # Kubernetes deployment
 Resources:
@@ -690,6 +741,7 @@ Configuration:
 ```
 
 #### Oso Integration
+
 ```python
 # In-process policy evaluation
 # No additional infrastructure required
@@ -699,6 +751,7 @@ Configuration:
 ### 3. Certificate Management
 
 #### PKI Infrastructure
+
 ```
 Certificate Hierarchy:
 ├── Root CA (Vault)
@@ -714,6 +767,7 @@ Rotation Strategy:
 ### 4. Networking and Security
 
 #### Network Security
+
 ```yaml
 Network Policies:
   - Vault access restricted to authenticated services
@@ -732,6 +786,7 @@ Load Balancing:
 ### 1. Authentication Patterns
 
 #### Service-to-Service Authentication
+
 ```python
 # mTLS with short-lived certificates
 @app.middleware("https")
@@ -743,6 +798,7 @@ async def verify_client_cert(request: Request, call_next):
 ```
 
 #### User Authentication
+
 ```python
 # JWT with Vault-managed signing keys
 async def verify_jwt_token(token: str) -> dict:
@@ -753,6 +809,7 @@ async def verify_jwt_token(token: str) -> dict:
 ### 2. Authorization Patterns
 
 #### Context-Aware Authorization
+
 ```python
 # Request context evaluation
 auth_request = AuthorizationRequest(
@@ -768,6 +825,7 @@ auth_request = AuthorizationRequest(
 ```
 
 #### Policy Composition
+
 ```python
 # Multiple policy evaluation
 policies = ["rbac_users", "abac_financial", "compliance_policy"]
@@ -777,6 +835,7 @@ result = await policy_manager.evaluate(auth_request, policies)
 ### 3. Secret Management Patterns
 
 #### Dynamic Secret Retrieval
+
 ```python
 # Secrets retrieved at runtime
 @app.dependency
@@ -785,6 +844,7 @@ async def get_database_credentials():
 ```
 
 #### Secret Rotation
+
 ```python
 # Automatic rotation monitoring
 @background_task
@@ -797,6 +857,7 @@ async def monitor_secret_rotation():
 ## Compliance and Audit
 
 ### 1. Audit Logging
+
 ```python
 # Comprehensive audit trail
 audit_event = {
@@ -812,6 +873,7 @@ audit_event = {
 ```
 
 ### 2. Compliance Controls
+
 - **PCI DSS**: Secret encryption, access logging, network segmentation
 - **SOX**: Policy versioning, approval workflows, audit trails
 - **GDPR**: Data access controls, encryption at rest and in transit
@@ -820,6 +882,7 @@ audit_event = {
 ## Monitoring and Observability
 
 ### 1. Security Metrics
+
 ```python
 # Key security metrics
 metrics = {
@@ -832,6 +895,7 @@ metrics = {
 ```
 
 ### 2. Health Checks
+
 ```python
 # Security health monitoring
 @app.get("/health/security")
@@ -847,6 +911,7 @@ async def security_health():
 ## Migration and Deployment
 
 ### 1. Migration Strategy
+
 ```
 Phase 1: Infrastructure Setup
 - Deploy Vault cluster
@@ -870,6 +935,7 @@ Phase 4: Full Security Enablement
 ```
 
 ### 2. Rollback Plan
+
 ```
 Emergency Procedures:
 1. Disable policy enforcement
@@ -882,12 +948,14 @@ Emergency Procedures:
 ## Performance Considerations
 
 ### 1. Latency Optimization
+
 - **Secret Caching**: Local cache with TTL
 - **Policy Caching**: In-memory policy evaluation
 - **Connection Pooling**: Reuse Vault connections
 - **Async Operations**: Non-blocking secret retrieval
 
 ### 2. Scalability
+
 - **Horizontal Scaling**: Multiple policy engine instances
 - **Load Distribution**: Round-robin policy evaluation
 - **Resource Limits**: CPU and memory constraints
@@ -898,6 +966,7 @@ Emergency Procedures:
 ### 1. Common Issues
 
 #### Vault Authentication Failures
+
 ```bash
 # Check Vault status
 vault status
@@ -910,6 +979,7 @@ vault policy read marty-msf-policy
 ```
 
 #### Policy Evaluation Errors
+
 ```bash
 # Test policy evaluation
 curl -X POST http://opa:8181/v1/data/authz/allow \
@@ -920,6 +990,7 @@ opa fmt --diff policy.rego
 ```
 
 #### Certificate Issues
+
 ```bash
 # Check certificate validity
 openssl x509 -in cert.pem -text -noout
@@ -931,6 +1002,7 @@ openssl verify -CAfile ca.pem cert.pem
 ### 2. Debugging Tools
 
 #### Security Audit Script
+
 ```python
 # Comprehensive security audit
 async def security_audit():
@@ -946,12 +1018,14 @@ async def security_audit():
 ## Future Enhancements
 
 ### 1. Planned Features
+
 - **Dynamic Policy Updates**: Real-time policy reloading
 - **Advanced Threat Detection**: ML-based anomaly detection
 - **Secret Scanning**: Automated secret detection in code
 - **Compliance Automation**: Automated compliance reporting
 
 ### 2. Integration Roadmap
+
 - **Service Mesh Integration**: Istio/Linkerd policy integration
 - **Cloud Provider Integration**: AWS/Azure/GCP native services
 - **Third-Party Tools**: Integration with security scanners
@@ -962,6 +1036,7 @@ async def security_audit():
 The enhanced security architecture provides enterprise-grade security capabilities while maintaining the simplicity and flexibility of the Marty Microservices Framework. The multi-layered approach ensures robust protection against various threat vectors while supporting compliance requirements and operational excellence.
 
 Key benefits:
+
 - **Reduced Security Risk**: Comprehensive protection across all layers
 - **Improved Compliance**: Built-in audit and control capabilities
 - **Operational Efficiency**: Automated secret management and policy enforcement

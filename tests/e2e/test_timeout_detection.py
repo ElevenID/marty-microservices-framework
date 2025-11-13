@@ -283,7 +283,6 @@ class TestTimeoutDetection:
         # Check if we should inject a timeout (make operation artificially slow)
         timeout_injection_rate = getattr(simulation_plugin.config, "timeout_injection_rate", 0.0)
 
-
         if random.random() < timeout_injection_rate:
             # Inject artificial delay that might cause timeout
             delay = random.uniform(3.0, 8.0)  # 3-8 second delay

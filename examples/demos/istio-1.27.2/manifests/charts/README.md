@@ -9,8 +9,9 @@ right place.
 If you want to _install_ Istio with Helm, instead please [follow the Helm installation docs here](https://istio.io/latest/docs/setup/install/helm/).
 
 Charts in this folder are published to the following Helm repos:
- - `https://istio-release.storage.googleapis.com/charts` (charts for official release versions)
- - `oci://gcr.io/istio-release/charts/` (charts for official release versions and dev build versions)
+
+- `https://istio-release.storage.googleapis.com/charts` (charts for official release versions)
+- `oci://gcr.io/istio-release/charts/` (charts for official release versions and dev build versions)
 
 Chart publishing is handled by [release builder](https://github.com/istio/release-builder).
 
@@ -22,6 +23,7 @@ Istio installer is a modular, 'a-la-carte' installer for Istio. It is based on a
 fork of the Istio helm templates, refactored to increase modularity and isolation.
 
 Goals:
+
 - Improve upgrade experience: users should be able to gradually roll upgrades, with proper
 canary deployments for Istio components. It should be possible to deploy a new version while keeping the
 stable version in place and gradually migrate apps to the new version.

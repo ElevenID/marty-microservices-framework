@@ -22,17 +22,11 @@ async def unified_event_bus_example():
     event_bus = create_unified_event_bus()
 
     # Configure NATS backend
-    nats_config = NATSConfig(
-        servers=["nats://localhost:4222"],
-        jetstream_enabled=True
-    )
+    nats_config = NATSConfig(servers=["nats://localhost:4222"], jetstream_enabled=True)
     nats_backend = NATSBackend(nats_config)
 
     # Configure AWS SNS backend
-    sns_config = AWSSNSConfig(
-        region_name="us-east-1",
-        fifo_topics=True
-    )
+    sns_config = AWSSNSConfig(region_name="us-east-1", fifo_topics=True)
     sns_backend = AWSSNSBackend(sns_config)
 
     # Register backends
@@ -47,7 +41,7 @@ async def unified_event_bus_example():
         await event_bus.publish_event(
             event_type="user_registered",
             data={"user_id": "123", "email": "user@example.com"},
-            metadata={"source": "user_service"}
+            metadata={"source": "user_service"},
         )
         print("✓ Published user_registered event")
 
@@ -55,7 +49,7 @@ async def unified_event_bus_example():
         await event_bus.send_command(
             command_type="process_payment",
             data={"order_id": "456", "amount": 99.99},
-            target_service="payment_service"
+            target_service="payment_service",
         )
         print("✓ Sent process_payment command")
 
@@ -65,7 +59,7 @@ async def unified_event_bus_example():
                 query_type="get_user_profile",
                 data={"user_id": "123"},
                 target_service="user_service",
-                timeout=5.0
+                timeout=5.0,
             )
             print(f"✓ Received query response: {response}")
         except Exception as e:
@@ -76,8 +70,8 @@ async def unified_event_bus_example():
             stream_name="order_events",
             events=[
                 {"event_type": "order_created", "order_id": "789"},
-                {"event_type": "order_confirmed", "order_id": "789"}
-            ]
+                {"event_type": "order_confirmed", "order_id": "789"},
+            ],
         )
         print("✓ Streamed order events")
 
@@ -94,10 +88,7 @@ async def enhanced_saga_example():
     event_bus = create_unified_event_bus()
 
     # Configure NATS backend for saga coordination
-    nats_config = NATSConfig(
-        servers=["nats://localhost:4222"],
-        jetstream_enabled=True
-    )
+    nats_config = NATSConfig(servers=["nats://localhost:4222"], jetstream_enabled=True)
     nats_backend = NATSBackend(nats_config)
     event_bus.register_backend(MessageBackendType.NATS, nats_backend)
 
@@ -115,21 +106,21 @@ async def enhanced_saga_example():
                     "name": "validate_payment",
                     "service": "payment_service",
                     "command": "validate_payment_method",
-                    "compensation": "release_payment_hold"
+                    "compensation": "release_payment_hold",
                 },
                 {
                     "name": "reserve_inventory",
                     "service": "inventory_service",
                     "command": "reserve_items",
-                    "compensation": "release_items"
+                    "compensation": "release_items",
                 },
                 {
                     "name": "create_order",
                     "service": "order_service",
                     "command": "create_order",
-                    "compensation": "cancel_order"
-                }
-            ]
+                    "compensation": "cancel_order",
+                },
+            ],
         }
 
         # Register saga
@@ -141,20 +132,15 @@ async def enhanced_saga_example():
             "customer_id": "CUST-456",
             "items": [{"sku": "ITEM-1", "quantity": 2}],
             "payment_method": "credit_card",
-            "total_amount": 199.99
+            "total_amount": 199.99,
         }
 
-        saga_id = await saga_manager.create_and_start_saga(
-            "order_processing",
-            saga_data
-        )
+        saga_id = await saga_manager.create_and_start_saga("order_processing", saga_data)
         print(f"✓ Started distributed saga: {saga_id}")
 
         # Simulate saga step completion
         await saga_manager.handle_step_completion(
-            saga_id,
-            "validate_payment",
-            {"status": "success", "payment_id": "PAY-789"}
+            saga_id, "validate_payment", {"status": "success", "payment_id": "PAY-789"}
         )
         print("✓ Payment validation completed")
 
@@ -179,8 +165,8 @@ async def backend_specific_examples():
         stream_config={
             "max_msgs": 10000,
             "max_bytes": 1024 * 1024,  # 1MB
-            "retention": "workqueue"
-        }
+            "retention": "workqueue",
+        },
     )
 
     # Backend would be used with unified event bus
@@ -190,10 +176,7 @@ async def backend_specific_examples():
 
     # AWS SNS FIFO example
     print("\n--- AWS SNS FIFO Features ---")
-    sns_config = AWSSNSConfig(
-        region_name="us-east-1",
-        fifo_topics=True
-    )
+    sns_config = AWSSNSConfig(region_name="us-east-1", fifo_topics=True)
 
     # Backend would be used with unified event bus
     print("✓ AWS SNS backend configured")

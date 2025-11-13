@@ -101,6 +101,7 @@ These are replaced by this chart.
 While not required, it is recommended all new users use this chart, and existing users migrate when possible.
 
 This chart has the following benefits and differences:
+
 * Designed with Helm best practices in mind (standardized values options, values schema, values are not all nested under `gateways.istio-ingressgateway.*`, release name and namespace taken into account, etc).
 * Utilizes Gateway injection, simplifying upgrades, allowing gateways to run in any namespace, and avoiding repeating config for sidecars and gateways.
 * Published to official Istio Helm repository.

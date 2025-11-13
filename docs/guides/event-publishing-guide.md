@@ -347,18 +347,22 @@ NotificationEventType.SYSTEM_ALERT
 The system follows consistent topic naming patterns:
 
 ### Audit Events
+
 - Topic: `{prefix}.audit.events`
 - Example: `marty.audit.events`
 
 ### Notification Events
+
 - Topic: `{prefix}.notification.events`
 - Example: `marty.notification.events`
 
 ### Domain Events
+
 - Pattern: `{prefix}.{service}.{aggregate}.{event_type}`
 - Example: `marty.user-service.user.user_created`
 
 ### Custom Events
+
 - Pattern: `{prefix}.{topic}`
 - Example: `marty.integration.events`
 
@@ -434,6 +438,7 @@ config = EventConfig(enable_metrics=True, enable_tracing=True)
 ### Replace Custom Outbox Logic
 
 **Before:**
+
 ```python
 async def _publish_event(self, topic: str, payload: dict, session=None):
     serialized = json.dumps(payload).encode("utf-8")
@@ -449,6 +454,7 @@ async def _publish_event(self, topic: str, payload: dict, session=None):
 ```
 
 **After:**
+
 ```python
 from framework.events import get_event_publisher
 
@@ -465,6 +471,7 @@ async def publish_event(self, event_type: str, data: dict, session=None):
 ### Replace Direct Kafka Publishing
 
 **Before:**
+
 ```python
 await self.event_bus.publish("cmc.created", {
     "cmc_id": cmc_id,
@@ -474,6 +481,7 @@ await self.event_bus.publish("cmc.created", {
 ```
 
 **After:**
+
 ```python
 from framework.events import get_event_publisher
 
@@ -492,6 +500,7 @@ await publisher.publish_domain_event(
 ### Replace Base Service Event Publishing
 
 **Before:**
+
 ```python
 await self.publish_event(
     topic="user.events",
@@ -501,6 +510,7 @@ await self.publish_event(
 ```
 
 **After:**
+
 ```python
 from framework.events import get_event_publisher
 

@@ -28,7 +28,6 @@ framework_path = Path(__file__).parent.parent.parent / "src"
 sys.path.insert(0, str(framework_path))
 
 
-
 class TestService(PluginService):
     """Shared test service class for all tests."""
 

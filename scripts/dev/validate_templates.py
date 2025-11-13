@@ -27,7 +27,7 @@ class ServiceTemplateValidator:
             templates_dir / "fastapi",
             templates_dir / "grpc",
             templates_dir / "hybrid",
-            templates_dir / "shared"
+            templates_dir / "shared",
         ]
 
         if not templates_dir.exists():
@@ -60,11 +60,15 @@ class ServiceTemplateValidator:
         template_dirs = []
         for service_dir in self.service_templates_dirs:
             if service_dir.exists():
-                template_dirs.extend([
-                    d
-                    for d in service_dir.iterdir()
-                    if d.is_dir() and d.name not in ["morty_service", "__pycache__"]  # Exclude concrete implementations
-                ])
+                template_dirs.extend(
+                    [
+                        d
+                        for d in service_dir.iterdir()
+                        if d.is_dir()
+                        and d.name
+                        not in ["morty_service", "__pycache__"]  # Exclude concrete implementations
+                    ]
+                )
         results["total"] = len(template_dirs)
 
         print("🚀 Starting Marty Service Template Validation")

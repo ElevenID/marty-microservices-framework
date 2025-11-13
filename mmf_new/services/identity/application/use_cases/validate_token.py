@@ -47,9 +47,7 @@ class TokenValidationResult:
         return cls(is_valid=True, user=user)
 
     @classmethod
-    def failure(
-        cls, message: str, code: AuthenticationErrorCode
-    ) -> "TokenValidationResult":
+    def failure(cls, message: str, code: AuthenticationErrorCode) -> "TokenValidationResult":
         """Create failed validation result."""
         return cls(is_valid=False, error_message=message, error_code=code)
 
@@ -84,9 +82,7 @@ class ValidateTokenUseCase:
         """
         try:
             # Validate and extract user from token
-            authenticated_user = await self._token_provider.validate_token(
-                request.token
-            )
+            authenticated_user = await self._token_provider.validate_token(request.token)
 
             # Return successful validation
             return TokenValidationResult.success(user=authenticated_user)

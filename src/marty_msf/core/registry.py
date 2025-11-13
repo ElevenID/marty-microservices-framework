@@ -16,7 +16,7 @@ from typing import Any, Generic, Optional, TypeVar, cast
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class ServiceRegistry(Generic[T]):
@@ -219,7 +219,7 @@ class TypedSingleton(Generic[T]):
         cls._lock = RLock()
 
     def __new__(cls):
-        if not hasattr(cls, '_instances'):
+        if not hasattr(cls, "_instances"):
             cls._instances = weakref.WeakValueDictionary()
             cls._lock = RLock()
 
@@ -232,14 +232,14 @@ class TypedSingleton(Generic[T]):
     @classmethod
     def reset_instance(cls) -> None:
         """Reset the singleton instance (useful for testing)."""
-        if hasattr(cls, '_instances') and hasattr(cls, '_lock'):
+        if hasattr(cls, "_instances") and hasattr(cls, "_lock"):
             with cls._lock:
                 cls._instances.pop(cls, None)
 
     @classmethod
     def get_instance(cls):
         """Get the current instance if it exists."""
-        if hasattr(cls, '_instances') and hasattr(cls, '_lock'):
+        if hasattr(cls, "_instances") and hasattr(cls, "_lock"):
             with cls._lock:
                 return cls._instances.get(cls)
         return None
@@ -251,16 +251,19 @@ def inject(service_type: type[T]) -> Callable[[Callable], Callable]:
 
     Automatically injects a service as the first argument to a function.
     """
+
     def decorator(func: Callable) -> Callable:
         def wrapper(*args, **kwargs):
             service = get_service(service_type)
             return func(service, *args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
 # Type aliases for common service patterns
-ConfigService = TypeVar('ConfigService')
-ObservabilityService = TypeVar('ObservabilityService')
-SecurityService = TypeVar('SecurityService')
-MessagingService = TypeVar('MessagingService')
+ConfigService = TypeVar("ConfigService")
+ObservabilityService = TypeVar("ObservabilityService")
+SecurityService = TypeVar("SecurityService")
+MessagingService = TypeVar("MessagingService")

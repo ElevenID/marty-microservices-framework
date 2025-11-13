@@ -417,8 +417,6 @@ class TestLoadBalancerHealthCheckFixed:
         assert result == healthy_instance or result is None
 
 
-
-
 class TestServiceInstanceFixedV2:
     """Test real ServiceInstance behavior without mocking."""
 
@@ -717,7 +715,6 @@ class TestHealthBasedBalancerFixed:
         for _ in range(10):
             selected = balancer.select_instance(mixed_health_instances, config, None)
             if selected:
-
                 assert selected.health_status == HealthStatus.HEALTHY
 
     def test_health_based_all_unhealthy_returns_none(self):

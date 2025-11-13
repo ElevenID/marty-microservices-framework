@@ -3,12 +3,15 @@ Database configuration for the application layer.
 Contains configuration classes and database connection details.
 """
 
+from __future__ import annotations
+
 import os
 from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
-from ..domain.database import DatabaseType
+from ..domain.database import DatabaseType, IsolationLevel
+from ..infrastructure.config import MMFConfiguration
 
 
 @dataclass
@@ -23,6 +26,19 @@ class ConnectionPoolConfig:
     pool_pre_ping: bool = True
     echo: bool = False
     echo_pool: bool = False
+
+
+@dataclass
+class TransactionConfig:
+    """Transaction configuration."""
+
+    isolation_level: IsolationLevel | None = None
+    read_only: bool = False
+    deferrable: bool = False
+    max_retries: int = 3
+    retry_delay: float = 0.1
+    retry_backoff: float = 2.0
+    timeout: float | None = None
 
 
 @dataclass
@@ -147,7 +163,7 @@ class DatabaseConfig:
         return url
 
     @classmethod
-    def from_url(cls, url: str, service_name: str = "unknown") -> "DatabaseConfig":
+    def from_url(cls, url: str, service_name: str = "unknown") -> DatabaseConfig:
         """Create DatabaseConfig from a connection URL."""
 
         parsed = urlparse(url)
@@ -187,7 +203,7 @@ class DatabaseConfig:
         return config
 
     @classmethod
-    def from_environment(cls, service_name: str) -> "DatabaseConfig":
+    def from_environment(cls, service_name: str) -> DatabaseConfig:
         """Create DatabaseConfig from environment variables."""
 
         # Service-specific environment variables
@@ -212,24 +228,18 @@ class DatabaseConfig:
 
         # Pool configuration
         pool_config = ConnectionPoolConfig(
-            min_size=int(
-                os.getenv(f"{prefix}POOL_MIN_SIZE")
-                or os.getenv("DB_POOL_MIN_SIZE", "1")
-            ),
+            min_size=int(os.getenv(f"{prefix}POOL_MIN_SIZE") or os.getenv("DB_POOL_MIN_SIZE", "1")),
             max_size=int(
-                os.getenv(f"{prefix}POOL_MAX_SIZE")
-                or os.getenv("DB_POOL_MAX_SIZE", "10")
+                os.getenv(f"{prefix}POOL_MAX_SIZE") or os.getenv("DB_POOL_MAX_SIZE", "10")
             ),
             max_overflow=int(
-                os.getenv(f"{prefix}POOL_MAX_OVERFLOW")
-                or os.getenv("DB_POOL_MAX_OVERFLOW", "20")
+                os.getenv(f"{prefix}POOL_MAX_OVERFLOW") or os.getenv("DB_POOL_MAX_OVERFLOW", "20")
             ),
             pool_timeout=int(
                 os.getenv(f"{prefix}POOL_TIMEOUT") or os.getenv("DB_POOL_TIMEOUT", "30")
             ),
             pool_recycle=int(
-                os.getenv(f"{prefix}POOL_RECYCLE")
-                or os.getenv("DB_POOL_RECYCLE", "3600")
+                os.getenv(f"{prefix}POOL_RECYCLE") or os.getenv("DB_POOL_RECYCLE", "3600")
             ),
             echo=os.getenv(f"{prefix}ECHO", "false").lower() == "true",
         )
@@ -252,6 +262,77 @@ class DatabaseConfig:
             ssl_cert=ssl_cert,
             ssl_key=ssl_key,
             ssl_ca=ssl_ca,
+            service_name=service_name,
+            schema=schema,
+            timezone=timezone,
+        )
+
+    @classmethod
+    def from_mmf_config(
+        cls,
+        config: MMFConfiguration,
+        service_name: str,
+    ) -> DatabaseConfig:
+        """
+        Create DatabaseConfig from MMFConfiguration.
+
+        Args:
+            config: MMF configuration instance
+            service_name: Name of the service
+
+        Returns:
+            DatabaseConfig loaded from MMF configuration system
+        """
+        # Get database configuration from MMF config
+        db_config = config.get("database", {})
+
+        # Extract connection details with defaults
+        host = db_config.get("host", "localhost")
+        port = int(db_config.get("port", 5432))
+        database = db_config.get("name", service_name)
+        username = db_config.get("username", "postgres")
+        password = db_config.get("password", "")
+
+        # Database type
+        db_type_str = db_config.get("type", "postgresql")
+        db_type = DatabaseType(db_type_str.lower())
+
+        # SSL configuration
+        ssl_config = db_config.get("ssl", {})
+        ssl_mode = ssl_config.get("mode")
+        ssl_cert = ssl_config.get("cert")
+        ssl_key = ssl_config.get("key")
+        ssl_ca = ssl_config.get("ca")
+
+        # Pool configuration
+        pool_config_dict = db_config.get("pool", {})
+        pool_config = ConnectionPoolConfig(
+            min_size=int(pool_config_dict.get("min_size", 1)),
+            max_size=int(pool_config_dict.get("max_size", 10)),
+            max_overflow=int(pool_config_dict.get("max_overflow", 20)),
+            pool_timeout=int(pool_config_dict.get("timeout", 30)),
+            pool_recycle=int(pool_config_dict.get("recycle", 3600)),
+            echo=pool_config_dict.get("echo", False),
+        )
+
+        # Schema
+        schema = db_config.get("schema")
+
+        # Timezone
+        timezone = db_config.get("timezone", "UTC")
+
+        return cls(
+            host=host,
+            port=port,
+            database=database,
+            username=username,
+            password=password,
+            db_type=db_type,
+            ssl_mode=ssl_mode,
+            ssl_cert=ssl_cert,
+            ssl_key=ssl_key,
+            ssl_ca=ssl_ca,
+            pool_config=pool_config,
             service_name=service_name,
             schema=schema,
             timezone=timezone,

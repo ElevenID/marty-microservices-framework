@@ -2,9 +2,9 @@
 # Table of Contents
 
 - [Updating charts and values.yaml](#updating-charts-and-valuesyaml)
-    - [Acceptable Pull Requests](#acceptable-pull-requests)
-    - [Making changes](#making-changes)
-    - [Value deprecation](#value-deprecation)
+  - [Acceptable Pull Requests](#acceptable-pull-requests)
+  - [Making changes](#making-changes)
+  - [Value deprecation](#value-deprecation)
 
 <!-- markdown-toc end -->
 
@@ -56,7 +56,7 @@ the schema must be added here, otherwise istioctl users will see errors.
 Once the schema file is updated, run:
 
 ```bash
-$ make operator-proto
+make operator-proto
 ```
 
 This will regenerate the Go structs used for schema validation.
@@ -68,7 +68,7 @@ Tests of istioctl use the auto-generated manifests to ensure that the istioctl b
 To regenerate the manifests, run:
 
 ```bash
-$ make copy-templates update-golden
+make copy-templates update-golden
 ```
 
 ### Step 5. Create a PR using outputs from Steps 1 to 4
@@ -79,6 +79,6 @@ Your PR should pass all the checks if you followed these steps.
 
 - Values may be marked as deprecated, but may not be removed until a minimum of 2 releases after the PR marking them as such is merged.
 
-- If you are _marking_ a value as `deprecated`, the PR doing so **must* add a [release note](../../releasenotes/README.md) mentioning the value being deprecated, and any replacements/alternatives.
+- If you are *marking* a value as `deprecated`, the PR doing so **must* add a [release note](../../releasenotes/README.md) mentioning the value being deprecated, and any replacements/alternatives.
 
-- When _removing_ a value that has been marked as `deprecated` for a minimum of 2 releases, **both** the `releaseNote` and `upgradeNote` fields must be populated in the release note in the removal PR, mentioning the value being removed, and any replacements/alternatives.
+- When *removing* a value that has been marked as `deprecated` for a minimum of 2 releases, **both** the `releaseNote` and `upgradeNote` fields must be populated in the release note in the removal PR, mentioning the value being removed, and any replacements/alternatives.

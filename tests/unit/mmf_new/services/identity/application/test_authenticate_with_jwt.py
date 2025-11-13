@@ -56,10 +56,7 @@ class TestAuthenticateWithJWTUseCase:
         self.use_case = AuthenticateWithJWTUseCase(self.mock_token_provider)
 
         self.test_user = AuthenticatedUser(
-            user_id="test-123",
-            username="testuser",
-            email="test@example.com",
-            auth_method="jwt"
+            user_id="test-123", username="testuser", email="test@example.com", auth_method="jwt"
         )
 
     @pytest.mark.asyncio
@@ -149,16 +146,8 @@ class TestAuthenticateWithJWTUseCase:
         token1 = "token1.jwt"
         token2 = "token2.jwt"
 
-        user1 = AuthenticatedUser(
-            user_id="user1",
-            username="user1",
-            auth_method="jwt"
-        )
-        user2 = AuthenticatedUser(
-            user_id="user2",
-            username="user2",
-            auth_method="jwt"
-        )
+        user1 = AuthenticatedUser(user_id="user1", username="user1", auth_method="jwt")
+        user2 = AuthenticatedUser(user_id="user2", username="user2", auth_method="jwt")
 
         self.mock_token_provider.validate_token = AsyncMock()
         self.mock_token_provider.validate_token.side_effect = [user1, user2]
@@ -194,7 +183,7 @@ class TestAuthenticateWithJWTUseCase:
             roles={"admin", "user"},
             permissions={"read", "write", "delete"},
             auth_method="jwt",
-            metadata={"department": "IT", "level": "senior"}
+            metadata={"department": "IT", "level": "senior"},
         )
 
         self.mock_token_provider.validate_token = AsyncMock(return_value=user_with_roles)

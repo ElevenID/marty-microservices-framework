@@ -310,7 +310,6 @@ class TestFrameworkIntegration:
                     raise
 
             def _should_attempt_reset(self):
-
                 return (
                     self.last_failure_time and time.time() - self.last_failure_time >= self.timeout
                 )
@@ -320,7 +319,6 @@ class TestFrameworkIntegration:
                 self.state = "CLOSED"
 
             def _on_failure(self):
-
                 self.failure_count += 1
                 self.last_failure_time = time.time()
 

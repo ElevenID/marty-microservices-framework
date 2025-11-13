@@ -37,7 +37,7 @@ class RoleBasedAuthorizer:
     def __init__(
         self,
         role_permissions: dict[str, set[str]] | None = None,
-        role_hierarchy: dict[str, set[str]] | None = None
+        role_hierarchy: dict[str, set[str]] | None = None,
     ):
         """
         Initialize the role-based authorizer.
@@ -72,12 +72,14 @@ class RoleBasedAuthorizer:
 
             # Check if user has the required permission
             if required_permission in user_permissions:
-                logger.info(f"Authorization granted for user {user.username} on {resource}:{action}")
+                logger.info(
+                    f"Authorization granted for user {user.username} on {resource}:{action}"
+                )
                 return AuthorizationResult(
                     allowed=True,
                     reason=f"User has permission {required_permission}",
                     policies_evaluated=["role_based"],
-                    metadata={"permission": required_permission}
+                    metadata={"permission": required_permission},
                 )
 
             # Check for admin override
@@ -87,7 +89,7 @@ class RoleBasedAuthorizer:
                     allowed=True,
                     reason="User has admin role",
                     policies_evaluated=["role_based", "admin_override"],
-                    metadata={"admin_override": True}
+                    metadata={"admin_override": True},
                 )
 
             # Access denied
@@ -96,7 +98,7 @@ class RoleBasedAuthorizer:
                 allowed=False,
                 reason=f"User lacks permission {required_permission}",
                 policies_evaluated=["role_based"],
-                metadata={"required_permission": required_permission}
+                metadata={"required_permission": required_permission},
             )
 
         except Exception as e:
@@ -105,7 +107,7 @@ class RoleBasedAuthorizer:
                 allowed=False,
                 reason="Authorization check failed",
                 policies_evaluated=["role_based"],
-                metadata={"error": str(e)}
+                metadata={"error": str(e)},
             )
 
     def get_user_permissions(self, user: User) -> set[str]:
@@ -185,7 +187,7 @@ class RoleBasedAuthorizer:
                 "data:delete",
                 "profile:read",
                 "users:read",
-            }
+            },
         }
 
     def _get_default_role_hierarchy(self) -> dict[str, set[str]]:
@@ -206,7 +208,7 @@ class RoleBasedAuthorizer:
         self,
         role_name: str,
         permissions: set[str] | None = None,
-        inherited_roles: set[str] | None = None
+        inherited_roles: set[str] | None = None,
     ) -> bool:
         """
         Create a new role with specified permissions and inheritance.
@@ -303,7 +305,7 @@ class RoleBasedAuthorizer:
             "name": role_name,
             "permissions": list(self.role_permissions[role_name]),
             "inherited_roles": list(self.role_hierarchy.get(role_name, set())),
-            "effective_permissions": list(self._get_effective_permissions_for_role(role_name))
+            "effective_permissions": list(self._get_effective_permissions_for_role(role_name)),
         }
 
     def list_roles(self) -> dict[str, dict[str, Any]]:
@@ -360,7 +362,9 @@ class RoleBasedAuthorizer:
         add_inherited_permissions(role_name)
         return permissions
 
-    def _has_circular_dependency(self, role: str, visited: set[str] | None = None, path: set[str] | None = None) -> bool:
+    def _has_circular_dependency(
+        self, role: str, visited: set[str] | None = None, path: set[str] | None = None
+    ) -> bool:
         """
         Check if a role has circular dependencies in the hierarchy.
 
@@ -435,13 +439,13 @@ class PermissionBasedAuthorizer:
                     allowed=True,
                     reason=f"User has explicit permission {required_permission}",
                     policies_evaluated=["permission_based"],
-                    metadata={"permission": required_permission}
+                    metadata={"permission": required_permission},
                 )
 
             # Check for wildcard permissions
             wildcard_permissions = [
                 f"{resource}:*",  # All actions on resource
-                "*:*",           # All actions on all resources
+                "*:*",  # All actions on all resources
             ]
 
             for wildcard in wildcard_permissions:
@@ -451,7 +455,7 @@ class PermissionBasedAuthorizer:
                         allowed=True,
                         reason=f"User has wildcard permission {wildcard}",
                         policies_evaluated=["permission_based"],
-                        metadata={"wildcard_permission": wildcard}
+                        metadata={"wildcard_permission": wildcard},
                     )
 
             # Access denied
@@ -460,7 +464,7 @@ class PermissionBasedAuthorizer:
                 allowed=False,
                 reason=f"User lacks permission {required_permission}",
                 policies_evaluated=["permission_based"],
-                metadata={"required_permission": required_permission}
+                metadata={"required_permission": required_permission},
             )
 
         except Exception as e:
@@ -469,7 +473,7 @@ class PermissionBasedAuthorizer:
                 allowed=False,
                 reason="Authorization check failed",
                 policies_evaluated=["permission_based"],
-                metadata={"error": str(e)}
+                metadata={"error": str(e)},
             )
 
     def get_user_permissions(self, user: User) -> set[str]:
@@ -536,7 +540,7 @@ class AttributeBasedAuthorizer:
                         allowed=True,
                         reason=f"Access granted by policy {policy_name}",
                         policies_evaluated=evaluated_policies,
-                        metadata={"matching_policy": policy_name}
+                        metadata={"matching_policy": policy_name},
                     )
 
             # No policy granted access
@@ -545,7 +549,7 @@ class AttributeBasedAuthorizer:
                 allowed=False,
                 reason="No policy grants access",
                 policies_evaluated=evaluated_policies,
-                metadata={"policies_count": len(self.policies)}
+                metadata={"policies_count": len(self.policies)},
             )
 
         except Exception as e:
@@ -554,7 +558,7 @@ class AttributeBasedAuthorizer:
                 allowed=False,
                 reason="Authorization check failed",
                 policies_evaluated=["abac"],
-                metadata={"error": str(e)}
+                metadata={"error": str(e)},
             )
 
     def get_user_permissions(self, user: User) -> set[str]:
@@ -628,7 +632,9 @@ class AttributeBasedAuthorizer:
 
         return True
 
-    def _evaluate_environment_conditions(self, policy: dict[str, Any], environment: dict[str, Any]) -> bool:
+    def _evaluate_environment_conditions(
+        self, policy: dict[str, Any], environment: dict[str, Any]
+    ) -> bool:
         """Evaluate environment-based conditions in the policy."""
         conditions = policy.get("environment_conditions", {})
 
@@ -651,32 +657,24 @@ class AttributeBasedAuthorizer:
                 "name": "admin_full_access",
                 "resources": ["*"],
                 "actions": ["*"],
-                "user_conditions": {
-                    "roles": ["admin"]
-                }
+                "user_conditions": {"roles": ["admin"]},
             },
             {
                 "name": "user_profile_access",
                 "resources": ["profile"],
                 "actions": ["read", "write"],
-                "user_conditions": {
-                    "roles": ["user", "editor", "moderator"]
-                }
+                "user_conditions": {"roles": ["user", "editor", "moderator"]},
             },
             {
                 "name": "data_read_access",
                 "resources": ["data"],
                 "actions": ["read"],
-                "user_conditions": {
-                    "roles": ["user", "viewer", "editor", "moderator"]
-                }
+                "user_conditions": {"roles": ["user", "viewer", "editor", "moderator"]},
             },
             {
                 "name": "data_write_access",
                 "resources": ["data"],
                 "actions": ["write"],
-                "user_conditions": {
-                    "roles": ["editor", "moderator"]
-                }
-            }
+                "user_conditions": {"roles": ["editor", "moderator"]},
+            },
         ]

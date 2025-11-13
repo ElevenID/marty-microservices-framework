@@ -282,9 +282,7 @@ class TestDomainEventIntegration:
         aggregate = AggregateRoot()
 
         before_event = datetime.now(timezone.utc)
-        aggregate.raise_event(
-            "UserRegistered", {"user_id": "123", "email": "test@example.com"}
-        )
+        aggregate.raise_event("UserRegistered", {"user_id": "123", "email": "test@example.com"})
         after_event = datetime.now(timezone.utc)
 
         event = aggregate.domain_events[0]
@@ -303,6 +301,4 @@ class TestDomainEventIntegration:
         assert len(events) == 3
 
         # Events should be in chronological order
-        assert (
-            events[0]["timestamp"] <= events[1]["timestamp"] <= events[2]["timestamp"]
-        )
+        assert events[0]["timestamp"] <= events[1]["timestamp"] <= events[2]["timestamp"]

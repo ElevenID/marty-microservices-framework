@@ -12,10 +12,10 @@ from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass, field
 from typing import Any, Union
 
-import aioredis
-from aioredis import ConnectionPool, Redis
-from aioredis.exceptions import ConnectionError, RedisError, TimeoutError
-from aioredis.sentinel import Sentinel
+import redis.asyncio as redis
+from redis.asyncio import ConnectionPool, Redis
+from redis.asyncio.sentinel import Sentinel
+from redis.exceptions import ConnectionError, RedisError, TimeoutError
 
 logger = logging.getLogger(__name__)
 
@@ -80,8 +80,8 @@ class RedisPoolConfig:
 class RedisPooledConnection:
     """Wrapper for Redis connection with metadata and lifecycle management"""
 
-    def __init__(self, redis: Redis, pool: 'RedisConnectionPool'):
-        self.redis = redis
+    def __init__(self, redis_client: Redis, pool: "RedisConnectionPool"):
+        self.redis = redis_client
         self.pool = pool
         self.created_at = time.time()
         self.last_used = time.time()
@@ -122,8 +122,8 @@ class RedisPooledConnection:
             # Quick ping to check connectivity
             await self.redis.ping()
             return (
-                self.idle_time < self.pool.config.max_idle_time and
-                self.age < self.pool.config.connection_ttl
+                self.idle_time < self.pool.config.max_idle_time
+                and self.age < self.pool.config.connection_ttl
             )
         except Exception:
             return False
@@ -217,26 +217,24 @@ class RedisConnectionPool:
             # Create Redis connection
             if self.config.cluster_mode:
                 # Redis Cluster support
-                redis = aioredis.Redis.from_url(
+                redis_client = redis.Redis.from_url(
                     f"redis://{self.config.host}:{self.config.port}/{self.config.db}",
-                    **connection_params
+                    **connection_params,
                 )
             elif self.config.sentinel_hosts:
                 # Redis Sentinel support
                 sentinel = Sentinel(
                     [(host["host"], host["port"]) for host in self.config.sentinel_hosts]
                 )
-                redis = sentinel.master_for(
-                    self.config.sentinel_service_name or "mymaster"
-                )
+                redis_client = sentinel.master_for(self.config.sentinel_service_name or "mymaster")
             else:
                 # Standard Redis connection
-                redis = aioredis.Redis(**connection_params)
+                redis_client = redis.Redis(**connection_params)
 
             # Test the connection
-            await redis.ping()
+            await redis_client.ping()
 
-            connection = RedisPooledConnection(redis, self)
+            connection = RedisPooledConnection(redis_client, self)
             self._connections.add(connection)
             self.total_connections_created += 1
             self.active_connections += 1
@@ -316,9 +314,9 @@ class RedisConnectionPool:
         while retries <= self.config.max_retries:
             try:
                 connection = await self.acquire()
-                async with connection as redis:
+                async with connection as redis_client:
                     self.total_commands += 1
-                    result = await redis.execute_command(command, *args, **kwargs)
+                    result = await redis_client.execute_command(command, *args, **kwargs)
                     return result
 
             except (ConnectionError, TimeoutError) as e:
@@ -327,7 +325,9 @@ class RedisConnectionPool:
                 retries += 1
 
                 if retries <= self.config.max_retries:
-                    delay = self.config.retry_delay * (self.config.retry_backoff_factor ** (retries - 1))
+                    delay = self.config.retry_delay * (
+                        self.config.retry_backoff_factor ** (retries - 1)
+                    )
                     await asyncio.sleep(delay)
                     logger.warning(f"Redis command failed, retrying in {delay}s: {e}")
             except Exception as e:
@@ -344,32 +344,32 @@ class RedisConnectionPool:
     async def get(self, key: str) -> Any:
         """Get value by key"""
         connection = await self.acquire()
-        async with connection as redis:
-            return await redis.get(key)
+        async with connection as redis_client:
+            return await redis_client.get(key)
 
     async def set(self, key: str, value: Any, **kwargs) -> bool:
         """Set key-value pair"""
         connection = await self.acquire()
-        async with connection as redis:
-            return await redis.set(key, value, **kwargs)
+        async with connection as redis_client:
+            return await redis_client.set(key, value, **kwargs)
 
     async def delete(self, *keys: str) -> int:
         """Delete keys"""
         connection = await self.acquire()
-        async with connection as redis:
-            return await redis.delete(*keys)
+        async with connection as redis_client:
+            return await redis_client.delete(*keys)
 
     async def exists(self, *keys: str) -> int:
         """Check if keys exist"""
         connection = await self.acquire()
-        async with connection as redis:
-            return await redis.exists(*keys)
+        async with connection as redis_client:
+            return await redis_client.exists(*keys)
 
     async def expire(self, key: str, seconds: int) -> bool:
         """Set expiration for key"""
         connection = await self.acquire()
-        async with connection as redis:
-            return await redis.expire(key, seconds)
+        async with connection as redis_client:
+            return await redis_client.expire(key, seconds)
 
     def get_metrics(self) -> dict[str, Any]:
         """Get pool metrics"""
@@ -386,7 +386,7 @@ class RedisConnectionPool:
             "max_connections": self.config.max_connections,
             "host": self.config.host,
             "port": self.config.port,
-            "db": self.config.db
+            "db": self.config.db,
         }
 
     async def close(self):
@@ -417,7 +417,9 @@ _redis_pools: dict[str, RedisConnectionPool] = {}
 _pools_lock = asyncio.Lock()
 
 
-async def get_redis_pool(name: str = "default", config: RedisPoolConfig | None = None) -> RedisConnectionPool:
+async def get_redis_pool(
+    name: str = "default", config: RedisPoolConfig | None = None
+) -> RedisConnectionPool:
     """Get or create a Redis connection pool"""
     async with _pools_lock:
         if name not in _redis_pools:

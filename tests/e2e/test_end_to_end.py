@@ -249,7 +249,6 @@ class TestEndToEnd:
             # Wait for services to start
             await asyncio.sleep(10)
 
-
             # Test user service
             async with httpx.AsyncClient() as client:
                 user_response = await client.post(
@@ -536,7 +535,6 @@ class TestEndToEnd:
         try:
             await asyncio.sleep(5)
 
-
             # Generate some traffic for metrics
             async with httpx.AsyncClient() as client:
                 for _i in range(10):
@@ -604,8 +602,13 @@ class TestEndToEnd:
             cwd=Path.cwd(),
         )
 
-        # Verify environment-specific configs were created
-        config_files = ["config/development.yaml", "config/testing.yaml", "config/production.yaml"]
+        # Verify environment-specific configs were created (new MMF structure)
+        config_files = [
+            "mmf_new/config/base.yaml",
+            "mmf_new/config/environments/development.yaml",
+            "mmf_new/config/environments/testing.yaml",
+            "mmf_new/config/environments/production.yaml",
+        ]
 
         for config_file in config_files:
             config_path = service_dir / config_file
@@ -790,7 +793,6 @@ class TestEndToEnd:
             await asyncio.sleep(5)
 
             # Performance test using concurrent requests
-
 
             async def make_request(client, url):
                 start_time = time.time()

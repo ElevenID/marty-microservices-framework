@@ -783,7 +783,6 @@ class PerformanceReportGenerator:
         plt.legend()
         plt.grid(True, alpha=0.3)
 
-
         plt.savefig(os.path.join(self.output_dir, f"{report_name}_response_time_dist.png"))
         plt.close()
 
@@ -817,7 +816,6 @@ class PerformanceReportGenerator:
         plt.title("Throughput Over Time")
         plt.legend()
         plt.grid(True, alpha=0.3)
-
 
         plt.savefig(os.path.join(self.output_dir, f"{report_name}_throughput.png"))
         plt.close()
@@ -860,7 +858,6 @@ class PerformanceReportGenerator:
             ax3.tick_params(axis="x", rotation=45)
 
             plt.tight_layout()
-
 
             plt.savefig(os.path.join(self.output_dir, f"{report_name}_comparison.png"))
             plt.close()

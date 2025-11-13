@@ -53,21 +53,15 @@ def identity_service_contract():
                 "response_schema": {
                     "type": "object",
                     "required": ["status", "service"],
-                    "properties": {
-                        "status": {"type": "string"},
-                        "service": {"type": "string"}
-                    }
-                }
+                    "properties": {"status": {"type": "string"}, "service": {"type": "string"}},
+                },
             },
             "/authenticate": {
                 "methods": ["POST"],
                 "request_schema": {
                     "type": "object",
                     "required": ["username", "password"],
-                    "properties": {
-                        "username": {"type": "string"},
-                        "password": {"type": "string"}
-                    }
+                    "properties": {"username": {"type": "string"}, "password": {"type": "string"}},
                 },
                 "response_schema": {
                     "type": "object",
@@ -78,10 +72,10 @@ def identity_service_contract():
                         "username": {"type": ["string", "null"]},
                         "authenticated_at": {"type": ["string", "null"]},
                         "expires_at": {"type": ["string", "null"]},
-                        "error_message": {"type": ["string", "null"]}
-                    }
-                }
-            }
+                        "error_message": {"type": ["string", "null"]},
+                    },
+                },
+            },
         }
     }
 

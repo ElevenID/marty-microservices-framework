@@ -210,8 +210,7 @@ class TestCommandBus:
         if command_type not in self._handlers:
             return CommandResult(
                 success=False,
-                error=f"No handler for {
-                    command_type.__name__}",
+                error=f"No handler for {command_type.__name__}",
             )
 
         handler = self._handlers[command_type]
@@ -234,8 +233,7 @@ class TestQueryBus:
         if query_type not in self._handlers:
             return QueryResult(
                 success=False,
-                error=f"No handler for {
-                    query_type.__name__}",
+                error=f"No handler for {query_type.__name__}",
             )
 
         handler = self._handlers[query_type]

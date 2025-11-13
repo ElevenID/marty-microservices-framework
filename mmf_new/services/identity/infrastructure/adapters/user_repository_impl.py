@@ -4,14 +4,13 @@ import os
 
 # Import existing framework components
 import sys
-from typing import Optional
+from typing import Any, Optional
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mmf_new.core.domain.repository import Repository
-from mmf_new.core.infrastructure.database import BaseModel, CoreDatabaseManager
 from mmf_new.services.identity.domain.models.authenticated_user import AuthenticatedUser
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../../src"))
@@ -24,7 +23,7 @@ class AuthenticatedUserRepository(Repository[AuthenticatedUser]):
     using the existing framework's database infrastructure.
     """
 
-    def __init__(self, db_manager: CoreDatabaseManager):
+    def __init__(self, db_manager: Any):
         """Initialize repository with database manager.
 
         Args:
@@ -57,9 +56,7 @@ class AuthenticatedUserRepository(Repository[AuthenticatedUser]):
         # This is a placeholder showing the interface
         return None
 
-    async def find_all(
-        self, skip: int = 0, limit: int = 100
-    ) -> list[AuthenticatedUser]:
+    async def find_all(self, skip: int = 0, limit: int = 100) -> list[AuthenticatedUser]:
         """Find all authenticated users with pagination.
 
         Args:
@@ -127,6 +124,7 @@ class AuthenticatedUserRepository(Repository[AuthenticatedUser]):
             The authenticated user if found, None otherwise
         """
         # Implementation would query the underlying user storage
+        _ = username  # Acknowledge unused parameter
         return None
 
     async def find_by_session_id(self, session_id: str) -> AuthenticatedUser | None:
@@ -139,4 +137,5 @@ class AuthenticatedUserRepository(Repository[AuthenticatedUser]):
             The authenticated user if found, None otherwise
         """
         # Implementation would query session storage
+        _ = session_id  # Acknowledge unused parameter
         return None

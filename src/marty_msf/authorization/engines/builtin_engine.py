@@ -53,9 +53,7 @@ class BuiltinPolicyEngine(AbstractPolicyEngine):
         except Exception as e:
             logger.error(f"Policy evaluation error: {e}")
             return SecurityDecision(
-                allowed=False,
-                reason=f"Policy evaluation error: {e}",
-                evaluation_time_ms=0.0
+                allowed=False, reason=f"Policy evaluation error: {e}", evaluation_time_ms=0.0
             )
 
     async def load_policies(self, policies: list[dict[str, Any]]) -> bool:
@@ -137,7 +135,9 @@ class BuiltinPolicyEngine(AbstractPolicyEngine):
             logger.error(f"Policy matching error: {e}")
             return False
 
-    def _evaluate_single_policy(self, policy: dict[str, Any], context: SecurityContext) -> SecurityDecision:
+    def _evaluate_single_policy(
+        self, policy: dict[str, Any], context: SecurityContext
+    ) -> SecurityDecision:
         """Evaluate a single policy"""
         try:
             effect = policy.get("effect", "deny").lower()
@@ -149,27 +149,22 @@ class BuiltinPolicyEngine(AbstractPolicyEngine):
                 if not condition_result:
                     return SecurityDecision(
                         allowed=False,
-                        reason=f"Policy condition not met: {policy.get('name', 'unnamed')}"
+                        reason=f"Policy condition not met: {policy.get('name', 'unnamed')}",
                     )
 
             # Return decision based on effect
             if effect == "allow":
                 return SecurityDecision(
-                    allowed=True,
-                    reason=f"Policy allows access: {policy.get('name', 'unnamed')}"
+                    allowed=True, reason=f"Policy allows access: {policy.get('name', 'unnamed')}"
                 )
             else:
                 return SecurityDecision(
-                    allowed=False,
-                    reason=f"Policy denies access: {policy.get('name', 'unnamed')}"
+                    allowed=False, reason=f"Policy denies access: {policy.get('name', 'unnamed')}"
                 )
 
         except Exception as e:
             logger.error(f"Single policy evaluation error: {e}")
-            return SecurityDecision(
-                allowed=False,
-                reason=f"Policy evaluation error: {e}"
-            )
+            return SecurityDecision(allowed=False, reason=f"Policy evaluation error: {e}")
 
     def _matches_pattern(self, pattern: str, value: str) -> bool:
         """Check if value matches pattern (supports wildcards)"""
@@ -210,7 +205,9 @@ class BuiltinPolicyEngine(AbstractPolicyEngine):
             logger.error(f"Principal condition matching error: {e}")
             return False
 
-    def _matches_environment_conditions(self, conditions: dict[str, Any], environment: dict[str, Any]) -> bool:
+    def _matches_environment_conditions(
+        self, conditions: dict[str, Any], environment: dict[str, Any]
+    ) -> bool:
         """Check if environment matches conditions"""
         try:
             for condition_name, condition_value in conditions.items():
@@ -231,7 +228,9 @@ class BuiltinPolicyEngine(AbstractPolicyEngine):
             logger.error(f"Environment condition matching error: {e}")
             return False
 
-    def _evaluate_complex_environment_condition(self, condition: dict[str, Any], value: Any) -> bool:
+    def _evaluate_complex_environment_condition(
+        self, condition: dict[str, Any], value: Any
+    ) -> bool:
         """Evaluate complex environment conditions"""
         try:
             # Handle range conditions
@@ -308,7 +307,9 @@ class BuiltinPolicyEngine(AbstractPolicyEngine):
             logger.error(f"Time condition evaluation error: {e}")
             return False
 
-    def _evaluate_attribute_condition(self, condition: dict[str, Any], context: SecurityContext) -> bool:
+    def _evaluate_attribute_condition(
+        self, condition: dict[str, Any], context: SecurityContext
+    ) -> bool:
         """Evaluate attribute-based conditions"""
         try:
             required_attributes = condition.get("attributes", {})
@@ -327,10 +328,7 @@ class BuiltinPolicyEngine(AbstractPolicyEngine):
     def _combine_policy_decisions(self, decisions: list[SecurityDecision]) -> SecurityDecision:
         """Combine multiple policy decisions"""
         if not decisions:
-            return SecurityDecision(
-                allowed=False,
-                reason="No matching policies found"
-            )
+            return SecurityDecision(allowed=False, reason="No matching policies found")
 
         # Check for explicit denies first
         for decision in decisions:
@@ -343,10 +341,7 @@ class BuiltinPolicyEngine(AbstractPolicyEngine):
                 return decision
 
         # Default to deny
-        return SecurityDecision(
-            allowed=False,
-            reason="Access denied by policy"
-        )
+        return SecurityDecision(allowed=False, reason="Access denied by policy")
 
     def _validate_policy(self, policy: dict[str, Any]) -> bool:
         """Basic policy validation"""
@@ -404,26 +399,22 @@ class BuiltinPolicyEngine(AbstractPolicyEngine):
                 "description": "Administrators have full access",
                 "resource": "*",
                 "action": "*",
-                "principal": {
-                    "roles": ["admin"]
-                },
-                "effect": "allow"
+                "principal": {"roles": ["admin"]},
+                "effect": "allow",
             },
             {
                 "name": "user_read_access",
                 "description": "Users have read access to their resources",
                 "resource": "/api/v1/users/*",
                 "action": "GET",
-                "principal": {
-                    "roles": ["user"]
-                },
-                "effect": "allow"
+                "principal": {"roles": ["user"]},
+                "effect": "allow",
             },
             {
                 "name": "deny_by_default",
                 "description": "Deny all other access",
                 "resource": "*",
                 "action": "*",
-                "effect": "deny"
-            }
+                "effect": "deny",
+            },
         ]

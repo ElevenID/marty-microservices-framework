@@ -29,7 +29,11 @@ class TestFrameworkFunctionality:
             pytest.skip("Templates directory not found")
 
         # Find template files
-        template_files = list(template_dir.rglob("*.py")) + list(template_dir.rglob("*.yml")) + list(template_dir.rglob("*.yaml"))
+        template_files = (
+            list(template_dir.rglob("*.py"))
+            + list(template_dir.rglob("*.yml"))
+            + list(template_dir.rglob("*.yaml"))
+        )
 
         if not template_files:
             pytest.skip("No template files found")
@@ -38,15 +42,15 @@ class TestFrameworkFunctionality:
 
         for template_file in template_files:
             try:
-                if template_file.suffix == '.py':
+                if template_file.suffix == ".py":
                     # Validate Python syntax
-                    with open(template_file, encoding='utf-8') as f:
+                    with open(template_file, encoding="utf-8") as f:
                         content = f.read()
-                    compile(content, str(template_file), 'exec')
+                    compile(content, str(template_file), "exec")
 
-                elif template_file.suffix in ['.yml', '.yaml']:
+                elif template_file.suffix in [".yml", ".yaml"]:
                     # Validate YAML syntax
-                    with open(template_file, encoding='utf-8') as f:
+                    with open(template_file, encoding="utf-8") as f:
                         yaml.safe_load(f)
 
             except (SyntaxError, yaml.YAMLError) as e:
@@ -56,12 +60,10 @@ class TestFrameworkFunctionality:
                 continue
 
         if syntax_errors:
-            error_msg = "\n".join([
-                f"  {file}: {error}" for file, error in syntax_errors
-            ])
+            error_msg = "\n".join([f"  {file}: {error}" for file, error in syntax_errors])
             pytest.fail(f"Template syntax errors:\n{error_msg}")
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_service_generation(self, mock_run):
         """Test service generation functionality."""
         # Mock successful command execution
@@ -70,7 +72,6 @@ class TestFrameworkFunctionality:
         mock_result.stdout = "Service generated successfully"
         mock_result.stderr = ""
         mock_run.return_value = mock_result
-
 
         # Test service generation command
         result = run_command("python scripts/generate_service.py test-service")
@@ -81,11 +82,11 @@ class TestFrameworkFunctionality:
     def test_framework_imports(self):
         """Test that core framework modules can be imported."""
         framework_modules = [
-            'src.framework.config',
-            'src.framework.events',
-            'src.framework.logging',
-            'src.framework.monitoring',
-            'src.framework.messaging',
+            "src.framework.config",
+            "src.framework.events",
+            "src.framework.logging",
+            "src.framework.monitoring",
+            "src.framework.messaging",
         ]
 
         import_errors = []
@@ -96,9 +97,7 @@ class TestFrameworkFunctionality:
                 import_errors.append((module, str(e)))
 
         if import_errors:
-            error_msg = "\n".join([
-                f"  {module}: {error}" for module, error in import_errors
-            ])
+            error_msg = "\n".join([f"  {module}: {error}" for module, error in import_errors])
             pytest.fail(f"Framework import errors:\n{error_msg}")
 
     def test_config_validation(self):
@@ -117,7 +116,7 @@ class TestFrameworkFunctionality:
 
         for config_file in config_files:
             try:
-                with open(config_file, encoding='utf-8') as f:
+                with open(config_file, encoding="utf-8") as f:
                     config = yaml.safe_load(f)
 
                 # Basic validation - should be a dictionary
@@ -130,9 +129,7 @@ class TestFrameworkFunctionality:
                 continue
 
         if config_errors:
-            error_msg = "\n".join([
-                f"  {file}: {error}" for file, error in config_errors
-            ])
+            error_msg = "\n".join([f"  {file}: {error}" for file, error in config_errors])
             pytest.fail(f"Config validation errors:\n{error_msg}")
 
     def test_docker_configuration(self):
@@ -142,7 +139,7 @@ class TestFrameworkFunctionality:
 
         if template_dockerfile.exists():
             try:
-                with open(template_dockerfile, encoding='utf-8') as f:
+                with open(template_dockerfile, encoding="utf-8") as f:
                     content = f.read()
 
                 # Basic Dockerfile validation
@@ -150,10 +147,12 @@ class TestFrameworkFunctionality:
 
                 # Check for common Python Dockerfile patterns
                 if "python" in content.lower():
-                    assert any(keyword in content for keyword in ["COPY", "ADD"]), \
+                    assert any(keyword in content for keyword in ["COPY", "ADD"]), (
                         "Python Dockerfile should copy files"
-                    assert "CMD" in content or "ENTRYPOINT" in content, \
+                    )
+                    assert "CMD" in content or "ENTRYPOINT" in content, (
                         "Dockerfile should have CMD or ENTRYPOINT"
+                    )
 
             except OSError:
                 pytest.skip("Could not read Dockerfile")
@@ -176,7 +175,7 @@ class TestFrameworkFunctionality:
 
         for manifest_file in manifest_files:
             try:
-                with open(manifest_file, encoding='utf-8') as f:
+                with open(manifest_file, encoding="utf-8") as f:
                     manifests = list(yaml.safe_load_all(f))
 
                 for i, manifest in enumerate(manifests):
@@ -184,7 +183,9 @@ class TestFrameworkFunctionality:
                         continue
 
                     if not isinstance(manifest, dict):
-                        manifest_errors.append((manifest_file, f"Manifest {i} should be a dictionary"))
+                        manifest_errors.append(
+                            (manifest_file, f"Manifest {i} should be a dictionary")
+                        )
                         continue
 
                     # Basic Kubernetes manifest validation
@@ -199,12 +200,10 @@ class TestFrameworkFunctionality:
                 continue
 
         if manifest_errors:
-            error_msg = "\n".join([
-                f"  {file}: {error}" for file, error in manifest_errors
-            ])
+            error_msg = "\n".join([f"  {file}: {error}" for file, error in manifest_errors])
             pytest.fail(f"Kubernetes manifest errors:\n{error_msg}")
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_build_integration(self, mock_run):
         """Test build integration functionality."""
         # Mock successful build
@@ -213,7 +212,6 @@ class TestFrameworkFunctionality:
         mock_result.stdout = "Build successful"
         mock_result.stderr = ""
         mock_run.return_value = mock_result
-
 
         # Test build command
         result = run_command("make build")
@@ -278,8 +276,8 @@ class TestFrameworkFunctionality:
             assert metrics is not None
 
             # Test that they have expected interfaces
-            assert hasattr(logger, 'info')
-            assert hasattr(metrics, 'increment_counter')
+            assert hasattr(logger, "info")
+            assert hasattr(metrics, "increment_counter")
 
         except ImportError as e:
             pytest.skip(f"Framework components not available: {e}")
@@ -300,11 +298,11 @@ class TestFrameworkFunctionality:
 
         for example_file in python_examples:
             try:
-                with open(example_file, encoding='utf-8') as f:
+                with open(example_file, encoding="utf-8") as f:
                     content = f.read()
 
                 # Check syntax
-                compile(content, str(example_file), 'exec')
+                compile(content, str(example_file), "exec")
 
             except SyntaxError as e:
                 syntax_errors.append((example_file, str(e)))
@@ -312,9 +310,7 @@ class TestFrameworkFunctionality:
                 continue
 
         if syntax_errors:
-            error_msg = "\n".join([
-                f"  {file}: {error}" for file, error in syntax_errors
-            ])
+            error_msg = "\n".join([f"  {file}: {error}" for file, error in syntax_errors])
             pytest.fail(f"Example syntax errors:\n{error_msg}")
 
     @pytest.mark.slow
@@ -329,7 +325,7 @@ class TestFrameworkFunctionality:
             service_dir.mkdir()
 
             # Create basic service files
-            (service_dir / "main.py").write_text('''
+            (service_dir / "main.py").write_text("""
 from fastapi import FastAPI
 
 app = FastAPI()
@@ -337,7 +333,7 @@ app = FastAPI()
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
-''')
+""")
 
             (service_dir / "requirements.txt").write_text("fastapi\nuvicorn\n")
 
@@ -348,9 +344,8 @@ def read_root():
     def test_import_original_framework_script(self):
         """Test that the original framework script can be imported."""
         try:
-
             # Check that main functions exist
-            assert hasattr(test_framework, 'run_command')
+            assert hasattr(test_framework, "run_command")
 
             # Test that we can call the main functions
             result = test_framework.run_command("echo test")

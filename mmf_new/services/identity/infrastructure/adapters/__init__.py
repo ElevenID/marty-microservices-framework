@@ -38,9 +38,7 @@ class InMemoryUserRepository(UserRepository):
         # In a real implementation, this would use bcrypt or similar
         return f"hashed_{password}" == stored_hash
 
-    def add_user(
-        self, username: str, password: str, user_id: UserId | None = None
-    ) -> UserId:
+    def add_user(self, username: str, password: str, user_id: UserId | None = None) -> UserId:
         """Add a user for testing purposes."""
         if user_id is None:
             user_id = UserId(f"user_{len(self._users)}")

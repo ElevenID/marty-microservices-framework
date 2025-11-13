@@ -30,30 +30,35 @@ The Marty Microservices Framework features enterprise-grade security with unifie
 ## Security Architecture Principles
 
 ### 1. Consolidated Security Management
+
 - **Principle**: Single security manager for all operations
 - **Implementation**: `ConsolidatedSecurityManager` using `UnifiedSecurityFramework`
 - **Components**: JWT validation, RBAC/ABAC authorization, audit logging, policy engines
 - **Benefits**: Consistent security model, reduced duplication, easier configuration
 
 ### 2. Robust Error Handling
+
 - **Principle**: Comprehensive error handling for all security edge cases
 - **Implementation**: Categorized security exceptions with detailed context
 - **Components**: Token validation, claims verification, authorization failures
 - **Benefits**: Better debugging, security incident detection, graceful degradation
 
 ### 3. Comprehensive Audit Trail
+
 - **Principle**: All security decisions must be auditable
 - **Implementation**: Automatic audit logging for all security operations
 - **Components**: Authentication events, authorization decisions, policy evaluations, security violations
 - **Benefits**: Compliance, incident investigation, security monitoring
 
 ### 4. Zero Trust Security Model
+
 - **Principle**: Never trust, always verify
 - **Implementation**: Every request is authenticated and authorized
 - **Components**: mTLS, JWT verification, certificate-based authentication
 - **Benefits**: Reduced attack surface, improved compliance
 
 ### 5. Policy as Code
+
 - **Principle**: Authorization policies defined as code
 - **Implementation**: Version-controlled policy definitions
 - **Components**: OPA Rego policies, ABAC attribute conditions, RBAC role hierarchies
@@ -64,6 +69,7 @@ The Marty Microservices Framework features enterprise-grade security with unifie
 ### Core Components
 
 #### 1. ConsolidatedSecurityManager
+
 The central security manager that replaces multiple duplicate implementations:
 
 ```python
@@ -94,6 +100,7 @@ security_manager = configure_security_manager({
 ```
 
 #### 2. Enhanced Security Decorators
+
 Robust decorators with comprehensive error handling:
 
 ```python
@@ -125,6 +132,7 @@ async def update_order(request: Request, order_id: str, security_context: Securi
 ```
 
 #### 3. Comprehensive Error Handling
+
 Categorized security exceptions with detailed context:
 
 ```python
@@ -153,6 +161,7 @@ except ClaimsVerificationError as e:
 ```
 
 #### 4. Automatic Audit Logging
+
 All security operations are automatically audited:
 
 ```python
@@ -172,6 +181,7 @@ security_manager.authorize_abac(context, "resource", "action")
 ### Security Features
 
 #### 1. Enhanced JWT Token Validation
+
 Comprehensive token validation with detailed error categorization:
 
 - **Signature Verification**: RSA/ECDSA/HMAC support with proper error handling
@@ -180,6 +190,7 @@ Comprehensive token validation with detailed error categorization:
 - **Audit Integration**: All validation attempts logged with context
 
 #### 2. RBAC with Hierarchical Roles
+
 Role-based access control with inheritance:
 
 ```python
@@ -196,6 +207,7 @@ async def admin_function():
 ```
 
 #### 3. ABAC with Policy Engines
+
 Attribute-based access control with external policy evaluation:
 
 ```python
@@ -216,6 +228,7 @@ async def read_document(request: Request, doc_id: str):
 ```
 
 #### 4. External Identity Provider Integration
+
 Support for multiple identity providers:
 
 ```python
@@ -239,6 +252,7 @@ security_manager.configure({
 ## Security Decision Flow
 
 ### 1. Authentication Flow
+
 ```mermaid
 graph TD
     A[Request with Token] --> B[Extract Token]
@@ -256,6 +270,7 @@ graph TD
 ```
 
 ### 2. Authorization Flow
+
 ```mermaid
 graph TD
     A[Security Context] --> B{RBAC Required?}
@@ -279,6 +294,7 @@ graph TD
 ### From Old SecurityManager to ConsolidatedSecurityManager
 
 #### Before (Multiple Managers)
+
 ```python
 # Old - Multiple security managers
 from marty_msf.security.decorators import SecurityManager
@@ -292,6 +308,7 @@ unified_framework = UnifiedSecurityFramework(config)
 ```
 
 #### After (Consolidated Manager)
+
 ```python
 # New - Single consolidated manager
 from marty_msf.security import get_security_manager, configure_security_manager
@@ -310,6 +327,7 @@ security_manager = configure_security_manager({
 ### Decorator Updates
 
 #### Before (Basic Error Handling)
+
 ```python
 @requires_auth
 def old_endpoint(request):
@@ -318,6 +336,7 @@ def old_endpoint(request):
 ```
 
 #### After (Robust Error Handling)
+
 ```python
 @requires_auth()
 async def new_endpoint(request: Request, security_context: SecurityContext):
@@ -329,6 +348,7 @@ async def new_endpoint(request: Request, security_context: SecurityContext):
 ## Security Best Practices
 
 ### 1. Configuration Security
+
 ```python
 # Use environment variables for secrets
 security_manager = configure_security_manager({
@@ -342,6 +362,7 @@ security_manager = configure_security_manager({
 ```
 
 ### 2. Error Handling
+
 ```python
 # Handle specific security exceptions appropriately
 try:
@@ -358,6 +379,7 @@ except ClaimsVerificationError:
 ```
 
 ### 3. Audit Monitoring
+
 ```python
 # Monitor audit logs for security patterns
 from marty_msf.security.audit import get_security_auditor
@@ -386,6 +408,7 @@ The consolidated security architecture provides:
 6. **Zero-Trust Foundation**: Every request authenticated and authorized
 
 This architecture addresses the original feedback by providing:
+
 - ✅ **No duplicate implementations** - Consolidated into single manager
 - ✅ **RBAC/ABAC support** - Full role and attribute-based access control
 - ✅ **Policy engine integration** - OPA and custom policy support

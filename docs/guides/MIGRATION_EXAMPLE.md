@@ -133,21 +133,25 @@ class TrustServicer:
 ## Key Benefits of Migration
 
 ### 1. **Eliminated Duplication**
+
 - No more per-service Prometheus setup
 - No more custom metrics server code
 - No more manual gRPC interceptor implementation
 
 ### 2. **Standardized Metrics**
+
 - All services use consistent metric names (`mmf_*` prefix)
 - Standardized labels include `service` name automatically
 - Common business metrics like `documents_processed_total`
 
 ### 3. **Automatic Instrumentation**
+
 - HTTP/gRPC request metrics collected automatically
 - OpenTelemetry tracing with zero configuration
 - Health checks with sensible defaults
 
 ### 4. **Framework-Level Configuration**
+
 - Tracing enabled/disabled via environment variables
 - Metrics format and endpoints handled by framework
 - Service discovery and registration patterns
@@ -155,6 +159,7 @@ class TrustServicer:
 ## Migration Steps
 
 ### Step 1: Replace Service Metrics
+
 ```python
 # Remove old imports
 # from trust_svc.metrics import TrustServiceMetrics
@@ -165,6 +170,7 @@ from marty_microservices_framework import init_observability, get_framework_metr
 ```
 
 ### Step 2: Initialize Observability
+
 ```python
 # Replace manual setup
 monitor = init_observability("your-service-name")
@@ -172,6 +178,7 @@ metrics = get_framework_metrics("your-service-name")
 ```
 
 ### Step 3: Add Middleware
+
 ```python
 # For gRPC services
 from marty_microservices_framework import create_grpc_metrics_interceptor
@@ -184,6 +191,7 @@ app.middleware("http")(create_fastapi_metrics_middleware("your-service-name"))
 ```
 
 ### Step 4: Replace Custom Metrics
+
 ```python
 # Old way
 self.certificates_processed.labels(cert_type=cert_type, status=status).inc()
@@ -201,6 +209,7 @@ custom_counter.labels(validation_type="x509", service="trust-service").inc()
 ```
 
 ### Step 5: Add Tracing (Optional)
+
 ```python
 from marty_microservices_framework import traced_operation
 

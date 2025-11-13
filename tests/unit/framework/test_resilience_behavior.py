@@ -210,10 +210,7 @@ class TestBulkheadBehavior:
 
         # Start multiple threads
         with ThreadPoolExecutor(max_workers=5) as executor:
-            futures = [
-                executor.submit(bulkhead.execute, track_concurrency)
-                for _ in range(5)
-            ]
+            futures = [executor.submit(bulkhead.execute, track_concurrency) for _ in range(5)]
 
             for future in futures:
                 future.result(timeout=1.0)

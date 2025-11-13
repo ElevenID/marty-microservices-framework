@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PolicyEvaluationRequest:
     """Request for policy evaluation."""
+
     principal: dict[str, Any]
     resource: str
     action: str
@@ -36,6 +37,7 @@ class PolicyEvaluationRequest:
 @dataclass
 class PolicyEvaluationResponse:
     """Response from policy evaluation."""
+
     decision: PolicyEffect
     allow: bool
     reason: str | None = None
@@ -64,10 +66,7 @@ class OPAPolicyEngine:
             self.session = aiohttp.ClientSession(timeout=timeout)
         return self.session
 
-    async def evaluate(
-        self,
-        request: PolicyEvaluationRequest
-    ) -> PolicyEvaluationResponse:
+    async def evaluate(self, request: PolicyEvaluationRequest) -> PolicyEvaluationResponse:
         """Evaluate policy using OPA."""
         start_time = datetime.now()
 
@@ -81,7 +80,7 @@ class OPAPolicyEngine:
                     "resource": request.resource,
                     "action": request.action,
                     "environment": request.environment,
-                    **request.context
+                    **request.context,
                 }
             }
 
@@ -91,8 +90,7 @@ class OPAPolicyEngine:
                 if response.status != 200:
                     error_text = await response.text()
                     raise PolicyEvaluationError(
-                        f"OPA returned status {response.status}: {error_text}",
-                        engine_type="OPA"
+                        f"OPA returned status {response.status}: {error_text}", engine_type="OPA"
                     )
 
                 result = await response.json()
@@ -118,23 +116,18 @@ class OPAPolicyEngine:
                     reason=reason,
                     policy_id=policy_id,
                     evaluation_time_ms=evaluation_time,
-                    metadata={"opa_result": result}
+                    metadata={"opa_result": result},
                 )
 
         except aiohttp.ClientError as e:
             self.is_healthy = False
             self.last_error = str(e)
             raise ExternalProviderError(
-                f"OPA connection failed: {e}",
-                provider="OPA",
-                provider_error=str(e)
+                f"OPA connection failed: {e}", provider="OPA", provider_error=str(e)
             )
         except Exception as e:
             logger.error("OPA evaluation error: %s", e)
-            raise PolicyEvaluationError(
-                f"OPA evaluation failed: {e}",
-                engine_type="OPA"
-            )
+            raise PolicyEvaluationError(f"OPA evaluation failed: {e}", engine_type="OPA")
 
     async def health_check(self) -> bool:
         """Check OPA health."""
@@ -166,14 +159,16 @@ class OPAPolicyEngine:
             "url": self.base_url,
             "policy_path": self.policy_path,
             "is_healthy": self.is_healthy,
-            "last_error": self.last_error
+            "last_error": self.last_error,
         }
 
 
 class OPAPolicyService:
     """Service wrapper for OPA policy engine with configuration management."""
 
-    def __init__(self, config: dict[str, Any] | None = None, service_config: dict[str, Any] | None = None):
+    def __init__(
+        self, config: dict[str, Any] | None = None, service_config: dict[str, Any] | None = None
+    ):
         # Load from service configuration if provided
         if service_config and not config:
             config = self._load_from_service_config(service_config)
@@ -189,7 +184,7 @@ class OPAPolicyService:
             "url": "http://localhost:8181",
             "policy_path": "v1/data/authz/allow",
             "timeout": 5.0,
-            "health_check_interval": 30.0
+            "health_check_interval": 30.0,
         }
 
     def _load_from_service_config(self, service_config: dict[str, Any]) -> dict[str, Any]:
@@ -200,7 +195,7 @@ class OPAPolicyService:
             "url": opa_config.get("url", "http://localhost:8181"),
             "policy_path": opa_config.get("policy_path", "v1/data/authz/allow"),
             "timeout": opa_config.get("timeout", 5.0),
-            "health_check_interval": opa_config.get("health_check_interval", 30.0)
+            "health_check_interval": opa_config.get("health_check_interval", 30.0),
         }
 
     async def initialize(self):
@@ -222,7 +217,7 @@ class OPAPolicyService:
         resource: str,
         action: str,
         environment: dict[str, Any] | None = None,
-        context: dict[str, Any] | None = None
+        context: dict[str, Any] | None = None,
     ) -> PolicyEvaluationResponse:
         """Evaluate policy for given request."""
         if not self._initialized:
@@ -233,7 +228,7 @@ class OPAPolicyService:
             resource=resource,
             action=action,
             environment=environment or {},
-            context=context or {}
+            context=context or {},
         )
 
         return await self.engine.evaluate(request)
@@ -255,13 +250,12 @@ class OPAPolicyService:
             "config": {
                 "url": self.config["url"],
                 "policy_path": self.config["policy_path"],
-                "timeout": self.config["timeout"]
-            }
+                "timeout": self.config["timeout"],
+            },
         }
 
 
 # Service-based OPA policy service access
-
 
 
 def get_policy_service(service_config: dict[str, Any] | None = None) -> OPAPolicyService:
@@ -273,7 +267,7 @@ def get_policy_service(service_config: dict[str, Any] | None = None) -> OPAPolic
 def configure_opa_service(
     url: str = "http://localhost:8181",
     policy_path: str = "v1/data/authz/allow",
-    timeout: float = 5.0
+    timeout: float = 5.0,
 ) -> OPAPolicyService:
     """Configure OPA policy service (not supported - use DI container instead)."""
     raise NotImplementedError(
@@ -298,7 +292,7 @@ async def evaluate_policy(
     resource: str,
     action: str,
     environment: dict[str, Any] | None = None,
-    context: dict[str, Any] | None = None
+    context: dict[str, Any] | None = None,
 ) -> PolicyEvaluationResponse:
     """Convenience function to evaluate policy using global service."""
     service = get_policy_service()
@@ -307,7 +301,7 @@ async def evaluate_policy(
         resource=resource,
         action=action,
         environment=environment,
-        context=context
+        context=context,
     )
 
 
@@ -318,5 +312,5 @@ __all__ = [
     "OPAPolicyService",
     "get_policy_service",
     "configure_opa_service",
-    "evaluate_policy"
+    "evaluate_policy",
 ]

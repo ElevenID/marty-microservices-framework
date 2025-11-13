@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 class HealthStatus(Enum):
     """Health check status levels"""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
@@ -28,6 +29,7 @@ class HealthStatus(Enum):
 @dataclass
 class HealthCheckResult:
     """Result of a health check operation"""
+
     status: HealthStatus
     message: str
     timestamp: datetime
@@ -42,12 +44,12 @@ class HealthCheckConfig:
 
     # Check intervals
     check_interval: float = 60.0  # seconds
-    check_timeout: float = 5.0    # seconds
+    check_timeout: float = 5.0  # seconds
 
     # Thresholds
-    error_rate_threshold: float = 0.1      # 10%
-    utilization_threshold: float = 0.9     # 90%
-    response_time_threshold: float = 1.0   # 1 second
+    error_rate_threshold: float = 0.1  # 10%
+    utilization_threshold: float = 0.9  # 90%
+    response_time_threshold: float = 1.0  # 1 second
 
     # Failure handling
     consecutive_failures_threshold: int = 3
@@ -81,9 +83,7 @@ class PoolHealthChecker:
         self._running = True
 
         for pool_name, pool in pools.items():
-            task = asyncio.create_task(
-                self._monitor_pool(pool_name, pool)
-            )
+            task = asyncio.create_task(self._monitor_pool(pool_name, pool))
             self._check_tasks[pool_name] = task
 
         logger.info(f"Started health monitoring for {len(pools)} pools")
@@ -129,7 +129,7 @@ class PoolHealthChecker:
 
         try:
             # Get pool metrics
-            if hasattr(pool, 'get_metrics'):
+            if hasattr(pool, "get_metrics"):
                 metrics = pool.get_metrics()
             else:
                 metrics = {}
@@ -139,22 +139,30 @@ class PoolHealthChecker:
             messages = []
 
             # Check error rate
-            error_rate = metrics.get('error_rate', 0)
+            error_rate = metrics.get("error_rate", 0)
             if error_rate > self.config.error_rate_threshold:
-                status = HealthStatus.DEGRADED if status == HealthStatus.HEALTHY else HealthStatus.UNHEALTHY
+                status = (
+                    HealthStatus.DEGRADED
+                    if status == HealthStatus.HEALTHY
+                    else HealthStatus.UNHEALTHY
+                )
                 messages.append(f"High error rate: {error_rate:.2%}")
 
             # Check utilization
-            active_connections = metrics.get('active_connections', 0)
-            max_connections = metrics.get('max_connections', 1)
+            active_connections = metrics.get("active_connections", 0)
+            max_connections = metrics.get("max_connections", 1)
             utilization = active_connections / max_connections
 
             if utilization > self.config.utilization_threshold:
-                status = HealthStatus.DEGRADED if status == HealthStatus.HEALTHY else HealthStatus.UNHEALTHY
+                status = (
+                    HealthStatus.DEGRADED
+                    if status == HealthStatus.HEALTHY
+                    else HealthStatus.UNHEALTHY
+                )
                 messages.append(f"High utilization: {utilization:.2%}")
 
             # Check if pool has any active connections (might be completely down)
-            if active_connections == 0 and metrics.get('total_connections', 0) == 0:
+            if active_connections == 0 and metrics.get("total_connections", 0) == 0:
                 status = HealthStatus.UNHEALTHY
                 messages.append("No active connections")
 
@@ -172,7 +180,7 @@ class PoolHealthChecker:
                     messages.append(f"Custom check error: {e}")
 
             # Specific pool type checks
-            if hasattr(pool, '_connections'):  # HTTP/Redis pools
+            if hasattr(pool, "_connections"):  # HTTP/Redis pools
                 try:
                     await self._check_connection_health(pool)
                 except Exception as e:
@@ -186,7 +194,7 @@ class PoolHealthChecker:
                 message="; ".join(messages) if messages else "All checks passed",
                 timestamp=datetime.now(timezone.utc),
                 metrics=metrics,
-                duration_ms=duration_ms
+                duration_ms=duration_ms,
             )
 
         except Exception as e:
@@ -197,25 +205,24 @@ class PoolHealthChecker:
                 message=f"Health check failed: {e}",
                 timestamp=datetime.now(timezone.utc),
                 duration_ms=duration_ms,
-                error=str(e)
+                error=str(e),
             )
 
     async def _check_connection_health(self, pool: Any):
         """Check if we can acquire and use a connection"""
         try:
             # Try to acquire a connection
-            if hasattr(pool, 'acquire'):
+            if hasattr(pool, "acquire"):
                 connection = await asyncio.wait_for(
-                    pool.acquire(),
-                    timeout=self.config.check_timeout
+                    pool.acquire(), timeout=self.config.check_timeout
                 )
 
                 # Test the connection
                 async with connection as conn:
-                    if hasattr(conn, 'ping'):
+                    if hasattr(conn, "ping"):
                         await conn.ping()
-                    elif hasattr(conn, 'execute_command'):
-                        await conn.execute_command('PING')
+                    elif hasattr(conn, "execute_command"):
+                        await conn.execute_command("PING")
                     # For HTTP pools, we could make a test request
 
         except asyncio.TimeoutError:
@@ -246,9 +253,13 @@ class PoolHealthChecker:
 
         # Log significant status changes
         if result.status in (HealthStatus.UNHEALTHY, HealthStatus.UNKNOWN):
-            logger.warning(f"Pool '{pool_name}' health check: {result.status.value} - {result.message}")
+            logger.warning(
+                f"Pool '{pool_name}' health check: {result.status.value} - {result.message}"
+            )
         elif result.status == HealthStatus.DEGRADED:
-            logger.info(f"Pool '{pool_name}' health check: {result.status.value} - {result.message}")
+            logger.info(
+                f"Pool '{pool_name}' health check: {result.status.value} - {result.message}"
+            )
         else:
             logger.debug(f"Pool '{pool_name}' health check: {result.status.value}")
 
@@ -259,8 +270,8 @@ class PoolHealthChecker:
 
         # Check if we should send an alert
         should_alert = (
-            result.status == HealthStatus.UNHEALTHY and
-            self._consecutive_failures[pool_name] >= self.config.consecutive_failures_threshold
+            result.status == HealthStatus.UNHEALTHY
+            and self._consecutive_failures[pool_name] >= self.config.consecutive_failures_threshold
         )
 
         if not should_alert:
@@ -304,7 +315,7 @@ class PoolHealthChecker:
         summary = {
             "overall_status": HealthStatus.HEALTHY,
             "pools": {},
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         unhealthy_count = 0
@@ -321,7 +332,7 @@ class PoolHealthChecker:
                 "status": pool_status.value,
                 "consecutive_failures": self._consecutive_failures.get(pool_name, 0),
                 "last_check": results[-1].timestamp.isoformat() if results else None,
-                "last_message": results[-1].message if results else None
+                "last_message": results[-1].message if results else None,
             }
 
             if pool_status in (HealthStatus.UNHEALTHY, HealthStatus.UNKNOWN):
@@ -338,7 +349,7 @@ class PoolHealthChecker:
         summary["summary"] = {
             "total_pools": total_pools,
             "healthy_pools": total_pools - unhealthy_count,
-            "unhealthy_pools": unhealthy_count
+            "unhealthy_pools": unhealthy_count,
         }
 
         return summary
@@ -349,13 +360,15 @@ class PoolHealthChecker:
 
         history = []
         for result in results[-limit:]:
-            history.append({
-                "status": result.status.value,
-                "message": result.message,
-                "timestamp": result.timestamp.isoformat(),
-                "duration_ms": result.duration_ms,
-                "metrics": result.metrics,
-                "error": result.error
-            })
+            history.append(
+                {
+                    "status": result.status.value,
+                    "message": result.message,
+                    "timestamp": result.timestamp.isoformat(),
+                    "duration_ms": result.duration_ms,
+                    "metrics": result.metrics,
+                    "error": result.error,
+                }
+            )
 
         return history

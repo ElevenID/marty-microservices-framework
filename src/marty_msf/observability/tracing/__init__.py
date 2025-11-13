@@ -48,7 +48,6 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 # FastAPI and gRPC imports
 try:
-
     FASTAPI_AVAILABLE = True
 except ImportError:
     FASTAPI_AVAILABLE = False

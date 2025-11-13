@@ -283,6 +283,7 @@ public class {{ service.name }}Client {
 ## Error Handling
 
 ### Python
+
 ```python
 import grpc
 
@@ -293,6 +294,7 @@ except grpc.RpcError as e:
 ```
 
 ### JavaScript
+
 ```javascript
 client.{{ service.grpc_methods[0].name if service.grpc_methods }}(request, (error, response) => {
     if (error) {
@@ -302,6 +304,7 @@ client.{{ service.grpc_methods[0].name if service.grpc_methods }}(request, (erro
 ```
 
 ### Go
+
 ```go
 resp, err := client.{{ service.grpc_methods[0].name if service.grpc_methods }}(ctx, req)
 if err != nil {
@@ -316,6 +319,7 @@ if err != nil {
 ### TLS/SSL Configuration
 
 #### Python
+
 ```python
 import grpc
 import ssl
@@ -326,6 +330,7 @@ channel = grpc.secure_channel('your-service:443', credentials)
 ```
 
 #### JavaScript
+
 ```javascript
 const fs = require('fs');
 const grpc = require('@grpc/grpc-js');
@@ -343,6 +348,7 @@ const client = new serviceProto.{{ service.name }}('your-service:443', credentia
 ### Authentication
 
 #### Metadata (Python)
+
 ```python
 import grpc
 
@@ -352,6 +358,7 @@ response = stub.{{ service.grpc_methods[0].name if service.grpc_methods }}(reque
 ```
 
 #### Interceptors (JavaScript)
+
 ```javascript
 const authInterceptor = (options, nextCall) => {
     return new grpc.InterceptingCall(nextCall(options), {

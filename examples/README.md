@@ -13,6 +13,7 @@ The Marty Microservices Framework is designed for a streamlined adoption process
 ## Examples Structure
 
 ### Framework Examples
+
 - **`demos/`**: Interactive demonstrations and walkthroughs
 - **`extended_messaging/`**: Advanced messaging patterns
 - **`security/`**: Security configuration examples
@@ -29,6 +30,7 @@ A complete business domain example demonstrating:
 - **Configuration Patterns**: Plugin-based configuration loading and management
 
 **Plugin Configuration Structure:**
+
 ```
 petstore_domain/
 ├── plugins/                    # Plugin configurations
@@ -97,6 +99,7 @@ curl http://localhost:8002/docs
 To create your own production-ready service:
 
 1. **Generate a new service**:
+
    ```bash
    uv run python scripts/dev/generate_service.py production your-service-name --description "Your service description" --http-port 8003
    ```
@@ -138,6 +141,7 @@ More examples will be added to demonstrate:
 ## Support
 
 For more information:
+
 - See the main framework README
 - Check the `docs/` directory for detailed guides
 - Review the generated service README files

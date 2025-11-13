@@ -42,7 +42,7 @@ class TestJWTConfig:
             algorithm="HS512",
             access_token_expire_minutes=60,
             issuer="test-issuer",
-            audience="test-audience"
+            audience="test-audience",
         )
 
         assert config.secret_key == "test-secret"
@@ -71,7 +71,7 @@ class TestJWTTokenProvider:
             secret_key="test-secret-key-123",
             access_token_expire_minutes=30,
             issuer="test-issuer",
-            audience="test-audience"
+            audience="test-audience",
         )
         self.provider = JWTTokenProvider(self.config)
 
@@ -82,17 +82,13 @@ class TestJWTTokenProvider:
             roles={"admin", "user"},
             permissions={"read", "write"},
             auth_method="jwt",
-            metadata={"department": "IT"}
+            metadata={"department": "IT"},
         )
 
     @pytest.mark.asyncio
     async def test_create_token_minimal(self):
         """Test creating a JWT token with minimal user data."""
-        user = AuthenticatedUser(
-            user_id="simple-user",
-            username="simpleuser",
-            auth_method="jwt"
-        )
+        user = AuthenticatedUser(user_id="simple-user", username="simpleuser", auth_method="jwt")
 
         token = await self.provider.create_token(user)
 
@@ -105,7 +101,7 @@ class TestJWTTokenProvider:
             self.config.secret_key,
             algorithms=[self.config.algorithm],
             audience=self.config.audience,
-            issuer=self.config.issuer
+            issuer=self.config.issuer,
         )
 
         assert payload["sub"] == "simple-user"
@@ -124,7 +120,7 @@ class TestJWTTokenProvider:
             self.config.secret_key,
             algorithms=[self.config.algorithm],
             audience=self.config.audience,
-            issuer=self.config.issuer
+            issuer=self.config.issuer,
         )
 
         assert payload["sub"] == "test-123"
@@ -141,17 +137,14 @@ class TestJWTTokenProvider:
         """Test creating a token with custom expiration time."""
         custom_expiry = datetime.now(timezone.utc) + timedelta(hours=2)
 
-        token = await self.provider.create_token(
-            self.test_user,
-            expires_at=custom_expiry
-        )
+        token = await self.provider.create_token(self.test_user, expires_at=custom_expiry)
 
         payload = jwt.decode(
             token,
             self.config.secret_key,
             algorithms=[self.config.algorithm],
             audience=self.config.audience,
-            issuer=self.config.issuer
+            issuer=self.config.issuer,
         )
 
         # Verify custom expiration (with small tolerance for timing)
@@ -161,14 +154,10 @@ class TestJWTTokenProvider:
     @pytest.mark.asyncio
     async def test_create_token_with_additional_claims(self):
         """Test creating a token with additional claims."""
-        additional_claims = {
-            "custom_field": "custom_value",
-            "session_id": "session-123"
-        }
+        additional_claims = {"custom_field": "custom_value", "session_id": "session-123"}
 
         token = await self.provider.create_token(
-            self.test_user,
-            additional_claims=additional_claims
+            self.test_user, additional_claims=additional_claims
         )
 
         payload = jwt.decode(
@@ -176,7 +165,7 @@ class TestJWTTokenProvider:
             self.config.secret_key,
             algorithms=[self.config.algorithm],
             audience=self.config.audience,
-            issuer=self.config.issuer
+            issuer=self.config.issuer,
         )
 
         assert payload["custom_field"] == "custom_value"
@@ -187,17 +176,14 @@ class TestJWTTokenProvider:
         """Test that naive datetime is converted to UTC."""
         naive_expiry = datetime(2026, 1, 1, 12, 0, 0)  # No timezone, future date
 
-        token = await self.provider.create_token(
-            self.test_user,
-            expires_at=naive_expiry
-        )
+        token = await self.provider.create_token(self.test_user, expires_at=naive_expiry)
 
         payload = jwt.decode(
             token,
             self.config.secret_key,
             algorithms=[self.config.algorithm],
             audience=self.config.audience,
-            issuer=self.config.issuer
+            issuer=self.config.issuer,
         )
 
         # Should be treated as UTC
@@ -237,10 +223,7 @@ class TestJWTTokenProvider:
         """Test validation of an expired token."""
         # Create token with past expiration
         past_expiry = datetime.now(timezone.utc) - timedelta(hours=1)
-        token = await self.provider.create_token(
-            self.test_user,
-            expires_at=past_expiry
-        )
+        token = await self.provider.create_token(self.test_user, expires_at=past_expiry)
 
         with pytest.raises(TokenValidationError, match="JWT token has expired"):
             await self.provider.validate_token(token)
@@ -272,7 +255,7 @@ class TestJWTTokenProvider:
         payload = {
             "exp": datetime.now(timezone.utc) + timedelta(hours=1),
             "iss": self.config.issuer,
-            "aud": self.config.audience
+            "aud": self.config.audience,
         }
         token = jwt.encode(payload, self.config.secret_key, algorithm=self.config.algorithm)
 
@@ -298,17 +281,14 @@ class TestJWTTokenProvider:
         original_token = await self.provider.create_token(self.test_user)
         custom_expiry = datetime.now(timezone.utc) + timedelta(hours=4)
 
-        new_token = await self.provider.refresh_token(
-            original_token,
-            new_expires_at=custom_expiry
-        )
+        new_token = await self.provider.refresh_token(original_token, new_expires_at=custom_expiry)
 
         payload = jwt.decode(
             new_token,
             self.config.secret_key,
             algorithms=[self.config.algorithm],
             audience=self.config.audience,
-            issuer=self.config.issuer
+            issuer=self.config.issuer,
         )
 
         token_exp = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
@@ -323,7 +303,7 @@ class TestJWTTokenProvider:
             await self.provider.refresh_token(invalid_token)
 
     @pytest.mark.asyncio
-    @patch('jwt.encode')
+    @patch("jwt.encode")
     async def test_create_token_error_handling(self, mock_encode):
         """Test error handling during token creation."""
         mock_encode.side_effect = Exception("JWT encoding failed")
@@ -334,7 +314,7 @@ class TestJWTTokenProvider:
     @pytest.mark.asyncio
     async def test_validate_token_generic_error_handling(self):
         """Test generic error handling during token validation."""
-        with patch('jwt.decode') as mock_decode:
+        with patch("jwt.decode") as mock_decode:
             mock_decode.side_effect = Exception("Unexpected error")
 
             token = "some.jwt.token"
@@ -349,11 +329,7 @@ class TestJWTTokenProvider:
 
         token = await simple_provider.create_token(self.test_user)
 
-        payload = jwt.decode(
-            token,
-            simple_config.secret_key,
-            algorithms=[simple_config.algorithm]
-        )
+        payload = jwt.decode(token, simple_config.secret_key, algorithms=[simple_config.algorithm])
 
         assert "iss" not in payload
         assert "aud" not in payload

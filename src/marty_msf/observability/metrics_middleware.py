@@ -60,13 +60,9 @@ class MetricsMiddleware:
             status: Response status
             duration: Request duration in seconds
         """
-        self.requests_total.labels(
-            service=self.service_name, method=method, status=status
-        ).inc()
+        self.requests_total.labels(service=self.service_name, method=method, status=status).inc()
 
-        self.request_duration.labels(
-            service=self.service_name, method=method
-        ).observe(duration)
+        self.request_duration.labels(service=self.service_name, method=method).observe(duration)
 
     def record_error(self, method: str, error_type: str) -> None:
         """Record an error metric.
@@ -84,80 +80,81 @@ class MetricsMiddleware:
 
 
 class FastAPIMetricsMiddleware(BaseHTTPMiddleware):
-        """FastAPI middleware for collecting HTTP request metrics."""
+    """FastAPI middleware for collecting HTTP request metrics."""
 
-        def __init__(self, app: Any, service_name: str):
-            super().__init__(app)
-            self.metrics = MetricsMiddleware(service_name)
+    def __init__(self, app: Any, service_name: str):
+        super().__init__(app)
+        self.metrics = MetricsMiddleware(service_name)
 
-        async def dispatch(self, request: Request, call_next: Callable) -> Response:
-            """Dispatch the request and collect metrics."""
-            start_time = time.time()
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        """Dispatch the request and collect metrics."""
+        start_time = time.time()
 
-            try:
-                response = await call_next(request)
-                duration = time.time() - start_time
+        try:
+            response = await call_next(request)
+            duration = time.time() - start_time
 
-                # Record successful request
-                method = f"{request.method} {request.url.path}"
-                status = str(response.status_code)
-                self.metrics.record_request(method, status, duration)
+            # Record successful request
+            method = f"{request.method} {request.url.path}"
+            status = str(response.status_code)
+            self.metrics.record_request(method, status, duration)
 
-                return response
+            return response
 
-            except Exception as e:
-                duration = time.time() - start_time
-                error_type = type(e).__name__
+        except Exception as e:
+            duration = time.time() - start_time
+            error_type = type(e).__name__
 
-                # Record error
-                method = f"{request.method} {request.url.path}"
-                self.metrics.record_request(method, "ERROR", duration)
-                self.metrics.record_error(method, error_type)
+            # Record error
+            method = f"{request.method} {request.url.path}"
+            self.metrics.record_request(method, "ERROR", duration)
+            self.metrics.record_error(method, error_type)
 
 
 # gRPC middleware
 
 
 class GRPCMetricsInterceptor(grpc.ServerInterceptor):
-        """gRPC server interceptor for collecting request metrics."""
+    """gRPC server interceptor for collecting request metrics."""
 
-        def __init__(self, service_name: str):
-            self.metrics = MetricsMiddleware(service_name)
+    def __init__(self, service_name: str):
+        self.metrics = MetricsMiddleware(service_name)
 
-        def intercept_service(
-            self,
-            continuation: Callable[..., Any],
-            handler_call_details: grpc.HandlerCallDetails,
-        ) -> Any:
-            """Intercept gRPC service calls to collect metrics."""
+    def intercept_service(
+        self,
+        continuation: Callable[..., Any],
+        handler_call_details: grpc.HandlerCallDetails,
+    ) -> Any:
+        """Intercept gRPC service calls to collect metrics."""
 
-            def wrapper(behavior: Callable[..., Any]) -> Callable[..., Any]:
-                def wrapped_behavior(request: Any, context: grpc.ServicerContext) -> Any:
-                    method = handler_call_details.method
-                    start_time = time.time()
+        def wrapper(behavior: Callable[..., Any]) -> Callable[..., Any]:
+            def wrapped_behavior(request: Any, context: grpc.ServicerContext) -> Any:
+                method = handler_call_details.method
+                start_time = time.time()
 
-                    try:
-                        response = behavior(request, context)
-                        duration = time.time() - start_time
+                try:
+                    response = behavior(request, context)
+                    duration = time.time() - start_time
 
-                        # Record successful request
-                        self.metrics.record_request(method, "OK", duration)
+                    # Record successful request
+                    self.metrics.record_request(method, "OK", duration)
 
-                        return response
+                    return response
 
-                    except Exception as e:
-                        duration = time.time() - start_time
-                        error_type = type(e).__name__
+                except Exception as e:
+                    duration = time.time() - start_time
+                    error_type = type(e).__name__
 
-                        # Record error
-                        self.metrics.record_request(method, "ERROR", duration)
-                        self.metrics.record_error(method, error_type)
+                    # Record error
+                    self.metrics.record_request(method, "ERROR", duration)
+                    self.metrics.record_error(method, error_type)
 
-                        raise
-
-                return wrapper(continuation(handler_call_details))
+                    raise
 
             return wrapper(continuation(handler_call_details))
+
+        return wrapper(continuation(handler_call_details))
+
 
 class AsyncGRPCMetricsInterceptor(grpc_aio.ServerInterceptor):
     """Async gRPC server interceptor for collecting request metrics."""
@@ -210,6 +207,7 @@ def create_fastapi_metrics_middleware(service_name: str) -> Any:
     Returns:
         FastAPI middleware instance
     """
+
     def middleware_factory(app: Any) -> FastAPIMetricsMiddleware:
         return FastAPIMetricsMiddleware(app, service_name)
 

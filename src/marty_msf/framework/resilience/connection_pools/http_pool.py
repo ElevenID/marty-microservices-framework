@@ -63,7 +63,7 @@ class HTTPPoolConfig:
 class HTTPPooledConnection:
     """Wrapper for HTTP connection with metadata and lifecycle management"""
 
-    def __init__(self, session: aiohttp.ClientSession, pool: 'HTTPConnectionPool'):
+    def __init__(self, session: aiohttp.ClientSession, pool: "HTTPConnectionPool"):
         self.session = session
         self.pool = pool
         self.created_at = time.time()
@@ -100,10 +100,10 @@ class HTTPPooledConnection:
     def is_healthy(self) -> bool:
         """Check if connection is healthy"""
         return (
-            not self._closed and
-            not self.session.closed and
-            self.idle_time < self.pool.config.max_idle_time and
-            self.age < self.pool.config.connection_ttl
+            not self._closed
+            and not self.session.closed
+            and self.idle_time < self.pool.config.max_idle_time
+            and self.age < self.pool.config.connection_ttl
         )
 
     async def close(self):
@@ -183,14 +183,14 @@ class HTTPConnectionPool:
                 ssl=ssl_setting if ssl_setting is not None else True,
                 enable_cleanup_closed=True,
                 force_close=True,
-                keepalive_timeout=self.config.max_idle_time
+                keepalive_timeout=self.config.max_idle_time,
             )
 
             # Configure timeout
             timeout = aiohttp.ClientTimeout(
                 total=self.config.total_timeout,
                 connect=self.config.connect_timeout,
-                sock_read=self.config.sock_read_timeout
+                sock_read=self.config.sock_read_timeout,
             )
 
             # Create session
@@ -200,7 +200,7 @@ class HTTPConnectionPool:
                 headers=self.config.default_headers,
                 auto_decompress=self.config.enable_compression,
                 raise_for_status=False,
-                skip_auto_headers={'User-Agent'}
+                skip_auto_headers={"User-Agent"},
             )
 
             connection = HTTPPooledConnection(session, self)
@@ -295,7 +295,9 @@ class HTTPConnectionPool:
                 retries += 1
 
                 if retries <= self.config.max_retries:
-                    delay = self.config.retry_delay * (self.config.retry_backoff_factor ** (retries - 1))
+                    delay = self.config.retry_delay * (
+                        self.config.retry_backoff_factor ** (retries - 1)
+                    )
                     await asyncio.sleep(delay)
                     logger.warning(f"HTTP request failed, retrying in {delay}s: {e}")
 
@@ -306,19 +308,19 @@ class HTTPConnectionPool:
 
     async def get(self, url: str, **kwargs) -> aiohttp.ClientResponse:
         """Make GET request"""
-        return await self.request('GET', url, **kwargs)
+        return await self.request("GET", url, **kwargs)
 
     async def post(self, url: str, **kwargs) -> aiohttp.ClientResponse:
         """Make POST request"""
-        return await self.request('POST', url, **kwargs)
+        return await self.request("POST", url, **kwargs)
 
     async def put(self, url: str, **kwargs) -> aiohttp.ClientResponse:
         """Make PUT request"""
-        return await self.request('PUT', url, **kwargs)
+        return await self.request("PUT", url, **kwargs)
 
     async def delete(self, url: str, **kwargs) -> aiohttp.ClientResponse:
         """Make DELETE request"""
-        return await self.request('DELETE', url, **kwargs)
+        return await self.request("DELETE", url, **kwargs)
 
     def get_metrics(self) -> dict[str, Any]:
         """Get pool metrics"""
@@ -333,7 +335,7 @@ class HTTPConnectionPool:
             "total_errors": self.total_errors,
             "error_rate": self.total_errors / max(self.total_requests, 1),
             "max_connections": self.config.max_connections,
-            "max_connections_per_host": self.config.max_connections_per_host
+            "max_connections_per_host": self.config.max_connections_per_host,
         }
 
     async def close(self):
@@ -364,7 +366,9 @@ _http_pools: dict[str, HTTPConnectionPool] = {}
 _pools_lock = asyncio.Lock()
 
 
-async def get_http_pool(name: str = "default", config: HTTPPoolConfig | None = None) -> HTTPConnectionPool:
+async def get_http_pool(
+    name: str = "default", config: HTTPPoolConfig | None = None
+) -> HTTPConnectionPool:
     """Get or create an HTTP connection pool"""
     async with _pools_lock:
         if name not in _http_pools:

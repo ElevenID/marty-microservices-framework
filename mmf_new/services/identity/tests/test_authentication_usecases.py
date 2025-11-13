@@ -142,12 +142,6 @@ class TestAuthenticatePrincipalUseCase:
 
         # Check that expiration is set to 24 hours from authentication
         assert authenticated_user.expires_at is not None
-        expected_expiry_min = authenticated_user.created_at + timedelta(
-            hours=24, minutes=-1
-        )
-        expected_expiry_max = authenticated_user.created_at + timedelta(
-            hours=24, minutes=1
-        )
-        assert (
-            expected_expiry_min <= authenticated_user.expires_at <= expected_expiry_max
-        )
+        expected_expiry_min = authenticated_user.created_at + timedelta(hours=24, minutes=-1)
+        expected_expiry_max = authenticated_user.created_at + timedelta(hours=24, minutes=1)
+        assert expected_expiry_min <= authenticated_user.expires_at <= expected_expiry_max

@@ -26,22 +26,26 @@ mmf_new/services/identity/
 ## Key Principles Demonstrated
 
 ### 1. **Ports and Adapters**
+
 - **Inbound Ports**: `AuthenticatePrincipal` - defines what the service can do
 - **Outbound Ports**: `UserRepository`, `EventBus` - defines what the service needs
 - **Adapters**: `InMemoryUserRepository`, `InMemoryEventBus` - implement the ports
 
 ### 2. **Dependency Inversion**
+
 - Domain depends on nothing
 - Application depends only on domain and its own port interfaces
 - Infrastructure depends on application ports but not the reverse
 
 ### 3. **Test-Driven Development (TDD)**
+
 - Domain models have comprehensive unit tests
 - Use cases have isolated unit tests with mocks
 - Integration tests verify the complete flow
 - Tests drive the design and ensure quality
 
 ### 4. **Clean Boundaries**
+
 - No framework code in domain or application layers
 - Infrastructure details isolated in adapters
 - Clear contracts between layers
@@ -86,18 +90,21 @@ pytest mmf_new/services/identity/tests/test_integration.py       # Integration t
 This minimal example serves as the **template and proving ground** for migrating the existing code:
 
 ### Current State
+
 - **`mmf/`** - Existing working code with similar structure
 - **`mmf_new/`** - This minimal example
 - **`src/marty_msf/`** - Legacy security framework
 - **`boneyard/`** - Code to be deprecated (currently empty)
 
 ### Migration Process
+
 1. **✅ Prove the architecture** - This minimal example demonstrates the pattern
 2. **Next: Expand the example** - Add more use cases (authorization, token validation, etc.)
 3. **Then: Migrate piece by piece** - Move functionality from `mmf/` and `src/` to the new structure
 4. **Finally: Deprecate old code** - Move replaced code to `boneyard/` only after full migration
 
 ### Why This Approach
+
 - **De-risk the migration** - Prove the architecture works before committing
 - **Enable parallel development** - Old code keeps working while new is built
 - **Test-driven migration** - Every migrated piece has comprehensive tests

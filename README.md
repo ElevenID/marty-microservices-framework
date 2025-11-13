@@ -4,7 +4,6 @@
 
 **Technical stack.** MMF is built with Python 3.10+, using [FastAPI](https://fastapi.tiangolo.com/) for HTTP endpoints and [gRPC](https://grpc.io/) for high-performance RPC, and provides [Jinja-based templates](https://github.com/burdettadam/marty-microservices-framework/tree/main/templates) for scaffolding new services. Service discovery uses [Consul](https://developer.hashicorp.com/consul/docs), while event-driven communication relies on [Kafka](https://kafka.apache.org/); data is persisted in multiple databases (e.g., PostgreSQL) with built-in connection pooling and augmented with a [Redis](https://redis.io/) cache. Observability is handled by [Prometheus](https://prometheus.io/) for metrics, [Grafana](https://grafana.com/) for dashboards and [Jaeger](https://www.jaegertracing.io/) for distributed tracing, all running inside a local or cloud [Kubernetes](https://kubernetes.io/) cluster. The framework’s CLI (based on [Typer](https://typer.tiangolo.com/)) orchestrates code generation, dependency management, Docker builds and Kubernetes deployments, while the security layer integrates JWT and OAuth2/OIDC providers and includes rate-limiting and certificate management. Operations tooling includes [Kubernetes manifests](https://github.com/burdettadam/marty-microservices-framework/tree/main/devops/kubernetes), [service-mesh configuration](https://github.com/burdettadam/marty-microservices-framework/tree/main/docs/architecture), monitoring dashboards and CI/CD pipelines. Together, this stack ensures that MMF can deliver the full set of microservices features listed above with minimal additional setup.
 
-
 ## 📁 Project Structure
 
 ```
@@ -54,7 +53,7 @@
 
 ## 🚀 Quick Start - Local Development Environment
 
-### Get Started in 2 Minutes!
+### Get Started in 2 Minutes
 
 ```bash
 # 1. Clone and setup
@@ -68,8 +67,8 @@ make kind-up
 
 **That's it!** You now have a complete local development environment running:
 
-- 🎯 **Prometheus**: http://localhost:9090 (metrics & monitoring)
-- 📊 **Grafana**: http://localhost:3000 (dashboards - login: admin/admin)
+- 🎯 **Prometheus**: <http://localhost:9090> (metrics & monitoring)
+- 📊 **Grafana**: <http://localhost:3000> (dashboards - login: admin/admin)
 - ☸️ **Kubernetes cluster**: Full local cluster for development
 - 🔍 **Complete observability stack**: Logging, metrics, tracing
 
@@ -111,6 +110,7 @@ make test-e2e-clean
 ```
 
 **Test Coverage**: 21/23 tests passing (91.3% success rate)
+
 - ✅ Health checks, authentication, user management
 - ✅ Kubernetes deployment, service discovery, ingress
 - ✅ Docker containerization, cluster orchestration
@@ -134,6 +134,7 @@ make generate TYPE=hybrid NAME=my-hybrid-service
 ## 📚 Framework Components
 
 ### Core Framework (`src/marty_msf/framework/`)
+
 - **API Gateway**: Intelligent routing and load balancing
 - **Service Discovery**: Consul-based service registration
 - **Configuration Management**: Centralized config with hot-reload
@@ -143,6 +144,7 @@ make generate TYPE=hybrid NAME=my-hybrid-service
 - **Performance Monitoring**: Real-time metrics and profiling
 
 ### CLI Tools (`src/marty_msf/cli/`)
+
 - Project scaffolding and code generation
 - Service templates and boilerplate
 - Dependency management
@@ -150,6 +152,7 @@ make generate TYPE=hybrid NAME=my-hybrid-service
 - Configuration validation and management
 
 ### Security (`src/marty_msf/security/`)
+
 - JWT-based authentication and authorization
 - OAuth2 and OpenID Connect integration
 - Rate limiting and DDoS protection
@@ -157,6 +160,7 @@ make generate TYPE=hybrid NAME=my-hybrid-service
 - Certificate management
 
 ### Observability (`src/marty_msf/observability/`)
+
 - Prometheus metrics collection
 - Grafana dashboard templates
 - Distributed tracing with Jaeger
@@ -176,7 +180,8 @@ cd examples/demos/runner
 ./stop_demo.sh
 ```
 
-### Demo Services:
+### Demo Services
+
 - **Order Service**: Handles order processing and workflow
 - **Payment Service**: Manages payment processing and transactions
 - **Inventory Service**: Tracks inventory levels and stock management
@@ -209,12 +214,14 @@ make test-all
 ## 🛠️ Development
 
 ### Prerequisites
+
 - Python 3.10+
 - Docker & Docker Compose
 - kubectl
 - Make
 
 ### Development Setup
+
 ```bash
 # Install development dependencies
 make install-dev
@@ -258,6 +265,6 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## 📞 Support
 
-- 📧 Email: team@marty-msf.com
+- 📧 Email: <team@marty-msf.com>
 - 🐛 Issues: [GitHub Issues](https://github.com/marty-framework/marty-microservices-framework/issues)
 - 📖 Documentation: [marty-msf.readthedocs.io](https://marty-msf.readthedocs.io)

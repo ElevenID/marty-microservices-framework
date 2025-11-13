@@ -929,11 +929,13 @@ class SecurityMonitoringSystem:
     - Dashboard and reporting
     """
 
-    def __init__(self,
-                 event_collector: SecurityEventCollector | None = None,
-                 analytics_engine: SecurityAnalyticsEngine | None = None,
-                 siem_integration: SIEMIntegration | None = None,
-                 dashboard: SecurityMonitoringDashboard | None = None):
+    def __init__(
+        self,
+        event_collector: SecurityEventCollector | None = None,
+        analytics_engine: SecurityAnalyticsEngine | None = None,
+        siem_integration: SIEMIntegration | None = None,
+        dashboard: SecurityMonitoringDashboard | None = None,
+    ):
         # Use injected components or create new ones
         self.event_collector = event_collector or SecurityEventCollector()
         self.analytics_engine = analytics_engine or SecurityAnalyticsEngine()
@@ -1253,6 +1255,7 @@ async def main():
 
 
 # DI container convenience functions
+
 
 def create_monitoring_system_with_di() -> SecurityMonitoringSystem:
     """Create a complete monitoring system with all components registered in DI container."""

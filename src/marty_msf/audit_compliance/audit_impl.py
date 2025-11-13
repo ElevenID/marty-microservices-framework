@@ -64,7 +64,7 @@ class FileAuditor:
                 action=details.get("action"),
                 result=details.get("result", "unknown"),
                 details=details,
-                session_id=details.get("session_id")
+                session_id=details.get("session_id"),
             )
 
             # Convert to JSON
@@ -76,7 +76,7 @@ class FileAuditor:
                 "action": event.action,
                 "result": event.result,
                 "session_id": event.session_id,
-                "details": event.details
+                "details": event.details,
             }
 
             # Write to file
@@ -93,10 +93,15 @@ class FileAuditor:
     def _maybe_rotate_log(self) -> None:
         """Rotate log file if it exceeds maximum size."""
         try:
-            if self.log_file_path.exists() and self.log_file_path.stat().st_size > self.max_file_size:
+            if (
+                self.log_file_path.exists()
+                and self.log_file_path.stat().st_size > self.max_file_size
+            ):
                 # Simple rotation - just rename with timestamp
                 timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-                rotated_path = self.log_file_path.with_name(f"{self.log_file_path.stem}_{timestamp}.log")
+                rotated_path = self.log_file_path.with_name(
+                    f"{self.log_file_path.stem}_{timestamp}.log"
+                )
                 self.log_file_path.rename(rotated_path)
                 logger.info("Rotated audit log to: %s", rotated_path)
         except Exception as e:
@@ -139,7 +144,7 @@ class StructuredAuditor:
                 action=details.get("action"),
                 result=details.get("result", "unknown"),
                 details=details,
-                session_id=details.get("session_id")
+                session_id=details.get("session_id"),
             )
 
             # Create structured log message
@@ -151,7 +156,7 @@ class StructuredAuditor:
                 "result": event.result,
                 "session_id": event.session_id,
                 "timestamp": event.timestamp.isoformat(),
-                **event.details
+                **event.details,
             }
 
             # Log with appropriate level based on result
@@ -161,10 +166,7 @@ class StructuredAuditor:
                 log_level = self.log_level
 
             self.audit_logger.log(
-                log_level,
-                "Security audit event: %s",
-                event_type,
-                extra={"audit_data": log_data}
+                log_level, "Security audit event: %s", event_type, extra={"audit_data": log_data}
             )
 
         except Exception as e:

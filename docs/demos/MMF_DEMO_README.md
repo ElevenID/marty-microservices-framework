@@ -48,6 +48,7 @@ The demo consists of three microservices demonstrating a realistic e-commerce tr
 ```
 
 This will:
+
 - Start Order Service on port 8001
 - Start Payment Service on port 8002 (with simulated bottlenecks)
 - Start Inventory Service on port 8003
@@ -61,6 +62,7 @@ uv run mmf_demo_runner.py
 ```
 
 This will run multiple test scenarios:
+
 - **Baseline Performance Test**: Normal load, no errors
 - **High Load Test**: Increased load with large orders (triggering payment delays)
 - **Error Scenario Test**: 15% error rate to demonstrate error handling
@@ -69,6 +71,7 @@ This will run multiple test scenarios:
 ### 3. Review Results
 
 The demo generates a comprehensive report saved as `mmf_demo_report_YYYYMMDD_HHMMSS.json` containing:
+
 - Load test summary with success rates and response times
 - Performance analysis with bottleneck identification
 - Error pattern analysis
@@ -201,6 +204,7 @@ class TransactionAnalyticsPlugin(MMFPlugin):
 ### 5. Error Handling & Root Cause Analysis
 
 The demo includes various error scenarios:
+
 - Invalid order amounts (< 0)
 - Network timeouts
 - Service unavailability
@@ -221,6 +225,7 @@ The analytics plugin automatically identifies services exceeding performance thr
 ### Error Pattern Analysis
 
 Common error patterns are tracked and analyzed:
+
 - Error frequency by type
 - Error rate trends
 - Service-specific error patterns
@@ -229,6 +234,7 @@ Common error patterns are tracked and analyzed:
 ### Performance Recommendations
 
 The system provides actionable insights:
+
 - Scaling recommendations for slow services
 - Error investigation priorities
 - Performance optimization suggestions
@@ -255,27 +261,31 @@ The system provides actionable insights:
 
 If you have the Kind cluster running (via `make kind-up`), the services integrate with:
 
-- **Prometheus**: http://localhost:9090 - Metrics visualization
-- **Grafana**: http://localhost:3000 - Performance dashboards
+- **Prometheus**: <http://localhost:9090> - Metrics visualization
+- **Grafana**: <http://localhost:3000> - Performance dashboards
 
 ## 🎪 Demo Scenarios
 
 ### Scenario 1: Normal Operations
+
 - Low load, no errors
 - Demonstrates baseline performance
 - Shows normal transaction flow
 
 ### Scenario 2: High Load Performance
+
 - Increased RPS with large orders
 - Triggers payment service bottlenecks
 - Demonstrates performance analysis
 
 ### Scenario 3: Error Handling
+
 - Introduces 15% error rate
 - Shows error tracking and analysis
 - Demonstrates root cause identification
 
 ### Scenario 4: Mixed Workload
+
 - Realistic production-like scenario
 - Combines performance issues and errors
 - Comprehensive system analysis
@@ -292,6 +302,7 @@ If you have the Kind cluster running (via `make kind-up`), the services integrat
 ## 🔧 Troubleshooting
 
 ### Services Not Starting
+
 ```bash
 # Check if ports are available
 lsof -i :8001 -i :8002 -i :8003
@@ -303,6 +314,7 @@ cat "Inventory Service.log"
 ```
 
 ### Demo Runner Issues
+
 ```bash
 # Ensure services are running first
 curl http://localhost:8001/health

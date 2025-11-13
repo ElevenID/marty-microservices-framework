@@ -2,13 +2,11 @@
 Verify relative imports in external_connectors package
 """
 
-
 import ast
 import os
 
 
 def test_files_exist():
-
     base_dir = os.path.dirname(__file__)
 
     expected_files = [
@@ -31,7 +29,6 @@ def test_files_exist():
 
 
 def test_syntax():
-
     base_dir = os.path.dirname(__file__)
     python_files = [
         "enums.py",

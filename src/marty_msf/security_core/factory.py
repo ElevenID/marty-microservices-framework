@@ -79,7 +79,7 @@ class SecurityServiceFactory:
             event_collector=event_collector,
             analytics_engine=analytics_engine,
             siem_integration=siem_integration,
-            dashboard=dashboard
+            dashboard=dashboard,
         )
 
     def get_core_security_services(self) -> tuple[IAuthenticator, IAuthorizer, ISecretManager]:
@@ -113,6 +113,7 @@ class SecurityServiceFactory:
 
 
 # Module-level convenience functions
+
 
 def get_security_factory() -> SecurityServiceFactory:
     """Get the global security service factory instance."""

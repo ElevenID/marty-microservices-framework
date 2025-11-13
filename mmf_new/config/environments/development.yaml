@@ -1,0 +1,103 @@
+# Development Environment Configuration
+# Inherits from base.yaml with development-specific overrides
+
+# Import base configuration
+base: "../base.yaml"
+
+# Environment metadata
+environment:
+  name: "development"
+  debug: true
+  hot_reload: true
+  strict_validation: false
+
+# Development security (relaxed for local development)
+security:
+  authentication:
+    jwt:
+      secret: "${SECRET:jwt_secret_dev}"  # pragma: allowlist secret
+      expires_delta_minutes: 480  # 8 hours for development
+      verify_signature: true
+    required: false  # Relaxed for development
+
+  authorization:
+    enabled: false  # Disabled for development ease
+
+  tls:
+    enabled: false  # No TLS in development
+    mutual_tls: false
+
+# Development database
+database:
+  host: "localhost"
+  port: 5432
+  database: "mmf_dev"
+  username: "mmf_dev_user"
+  password: "mmf_dev_pass"  # pragma: allowlist secret
+  ssl_mode: "disable"
+
+  pool:
+    min_size: 1
+    max_size: 5
+    timeout: 10
+
+# Development observability
+observability:
+  logging:
+    level: "DEBUG"
+    format: "console"  # Human-readable for development
+    handlers: ["console"]
+
+  tracing:
+    enabled: false  # Disabled for development performance
+
+  metrics:
+    enabled: true
+    prometheus_enabled: false
+
+# Development messaging
+messaging:
+  connection:
+    host: "localhost"
+    port: 6379
+    database: 0
+    # No auth in development
+    username: ""
+    password: ""
+
+# Development cache
+cache:
+  connection:
+    host: "localhost"
+    port: 6379
+    database: 1
+    username: ""
+    password: ""
+  default_ttl: 300  # Shorter TTL for development
+
+# Development secrets (unsafe - only for local dev)
+secrets:
+  database_host: "localhost"
+  database_name: "mmf_dev"
+  database_username: "mmf_dev_user"
+  database_password: "mmf_dev_pass"  # pragma: allowlist secret
+  jwt_secret_dev: "dev_jwt_secret_not_for_production"  # pragma: allowlist secret
+  message_broker_host: "localhost"
+  message_broker_username: ""
+  message_broker_password: ""
+  cache_host: "localhost"
+  cache_username: ""
+  cache_password: ""
+  jaeger_endpoint: ""
+
+# Service overrides for development
+services:
+  identity_service:
+    debug_mode: true
+    auto_reload: true
+
+  api_gateway:
+    cors:
+      enabled: true
+      allow_origins: ["http://localhost:*"]
+      allow_credentials: true

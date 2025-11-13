@@ -22,9 +22,9 @@ class TestSecurityFramework:
     def test_security_modules_import(self):
         """Test that security modules can be imported."""
         security_modules = [
-            'security.monitoring',
-            'security.middleware',
-            'security.identity_access',
+            "security.monitoring",
+            "security.middleware",
+            "security.identity_access",
         ]
 
         import_errors = []
@@ -36,9 +36,7 @@ class TestSecurityFramework:
 
         if import_errors:
             # Don't fail for missing security modules, just warn
-            error_msg = "\n".join([
-                f"  {module}: {error}" for module, error in import_errors
-            ])
+            error_msg = "\n".join([f"  {module}: {error}" for module, error in import_errors])
             print(f"⚠️  Security module import warnings:\n{error_msg}")
 
     def test_security_policies_validation(self):
@@ -48,7 +46,11 @@ class TestSecurityFramework:
         if not policies_dir.exists():
             pytest.skip("Security policies directory not found")
 
-        policy_files = list(policies_dir.glob("*.yaml")) + list(policies_dir.glob("*.yml")) + list(policies_dir.glob("*.json"))
+        policy_files = (
+            list(policies_dir.glob("*.yaml"))
+            + list(policies_dir.glob("*.yml"))
+            + list(policies_dir.glob("*.json"))
+        )
 
         if not policy_files:
             pytest.skip("No security policy files found")
@@ -57,11 +59,11 @@ class TestSecurityFramework:
 
         for policy_file in policy_files:
             try:
-                if policy_file.suffix in ['.yml', '.yaml']:
-                    with open(policy_file, encoding='utf-8') as f:
+                if policy_file.suffix in [".yml", ".yaml"]:
+                    with open(policy_file, encoding="utf-8") as f:
                         policy = yaml.safe_load(f)
-                elif policy_file.suffix == '.json':
-                    with open(policy_file, encoding='utf-8') as f:
+                elif policy_file.suffix == ".json":
+                    with open(policy_file, encoding="utf-8") as f:
                         policy = json.load(f)
                 else:
                     continue
@@ -81,9 +83,7 @@ class TestSecurityFramework:
                 continue
 
         if policy_errors:
-            error_msg = "\n".join([
-                f"  {file}: {error}" for file, error in policy_errors
-            ])
+            error_msg = "\n".join([f"  {file}: {error}" for file, error in policy_errors])
             pytest.fail(f"Security policy validation errors:\n{error_msg}")
 
     def test_compliance_configuration(self):
@@ -102,7 +102,7 @@ class TestSecurityFramework:
 
         for compliance_file in compliance_files:
             try:
-                with open(compliance_file, encoding='utf-8') as f:
+                with open(compliance_file, encoding="utf-8") as f:
                     config = yaml.safe_load(f)
 
                 # Basic compliance validation
@@ -122,9 +122,7 @@ class TestSecurityFramework:
                 continue
 
         if compliance_errors:
-            error_msg = "\n".join([
-                f"  {file}: {error}" for file, error in compliance_errors
-            ])
+            error_msg = "\n".join([f"  {file}: {error}" for file, error in compliance_errors])
             pytest.fail(f"Compliance configuration errors:\n{error_msg}")
 
     def test_identity_access_management(self):
@@ -135,7 +133,11 @@ class TestSecurityFramework:
             pytest.skip("Identity access directory not found")
 
         # Look for common IAM configuration files
-        iam_files = list(iam_dir.glob("*.yaml")) + list(iam_dir.glob("*.yml")) + list(iam_dir.glob("*.json"))
+        iam_files = (
+            list(iam_dir.glob("*.yaml"))
+            + list(iam_dir.glob("*.yml"))
+            + list(iam_dir.glob("*.json"))
+        )
 
         if not iam_files:
             pytest.skip("No IAM configuration files found")
@@ -144,11 +146,11 @@ class TestSecurityFramework:
 
         for iam_file in iam_files:
             try:
-                if iam_file.suffix in ['.yml', '.yaml']:
-                    with open(iam_file, encoding='utf-8') as f:
+                if iam_file.suffix in [".yml", ".yaml"]:
+                    with open(iam_file, encoding="utf-8") as f:
                         config = yaml.safe_load(f)
-                elif iam_file.suffix == '.json':
-                    with open(iam_file, encoding='utf-8') as f:
+                elif iam_file.suffix == ".json":
+                    with open(iam_file, encoding="utf-8") as f:
                         config = json.load(f)
                 else:
                     continue
@@ -156,7 +158,14 @@ class TestSecurityFramework:
                 # Basic IAM validation
                 if isinstance(config, dict):
                     # Check for IAM-related fields
-                    iam_fields = ["users", "roles", "permissions", "groups", "authentication", "authorization"]
+                    iam_fields = [
+                        "users",
+                        "roles",
+                        "permissions",
+                        "groups",
+                        "authentication",
+                        "authorization",
+                    ]
                     has_iam_content = any(field in config for field in iam_fields)
 
                     if not has_iam_content:
@@ -168,9 +177,7 @@ class TestSecurityFramework:
                 continue
 
         if iam_errors:
-            error_msg = "\n".join([
-                f"  {file}: {error}" for file, error in iam_errors
-            ])
+            error_msg = "\n".join([f"  {file}: {error}" for file, error in iam_errors])
             pytest.fail(f"IAM configuration errors:\n{error_msg}")
 
     def test_security_middleware_configuration(self):
@@ -193,11 +200,11 @@ class TestSecurityFramework:
                 continue
 
             try:
-                with open(middleware_file, encoding='utf-8') as f:
+                with open(middleware_file, encoding="utf-8") as f:
                     content = f.read()
 
                 # Check syntax
-                compile(content, str(middleware_file), 'exec')
+                compile(content, str(middleware_file), "exec")
 
                 # Basic security middleware validation
                 security_keywords = ["auth", "security", "token", "jwt", "cors", "csrf"]
@@ -214,9 +221,7 @@ class TestSecurityFramework:
                 continue
 
         if syntax_errors:
-            error_msg = "\n".join([
-                f"  {file}: {error}" for file, error in syntax_errors
-            ])
+            error_msg = "\n".join([f"  {file}: {error}" for file, error in syntax_errors])
             pytest.fail(f"Security middleware syntax errors:\n{error_msg}")
 
     def test_security_scanners_configuration(self):
@@ -235,14 +240,16 @@ class TestSecurityFramework:
 
         for scanner_file in scanner_files:
             try:
-                with open(scanner_file, encoding='utf-8') as f:
+                with open(scanner_file, encoding="utf-8") as f:
                     config = yaml.safe_load(f)
 
                 # Basic scanner validation
                 if isinstance(config, dict):
                     # Check for scanner-related fields
                     scanner_fields = ["scan", "vulnerability", "security", "rules", "checks"]
-                    has_scanner_content = any(field in str(config).lower() for field in scanner_fields)
+                    has_scanner_content = any(
+                        field in str(config).lower() for field in scanner_fields
+                    )
 
                     if not has_scanner_content:
                         print(f"⚠️  {scanner_file} may not contain scanner configuration")
@@ -253,9 +260,7 @@ class TestSecurityFramework:
                 continue
 
         if scanner_errors:
-            error_msg = "\n".join([
-                f"  {file}: {error}" for file, error in scanner_errors
-            ])
+            error_msg = "\n".join([f"  {file}: {error}" for file, error in scanner_errors])
             pytest.fail(f"Security scanner configuration errors:\n{error_msg}")
 
     def test_security_requirements_file(self):
@@ -266,7 +271,7 @@ class TestSecurityFramework:
             pytest.skip("Security requirements.txt not found")
 
         try:
-            with open(security_requirements, encoding='utf-8') as f:
+            with open(security_requirements, encoding="utf-8") as f:
                 requirements = f.read()
 
             # Check for common security packages
@@ -292,7 +297,7 @@ class TestSecurityFramework:
         except OSError:
             pytest.skip("Could not read security requirements.txt")
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_security_monitoring_health(self, mock_run):
         """Test security monitoring health checks."""
         # Mock successful health check
@@ -360,16 +365,14 @@ class TestSecurityFramework:
         tls_errors = []
         for tls_file in tls_configs:
             try:
-                if tls_file.suffix in ['.yml', '.yaml']:
-                    with open(tls_file, encoding='utf-8') as f:
+                if tls_file.suffix in [".yml", ".yaml"]:
+                    with open(tls_file, encoding="utf-8") as f:
                         config = yaml.safe_load(f)
 
                     if isinstance(config, dict):
                         # Check for TLS-related fields
                         tls_fields = ["tls", "ssl", "certificate", "key", "https"]
-                        has_tls_content = any(
-                            field in str(config).lower() for field in tls_fields
-                        )
+                        has_tls_content = any(field in str(config).lower() for field in tls_fields)
 
                         if not has_tls_content:
                             print(f"⚠️  {tls_file} may not contain TLS configuration")
@@ -380,17 +383,14 @@ class TestSecurityFramework:
                 continue
 
         if tls_errors:
-            error_msg = "\n".join([
-                f"  {file}: {error}" for file, error in tls_errors
-            ])
+            error_msg = "\n".join([f"  {file}: {error}" for file, error in tls_errors])
             pytest.fail(f"TLS configuration errors:\n{error_msg}")
 
     def test_import_original_security_script(self):
         """Test that the original security script can be imported."""
         try:
-
             # Check that main validation functions exist
-            assert hasattr(verify_security_framework, '__file__')
+            assert hasattr(verify_security_framework, "__file__")
 
         except ImportError as e:
             pytest.skip(f"Could not import verify_security_framework script: {e}")
@@ -418,7 +418,7 @@ class TestSecurityFramework:
         for env_file in env_files:
             if env_file.exists():
                 try:
-                    with open(env_file, encoding='utf-8') as f:
+                    with open(env_file, encoding="utf-8") as f:
                         content = f.read()
 
                     for var in security_env_vars:

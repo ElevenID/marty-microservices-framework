@@ -1,0 +1,215 @@
+# Platform Core Configuration
+# Cross-cutting platform concerns and shared infrastructure
+
+platform:
+  name: "mmf-platform"
+  version: "2.0.0"
+  architecture: "hexagonal"
+
+# Secret management configuration
+secrets:
+  manager: "environment"  # Options: environment, vault, kubernetes, aws, azure, gcp
+  refresh_interval: 300  # 5 minutes
+
+  # Vault configuration (when using vault)
+  vault:
+    address: "${VAULT_ADDR}"
+    auth_method: "kubernetes"
+    role: "${VAULT_ROLE}"
+    secret_mount: "secret"  # pragma: allowlist secret
+
+  # Kubernetes secrets (when using kubernetes)
+  kubernetes:
+    namespace: "mmf-system"
+    secret_names:
+      - "mmf-database-secrets"
+      - "mmf-jwt-secrets"
+      - "mmf-external-api-secrets"
+
+# Telemetry platform configuration
+telemetry:
+  # Distributed tracing
+  tracing:
+    provider: "jaeger"  # Options: jaeger, zipkin, datadog, lightstep
+    jaeger:
+      collector_endpoint: "${JAEGER_COLLECTOR_ENDPOINT}"
+      agent_endpoint: "${JAEGER_AGENT_ENDPOINT}"
+      service_name_prefix: "mmf-"
+      tags:
+        environment: "${DEPLOYMENT_ENVIRONMENT}"
+        cluster: "${CLUSTER_NAME}"
+
+  # Metrics collection
+  metrics:
+    provider: "prometheus"
+    prometheus:
+      push_gateway: "${PROMETHEUS_PUSH_GATEWAY}"
+      scrape_interval: "15s"
+      evaluation_interval: "15s"
+
+  # Log aggregation
+  logging:
+    provider: "elasticsearch"  # Options: elasticsearch, splunk, datadog
+    elasticsearch:
+      endpoint: "${ELASTICSEARCH_ENDPOINT}"
+      index_pattern: "mmf-logs-*"
+      auth:
+        username: "${ELASTICSEARCH_USERNAME}"
+        password: "${ELASTICSEARCH_PASSWORD}"
+
+# Message broker platform configuration
+messaging:
+  # Platform-wide message broker settings
+  broker_type: "redis"  # Options: redis, rabbitmq, kafka, nats
+
+  # Redis configuration
+  redis:
+    cluster_mode: false
+    sentinel_mode: false
+    master_name: "mmf-redis"
+    nodes:
+      - host: "${REDIS_HOST}"
+        port: 6379
+    auth:
+      username: "${REDIS_USERNAME}"
+      password: "${REDIS_PASSWORD}"
+    ssl:
+      enabled: false
+      ca_cert_path: "/etc/ssl/certs/redis-ca.pem"
+
+  # Message patterns configuration
+  patterns:
+    event_sourcing:
+      enabled: true
+      stream_prefix: "mmf-events"
+
+    saga_orchestration:
+      enabled: true
+      timeout_seconds: 300
+
+    request_reply:
+      enabled: true
+      timeout_seconds: 30
+
+# Service mesh configuration
+service_mesh:
+  enabled: false  # Set to true when using Istio, Linkerd, etc.
+  provider: "istio"
+
+  istio:
+    namespace: "istio-system"
+    gateway: "mmf-gateway"
+    virtual_service_template: "/etc/config/istio/virtual-service.yaml"
+    destination_rule_template: "/etc/config/istio/destination-rule.yaml"
+
+# Policy engine configuration
+policy:
+  engine: "open_policy_agent"  # Options: open_policy_agent, casbin, custom
+
+  open_policy_agent:
+    server_url: "${OPA_SERVER_URL}"
+    policy_bundle_url: "${OPA_BUNDLE_URL}"
+    decision_log_enabled: true
+
+  policies:
+    # Global policies applied to all services
+    global:
+      - name: "rate_limiting"
+        path: "/policies/global/rate_limiting.rego"
+      - name: "authentication"
+        path: "/policies/global/authentication.rego"
+
+    # Service-specific policies
+    service_specific:
+      identity:
+        - name: "user_management"
+          path: "/policies/identity/user_management.rego"
+      api_gateway:
+        - name: "routing_authorization"
+          path: "/policies/gateway/routing.rego"
+
+# Database platform configuration
+database:
+  # Connection pooling at platform level
+  connection_pooling:
+    enabled: true
+    max_connections_per_service: 20
+    connection_lifetime: 3600
+
+  # Database migration coordination
+  migrations:
+    coordinator: "flyway"  # Options: flyway, liquibase, custom
+    schema_history_table: "mmf_schema_history"
+
+  # Multi-tenancy support
+  multi_tenancy:
+    enabled: false
+    strategy: "schema"  # Options: schema, database, row_level
+
+  # Read/write splitting
+  read_write_splitting:
+    enabled: false
+    read_replicas: []
+    write_master: "${DATABASE_HOST}"
+
+# API Gateway platform configuration
+api_gateway:
+  # Global API policies
+  global_policies:
+    authentication_required: true
+    rate_limiting_enabled: true
+    request_size_limit: "10MB"
+    response_size_limit: "50MB"
+
+  # API versioning strategy
+  versioning:
+    strategy: "path"  # Options: path, header, query_param
+    path_prefix: "/api"
+    supported_versions: ["v1"]
+    default_version: "v1"
+
+  # Global middleware
+  middleware:
+    - name: "request_id"
+      order: 1
+    - name: "authentication"
+      order: 2
+    - name: "authorization"
+      order: 3
+    - name: "rate_limiting"
+      order: 4
+    - name: "logging"
+      order: 5
+    - name: "metrics"
+      order: 6
+
+# Deployment platform configuration
+deployment:
+  orchestrator: "kubernetes"  # Options: kubernetes, docker_compose, nomad
+
+  kubernetes:
+    namespace: "mmf-system"
+    ingress_class: "nginx"
+    storage_class: "fast-ssd"
+
+    # Resource defaults
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "1000m"
+
+    # Health checks
+    health_checks:
+      liveness_probe:
+        initial_delay_seconds: 30
+        period_seconds: 10
+        timeout_seconds: 5
+        failure_threshold: 3
+      readiness_probe:
+        initial_delay_seconds: 10
+        period_seconds: 5
+        timeout_seconds: 3
+        failure_threshold: 3

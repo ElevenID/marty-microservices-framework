@@ -7,6 +7,7 @@ This comprehensive end-to-end testing suite demonstrates the full capabilities o
 The E2E test suite includes:
 
 ### 🔐 **JWT Authentication E2E Tests** (`test_jwt_auth_e2e.py` & `test_jwt_integration_e2e.py`)
+
 - Comprehensive tests for the migrated JWT authentication system
 - Full Kind-based cluster testing with real deployments
 - Lightweight integration testing for fast feedback
@@ -14,6 +15,7 @@ The E2E test suite includes:
 - Authentication middleware and endpoint integration
 
 ### 🔍 **Bottleneck Analysis** (`test_bottleneck_analysis.py`)
+
 - Uses example plugins to generate realistic workload
 - Analyzes performance bottlenecks under different load levels
 - Measures CPU, memory, and response time metrics
@@ -21,6 +23,7 @@ The E2E test suite includes:
 - Generates actionable optimization recommendations
 
 ### ⏱️ **Timeout Detection** (`test_timeout_detection.py`)
+
 - Tests services under increased workload leading to timeouts
 - Demonstrates circuit breaker functionality and state transitions
 - Monitors timeout patterns and service resilience
@@ -28,6 +31,7 @@ The E2E test suite includes:
 - Provides insights on service protection strategies
 
 ### 📋 **Auditability** (`test_auditability.py`)
+
 - Comprehensive error logging and event tracking
 - Audit trail functionality for compliance and debugging
 - Structured logging for observability across services
@@ -35,6 +39,7 @@ The E2E test suite includes:
 - Compliance checking and gap analysis
 
 ### 🎭 **Visual Testing** (`test_playwright_visual.py`)
+
 - Automated testing of monitoring dashboards using Playwright
 - Visual regression testing and screenshot comparison
 - Responsive design validation across devices
@@ -42,6 +47,7 @@ The E2E test suite includes:
 - UI performance and usability analysis
 
 ### 📈 **Performance Reporting** (`performance_reporting.py`)
+
 - Generates comprehensive reports with visual charts
 - Performance trend analysis and bottleneck visualization
 - Executive summaries with actionable insights
@@ -65,6 +71,7 @@ playwright install chromium
 ### JWT Authentication E2E Testing
 
 #### Quick JWT Test Run
+
 ```bash
 # Run all JWT E2E tests
 ./tests/e2e/run_jwt_e2e_tests.sh
@@ -77,7 +84,9 @@ playwright install chromium
 ```
 
 #### JWT Test Requirements
+
 For Kind-based tests, ensure you have:
+
 - Docker installed and running
 - Kind installed (`brew install kind` on macOS)
 - kubectl installed
@@ -86,12 +95,14 @@ For Kind-based tests, ensure you have:
 ### Running Other Tests
 
 #### Run All E2E Tests (Recommended)
+
 ```bash
 # Run the comprehensive master test
 pytest tests/e2e/test_master_e2e.py -v -s
 ```
 
 #### Run Individual Test Categories
+
 ```bash
 # Bottleneck analysis only
 pytest tests/e2e/test_bottleneck_analysis.py -v -s
@@ -144,6 +155,7 @@ The tests demonstrate the framework using these example plugins:
 ## Key Features Demonstrated
 
 ### 🚀 **Framework Capabilities**
+
 - Plugin architecture with lifecycle management
 - Service registry and discovery patterns
 - Event bus for cross-service communication
@@ -151,6 +163,7 @@ The tests demonstrate the framework using these example plugins:
 - Circuit breaker and resilience patterns
 
 ### 📊 **Performance Analysis**
+
 - Real-time bottleneck detection
 - Resource usage monitoring (CPU, memory)
 - Response time analysis and trending
@@ -158,6 +171,7 @@ The tests demonstrate the framework using these example plugins:
 - Performance correlation analysis
 
 ### 🔒 **Observability & Compliance**
+
 - Structured logging with correlation IDs
 - Audit trail generation and validation
 - Error tracking and pattern analysis
@@ -165,6 +179,7 @@ The tests demonstrate the framework using these example plugins:
 - Event correlation across services
 
 ### 🎯 **Visual Validation**
+
 - Dashboard functionality testing
 - Responsive design validation
 - Interactive element verification
@@ -174,6 +189,7 @@ The tests demonstrate the framework using these example plugins:
 ## Test Configuration
 
 ### Environment Variables
+
 ```bash
 # Optional: Customize test behavior
 export E2E_TEST_DURATION=30          # Test duration in seconds
@@ -183,7 +199,9 @@ export E2E_VISUAL_HEADLESS=true      # Run browser in headless mode
 ```
 
 ### Plugin Configuration
+
 Tests automatically configure plugins with appropriate settings:
+
 - **Error rates**: 5-30% depending on test phase
 - **Complexity multipliers**: 1x to 6x for load testing
 - **Background tasks**: Scaled with load levels
@@ -192,24 +210,28 @@ Tests automatically configure plugins with appropriate settings:
 ## Understanding Test Results
 
 ### Health Scores
+
 - **90-100%**: Excellent - System performing optimally
 - **70-89%**: Good - Minor optimizations recommended
 - **50-69%**: Needs Attention - Performance issues detected
 - **<50%**: Critical - Immediate action required
 
 ### Bottleneck Types
+
 - **CPU**: High processor utilization under load
 - **Memory**: Memory usage approaching limits
 - **Response Time**: Slow service response times
 - **Error Rate**: High failure rates in operations
 
 ### Timeout Patterns
+
 - **Baseline**: Normal operation timeouts
 - **Moderate Load**: Increased timeout frequency
 - **High Load**: Significant timeout clustering
 - **Stress Test**: Circuit breaker activation
 
 ### Audit Quality Metrics
+
 - **Completeness**: Percentage of events with full context
 - **Traceability**: Correlation chain completeness
 - **Compliance**: Regulatory requirement adherence
@@ -219,12 +241,14 @@ Tests automatically configure plugins with appropriate settings:
 ### Common Issues
 
 **Tests fail with import errors:**
+
 ```bash
 # Ensure framework modules are properly imported
 python -c "from framework.plugins import PluginManager; print('Framework plugins available')"
 ```
 
 **Playwright tests fail:**
+
 ```bash
 # Install browser dependencies
 playwright install-deps
@@ -232,6 +256,7 @@ playwright install chromium
 ```
 
 **Performance tests show no bottlenecks:**
+
 ```bash
 # Increase load levels or test duration
 export E2E_LOAD_LEVELS="5,10,15,20"
@@ -239,12 +264,14 @@ export E2E_TEST_DURATION=60
 ```
 
 **Charts not generating:**
+
 ```bash
 # Ensure matplotlib backend is available
 python -c "import matplotlib.pyplot as plt; plt.figure()"
 ```
 
 ### Debug Mode
+
 ```bash
 # Run with verbose output and debug logging
 pytest tests/e2e/test_master_e2e.py -v -s --log-cli-level=DEBUG
@@ -253,6 +280,7 @@ pytest tests/e2e/test_master_e2e.py -v -s --log-cli-level=DEBUG
 ## Integration with CI/CD
 
 ### GitHub Actions Example
+
 ```yaml
 name: E2E Performance Tests
 on: [push, pull_request]

@@ -34,8 +34,9 @@ class BasicSessionManager(ISessionManager):
         self.session_timeout_minutes = session_timeout_minutes
         self._sessions: builtins.dict[str, builtins.dict[str, Any]] = {}
 
-    def create_session(self, principal: SecurityPrincipal,
-                      metadata: builtins.dict[str, Any] | None = None) -> str:
+    def create_session(
+        self, principal: SecurityPrincipal, metadata: builtins.dict[str, Any] | None = None
+    ) -> str:
         """Create a new session for a principal."""
         session_id = str(uuid.uuid4())
 
@@ -43,7 +44,7 @@ class BasicSessionManager(ISessionManager):
             "principal": principal,
             "created_at": datetime.now(timezone.utc),
             "last_accessed": datetime.now(timezone.utc),
-            "metadata": metadata or {}
+            "metadata": metadata or {},
         }
 
         return session_id
@@ -96,8 +97,9 @@ class BasicSessionManager(ISessionManager):
 class SecurityMiddleware:
     """Security middleware for request processing."""
 
-    def __init__(self, session_manager: ISessionManager,
-                 security_context_key: str = "security_context"):
+    def __init__(
+        self, session_manager: ISessionManager, security_context_key: str = "security_context"
+    ):
         """
         Initialize security middleware.
 
@@ -133,10 +135,10 @@ class SecurityMiddleware:
         # Create security context
         context = SecurityContext(
             principal=principal,
-            resource=getattr(request, 'path', '/'),
-            action=getattr(request, 'method', 'GET'),
+            resource=getattr(request, "path", "/"),
+            action=getattr(request, "method", "GET"),
             request_metadata=self._extract_request_metadata(request),
-            request_id=getattr(request, 'id', None)
+            request_id=getattr(request, "id", None),
         )
 
         # Store context in request for later use
@@ -147,22 +149,22 @@ class SecurityMiddleware:
     def _extract_session_id(self, request: Any) -> str | None:
         """Extract session ID from request."""
         # Try to get from Authorization header
-        auth_header = getattr(request, 'headers', {}).get('Authorization')
-        if auth_header and auth_header.startswith('Bearer '):
+        auth_header = getattr(request, "headers", {}).get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
             return auth_header[7:]  # Remove 'Bearer ' prefix
 
         # Try to get from cookie
-        cookies = getattr(request, 'cookies', {})
-        return cookies.get('session_id')
+        cookies = getattr(request, "cookies", {})
+        return cookies.get("session_id")
 
     def _extract_request_metadata(self, request: Any) -> builtins.dict[str, Any]:
         """Extract metadata from request."""
         return {
-            "user_agent": getattr(request, 'headers', {}).get('User-Agent'),
-            "remote_addr": getattr(request, 'remote_addr', None),
-            "method": getattr(request, 'method', None),
-            "path": getattr(request, 'path', None),
-            "query_string": getattr(request, 'query_string', None)
+            "user_agent": getattr(request, "headers", {}).get("User-Agent"),
+            "remote_addr": getattr(request, "remote_addr", None),
+            "method": getattr(request, "method", None),
+            "path": getattr(request, "path", None),
+            "query_string": getattr(request, "query_string", None),
         }
 
 
@@ -174,7 +176,9 @@ class ServiceMeshSecurityManager(AbstractServiceMeshSecurityManager):
         self._traffic_policies: builtins.list[builtins.dict[str, Any]] = []
         self._mtls_services: set[str] = set()
 
-    async def apply_traffic_policies(self, policies: builtins.list[builtins.dict[str, Any]]) -> bool:
+    async def apply_traffic_policies(
+        self, policies: builtins.list[builtins.dict[str, Any]]
+    ) -> bool:
         """Apply security policies to service mesh traffic."""
         try:
             for policy in policies:
@@ -201,10 +205,10 @@ class ServiceMeshSecurityManager(AbstractServiceMeshSecurityManager):
                 {
                     "name": policy.get("name", "unnamed"),
                     "type": policy.get("type", "unknown"),
-                    "enabled": policy.get("enabled", True)
+                    "enabled": policy.get("enabled", True),
                 }
                 for policy in self._traffic_policies
-            ]
+            ],
         }
 
     async def enforce_mTLS(self, services: builtins.list[str]) -> bool:
@@ -243,8 +247,11 @@ class ServiceMeshSecurityManager(AbstractServiceMeshSecurityManager):
 class SecurityDecorator:
     """Decorator for securing functions and methods."""
 
-    def __init__(self, required_permissions: builtins.list[str] | None = None,
-                 required_roles: builtins.list[str] | None = None):
+    def __init__(
+        self,
+        required_permissions: builtins.list[str] | None = None,
+        required_roles: builtins.list[str] | None = None,
+    ):
         """
         Initialize security decorator.
 
@@ -257,9 +264,10 @@ class SecurityDecorator:
 
     def __call__(self, func: Callable) -> Callable:
         """Apply security decorator to function."""
+
         def wrapper(*args, **kwargs):
             # Get security context (this would be injected in a real implementation)
-            context = kwargs.get('security_context')
+            context = kwargs.get("security_context")
 
             if not context:
                 raise PermissionError("No security context provided")
@@ -296,8 +304,9 @@ def require_role(role: str) -> Callable:
 
 def require_authentication(func: Callable) -> Callable:
     """Decorator to require authentication."""
+
     def wrapper(*args, **kwargs):
-        context = kwargs.get('security_context')
+        context = kwargs.get("security_context")
 
         if not context or not context.principal:
             raise PermissionError("Authentication required")

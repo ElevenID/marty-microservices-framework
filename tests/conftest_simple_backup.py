@@ -28,7 +28,6 @@ def temp_dir():
     temp_path = Path(tempfile.mkdtemp())
     yield temp_path
 
-
     if temp_path.exists():
         shutil.rmtree(temp_path)
 

@@ -18,14 +18,10 @@ class AuthenticateWithJWTRequest:
     jwt_token: str
 
 
-class AuthenticateWithJWTUseCase(
-    UseCase[AuthenticateWithJWTRequest, AuthenticationResult]
-):
+class AuthenticateWithJWTUseCase(UseCase[AuthenticateWithJWTRequest, AuthenticationResult]):
     """Use case for authenticating users with JWT tokens."""
 
-    async def execute(
-        self, request: AuthenticateWithJWTRequest
-    ) -> AuthenticationResult:
+    async def execute(self, request: AuthenticateWithJWTRequest) -> AuthenticationResult:
         """Execute the JWT authentication.
 
         Args:

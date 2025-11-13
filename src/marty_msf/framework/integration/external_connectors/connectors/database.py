@@ -10,7 +10,6 @@ from ..base import ExternalSystemConnector
 from ..config import ExternalSystemConfig, IntegrationRequest, IntegrationResponse
 
 try:
-
     SQLALCHEMY_AVAILABLE = True
 except ImportError:
     SQLALCHEMY_AVAILABLE = False

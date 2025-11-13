@@ -30,6 +30,7 @@ from typing_extensions import Protocol
 
 T = TypeVar("T")
 ServiceType = TypeVar("ServiceType")
+_MISSING = object()  # Sentinel value for missing defaults
 
 
 class ServiceProtocol(Protocol):
@@ -86,51 +87,33 @@ class DIContainer(metaclass=SingletonMeta):
         self._configurations: dict[type[Any], dict[str, Any]] = {}
         self._lock = threading.RLock()
 
-    def register_factory(
-        self,
-        service_type: type[T],
-        factory: ServiceFactory[T]
-    ) -> None:
+    def register_factory(self, service_type: type[T], factory: ServiceFactory[T]) -> None:
         """Register a factory for a service type."""
         with self._lock:
             self._factories[service_type] = factory
 
-    def register_instance(
-        self,
-        service_type: type[T],
-        instance: T
-    ) -> None:
+    def register_instance(self, service_type: type[T], instance: T) -> None:
         """Register a pre-created instance for a service type."""
         with self._lock:
             self._services[service_type] = instance
 
-    def configure(
-        self,
-        service_type: type[T],
-        config: dict[str, Any]
-    ) -> None:
+    def configure(self, service_type: type[T], config: dict[str, Any]) -> None:
         """Configure a service type with the given configuration."""
         with self._lock:
             self._configurations[service_type] = config
             # If instance already exists, reconfigure it
             if service_type in self._services:
                 service = self._services[service_type]
-                if hasattr(service, 'configure'):
+                if hasattr(service, "configure"):
                     service.configure(config)
 
     @overload
-    def get(self, service_type: type[T]) -> T:
-        ...
+    def get(self, service_type: type[T]) -> T: ...
 
     @overload
-    def get(self, service_type: type[T], default: T | None) -> T | None:
-        ...
+    def get(self, service_type: type[T], default: object = _MISSING) -> T | None: ...
 
-    def get(
-        self,
-        service_type: type[T],
-        default: T | None = None
-    ) -> T | None:
+    def get(self, service_type: type[T], default: object = _MISSING) -> T | None:
         """
         Get a service instance of the specified type.
 
@@ -158,16 +141,12 @@ class DIContainer(metaclass=SingletonMeta):
                 return cast(T, instance)
 
             # Return default if provided
-            if default is not None:
-                return default
+            if default is not _MISSING:
+                return default  # type: ignore
 
             raise ValueError(f"No factory or instance registered for {service_type}")
 
-    def get_or_create(
-        self,
-        service_type: type[T],
-        factory_func: Callable[[], T]
-    ) -> T:
+    def get_or_create(self, service_type: type[T], factory_func: Callable[[], T]) -> T:
         """
         Get existing service or create using factory function.
 
@@ -189,8 +168,7 @@ class DIContainer(metaclass=SingletonMeta):
     def has(self, service_type: type[T]) -> bool:
         """Check if a service type is registered."""
         with self._lock:
-            return (service_type in self._services or
-                    service_type in self._factories)
+            return service_type in self._services or service_type in self._factories
 
     def remove(self, service_type: type[T]) -> bool:
         """
@@ -207,7 +185,7 @@ class DIContainer(metaclass=SingletonMeta):
             if service_type in self._services:
                 service = self._services.pop(service_type)
                 # Call shutdown if available
-                if hasattr(service, 'shutdown'):
+                if hasattr(service, "shutdown"):
                     try:
                         service.shutdown()
                     except Exception:
@@ -229,7 +207,7 @@ class DIContainer(metaclass=SingletonMeta):
         with self._lock:
             # Shutdown all services
             for service in self._services.values():
-                if hasattr(service, 'shutdown'):
+                if hasattr(service, "shutdown"):
                     try:
                         service.shutdown()
                     except Exception:
@@ -255,7 +233,7 @@ class DIContainer(metaclass=SingletonMeta):
                 # Shutdown any services that weren't in original state
                 for service_type, service in self._services.items():
                     if service_type not in original_services:
-                        if hasattr(service, 'shutdown'):
+                        if hasattr(service, "shutdown"):
                             try:
                                 service.shutdown()
                             except Exception:

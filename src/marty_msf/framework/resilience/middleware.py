@@ -97,7 +97,7 @@ class ResilienceMiddleware(BaseHTTPMiddleware):
             if self.config.enable_circuit_breaker:
                 cb_config = CircuitBreakerConfig(
                     failure_threshold=self.config.circuit_breaker_failure_threshold,
-                    timeout_seconds=int(self.config.circuit_breaker_recovery_timeout)
+                    timeout_seconds=int(self.config.circuit_breaker_recovery_timeout),
                 )
                 self.circuit_breaker = CircuitBreaker("middleware_cb", cb_config)
 
@@ -105,7 +105,7 @@ class ResilienceMiddleware(BaseHTTPMiddleware):
             if self.config.enable_bulkhead:
                 bulkhead_config = BulkheadConfig(
                     max_concurrent=self.config.bulkhead_max_concurrent,
-                    timeout_seconds=self.config.bulkhead_timeout
+                    timeout_seconds=self.config.bulkhead_timeout,
                 )
                 self.bulkhead = SemaphoreBulkhead("middleware_bulkhead", bulkhead_config)
 
@@ -164,10 +164,7 @@ class ResilienceMiddleware(BaseHTTPMiddleware):
         """Apply resilience patterns to request handling"""
 
         async def execute_request():
-            return await asyncio.wait_for(
-                call_next(request),
-                timeout=self.config.request_timeout
-            )
+            return await asyncio.wait_for(call_next(request), timeout=self.config.request_timeout)
 
         # Apply bulkhead isolation
         if self.config.enable_bulkhead and self.bulkhead:
@@ -185,7 +182,8 @@ class ResilienceMiddleware(BaseHTTPMiddleware):
             if client_ip in self._rate_limit_state:
                 cutoff_time = current_time - 60  # 1 minute window
                 self._rate_limit_state[client_ip] = [
-                    req_time for req_time in self._rate_limit_state[client_ip]
+                    req_time
+                    for req_time in self._rate_limit_state[client_ip]
                     if req_time > cutoff_time
                 ]
             else:
@@ -206,8 +204,9 @@ class ResilienceMiddleware(BaseHTTPMiddleware):
         headers = {
             f"X-{self.config.metrics_prefix}-Requests": str(self.request_count),
             f"X-{self.config.metrics_prefix}-Errors": str(self.error_count),
-            f"X-{self.config.metrics_prefix}-Circuit-Breaker-Status":
-                self.circuit_breaker.state.value if self.circuit_breaker else "disabled"
+            f"X-{self.config.metrics_prefix}-Circuit-Breaker-Status": self.circuit_breaker.state.value
+            if self.circuit_breaker
+            else "disabled",
         }
 
         for key, value in headers.items():
@@ -219,19 +218,19 @@ class ResilienceMiddleware(BaseHTTPMiddleware):
             "requests": {
                 "total": self.request_count,
                 "errors": self.error_count,
-                "error_rate": self.error_count / max(self.request_count, 1)
+                "error_rate": self.error_count / max(self.request_count, 1),
             },
             "timeouts": self.timeout_count,
             "rate_limiting": {
                 "rejections": self.rate_limit_reject_count,
-                "active_clients": len(self._rate_limit_state)
-            }
+                "active_clients": len(self._rate_limit_state),
+            },
         }
 
         if self.circuit_breaker:
             metrics["circuit_breaker"] = {
                 "state": self.circuit_breaker.state.value,
-                "opens": self.circuit_breaker_open_count
+                "opens": self.circuit_breaker_open_count,
             }
 
         if self.bulkhead:
@@ -240,7 +239,7 @@ class ResilienceMiddleware(BaseHTTPMiddleware):
                 "rejections": self.bulkhead_reject_count,
                 "active_requests": stats.get("active_requests", 0),
                 "successful_requests": stats.get("successful_requests", 0),
-                "failed_requests": stats.get("failed_requests", 0)
+                "failed_requests": stats.get("failed_requests", 0),
             }
 
         return metrics
@@ -262,7 +261,7 @@ class ResilienceService:
         try:
             # Initialize connection pool manager if enabled
             if self.config.enable_connection_pools:
-                self.pool_manager = await get_pool_manager()
+                self.pool_manager = get_pool_manager()
 
             self._initialized = True
             logger.info("Resilience service initialized")
@@ -294,7 +293,7 @@ class ResilienceService:
             response = await http_pool.request(method, url, **kwargs)
             yield response
         finally:
-            if 'response' in locals():
+            if "response" in locals():
                 response.close()
 
     async def close(self):
@@ -312,7 +311,7 @@ def resilient(
     bulkhead_config: BulkheadConfig | None = None,
     timeout: float | None = None,
     _retries: int = 0,
-    _retry_delay: float = 1.0
+    _retry_delay: float = 1.0,
 ):
     """
     Decorator to apply resilience patterns to functions (not supported).
@@ -332,17 +331,21 @@ def resilient(
 # Service-based resilience service access
 
 
-
 def get_resilience_service():
     """Get resilience service with pure interface approach (breaks circular dependency)."""
-
 
     # Create a basic resilience implementation inline to avoid imports
     class BasicResilienceManager(IResilienceManager):
         def __init__(self):
             self._metrics = {"total_operations": 0, "success_count": 0, "failure_count": 0}
 
-        async def execute_resilient(self, func, strategy=ResilienceStrategy.INTERNAL_SERVICE, config_override=None, operation_name=None):
+        async def execute_resilient(
+            self,
+            func,
+            strategy=ResilienceStrategy.INTERNAL_SERVICE,
+            config_override=None,
+            operation_name=None,
+        ):
             try:
                 result = await func() if asyncio.iscoroutinefunction(func) else func()
                 self._metrics["success_count"] += 1

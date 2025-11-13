@@ -7,6 +7,7 @@ The Marty Microservices Framework (MMF) implements a robust plugin architecture 
 ## Plugin Architecture Principles
 
 ### Domain Bundle Approach
+
 - **Plugins represent business domains**, not individual services
 - **Multiple services per plugin** when they share domain boundaries
 - **Single entry point registration** per domain with multiple service exposures
@@ -15,7 +16,9 @@ The Marty Microservices Framework (MMF) implements a robust plugin architecture 
 ### Two Plugin Types
 
 #### 1. Service Plugins (MMFPlugin)
+
 Domain bundles that provide business logic and services:
+
 ```
 plugins/<domain-plugin>/
 ├── __init__.py                     # Plugin package entry point
@@ -27,7 +30,9 @@ plugins/<domain-plugin>/
 ```
 
 #### 2. Gateway Plugins (Middleware)
+
 Cross-cutting concern handlers for the API gateway:
+
 - Authentication and authorization
 - Rate limiting and throttling
 - Request/response transformation
@@ -38,6 +43,7 @@ Cross-cutting concern handlers for the API gateway:
 ### 1. Plugin Discovery and Registration
 
 #### Entry Point Registration
+
 ```toml
 # In pyproject.toml
 [project.entry-points."mmf.plugins"]
@@ -46,17 +52,20 @@ inventory_mgmt = "plugins.inventory_management:InventoryPlugin"
 ```
 
 #### Plugin Base Class
+
 - **Interface**: `MMFPlugin` from `src/marty_msf/framework/plugins/core.py`
 - **Required Methods**:
   - `get_metadata()`: Returns plugin name, version, dependencies
   - `get_service_definitions()`: Returns available services
   - Optional: `initialize()`, `shutdown()`, `get_configuration_schema()`
 - **Usage**:
+
   ```bash
   python3 scripts/generate_plugin_service.py --name payment-service --plugin production_payment
   ```
 
 #### Generated Service Features
+
 - Plugin integration manager
 - Automatic plugin loading on startup
 - Plugin-specific configuration
@@ -66,6 +75,7 @@ inventory_mgmt = "plugins.inventory_management:InventoryPlugin"
 ## Configuration Flow
 
 ### 1. Plugin Discovery
+
 ```yaml
 # config/base.yaml
 plugins:
@@ -78,6 +88,7 @@ plugins:
 ```
 
 ### 2. Plugin Loading
+
 ```yaml
 # Environment-specific loading
 default_plugins:
@@ -87,6 +98,7 @@ default_plugins:
 ```
 
 ### 3. Plugin Configuration
+
 ```yaml
 # config/plugins/production_payment_service.yaml
 default:
@@ -105,6 +117,7 @@ payment:
 ## Development Workflow
 
 ### 1. Plugin Development
+
 1. Create plugin directory structure
 2. Implement `MMFPlugin` subclass
 3. Define service definitions and routes
@@ -112,12 +125,14 @@ payment:
 5. Register entry point in `pyproject.toml`
 
 ### 2. Service Generation
+
 1. Use generator script with plugin parameter
 2. Configure plugin settings for environment
 3. Test plugin integration
 4. Deploy with plugin auto-loading
 
 ### 3. Testing and Verification
+
 - **Import Test**: Verify plugin can be imported
 - **Metadata Test**: Check plugin metadata structure
 - **Service Test**: Validate service definitions
@@ -126,16 +141,19 @@ payment:
 ## Key Benefits
 
 ### 1. Auto-Loading Architecture
+
 - **Entry Point Discovery**: Plugins discovered via `importlib.metadata`
 - **Configuration-Driven**: Plugin loading controlled by config files
 - **Environment-Aware**: Different loading strategies per environment
 
 ### 2. Enterprise Integration
+
 - **Security**: Sandboxing and signature verification in production
 - **Monitoring**: Plugin health checks and metrics
 - **Lifecycle Management**: Proper initialization and shutdown
 
 ### 3. Developer Experience
+
 - **Generator Scripts**: Automated service creation with plugin integration
 - **Configuration Management**: Centralized plugin configuration
 - **Documentation**: Clear integration guides and examples
@@ -143,6 +161,7 @@ payment:
 ## Production Deployment
 
 ### 1. Security Configuration
+
 ```yaml
 # config/production.yaml
 plugins:
@@ -156,11 +175,13 @@ plugins:
 ```
 
 ### 2. Monitoring Integration
+
 - Plugin status in health checks
 - Metrics collection for plugin performance
 - Audit logging for plugin operations
 
 ### 3. Deployment Process
+
 1. Build service with plugin dependencies
 2. Configure plugin settings per environment
 3. Deploy with framework auto-loading
@@ -169,6 +190,7 @@ plugins:
 ## Example Usage
 
 ### Creating a New Service with Plugin
+
 ```bash
 # Generate service with plugin integration
 python3 scripts/generate_plugin_service.py \
@@ -184,6 +206,7 @@ python3 scripts/generate_plugin_service.py \
 ```
 
 ### Plugin Configuration
+
 ```yaml
 # Service-specific plugin config
 plugin_settings:

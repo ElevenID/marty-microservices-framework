@@ -25,7 +25,7 @@ class ThreatDetector:
                 r"(?i)(\'\s*or\s*\'\s*=\s*\')",
                 r"(?i)(drop\s+table)",
                 r"(?i)(insert\s+into)",
-                r"(?i)(delete\s+from)"
+                r"(?i)(delete\s+from)",
             ],
             "xss": [
                 r"(?i)(<script[^>]*>)",
@@ -33,7 +33,7 @@ class ThreatDetector:
                 r"(?i)(on\w+\s*=)",
                 r"(?i)(<iframe[^>]*>)",
                 r"(?i)(eval\s*\()",
-                r"(?i)(document\.cookie)"
+                r"(?i)(document\.cookie)",
             ],
             "path_traversal": [
                 r"(\.\.\/)",
@@ -41,7 +41,7 @@ class ThreatDetector:
                 r"(%2e%2e%2f)",
                 r"(%2e%2e%5c)",
                 r"(\.\./.*etc/passwd)",
-                r"(\.\./.*windows/system32)"
+                r"(\.\./.*windows/system32)",
             ],
             "command_injection": [
                 r"(?i)(\|\s*cat\s)",
@@ -50,15 +50,15 @@ class ThreatDetector:
                 r"(?i)(\|\s*rm\s)",
                 r"(?i)(\|\s*del\s)",
                 r"(?i)(;\s*cat\s)",
-                r"(?i)(&&\s*cat\s)"
+                r"(?i)(&&\s*cat\s)",
             ],
             "ldap_injection": [
                 r"(\*\)\(.*=)",
                 r"(\)\(\|.*=)",
                 r"(\)\(&.*=)",
                 r"(\*\)\(.*\|)",
-                r"(\*\)\(.*&)"
-            ]
+                r"(\*\)\(.*&)",
+            ],
         }
 
     def scan_request(self, request_data: builtins.dict[str, Any]) -> builtins.dict[str, Any]:
@@ -78,21 +78,23 @@ class ThreatDetector:
             if isinstance(value, str):
                 threats = self._scan_string(value)
                 if threats:
-                    threats_found.extend([
-                        {
-                            "field": key,
-                            "threat_type": threat_type,
-                            "pattern": pattern,
-                            "value": value[:100]  # Truncate for logging
-                        }
-                        for threat_type, pattern in threats
-                    ])
+                    threats_found.extend(
+                        [
+                            {
+                                "field": key,
+                                "threat_type": threat_type,
+                                "pattern": pattern,
+                                "value": value[:100],  # Truncate for logging
+                            }
+                            for threat_type, pattern in threats
+                        ]
+                    )
 
         return {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "threats_found": threats_found,
             "threat_count": len(threats_found),
-            "risk_level": self._calculate_risk_level(threats_found)
+            "risk_level": self._calculate_risk_level(threats_found),
         }
 
     def _scan_string(self, text: str) -> builtins.list[tuple[str, str]]:
@@ -141,7 +143,7 @@ class VulnerabilityScanner:
             "insecure_protocols": self._check_insecure_protocols,
             "missing_encryption": self._check_missing_encryption,
             "default_credentials": self._check_default_credentials,
-            "outdated_dependencies": self._check_outdated_dependencies
+            "outdated_dependencies": self._check_outdated_dependencies,
         }
 
     def scan_configuration(self, config: builtins.dict[str, Any]) -> builtins.dict[str, Any]:
@@ -168,10 +170,12 @@ class VulnerabilityScanner:
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "vulnerabilities": vulnerabilities,
             "vulnerability_count": len(vulnerabilities),
-            "severity_summary": self._summarize_severity(vulnerabilities)
+            "severity_summary": self._summarize_severity(vulnerabilities),
         }
 
-    def _check_weak_passwords(self, config: builtins.dict[str, Any]) -> builtins.list[builtins.dict[str, Any]]:
+    def _check_weak_passwords(
+        self, config: builtins.dict[str, Any]
+    ) -> builtins.list[builtins.dict[str, Any]]:
         """Check for weak password configurations."""
         vulnerabilities = []
 
@@ -180,25 +184,31 @@ class VulnerabilityScanner:
 
         min_length = password_policy.get("min_length", 0)
         if min_length < 8:
-            vulnerabilities.append({
-                "type": "weak_passwords",
-                "severity": "medium",
-                "description": f"Minimum password length is {min_length}, should be at least 8",
-                "recommendation": "Set minimum password length to at least 8 characters"
-            })
+            vulnerabilities.append(
+                {
+                    "type": "weak_passwords",
+                    "severity": "medium",
+                    "description": f"Minimum password length is {min_length}, should be at least 8",
+                    "recommendation": "Set minimum password length to at least 8 characters",
+                }
+            )
 
         require_special = password_policy.get("require_special_chars", False)
         if not require_special:
-            vulnerabilities.append({
-                "type": "weak_passwords",
-                "severity": "low",
-                "description": "Password policy does not require special characters",
-                "recommendation": "Require special characters in passwords"
-            })
+            vulnerabilities.append(
+                {
+                    "type": "weak_passwords",
+                    "severity": "low",
+                    "description": "Password policy does not require special characters",
+                    "recommendation": "Require special characters in passwords",
+                }
+            )
 
         return vulnerabilities
 
-    def _check_insecure_protocols(self, config: builtins.dict[str, Any]) -> builtins.list[builtins.dict[str, Any]]:
+    def _check_insecure_protocols(
+        self, config: builtins.dict[str, Any]
+    ) -> builtins.list[builtins.dict[str, Any]]:
         """Check for insecure protocol configurations."""
         vulnerabilities = []
 
@@ -207,27 +217,33 @@ class VulnerabilityScanner:
 
         min_tls_version = ssl_config.get("min_tls_version", "1.0")
         if min_tls_version in ["1.0", "1.1"]:
-            vulnerabilities.append({
-                "type": "insecure_protocols",
-                "severity": "high",
-                "description": f"Minimum TLS version is {min_tls_version}, should be 1.2 or higher",
-                "recommendation": "Set minimum TLS version to 1.2 or 1.3"
-            })
+            vulnerabilities.append(
+                {
+                    "type": "insecure_protocols",
+                    "severity": "high",
+                    "description": f"Minimum TLS version is {min_tls_version}, should be 1.2 or higher",
+                    "recommendation": "Set minimum TLS version to 1.2 or 1.3",
+                }
+            )
 
         # Check for HTTP without HTTPS redirect
         http_config = config.get("http", {})
         force_https = http_config.get("force_https", False)
         if not force_https:
-            vulnerabilities.append({
-                "type": "insecure_protocols",
-                "severity": "medium",
-                "description": "HTTP traffic is not redirected to HTTPS",
-                "recommendation": "Enable HTTPS redirect for all HTTP traffic"
-            })
+            vulnerabilities.append(
+                {
+                    "type": "insecure_protocols",
+                    "severity": "medium",
+                    "description": "HTTP traffic is not redirected to HTTPS",
+                    "recommendation": "Enable HTTPS redirect for all HTTP traffic",
+                }
+            )
 
         return vulnerabilities
 
-    def _check_missing_encryption(self, config: builtins.dict[str, Any]) -> builtins.list[builtins.dict[str, Any]]:
+    def _check_missing_encryption(
+        self, config: builtins.dict[str, Any]
+    ) -> builtins.list[builtins.dict[str, Any]]:
         """Check for missing encryption configurations."""
         vulnerabilities = []
 
@@ -235,27 +251,33 @@ class VulnerabilityScanner:
         database_config = config.get("database", {})
         encryption_enabled = database_config.get("encryption_at_rest", False)
         if not encryption_enabled:
-            vulnerabilities.append({
-                "type": "missing_encryption",
-                "severity": "high",
-                "description": "Database encryption at rest is not enabled",
-                "recommendation": "Enable database encryption at rest"
-            })
+            vulnerabilities.append(
+                {
+                    "type": "missing_encryption",
+                    "severity": "high",
+                    "description": "Database encryption at rest is not enabled",
+                    "recommendation": "Enable database encryption at rest",
+                }
+            )
 
         # Check session encryption
         session_config = config.get("session", {})
         secure_cookies = session_config.get("secure_cookies", False)
         if not secure_cookies:
-            vulnerabilities.append({
-                "type": "missing_encryption",
-                "severity": "medium",
-                "description": "Session cookies are not marked as secure",
-                "recommendation": "Enable secure flag for session cookies"
-            })
+            vulnerabilities.append(
+                {
+                    "type": "missing_encryption",
+                    "severity": "medium",
+                    "description": "Session cookies are not marked as secure",
+                    "recommendation": "Enable secure flag for session cookies",
+                }
+            )
 
         return vulnerabilities
 
-    def _check_default_credentials(self, config: builtins.dict[str, Any]) -> builtins.list[builtins.dict[str, Any]]:
+    def _check_default_credentials(
+        self, config: builtins.dict[str, Any]
+    ) -> builtins.list[builtins.dict[str, Any]]:
         """Check for default credentials."""
         vulnerabilities = []
 
@@ -265,7 +287,7 @@ class VulnerabilityScanner:
             ("root", "root"),
             ("user", "user"),
             ("guest", "guest"),
-            ("test", "test")
+            ("test", "test"),
         ]
 
         # Check various configuration sections for default credentials
@@ -276,16 +298,20 @@ class VulnerabilityScanner:
 
                 for default_user, default_pass in default_credentials:
                     if username == default_user and password == default_pass:
-                        vulnerabilities.append({
-                            "type": "default_credentials",
-                            "severity": "critical",
-                            "description": f"Default credentials found in {section_name} section",
-                            "recommendation": "Change default credentials immediately"
-                        })
+                        vulnerabilities.append(
+                            {
+                                "type": "default_credentials",
+                                "severity": "critical",
+                                "description": f"Default credentials found in {section_name} section",
+                                "recommendation": "Change default credentials immediately",
+                            }
+                        )
 
         return vulnerabilities
 
-    def _check_outdated_dependencies(self, config: builtins.dict[str, Any]) -> builtins.list[builtins.dict[str, Any]]:
+    def _check_outdated_dependencies(
+        self, config: builtins.dict[str, Any]
+    ) -> builtins.list[builtins.dict[str, Any]]:
         """Check for outdated dependencies (placeholder implementation)."""
         vulnerabilities = []
 
@@ -297,16 +323,20 @@ class VulnerabilityScanner:
         if "flask" in dependencies:
             version = dependencies["flask"]
             if version and version < "2.0.0":
-                vulnerabilities.append({
-                    "type": "outdated_dependencies",
-                    "severity": "medium",
-                    "description": f"Flask version {version} may have known vulnerabilities",
-                    "recommendation": "Update Flask to the latest stable version"
-                })
+                vulnerabilities.append(
+                    {
+                        "type": "outdated_dependencies",
+                        "severity": "medium",
+                        "description": f"Flask version {version} may have known vulnerabilities",
+                        "recommendation": "Update Flask to the latest stable version",
+                    }
+                )
 
         return vulnerabilities
 
-    def _summarize_severity(self, vulnerabilities: builtins.list[builtins.dict[str, Any]]) -> builtins.dict[str, int]:
+    def _summarize_severity(
+        self, vulnerabilities: builtins.list[builtins.dict[str, Any]]
+    ) -> builtins.dict[str, int]:
         """Summarize vulnerabilities by severity."""
         summary = {"critical": 0, "high": 0, "medium": 0, "low": 0}
 
@@ -339,7 +369,7 @@ class SecurityScanner:
         results = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "scan_type": "comprehensive",
-            "target_type": target.get("type", "unknown")
+            "target_type": target.get("type", "unknown"),
         }
 
         # Perform threat detection on request data
@@ -359,7 +389,9 @@ class SecurityScanner:
 
         return results
 
-    def _calculate_overall_risk(self, scan_results: builtins.dict[str, Any]) -> builtins.dict[str, Any]:
+    def _calculate_overall_risk(
+        self, scan_results: builtins.dict[str, Any]
+    ) -> builtins.dict[str, Any]:
         """Calculate overall risk score from scan results."""
         risk_score = 0
         risk_factors = []
@@ -407,7 +439,7 @@ class SecurityScanner:
             "score": min(100, risk_score),
             "level": risk_level,
             "factors": risk_factors,
-            "recommendation": self._get_risk_recommendation(risk_level)
+            "recommendation": self._get_risk_recommendation(risk_level),
         }
 
     def _get_risk_recommendation(self, risk_level: str) -> str:
@@ -416,7 +448,9 @@ class SecurityScanner:
             "critical": "Immediate action required. Address critical vulnerabilities and threats before proceeding.",
             "high": "High priority remediation needed. Address security issues as soon as possible.",
             "medium": "Moderate security concerns. Plan remediation in next maintenance window.",
-            "low": "Minor security issues identified. Address during regular maintenance cycles."
+            "low": "Minor security issues identified. Address during regular maintenance cycles.",
         }
 
-        return recommendations.get(risk_level, "Review security scan results and take appropriate action.")
+        return recommendations.get(
+            risk_level, "Review security scan results and take appropriate action."
+        )

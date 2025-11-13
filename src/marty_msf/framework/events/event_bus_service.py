@@ -58,5 +58,5 @@ def _create_event_bus_service(config: dict[str, Any]) -> EventBusService:
 register_service(
     EventBusService,
     factory=LambdaFactory(EventBusService, _create_event_bus_service),
-    is_singleton=True
+    is_singleton=True,
 )

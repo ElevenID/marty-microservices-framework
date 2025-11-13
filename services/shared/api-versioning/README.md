@@ -5,6 +5,7 @@ This template provides a comprehensive API versioning and contract testing frame
 ## Features
 
 ### 🔄 API Versioning Strategies
+
 - **URL Path Versioning**: `/v1/users`, `/v2/users`
 - **Header Versioning**: `Accept: application/vnd.api+json;version=1`
 - **Query Parameter**: `/users?version=1`
@@ -12,6 +13,7 @@ This template provides a comprehensive API versioning and contract testing frame
 - **Custom Header**: `X-API-Version: 1`
 
 ### 📋 Contract Management
+
 - **Automatic Contract Generation**: From OpenAPI specifications
 - **Contract Registry**: Store and manage API contracts
 - **Schema Validation**: Request/response validation against contracts
@@ -19,6 +21,7 @@ This template provides a comprehensive API versioning and contract testing frame
 - **Contract Caching**: High-performance contract storage
 
 ### 🧪 Contract Testing
+
 - **Provider Testing**: Validate API implementations against contracts
 - **Consumer Testing**: Consumer-driven contract validation
 - **Automated Testing**: Scheduled contract validation
@@ -26,6 +29,7 @@ This template provides a comprehensive API versioning and contract testing frame
 - **Failure Recovery**: Retry mechanisms for failed tests
 
 ### 🔍 Breaking Change Detection
+
 - **Schema Analysis**: Detect structural changes
 - **Compatibility Checking**: Version-to-version comparison
 - **Impact Assessment**: Analyze consumer impact
@@ -33,6 +37,7 @@ This template provides a comprehensive API versioning and contract testing frame
 - **Deprecation Management**: Controlled API deprecation
 
 ### 📊 Monitoring & Observability
+
 - **Prometheus Metrics**: API usage, version adoption, test results
 - **Distributed Tracing**: OpenTelemetry integration
 - **Structured Logging**: Comprehensive audit trails
@@ -523,6 +528,7 @@ test_cases = [
 ### Common Issues
 
 1. **Contract Validation Failures**
+
    ```bash
    # Check contract registry
    curl http://localhost:8060/api/contracts/user-service
@@ -532,6 +538,7 @@ test_cases = [
    ```
 
 2. **Version Detection Problems**
+
    ```python
    # Debug version extraction
    version = version_extractor.extract_version(request)
@@ -539,6 +546,7 @@ test_cases = [
    ```
 
 3. **Performance Issues**
+
    ```bash
    # Check metrics
    curl http://localhost:8060/metrics | grep contract

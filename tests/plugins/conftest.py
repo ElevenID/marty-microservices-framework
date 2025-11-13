@@ -109,7 +109,6 @@ def mock_plugin_manager():
 def marty_config():
     """Create test Marty configuration."""
     try:
-
         return MartyTrustPKIConfig(
             trust_anchor_url="https://test-trust.example.com",
             pkd_url="https://test-pkd.example.com",
@@ -380,8 +379,6 @@ list_setting:
             "cache": {"type": "memory"},
         },
     }
-
-
 
     for filename, config_data in configs.items():
         config_file = config_dir / filename

@@ -21,12 +21,14 @@ from .configuration import IntegrationConfig
 # Request/Response models
 class LoginRequest(BaseModel):
     """Request model for user login."""
+
     username: str
     password: str
 
 
 class TokenResponse(BaseModel):
     """Response model for token operations."""
+
     access_token: str
     token_type: str = "bearer"
     expires_in: int
@@ -34,6 +36,7 @@ class TokenResponse(BaseModel):
 
 class UserInfo(BaseModel):
     """User information from token."""
+
     user_id: str
     username: str
     email: str | None = None
@@ -44,6 +47,7 @@ class UserInfo(BaseModel):
 @dataclass
 class AuthenticatedUser:
     """Simple user model for integration layer."""
+
     user_id: str
     username: str
     email: str | None = None
@@ -87,16 +91,14 @@ class JWTService:
         return {
             "access_token": token,
             "token_type": "bearer",
-            "expires_in": self.config.jwt_access_token_expire_minutes * 60
+            "expires_in": self.config.jwt_access_token_expire_minutes * 60,
         }
 
     def validate_token(self, token: str) -> AuthenticatedUser:
         """Validate JWT token and return user."""
         try:
             payload = jwt.decode(
-                token,
-                self.config.jwt_secret_key,
-                algorithms=[self.config.jwt_algorithm]
+                token, self.config.jwt_secret_key, algorithms=[self.config.jwt_algorithm]
             )
 
             return AuthenticatedUser(
@@ -104,19 +106,15 @@ class JWTService:
                 username=payload["username"],
                 email=payload.get("email"),
                 roles=set(payload.get("roles", [])),
-                permissions=set(payload.get("permissions", []))
+                permissions=set(payload.get("permissions", [])),
             )
 
         except jwt.ExpiredSignatureError:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token has expired"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired"
             )
         except jwt.InvalidTokenError:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token"
-            )
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
 
 # Dependency injection for clean architecture
@@ -136,8 +134,7 @@ router = APIRouter(prefix="/auth", tags=["authentication"])
 
 @router.post("/login", response_model=TokenResponse)
 async def login(
-    request: LoginRequest,
-    jwt_service: JWTService = Depends(get_jwt_service)
+    request: LoginRequest, jwt_service: JWTService = Depends(get_jwt_service)
 ) -> TokenResponse:
     """
     Authenticate user and return JWT token.
@@ -147,10 +144,7 @@ async def login(
     """
     # Simple demo authentication - accept any non-empty credentials
     if not request.username or not request.password:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
     # Create demo user
     user = AuthenticatedUser(
@@ -158,7 +152,7 @@ async def login(
         username=request.username,
         email=f"{request.username}@example.com",
         roles={"user"},
-        permissions={"read", "write"}
+        permissions={"read", "write"},
     )
 
     # Generate token
@@ -169,8 +163,7 @@ async def login(
 
 @router.get("/me", response_model=UserInfo)
 async def get_current_user(
-    token: str,
-    jwt_service: JWTService = Depends(get_jwt_service)
+    token: str, jwt_service: JWTService = Depends(get_jwt_service)
 ) -> UserInfo:
     """Get current user information from JWT token."""
     user = jwt_service.validate_token(token)
@@ -180,14 +173,13 @@ async def get_current_user(
         username=user.username,
         email=user.email,
         roles=list(user.roles) if user.roles else [],
-        permissions=list(user.permissions) if user.permissions else []
+        permissions=list(user.permissions) if user.permissions else [],
     )
 
 
 @router.post("/validate")
 async def validate_token(
-    token: str,
-    jwt_service: JWTService = Depends(get_jwt_service)
+    token: str, jwt_service: JWTService = Depends(get_jwt_service)
 ) -> dict[str, str]:
     """Validate a JWT token."""
     try:

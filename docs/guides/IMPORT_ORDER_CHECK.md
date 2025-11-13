@@ -18,6 +18,7 @@ This pre-commit hook ensures that all Python imports are placed at the top of fi
 ## Examples
 
 ### ✅ Good (imports at top)
+
 ```python
 #!/usr/bin/env python3
 """
@@ -33,6 +34,7 @@ def my_function():
 ```
 
 ### ❌ Bad (imports scattered)
+
 ```python
 #!/usr/bin/env python3
 """

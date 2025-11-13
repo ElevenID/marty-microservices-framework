@@ -5,6 +5,7 @@ This guide provides a complete step-by-step demonstration of the MMF petstore do
 ## 🎯 Demonstration Overview
 
 We'll demonstrate:
+
 1. **Core Plugin Functionality** - Basic petstore operations
 2. **Enhanced Features** - Message tracking, ML integration, scaling
 3. **Operational Excellence** - Monitoring, scaling, service mesh
@@ -13,6 +14,7 @@ We'll demonstrate:
 ## 📋 Prerequisites
 
 Before starting the demonstration, ensure you have:
+
 - ✅ Kubernetes cluster running (local or cloud)
 - ✅ MMF framework installed and configured
 - ✅ kubectl configured and connected
@@ -38,6 +40,7 @@ python -c "import marty_msf; print('MMF installed successfully')"
 ### Phase 1: Core Plugin Functionality (5-10 minutes)
 
 #### Step 1: Deploy the Petstore Plugin
+
 ```bash
 # Deploy the petstore domain plugin
 kubectl apply -f examples/demos/petstore_domain/k8s/
@@ -47,24 +50,28 @@ kubectl get pods -n petstore -l app=petstore-domain
 ```
 
 #### Step 2: Basic Health Check
+
 ```bash
 # Run basic health verification
 python petstore_demo_runner.py
 ```
 
 **What to show observers:**
+
 - ✅ Service starts successfully
 - ✅ Health endpoints respond correctly
 - ✅ Basic CRUD operations work
 - ✅ Plugin architecture integration
 
 #### Step 3: Enhanced Demo with Event Streaming
+
 ```bash
 # Run the enhanced demo with all features
 python enhanced_petstore_demo_runner.py
 ```
 
 **What to highlight:**
+
 - 🔄 Event streaming between services
 - 📊 Distributed system patterns
 - 🔗 Service-to-service communication
@@ -73,6 +80,7 @@ python enhanced_petstore_demo_runner.py
 ### Phase 2: Experience Polish Features (10-15 minutes)
 
 #### Step 4: Deploy Experience Polish Components
+
 ```bash
 # Deploy operational scaling infrastructure
 kubectl apply -f docs/demos/operational-scaling/hpa-vpa-manifests.yaml
@@ -82,12 +90,14 @@ kubectl apply -f docs/demos/operational-scaling/canary-deployment-istio.yaml
 ```
 
 #### Step 5: Launch Interactive Analytics
+
 ```bash
 # Start Jupyter notebook for live analytics
 jupyter notebook docs/demos/experience-polish-analytics.ipynb
 ```
 
 **Demonstration flow in notebook:**
+
 1. **Section 1**: Service health monitoring with live metrics
 2. **Section 2**: Customer journey tracking with message correlation
 3. **Section 3**: ML recommendation engine integration
@@ -99,6 +109,7 @@ jupyter notebook docs/demos/experience-polish-analytics.ipynb
 9. **Section 9**: Operational readiness assessment
 
 #### Step 6: ML Pet Advisor Integration
+
 ```bash
 # Start the ML recommendation service
 python docs/demos/ml_pet_advisor.py &
@@ -109,6 +120,7 @@ curl http://localhost:8001/analytics/model-performance
 ```
 
 **Key points to demonstrate:**
+
 - 🤖 AI-powered pet recommendations
 - 📊 ML model performance tracking
 - 🔄 A/B testing with multiple algorithms
@@ -117,6 +129,7 @@ curl http://localhost:8001/analytics/model-performance
 ### Phase 3: Operational Excellence (10-15 minutes)
 
 #### Step 7: Monitoring and Observability
+
 ```bash
 # Import Grafana dashboard
 kubectl apply -f docs/demos/operational-scaling/grafana-dashboard.yaml
@@ -126,6 +139,7 @@ kubectl port-forward -n monitoring svc/grafana 3000:80
 ```
 
 **Dashboard tour highlights:**
+
 - 📊 Service health overview with real-time status
 - 📈 Request rate and response time percentiles
 - 🚨 Error rate monitoring with alerting
@@ -136,6 +150,7 @@ kubectl port-forward -n monitoring svc/grafana 3000:80
 - 💰 Business metrics and revenue tracking
 
 #### Step 8: Scaling Demonstration
+
 ```bash
 # Generate load to trigger scaling
 python enhanced_petstore_demo_runner.py --load-test --concurrent-users 50
@@ -148,6 +163,7 @@ kubectl get pods -n petstore -w
 ```
 
 **Scaling scenarios to show:**
+
 - 📈 CPU-based horizontal scaling
 - 💾 Memory-based vertical scaling
 - 📊 Custom metric scaling (request rate, queue depth)
@@ -155,6 +171,7 @@ kubectl get pods -n petstore -w
 - 🛡️ Graceful scale-down with disruption budgets
 
 #### Step 9: Canary Deployment (if Istio available)
+
 ```bash
 # Trigger canary deployment
 kubectl patch deployment petstore-domain -n petstore -p '{"spec":{"template":{"metadata":{"labels":{"version":"canary"}}}}}'
@@ -164,6 +181,7 @@ kubectl get virtualservice -n petstore
 ```
 
 **Canary demonstration points:**
+
 - 🚦 Progressive traffic shifting (90/10 → 70/30 → 50/50)
 - 📊 Real-time success metrics monitoring
 - 🔄 Automatic rollback on error thresholds
@@ -173,12 +191,14 @@ kubectl get virtualservice -n petstore
 ### Phase 4: Business Value Demonstration (5-10 minutes)
 
 #### Step 10: Analytics and Insights
+
 ```bash
 # Generate realistic business scenarios
 python enhanced_petstore_demo_runner.py --business-scenarios
 ```
 
 **Business metrics to highlight:**
+
 - 📊 **Conversion Rate**: 15% improvement with ML recommendations
 - ⚡ **Response Time**: <200ms P95 across all endpoints
 - 🎯 **Availability**: 99.9% uptime with zero-downtime deployments
@@ -186,12 +206,14 @@ python enhanced_petstore_demo_runner.py --business-scenarios
 - 🔧 **Operational Efficiency**: 60% reduction in manual scaling
 
 #### Step 11: Error Recovery Patterns
+
 ```bash
 # Demonstrate error injection and recovery
 python enhanced_petstore_demo_runner.py --error-scenarios
 ```
 
 **Error scenarios to show:**
+
 - 💳 Payment service failures with circuit breaker activation
 - 🤖 ML service degradation with fallback to rule-based recommendations
 - 🗄️ Database connectivity issues with retry patterns
@@ -201,6 +223,7 @@ python enhanced_petstore_demo_runner.py --error-scenarios
 ## 🎯 Key Talking Points for Observers
 
 ### Technical Excellence
+
 - **Microservices Architecture**: Clean separation of concerns with plugin-based design
 - **Event-Driven Patterns**: Asynchronous communication with message correlation
 - **ML Integration**: Production-ready AI services with performance monitoring
@@ -208,6 +231,7 @@ python enhanced_petstore_demo_runner.py --error-scenarios
 - **Service Mesh**: Advanced traffic management and security policies
 
 ### Operational Maturity
+
 - **Zero-Downtime Deployments**: Canary releases with automatic rollback
 - **Comprehensive Monitoring**: Real-time metrics, alerting, and dashboards
 - **Resilience Patterns**: Circuit breakers, retries, bulkheads, timeouts
@@ -215,6 +239,7 @@ python enhanced_petstore_demo_runner.py --error-scenarios
 - **Cost Optimization**: Resource rightsizing and efficient scaling
 
 ### Business Impact
+
 - **Customer Experience**: Personalized recommendations and faster responses
 - **Revenue Growth**: Higher conversion rates and reduced abandonment
 - **Operational Efficiency**: Automated scaling and incident response
@@ -235,18 +260,21 @@ python enhanced_petstore_demo_runner.py --error-scenarios
 ## 🚀 Advanced Demonstrations (Optional)
 
 ### Load Testing at Scale
+
 ```bash
 # Simulate Black Friday traffic
 python enhanced_petstore_demo_runner.py --black-friday-simulation
 ```
 
 ### Multi-Region Deployment
+
 ```bash
 # Deploy across multiple clusters (if available)
 kubectl apply -f docs/demos/multi-region/
 ```
 
 ### Chaos Engineering
+
 ```bash
 # Introduce controlled failures
 python enhanced_petstore_demo_runner.py --chaos-engineering
@@ -263,6 +291,7 @@ python enhanced_petstore_demo_runner.py --chaos-engineering
 ## 🎯 Call to Action
 
 At the end of the demonstration:
+
 - **For Technical Teams**: "Clone the repo and deploy in your cluster in 5 minutes"
 - **For Business Teams**: "See immediate ROI with improved conversion and reduced operational costs"
 - **For Leadership**: "Production-ready microservices platform that scales with your business"

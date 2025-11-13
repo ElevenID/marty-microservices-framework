@@ -313,7 +313,6 @@ class InMemoryServiceRegistry(ServiceRegistry):
     async def _http_health_check(self, instance: ServiceInstance, health_check) -> HealthStatus:
         """Perform HTTP health check."""
         try:
-
             url = health_check.url
             if not url.startswith(("http://", "https://")):
                 base_url = instance.endpoint.get_url()
@@ -597,9 +596,7 @@ class ConsulServiceRegistry(ServiceRegistry):
         )
         return True
 
-    def _consul_service_to_instance(
-        self, service_data: dict[str, Any]
-    ) -> ServiceInstance | None:
+    def _consul_service_to_instance(self, service_data: dict[str, Any]) -> ServiceInstance | None:
         """Convert Consul service data to ServiceInstance."""
         try:
             service = service_data["Service"]
@@ -798,7 +795,6 @@ class EtcdServiceRegistry(ServiceRegistry):
     def _dict_to_instance(self, data: dict[str, Any]) -> ServiceInstance | None:
         """Convert dictionary data to ServiceInstance."""
         try:
-
             # Create endpoint
             endpoint_data = data["endpoint"]
             endpoint = ServiceEndpoint(
@@ -962,7 +958,6 @@ class KubernetesServiceRegistry(ServiceRegistry):
     ) -> ServiceInstance | None:
         """Convert Kubernetes endpoint to ServiceInstance."""
         try:
-
             # Create instance ID from IP and port
             instance_id = f"{address.ip}-{port.port}"
 

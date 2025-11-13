@@ -70,19 +70,23 @@ service/morty_service/
 ## Domain Layer
 
 ### Entities
+
 - **Task**: Represents a work item with business rules
 - **User**: Represents a person who can be assigned tasks
 
 ### Value Objects
+
 - **Email**: Email address with validation
 - **PersonName**: First and last name combination
 - **PhoneNumber**: Phone number with normalization
 
 ### Domain Services
+
 - **TaskManagementService**: Business logic for task operations
 - **UserManagementService**: Business logic for user operations
 
 ### Domain Events
+
 - **TaskCreated**: When a new task is created
 - **TaskAssigned**: When a task is assigned to a user
 - **TaskCompleted**: When a task is marked as completed
@@ -90,11 +94,13 @@ service/morty_service/
 ## Application Layer
 
 ### Input Ports (Interfaces)
+
 - **TaskManagementPort**: Task operations interface
 - **UserManagementPort**: User operations interface
 - **HealthCheckPort**: Health check interface
 
 ### Output Ports (Interfaces)
+
 - **TaskRepositoryPort**: Task persistence interface
 - **UserRepositoryPort**: User persistence interface
 - **EventPublisherPort**: Event publishing interface
@@ -103,16 +109,19 @@ service/morty_service/
 - **UnitOfWorkPort**: Transaction management interface
 
 ### Use Cases
+
 - **TaskManagementUseCase**: Orchestrates task-related workflows
 - **UserManagementUseCase**: Orchestrates user-related workflows
 
 ## Infrastructure Layer
 
 ### Input Adapters
+
 - **HTTPAdapter**: FastAPI-based REST API
 - Future: gRPC adapter, CLI adapter, etc.
 
 ### Output Adapters
+
 - **SQLAlchemyTaskRepository**: PostgreSQL task persistence
 - **SQLAlchemyUserRepository**: PostgreSQL user persistence
 - **KafkaEventPublisher**: Event publishing via Kafka
@@ -122,6 +131,7 @@ service/morty_service/
 ## Getting Started
 
 ### Prerequisites
+
 - Python 3.10+
 - PostgreSQL
 - Redis (optional)
@@ -130,11 +140,13 @@ service/morty_service/
 ### Installation
 
 1. Install the Marty Chassis framework:
+
 ```bash
 pip install marty-chassis
 ```
 
 2. Set up the database:
+
 ```bash
 # Create database
 createdb morty_dev
@@ -146,6 +158,7 @@ export KAFKA_BOOTSTRAP_SERVERS="localhost:9092"
 ```
 
 3. Run the service:
+
 ```bash
 python -m service.morty_service.main
 ```
@@ -153,6 +166,7 @@ python -m service.morty_service.main
 ### API Endpoints
 
 #### Tasks
+
 - `POST /api/v1/tasks` - Create a new task
 - `GET /api/v1/tasks/{id}` - Get a task by ID
 - `PUT /api/v1/tasks/{id}` - Update a task
@@ -162,6 +176,7 @@ python -m service.morty_service.main
 - `DELETE /api/v1/tasks/{id}` - Delete a task
 
 #### Users
+
 - `POST /api/v1/users` - Create a new user
 - `GET /api/v1/users/{id}` - Get a user by ID
 - `GET /api/v1/users` - List all users
@@ -171,6 +186,7 @@ python -m service.morty_service.main
 - `DELETE /api/v1/users/{id}` - Delete a user
 
 #### Health
+
 - `GET /health` - Health check
 - `GET /ready` - Readiness check
 
@@ -209,6 +225,7 @@ LOG_FORMAT=json
 The hexagonal architecture makes testing straightforward:
 
 ### Domain Testing
+
 ```python
 # Test domain entities and services in isolation
 def test_task_creation():
@@ -218,6 +235,7 @@ def test_task_creation():
 ```
 
 ### Application Testing
+
 ```python
 # Test use cases with mock adapters
 async def test_create_task_use_case():
@@ -231,6 +249,7 @@ async def test_create_task_use_case():
 ```
 
 ### Integration Testing
+
 ```python
 # Test with real adapters but test database
 async def test_task_api():

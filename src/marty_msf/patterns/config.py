@@ -32,6 +32,7 @@ from .outbox.enhanced_outbox import (
 
 class ConsistencyLevel(Enum):
     """Data consistency levels for distributed operations."""
+
     EVENTUAL = "eventual"
     STRONG = "strong"
     BOUNDED_STALENESS = "bounded_staleness"
@@ -41,6 +42,7 @@ class ConsistencyLevel(Enum):
 
 class PersistenceMode(Enum):
     """Persistence modes for different patterns."""
+
     IN_MEMORY = "in_memory"
     DATABASE = "database"
     DISTRIBUTED_CACHE = "distributed_cache"
@@ -50,6 +52,7 @@ class PersistenceMode(Enum):
 @dataclass
 class DatabaseConfig:
     """Database configuration for data consistency patterns."""
+
     connection_string: str = "postgresql://localhost:5432/mmf_consistency"
     pool_size: int = 10
     max_overflow: int = 20
@@ -66,6 +69,7 @@ class DatabaseConfig:
 @dataclass
 class EventStoreConfig:
     """Event store configuration."""
+
     connection_string: str = "postgresql://localhost:5432/mmf_eventstore"
     stream_page_size: int = 100
     snapshot_frequency: int = 100
@@ -82,6 +86,7 @@ class EventStoreConfig:
 @dataclass
 class MessageBrokerConfig:
     """Message broker configuration."""
+
     broker_type: str = "kafka"  # kafka, rabbitmq, redis
     brokers: list[str] = field(default_factory=lambda: ["localhost:9092"])
 
@@ -108,6 +113,7 @@ class MessageBrokerConfig:
 @dataclass
 class SagaConfig:
     """Enhanced saga orchestration configuration."""
+
     # Core settings
     orchestrator_id: str = "default-orchestrator"
     worker_count: int = 3
@@ -142,6 +148,7 @@ class SagaConfig:
 @dataclass
 class CQRSConfig:
     """CQRS pattern configuration."""
+
     # Query settings
     default_query_mode: QueryExecutionMode = QueryExecutionMode.SYNC
     query_timeout_seconds: int = 30
@@ -233,10 +240,14 @@ class DataConsistencyConfig:
         # Event store configuration
         if es_url := os.getenv("EVENT_STORE_URL"):
             config.event_store.connection_string = es_url
-        config.event_store.enable_snapshots = os.getenv("ES_ENABLE_SNAPSHOTS", "true").lower() == "true"
+        config.event_store.enable_snapshots = (
+            os.getenv("ES_ENABLE_SNAPSHOTS", "true").lower() == "true"
+        )
 
         # Message broker configuration
-        config.message_broker.broker_type = os.getenv("MESSAGE_BROKER_TYPE", config.message_broker.broker_type)
+        config.message_broker.broker_type = os.getenv(
+            "MESSAGE_BROKER_TYPE", config.message_broker.broker_type
+        )
         if kafka_brokers := os.getenv("KAFKA_BROKERS"):
             config.message_broker.brokers = kafka_brokers.split(",")
 
@@ -246,7 +257,9 @@ class DataConsistencyConfig:
 
         # CQRS configuration
         config.cqrs.enable_query_caching = os.getenv("CQRS_ENABLE_CACHE", "true").lower() == "true"
-        config.cqrs.cache_ttl_seconds = int(os.getenv("CQRS_CACHE_TTL", config.cqrs.cache_ttl_seconds))
+        config.cqrs.cache_ttl_seconds = int(
+            os.getenv("CQRS_CACHE_TTL", config.cqrs.cache_ttl_seconds)
+        )
 
         # Outbox configuration
         config.outbox.worker_count = int(os.getenv("OUTBOX_WORKERS", config.outbox.worker_count))
@@ -266,16 +279,15 @@ class DataConsistencyConfig:
     def from_file(cls, config_path: str | Path) -> "DataConsistencyConfig":
         """Load configuration from YAML or JSON file."""
 
-
         config_path = Path(config_path)
 
         if not config_path.exists():
             raise FileNotFoundError(f"Configuration file not found: {config_path}")
 
         with open(config_path) as f:
-            if config_path.suffix.lower() in ['.yaml', '.yml']:
+            if config_path.suffix.lower() in [".yaml", ".yml"]:
                 data = yaml.safe_load(f)
-            elif config_path.suffix.lower() == '.json':
+            elif config_path.suffix.lower() == ".json":
                 data = json.load(f)
             else:
                 raise ValueError(f"Unsupported configuration file format: {config_path.suffix}")
@@ -288,126 +300,127 @@ class DataConsistencyConfig:
         config = cls()
 
         # Service settings
-        if 'service' in data:
-            service_data = data['service']
-            config.service_name = service_data.get('name', config.service_name)
-            config.service_version = service_data.get('version', config.service_version)
-            config.environment = service_data.get('environment', config.environment)
+        if "service" in data:
+            service_data = data["service"]
+            config.service_name = service_data.get("name", config.service_name)
+            config.service_version = service_data.get("version", config.service_version)
+            config.environment = service_data.get("environment", config.environment)
 
         # Database configuration
-        if 'database' in data:
-            db_data = data['database']
+        if "database" in data:
+            db_data = data["database"]
             config.database = DatabaseConfig(**db_data)
 
         # Event store configuration
-        if 'event_store' in data:
-            es_data = data['event_store']
+        if "event_store" in data:
+            es_data = data["event_store"]
             config.event_store = EventStoreConfig(**es_data)
 
         # Message broker configuration
-        if 'message_broker' in data:
-            mb_data = data['message_broker']
+        if "message_broker" in data:
+            mb_data = data["message_broker"]
             config.message_broker = MessageBrokerConfig(**mb_data)
 
         # Pattern configurations
-        if 'saga' in data:
-            saga_data = data['saga']
+        if "saga" in data:
+            saga_data = data["saga"]
             config.saga = SagaConfig(**saga_data)
 
-        if 'outbox' in data:
-            outbox_data = data['outbox']
+        if "outbox" in data:
+            outbox_data = data["outbox"]
             config.outbox = OutboxConfig(**outbox_data)
 
-        if 'cqrs' in data:
-            cqrs_data = data['cqrs']
+        if "cqrs" in data:
+            cqrs_data = data["cqrs"]
             config.cqrs = CQRSConfig(**cqrs_data)
 
         # Global settings
-        if 'global' in data:
-            global_data = data['global']
-            if 'consistency_level' in global_data:
-                config.global_consistency_level = ConsistencyLevel(global_data['consistency_level'])
-            config.enable_metrics = global_data.get('enable_metrics', config.enable_metrics)
-            config.enable_debug_logging = global_data.get('enable_debug_logging', config.enable_debug_logging)
-            config.log_level = global_data.get('log_level', config.log_level)
+        if "global" in data:
+            global_data = data["global"]
+            if "consistency_level" in global_data:
+                config.global_consistency_level = ConsistencyLevel(global_data["consistency_level"])
+            config.enable_metrics = global_data.get("enable_metrics", config.enable_metrics)
+            config.enable_debug_logging = global_data.get(
+                "enable_debug_logging", config.enable_debug_logging
+            )
+            config.log_level = global_data.get("log_level", config.log_level)
 
         return config
 
     def to_dict(self) -> dict[str, Any]:
         """Convert configuration to dictionary."""
         return {
-            'service': {
-                'name': self.service_name,
-                'version': self.service_version,
-                'environment': self.environment
+            "service": {
+                "name": self.service_name,
+                "version": self.service_version,
+                "environment": self.environment,
             },
-            'database': {
-                'connection_string': self.database.connection_string,
-                'pool_size': self.database.pool_size,
-                'max_overflow': self.database.max_overflow,
-                'pool_timeout': self.database.pool_timeout,
-                'echo_sql': self.database.echo_sql,
-                'transaction_timeout_seconds': self.database.transaction_timeout_seconds,
-                'isolation_level': self.database.isolation_level
+            "database": {
+                "connection_string": self.database.connection_string,
+                "pool_size": self.database.pool_size,
+                "max_overflow": self.database.max_overflow,
+                "pool_timeout": self.database.pool_timeout,
+                "echo_sql": self.database.echo_sql,
+                "transaction_timeout_seconds": self.database.transaction_timeout_seconds,
+                "isolation_level": self.database.isolation_level,
             },
-            'event_store': {
-                'connection_string': self.event_store.connection_string,
-                'stream_page_size': self.event_store.stream_page_size,
-                'enable_snapshots': self.event_store.enable_snapshots,
-                'compression_enabled': self.event_store.compression_enabled,
-                'batch_size': self.event_store.batch_size
+            "event_store": {
+                "connection_string": self.event_store.connection_string,
+                "stream_page_size": self.event_store.stream_page_size,
+                "enable_snapshots": self.event_store.enable_snapshots,
+                "compression_enabled": self.event_store.compression_enabled,
+                "batch_size": self.event_store.batch_size,
             },
-            'message_broker': {
-                'broker_type': self.message_broker.broker_type,
-                'brokers': self.message_broker.brokers,
-                'kafka_security_protocol': self.message_broker.kafka_security_protocol,
-                'enable_ssl': self.message_broker.enable_ssl
+            "message_broker": {
+                "broker_type": self.message_broker.broker_type,
+                "brokers": self.message_broker.brokers,
+                "kafka_security_protocol": self.message_broker.kafka_security_protocol,
+                "enable_ssl": self.message_broker.enable_ssl,
             },
-            'saga': {
-                'orchestrator_id': self.saga.orchestrator_id,
-                'worker_count': self.saga.worker_count,
-                'enable_parallel_execution': self.saga.enable_parallel_execution,
-                'step_timeout_seconds': self.saga.step_timeout_seconds,
-                'max_retry_attempts': self.saga.max_retry_attempts,
-                'enable_dead_letter_queue': self.saga.enable_dead_letter_queue
+            "saga": {
+                "orchestrator_id": self.saga.orchestrator_id,
+                "worker_count": self.saga.worker_count,
+                "enable_parallel_execution": self.saga.enable_parallel_execution,
+                "step_timeout_seconds": self.saga.step_timeout_seconds,
+                "max_retry_attempts": self.saga.max_retry_attempts,
+                "enable_dead_letter_queue": self.saga.enable_dead_letter_queue,
             },
-            'outbox': {
-                'worker_count': self.outbox.worker_count,
-                'enable_parallel_processing': self.outbox.enable_parallel_processing,
-                'poll_interval_ms': self.outbox.poll_interval_ms,
-                'enable_dead_letter_queue': self.outbox.enable_dead_letter_queue,
-                'auto_cleanup_enabled': self.outbox.auto_cleanup_enabled
+            "outbox": {
+                "worker_count": self.outbox.worker_count,
+                "enable_parallel_processing": self.outbox.enable_parallel_processing,
+                "poll_interval_ms": self.outbox.poll_interval_ms,
+                "enable_dead_letter_queue": self.outbox.enable_dead_letter_queue,
+                "auto_cleanup_enabled": self.outbox.auto_cleanup_enabled,
             },
-            'cqrs': {
-                'default_query_mode': self.cqrs.default_query_mode.value,
-                'query_timeout_seconds': self.cqrs.query_timeout_seconds,
-                'enable_query_caching': self.cqrs.enable_query_caching,
-                'cache_ttl_seconds': self.cqrs.cache_ttl_seconds,
-                'read_model_consistency': self.cqrs.read_model_consistency.value,
-                'enable_read_model_versioning': self.cqrs.enable_read_model_versioning
+            "cqrs": {
+                "default_query_mode": self.cqrs.default_query_mode.value,
+                "query_timeout_seconds": self.cqrs.query_timeout_seconds,
+                "enable_query_caching": self.cqrs.enable_query_caching,
+                "cache_ttl_seconds": self.cqrs.cache_ttl_seconds,
+                "read_model_consistency": self.cqrs.read_model_consistency.value,
+                "enable_read_model_versioning": self.cqrs.enable_read_model_versioning,
             },
-            'global': {
-                'consistency_level': self.global_consistency_level.value,
-                'enable_distributed_tracing': self.enable_distributed_tracing,
-                'enable_metrics': self.enable_metrics,
-                'metrics_port': self.metrics_port,
-                'enable_health_checks': self.enable_health_checks,
-                'enable_debug_logging': self.enable_debug_logging,
-                'log_level': self.log_level
-            }
+            "global": {
+                "consistency_level": self.global_consistency_level.value,
+                "enable_distributed_tracing": self.enable_distributed_tracing,
+                "enable_metrics": self.enable_metrics,
+                "metrics_port": self.metrics_port,
+                "enable_health_checks": self.enable_health_checks,
+                "enable_debug_logging": self.enable_debug_logging,
+                "log_level": self.log_level,
+            },
         }
 
     def save_to_file(self, config_path: str | Path, format: str = "yaml") -> None:
         """Save configuration to file."""
 
-
         config_path = Path(config_path)
         config_data = self.to_dict()
 
-        with open(config_path, 'w') as f:
-            if format.lower() in ['yaml', 'yml']:
+        with open(config_path, "w") as f:
+            if format.lower() in ["yaml", "yml"]:
                 yaml.dump(config_data, f, default_flow_style=False, sort_keys=False)
-            elif format.lower() == 'json':
+            elif format.lower() == "json":
                 json.dump(config_data, f, indent=2, sort_keys=False)
             else:
                 raise ValueError(f"Unsupported format: {format}")
@@ -579,8 +592,7 @@ class DataConsistencyConfigService(ConfigService):
 def get_config_service() -> DataConsistencyConfigService:
     """Get the configuration service instance from DI container."""
     return container.get_or_create(
-        "data_consistency_config_service",
-        lambda: DataConsistencyConfigService()
+        "data_consistency_config_service", lambda: DataConsistencyConfigService()
     )
 
 

@@ -7,6 +7,7 @@ WARNING: when it runs in an environment other than Linux, it will only
 produce an error message.
 
 The following dependencies must be installed before running the script:
+
   1. kubectl
   2. kind
   3. docker

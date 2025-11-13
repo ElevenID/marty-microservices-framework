@@ -5,11 +5,13 @@ This directory contains comprehensive demonstrations of all capabilities of the 
 ## 🚀 Quick Setup
 
 ### Prerequisites
+
 1. **Python Environment**: Python 3.8+ with virtual environment
 2. **Dependencies**: PostgreSQL, Redis (for full demos)
 3. **Optional**: Docker, Kubernetes + Istio (for advanced demos)
 
 ### **One-Command Setup**
+
 ```bash
 # Clone and navigate to the repository
 git clone https://github.com/burdettadam/marty-microservices-framework.git
@@ -28,17 +30,22 @@ cd examples/demos
 ## 🎯 Demo Options
 
 ### 1. 🚀 **Quick Start Demo** (5 minutes)
+
 **Perfect for first-time users**
+
 ```bash
 python quick_start_demo.py
 ```
+
 - ✅ **No External Dependencies**: Simulated operations
 - ✅ **Core Concepts**: Database, caching, messaging, health checks
 - ✅ **Interactive**: Watch MMF in action with live progress
 - ✅ **Fast Setup**: Ready to run immediately
 
 ### 2. � **Feature Demos** (15-45 minutes)
+
 **Deep dive into specific MMF capabilities**
+
 ```bash
 # List all available feature demos
 python runner/petstore_demo_runner.py --list
@@ -49,16 +56,20 @@ python runner/petstore_demo_runner.py --demo resilience   # Error handling
 python runner/petstore_demo_runner.py --demo api-docs     # API documentation
 python runner/petstore_demo_runner.py --demo service-mesh # Kubernetes + Istio
 ```
+
 - ✅ **Real Services**: Connects to actual PostgreSQL, Redis, APIs
 - ✅ **Production Patterns**: Circuit breakers, timeouts, retries
 - ✅ **Comprehensive Testing**: Real-world scenarios and operations
 
 ### 3. 🏪 **Petstore Domain** (2-3 hours)
+
 **Complete production-ready example**
+
 ```bash
 cd petstore_domain/
 python main.py
 ```
+
 - ✅ **Full Microservices**: Order, Payment, Inventory services
 - ✅ **Enterprise Features**: Security, observability, resilience
 - ✅ **Service Mesh Ready**: Istio configuration included
@@ -67,6 +78,7 @@ python main.py
 ## � What to Expect
 
 ### **Quick Start Demo Output**
+
 ```
 🚀 Welcome to the Marty Microservices Framework!
 ✅ Database operations completed successfully
@@ -77,6 +89,7 @@ python main.py
 ```
 
 ### **Feature Demo Output**
+
 ```
 🔍 Checking production prerequisites...
 ✅ PostgreSQL (K8s): Connected to cluster database
@@ -88,6 +101,7 @@ python main.py
 ```
 
 ### **Petstore Domain Output**
+
 ```
 🚀 Starting MMF Petstore Domain Service
 📊 Observability: Prometheus metrics at :9090
@@ -100,11 +114,13 @@ python main.py
 ## �📋 Interactive Demo Launcher
 
 The easiest way to explore all demos:
+
 ```bash
 ./demo_launcher.sh
 ```
 
 This interactive script provides:
+
 - 🎯 **Guided Selection**: Choose demos based on your needs
 - 📊 **Prerequisites Check**: Verifies requirements before running
 - 🚀 **One-Click Launch**: Automated demo execution
@@ -115,6 +131,7 @@ This interactive script provides:
 ### **Prerequisites Setup**
 
 #### **1. Basic Setup (Required for all demos)**
+
 ```bash
 # Ensure Python 3.8+ is installed
 python3 --version
@@ -132,6 +149,7 @@ python quick_start_demo.py --help
 ```
 
 #### **2. Database Setup (For feature demos)**
+
 ```bash
 # Option A: Using Docker (Recommended)
 docker run -d --name postgres \
@@ -148,6 +166,7 @@ docker run -d --name redis \
 ```
 
 #### **3. Kubernetes Setup (For service mesh demos)**
+
 ```bash
 # Install kubectl and kind/minikube
 # For Kind cluster:
@@ -161,6 +180,7 @@ istioctl install --set values.defaultRevision=default
 ### **Running Specific Demos**
 
 #### **Quick Start Demo (No prerequisites)**
+
 ```bash
 cd examples/demos
 python quick_start_demo.py          # Standard run
@@ -168,6 +188,7 @@ python quick_start_demo.py --verbose # Detailed output
 ```
 
 #### **Feature Demos (Requires databases)**
+
 ```bash
 # Check prerequisites first
 python runner/petstore_demo_runner.py --check
@@ -186,6 +207,7 @@ python runner/petstore_demo_runner.py --demo all          # 30-45 min
 ```
 
 #### **Petstore Domain Demo (Full experience)**
+
 ```bash
 cd petstore_domain/
 
@@ -222,18 +244,21 @@ examples/demos/
 ## 🎓 Learning Paths
 
 ### **New to MMF (Start here!)**
+
 1. **Quick Introduction**: `python quick_start_demo.py`
 2. **Interactive Guide**: `./demo_launcher.sh`
 3. **Feature Exploration**: `python runner/petstore_demo_runner.py --list`
 4. **Deep Dive**: `cd petstore_domain/` and explore documentation
 
 ### **Evaluating MMF for Production**
+
 1. **Prerequisites Check**: `python runner/petstore_demo_runner.py --check`
 2. **Core Features**: `python runner/petstore_demo_runner.py --demo core`
 3. **Resilience Testing**: `python runner/petstore_demo_runner.py --demo resilience`
 4. **Complete Example**: `cd petstore_domain/ && python main.py`
 
 ### **Ready to Build**
+
 1. **Study Patterns**: Explore `petstore_domain/app/` directory structure
 2. **Review Documentation**: Check `petstore_domain/docs/` guides
 3. **Kubernetes Deployment**: Try `petstore_domain/dev/deploy-kind.sh deploy`
@@ -244,6 +269,7 @@ examples/demos/
 ### **Common Issues**
 
 #### **"Module not found" errors**
+
 ```bash
 # Ensure virtual environment is activated
 source .venv/bin/activate
@@ -253,6 +279,7 @@ pwd  # Should end with /examples/demos
 ```
 
 #### **Database connection failures**
+
 ```bash
 # Check if services are running
 docker ps  # Should show postgres and redis containers
@@ -263,6 +290,7 @@ docker exec redis redis-cli ping
 ```
 
 #### **Permission denied on scripts**
+
 ```bash
 # Make scripts executable
 chmod +x demo_launcher.sh
@@ -270,6 +298,7 @@ chmod +x petstore_domain/dev/*.sh
 ```
 
 ### **Getting Help**
+
 - 📖 **Detailed Guides**: See `DEMO_GUIDE.md` for comprehensive instructions
 - 🏪 **Petstore Documentation**: Check `petstore_domain/docs/` directory
 - 🛠️  **Framework Docs**: Visit the main `docs/` directory

@@ -7,21 +7,25 @@ The Marty Microservices Framework's enhanced security system integrates with **O
 ## Security Architecture Principles
 
 ### 1. Policy as Code with OPA
+
 - **Principle**: Authorization policies defined in Rego language and version-controlled
 - **Implementation**: OPA service with Git-based policy management
 - **Benefits**: Auditability, consistency, industry-standard approach
 
 ### 2. Unified Security Framework
+
 - **Principle**: Single, cohesive security system with OPA at the core
 - **Implementation**: Enhanced security decorators that integrate RBAC, ABAC, and OPA evaluation
 - **Benefits**: Reduced complexity, consistent security model, easier maintenance
 
 ### 3. Zero Trust Security Model
+
 - **Principle**: Never trust, always verify through policy evaluation
 - **Implementation**: Every request is authenticated and authorized via OPA
 - **Benefits**: Reduced attack surface, fine-grained control
 
 ### 4. Comprehensive Audit Trail
+
 - **Principle**: All security decisions are logged and auditable
 - **Implementation**: Multi-sink audit logging with OPA decision tracking
 - **Benefits**: Compliance, debugging, security monitoring
@@ -56,6 +60,7 @@ async def protected_resource():
 ### 2. Enhanced Security Decorators
 
 **Key Features:**
+
 - JWT token validation with comprehensive claims verification
 - RBAC (Role-Based Access Control) integration
 - ABAC (Attribute-Based Access Control) support
@@ -63,6 +68,7 @@ async def protected_resource():
 - Comprehensive error handling and audit logging
 
 **Available Decorators:**
+
 ```python
 @requires_auth(method="jwt")              # JWT validation only
 @requires_auth(method="rbac", roles=["admin"])  # RBAC check
@@ -75,6 +81,7 @@ async def protected_resource():
 ### 3. OPA Policy Engine Integration
 
 **Architecture:**
+
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
 │   Application   │────│  Security Layer  │────│   OPA Service   │
@@ -91,6 +98,7 @@ async def protected_resource():
 ```
 
 **Policy Evaluation Flow:**
+
 1. Request arrives with JWT token
 2. SecurityManager validates token and extracts claims
 3. RBAC/ABAC checks performed if configured
@@ -101,12 +109,14 @@ async def protected_resource():
 ### 4. RBAC (Role-Based Access Control)
 
 **Features:**
+
 - Hierarchical role inheritance
 - Permission pattern matching with wildcards
 - Role metadata and caching
 - Integration with OPA policies
 
 **Example Usage:**
+
 ```python
 from marty_msf.security.rbac import RBACManager, Role, Permission
 
@@ -122,12 +132,14 @@ await rbac.add_role(admin_role)
 ### 5. ABAC (Attribute-Based Access Control)
 
 **Features:**
+
 - Attribute condition evaluation
 - Policy effect determination
 - Context-aware access control
 - Dynamic attribute evaluation
 
 **Example Usage:**
+
 ```python
 from marty_msf.security.abac import ABACManager, ABACPolicy
 
@@ -149,12 +161,14 @@ await abac.add_policy(policy)
 ### 6. Comprehensive Audit Logging
 
 **Features:**
+
 - Multiple audit sinks (file, syslog, elasticsearch)
 - Structured security event logging
 - Async processing for performance
 - Automatic correlation with security decisions
 
 **Audit Event Structure:**
+
 ```python
 @dataclass
 class SecurityAuditEvent:
@@ -174,6 +188,7 @@ class SecurityAuditEvent:
 ### 1. Service Deployment
 
 **Kubernetes:**
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -190,6 +205,7 @@ spec:
 ```
 
 **Docker Compose (Development):**
+
 ```yaml
 services:
   opa:
@@ -201,6 +217,7 @@ services:
 ### 2. Policy Structure
 
 **Example Authorization Policy (Rego):**
+
 ```rego
 package authz
 
@@ -308,26 +325,31 @@ security:
 ## Benefits of OPA Integration
 
 ### 1. Industry Standard
+
 - OPA is the CNCF graduated project for policy as code
 - Widely adopted in cloud-native environments
 - Excellent tooling and community support
 
 ### 2. Separation of Concerns
+
 - Policies are external to application code
 - Version-controlled policy management
 - Independent policy testing and validation
 
 ### 3. Performance
+
 - High-performance policy evaluation
 - Built-in caching mechanisms
 - Horizontal scaling support
 
 ### 4. Flexibility
+
 - Rego language supports complex authorization logic
 - Dynamic policy updates without code changes
 - Integration with external data sources
 
 ### 5. Observability
+
 - Comprehensive decision logging
 - Metrics and health checks
 - Integration with monitoring systems
@@ -337,11 +359,13 @@ security:
 ### From Basic Auth to Enhanced Security
 
 1. **Install dependencies:**
+
    ```bash
    uv add aiohttp
    ```
 
 2. **Update imports:**
+
    ```python
    # Old
    from marty_msf.authentication import requires_auth
@@ -351,11 +375,13 @@ security:
    ```
 
 3. **Configure OPA:**
+
    ```python
    configure_opa_service(url="http://localhost:8181")
    ```
 
 4. **Update decorators:**
+
    ```python
    # Enhanced with OPA
    @requires_auth(method="opa")
@@ -366,16 +392,19 @@ security:
 ### Policy Development Workflow
 
 1. **Develop policies locally:**
+
    ```bash
    opa test ops/dev/policies/
    ```
 
 2. **Test with sample data:**
+
    ```bash
    opa eval -d authz.rego "data.authz.allow" --input test-input.json
    ```
 
 3. **Deploy to staging:**
+
    ```bash
    kubectl apply -f ops/k8s/opa-deployment.yaml
    ```
@@ -387,22 +416,26 @@ security:
 ## Security Best Practices
 
 ### 1. Policy Management
+
 - Store policies in version control
 - Use GitOps for policy deployment
 - Implement policy review process
 - Test policies thoroughly
 
 ### 2. Network Security
+
 - Restrict OPA access to service mesh only
 - Use mTLS for OPA communication
 - Implement network policies
 
 ### 3. Monitoring
+
 - Monitor OPA health and performance
 - Alert on policy evaluation failures
 - Track decision patterns for anomalies
 
 ### 4. Incident Response
+
 - Implement graceful degradation
 - Maintain audit logs for investigation
 - Have policy rollback procedures

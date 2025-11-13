@@ -246,7 +246,7 @@ class UnifiedGrpcServer:
                 service_name=self.service_name,
                 environment=Environment.DEVELOPMENT,  # Will be auto-detected
                 config_class=BaseSettings,
-                strategy=ConfigurationStrategy.AUTO_DETECT
+                strategy=ConfigurationStrategy.AUTO_DETECT,
             )
             await self.config_manager.initialize()
             self.config = await self.config_manager.get_configuration()
@@ -258,11 +258,9 @@ class UnifiedGrpcServer:
             self.config = BaseSettings()
 
         # Initialize observability
-        service_version = getattr(self.config, 'service_version', "1.0.0")
+        service_version = getattr(self.config, "service_version", "1.0.0")
         self.observability = create_standard_observability(
-            service_name=self.service_name,
-            service_version=service_version,
-            service_type="grpc"
+            service_name=self.service_name, service_version=service_version, service_type="grpc"
         )
         await self.observability.initialize()
         set_global_observability(self.observability)
@@ -292,7 +290,7 @@ class UnifiedGrpcServer:
         if issubclass(servicer_class, ObservableGrpcServiceMixin):
             servicer = servicer_class(*args, **kwargs)
             # Setup observability for service if it supports it
-            if hasattr(servicer, '_setup_observability') and self.observability:
+            if hasattr(servicer, "_setup_observability") and self.observability:
                 servicer._setup_observability(self.observability)
         else:
             servicer = servicer_class(*args, **kwargs)
@@ -316,7 +314,7 @@ class UnifiedGrpcServer:
                 raise RuntimeError("Configuration manager not initialized")
 
             # Get server configuration
-            max_workers = getattr(self.config, 'grpc_max_workers', 10)
+            max_workers = getattr(self.config, "grpc_max_workers", 10)
 
             # Create gRPC server with production-ready options
             default_options = [
@@ -346,13 +344,10 @@ class UnifiedGrpcServer:
                     add_func(servicer, self.server)
 
             # Enable reflection if configured
-            if getattr(self.config, 'grpc_reflection_enabled', True):
+            if getattr(self.config, "grpc_reflection_enabled", True):
                 try:
                     # Enable reflection for all registered services
-                    reflection.enable_server_reflection(
-                        [reflection.SERVICE_NAME],
-                        self.server
-                    )
+                    reflection.enable_server_reflection([reflection.SERVICE_NAME], self.server)
                 except Exception as e:
                     self.logger.warning("Failed to enable server reflection: %s", e)
 
@@ -384,10 +379,7 @@ class UnifiedGrpcServer:
     def _register_service_definitions(self) -> None:
         """Register all service definitions with the server."""
         # Sort by priority (lower numbers first)
-        sorted_services = sorted(
-            self.service_definitions.values(),
-            key=lambda s: s.priority
-        )
+        sorted_services = sorted(self.service_definitions.values(), key=lambda s: s.priority)
 
         for service_def in sorted_services:
             try:
@@ -414,16 +406,16 @@ class UnifiedGrpcServer:
             raise RuntimeError("Configuration not initialized")
 
         # Use configured port or default
-        port = getattr(self.config, 'grpc_port', self.port)
+        port = getattr(self.config, "grpc_port", self.port)
         listen_addr = f"[::]:{port}"
 
         # Check for TLS configuration
-        tls_enabled = getattr(self.config, 'grpc_tls_enabled', False)
+        tls_enabled = getattr(self.config, "grpc_tls_enabled", False)
 
         if tls_enabled:
             # Load TLS credentials
-            server_cert = getattr(self.config, 'grpc_tls_server_cert', None)
-            server_key = getattr(self.config, 'grpc_tls_server_key', None)
+            server_cert = getattr(self.config, "grpc_tls_server_cert", None)
+            server_key = getattr(self.config, "grpc_tls_server_key", None)
 
             if server_cert and server_key:
                 with open(server_cert, "rb") as f:
@@ -455,17 +447,16 @@ class UnifiedGrpcServer:
             self.logger.warning("Observability not configured, skipping endpoints")
             return
 
-        monitoring_enabled = getattr(self.config, 'monitoring_enabled', True)
+        monitoring_enabled = getattr(self.config, "monitoring_enabled", True)
         if not monitoring_enabled:
             return
 
         try:
-
             # Create HTTP application for observability endpoints
             app = web.Application()
 
             # Metrics endpoint
-            if getattr(self.config, 'prometheus_enabled', True):
+            if getattr(self.config, "prometheus_enabled", True):
                 app.router.add_get("/metrics", self._metrics_handler)
 
             # Health check endpoints
@@ -477,7 +468,7 @@ class UnifiedGrpcServer:
             runner = web_runner.AppRunner(app)
             await runner.setup()
 
-            health_port = getattr(self.config, 'health_check_port', 8080)
+            health_port = getattr(self.config, "health_check_port", 8080)
             site = web_runner.TCPSite(runner, "localhost", health_port)
             await site.start()
 
@@ -495,14 +486,14 @@ class UnifiedGrpcServer:
 
         try:
             # Try to get metrics from observability system
-            if hasattr(self.observability, 'get_metrics'):
+            if hasattr(self.observability, "get_metrics"):
                 metrics_output = self.observability.get_metrics()
             else:
                 metrics_output = "# Metrics not available from observability system"
 
             # Ensure metrics_output is a string
             if isinstance(metrics_output, bytes):
-                metrics_output = metrics_output.decode('utf-8')
+                metrics_output = metrics_output.decode("utf-8")
             elif metrics_output is None:
                 metrics_output = "# No metrics data"
 
@@ -518,7 +509,7 @@ class UnifiedGrpcServer:
             "service": self.service_name,
             "status": "healthy" if self._running else "unhealthy",
             "server_running": self._running,
-            "services_registered": len(self.service_definitions)
+            "services_registered": len(self.service_definitions),
         }
 
         if self.observability:
@@ -611,7 +602,7 @@ def create_grpc_server(
     enable_health_service: bool = True,
     max_workers: int = 10,
     enable_reflection: bool = True,
-    **kwargs
+    **kwargs,
 ) -> UnifiedGrpcServer:
     """Create a gRPC server with unified configuration.
 
@@ -634,7 +625,7 @@ def create_grpc_server(
         enable_health_service=enable_health_service,
         max_workers=max_workers,
         enable_reflection=enable_reflection,
-        **kwargs
+        **kwargs,
     )
     return server
 

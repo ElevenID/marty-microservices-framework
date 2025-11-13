@@ -3,12 +3,15 @@
 ## Current Issues
 
 ### Basic Import/Enum Tests
+
 Current tests focus on:
+
 - Import validation (`test_import_deployment_strategies()`)
 - Enum membership checks (`assert hasattr(DeploymentStrategy, 'BLUE_GREEN')`)
 - Basic type checking (`assert issubclass(DeploymentStrategy, Enum)`)
 
 ### Unnecessary Shim Modules
+
 - `src/framework/discovery/discovery.py` - Only re-exports symbols (41 lines)
 - Similar patterns may exist in other modules
 
@@ -18,7 +21,8 @@ Current tests focus on:
 
 Replace basic import tests with actual behavior validation:
 
-#### Before (Current):
+#### Before (Current)
+
 ```python
 def test_deployment_strategy_enum():
     """Test DeploymentStrategy enum values."""
@@ -27,7 +31,8 @@ def test_deployment_strategy_enum():
     assert hasattr(DeploymentStrategy, 'CANARY')
 ```
 
-#### After (Improved):
+#### After (Improved)
+
 ```python
 @pytest.mark.asyncio
 async def test_blue_green_deployment_workflow():
@@ -73,12 +78,15 @@ async def test_canary_deployment_with_rollback():
 ### 3. Remove Unnecessary Shims
 
 #### discovery.py Removal
+
 The `src/framework/discovery/discovery.py` file should be removed because:
+
 - It only re-exports symbols (no actual logic)
 - The decomposed modules are already properly structured
 - Direct imports are cleaner: `from framework.discovery.clients import ServiceDiscoveryClient`
 
-#### Action Plan:
+#### Action Plan
+
 1. **Audit imports:** Find all code importing from `discovery.py`
 2. **Update imports:** Change to direct module imports
 3. **Remove shim:** Delete the unnecessary wrapper file
@@ -86,15 +94,17 @@ The `src/framework/discovery/discovery.py` file should be removed because:
 
 ### 4. Test Coverage Improvements
 
-#### Current Coverage Issues:
+#### Current Coverage Issues
+
 - Tests focus on structure rather than behavior
 - Missing integration test scenarios
 - No testing of error conditions
 - Limited async workflow testing
 
-#### Improvement Areas:
+#### Improvement Areas
 
 ##### A. Deployment Orchestrator
+
 ```python
 class TestDeploymentOrchestrator:
     """Comprehensive orchestrator behavior tests."""
@@ -110,6 +120,7 @@ class TestDeploymentOrchestrator:
 ```
 
 ##### B. Service Discovery
+
 ```python
 class TestServiceDiscoveryBehavior:
     """Test actual service discovery workflows."""
@@ -125,6 +136,7 @@ class TestServiceDiscoveryBehavior:
 ```
 
 ##### C. External Connectors
+
 ```python
 class TestExternalConnectorBehavior:
     """Test real external system integration workflows."""
@@ -152,16 +164,19 @@ class TestExternalConnectorBehavior:
 ### 6. Benefits
 
 #### Code Quality
+
 - **Real validation:** Tests verify actual functionality works
 - **Regression prevention:** Behavior tests catch breaking changes
 - **Documentation:** Tests serve as usage examples
 
 #### Maintainability
+
 - **Cleaner imports:** Direct module imports are more explicit
 - **Reduced complexity:** Fewer indirection layers
 - **Better IDE support:** Direct imports provide better autocomplete
 
 #### Development Velocity
+
 - **Faster debugging:** Behavior tests pinpoint actual issues
 - **Confident refactoring:** Tests validate changes don't break functionality
 - **Better onboarding:** Clear examples of how components work

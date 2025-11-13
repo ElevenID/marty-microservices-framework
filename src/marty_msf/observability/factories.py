@@ -21,21 +21,25 @@ from ..core.di_container import (
 # Use DI container to store class references instead of globals
 class _StandardObservabilityServiceClassRegistry:
     """Registry for standard observability service class."""
+
     pass
 
 
 class _StandardObservabilityClassRegistry:
     """Registry for standard observability class."""
+
     pass
 
 
 class _TracingServiceClassRegistry:
     """Registry for tracing service class."""
+
     pass
 
 
 class _FrameworkMetricsClassRegistry:
     """Registry for framework metrics class."""
+
     pass
 
 
@@ -176,6 +180,4 @@ def register_observability_services(service_name: str = "unknown") -> None:
         StandardObservabilityFactory(),
     )
     register_factory(get_tracing_service_class(), TracingServiceFactory())
-    register_factory(
-        get_framework_metrics_class(), FrameworkMetricsFactory(service_name)
-    )
+    register_factory(get_framework_metrics_class(), FrameworkMetricsFactory(service_name))

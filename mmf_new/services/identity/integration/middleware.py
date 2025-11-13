@@ -138,9 +138,7 @@ class JWTAuthenticationMiddleware(BaseHTTPMiddleware):
         except ValueError:
             return None
 
-    async def _validate_token(
-        self, token: str, is_optional: bool = False
-    ) -> dict | None:
+    async def _validate_token(self, token: str, is_optional: bool = False) -> dict | None:
         """
         Validate JWT token and extract user information.
 

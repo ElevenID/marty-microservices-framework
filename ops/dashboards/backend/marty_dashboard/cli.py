@@ -42,7 +42,6 @@ def init():
     click.echo("Initializing database...")
 
     async def init_db():
-
         await create_tables()
         click.echo("Database initialized successfully!")
 
@@ -65,7 +64,6 @@ def register(
     """Register a service with the dashboard."""
 
     async def register_service():
-
         service_discovery = ServiceDiscoveryService()
         await service_discovery.start()
 
@@ -96,7 +94,6 @@ def deregister(service_name: str):
     """Deregister a service from the dashboard."""
 
     async def deregister_service():
-
         service_discovery = ServiceDiscoveryService()
         await service_discovery.start()
 
@@ -117,7 +114,6 @@ def list_services():
     """List all registered services."""
 
     async def list_all_services():
-
         service_discovery = ServiceDiscoveryService()
         await service_discovery.start()
 

@@ -64,9 +64,7 @@ class SQLGenerator:
         if constraints:
             all_definitions.extend(constraints)
 
-        create_table_sql += ",\n".join(
-            f"    {definition}" for definition in all_definitions
-        )
+        create_table_sql += ",\n".join(f"    {definition}" for definition in all_definitions)
         create_table_sql += "\n);"
         sql_parts.append(create_table_sql)
 
@@ -82,7 +80,9 @@ class SQLGenerator:
                 else:
                     columns_str = index_columns
 
-                index_sql = f"CREATE INDEX {index_name} ON {table_name} USING {index_type}({columns_str});"
+                index_sql = (
+                    f"CREATE INDEX {index_name} ON {table_name} USING {index_type}({columns_str});"
+                )
                 sql_parts.append(index_sql)
 
         return "\n\n".join(sql_parts)
@@ -119,9 +119,7 @@ class SQLGenerator:
                     formatted_values.append(f"'{value}'")
                 elif isinstance(value, (dict, list)):
                     # Format structured data as proper JSON for JSONB columns
-                    formatted_values.append(
-                        f"'{SQLGenerator.format_jsonb_value(value)}'"
-                    )
+                    formatted_values.append(f"'{SQLGenerator.format_jsonb_value(value)}'")
                 else:
                     # Keep as-is (for numbers, function calls like NOW(), etc.)
                     formatted_values.append(str(value))
@@ -166,9 +164,7 @@ class SQLGenerator:
 
             # Find all INDEX declarations
             indexes = []
-            index_matches = list(
-                re.finditer(index_pattern, table_content, re.IGNORECASE)
-            )
+            index_matches = list(re.finditer(index_pattern, table_content, re.IGNORECASE))
 
             if not index_matches:
                 # No inline indexes, return as-is
@@ -195,15 +191,11 @@ class SQLGenerator:
             for index_name, index_columns in reversed(
                 indexes
             ):  # Reverse to maintain original order
-                fixed_table_sql += (
-                    f"\nCREATE INDEX {index_name} ON {table_name}({index_columns});"
-                )
+                fixed_table_sql += f"\nCREATE INDEX {index_name} ON {table_name}({index_columns});"
 
             return fixed_table_sql
 
-        return re.sub(
-            table_pattern, fix_table, sql_content, flags=re.DOTALL | re.IGNORECASE
-        )
+        return re.sub(table_pattern, fix_table, sql_content, flags=re.DOTALL | re.IGNORECASE)
 
     @staticmethod
     def validate_postgresql_syntax(sql_content: str) -> list[str]:
@@ -226,9 +218,7 @@ class SQLGenerator:
             )
 
         # Check for unquoted JSON values in INSERT statements
-        jsonb_pattern = (
-            r"INSERT INTO.*\([^)]*config_value[^)]*\).*VALUES.*'([^']*)'(?![^(]*\))"
-        )
+        jsonb_pattern = r"INSERT INTO.*\([^)]*config_value[^)]*\).*VALUES.*'([^']*)'(?![^(]*\))"
         matches = re.findall(jsonb_pattern, sql_content, re.DOTALL | re.IGNORECASE)
         for match in matches:
             if (

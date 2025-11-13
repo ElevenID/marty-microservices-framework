@@ -7,16 +7,19 @@ This guide covers common issues encountered during Helm to Kustomize migration a
 ### 1. Helm Template Rendering Errors
 
 **Issue:** Converter fails to render Helm templates
+
 ```
 Error: Failed to render Helm templates: template: my-service/templates/deployment.yaml:15:14: executing "my-service/templates/deployment.yaml" at <.Values.missing>: nil pointer evaluating interface {}.missing
 ```
 
 **Solutions:**
+
 - Ensure all required values files are provided with `--values-file`
 - Check for missing required values in your values.yaml files
 - Use `helm template` manually to debug template issues
 
 **Example:**
+
 ```bash
 # Test Helm rendering first
 helm template my-service ./helm/my-service -f values-dev.yaml
@@ -28,16 +31,19 @@ marty migrate helm-to-kustomize --helm-chart-path ./helm/my-service --values-fil
 ### 2. Kustomize Build Failures
 
 **Issue:** Generated Kustomize manifests fail to build
+
 ```
 Error: accumulating resources: accumulation err='accumulating resources from 'serviceaccount.yaml': ...'
 ```
 
 **Solutions:**
+
 - Validate individual YAML files: `kubectl apply --dry-run=client -f file.yaml`
 - Check for duplicate resource names across files
 - Ensure all referenced resources exist in the kustomization.yaml
 
 **Example:**
+
 ```bash
 # Check each overlay individually
 kustomize build k8s/my-service/base
@@ -47,16 +53,19 @@ kustomize build k8s/my-service/overlays/dev
 ### 3. Missing Container Images
 
 **Issue:** Deployment fails with ImagePullBackOff
+
 ```
 Failed to pull image "microservice-template:latest": rpc error: code = NotFound desc = image not found
 ```
 
 **Solutions:**
+
 - Update image references in overlays
 - Ensure image exists in registry
 - Check image pull secrets if using private registry
 
 **Example:**
+
 ```bash
 # Update image in overlay
 cd k8s/my-service/overlays/prod
@@ -66,16 +75,19 @@ kustomize edit set image microservice-template=my-registry/my-service:v1.0.0
 ### 4. ConfigMap/Secret Issues
 
 **Issue:** Pods fail to start due to missing configuration
+
 ```
 Error: couldn't find key environment in ConfigMap my-service-config
 ```
 
 **Solutions:**
+
 - Verify ConfigMap generator configuration
 - Check that all required keys are defined
 - Ensure proper merge behavior for generated ConfigMaps
 
 **Example:**
+
 ```yaml
 # In kustomization.yaml
 configMapGenerator:
@@ -89,16 +101,19 @@ configMapGenerator:
 ### 5. Network Policy Blocking Traffic
 
 **Issue:** Services cannot communicate after migration
+
 ```
 Error: dial tcp 10.0.0.5:8080: i/o timeout
 ```
 
 **Solutions:**
+
 - Review NetworkPolicy rules
 - Temporarily disable NetworkPolicy for testing
 - Check service discovery and DNS resolution
 
 **Example:**
+
 ```bash
 # Test without NetworkPolicy
 kubectl delete networkpolicy my-service
@@ -110,11 +125,13 @@ kubectl delete networkpolicy my-service
 **Issue:** Prometheus not scraping metrics after migration
 
 **Solutions:**
+
 - Verify ServiceMonitor/PodMonitor configuration
 - Check Prometheus operator is installed
 - Ensure metrics endpoint is accessible
 
 **Example:**
+
 ```bash
 # Test metrics endpoint
 kubectl port-forward pod/my-service-xxx 9000:9000
@@ -128,6 +145,7 @@ curl http://localhost:9000/metrics
 **Issue:** Helm charts with complex template logic don't convert well
 
 **Solutions:**
+
 - Simplify templates before conversion
 - Handle complex logic manually in Kustomize patches
 - Consider using multiple overlays for different configurations
@@ -137,11 +155,13 @@ curl http://localhost:9000/metrics
 **Issue:** Helm hooks (pre-install, post-upgrade) don't have Kustomize equivalent
 
 **Solutions:**
+
 - Convert hooks to Kubernetes Jobs
 - Use init containers for pre-deployment tasks
 - Implement post-deployment verification as separate jobs
 
 **Example:**
+
 ```yaml
 # Convert Helm hook to Job
 apiVersion: batch/v1
@@ -163,6 +183,7 @@ spec:
 **Issue:** Helm's dynamic value generation not possible in Kustomize
 
 **Solutions:**
+
 - Use external tools for dynamic value generation
 - Pre-process values before applying Kustomize
 - Use init containers for runtime value generation

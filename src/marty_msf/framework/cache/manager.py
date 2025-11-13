@@ -36,7 +36,6 @@ from redis.exceptions import RedisError
 
 # Optional Redis imports
 try:
-
     REDIS_AVAILABLE = True
 except ImportError:
     Redis = None
@@ -92,7 +91,6 @@ class RestrictedUnpickler(pickle.Unpickler):
             return getattr(builtins, name)
         # Allow datetime objects which are commonly cached
         if module == "datetime" and name in {"datetime", "date", "time", "timedelta"}:
-
             return getattr(datetime, name)
         # Block everything else
         raise pickle.UnpicklingError(f"Forbidden class {module}.{name}")

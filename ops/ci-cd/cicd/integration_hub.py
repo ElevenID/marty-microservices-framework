@@ -37,19 +37,16 @@ from slack_sdk import WebClient
 from . import PipelineExecution, PipelineStatus
 
 try:
-
     SLACK_AVAILABLE = True
 except ImportError:
     SLACK_AVAILABLE = False
 
 try:
-
     TEAMS_AVAILABLE = True
 except ImportError:
     TEAMS_AVAILABLE = False
 
 try:
-
     PROMETHEUS_AVAILABLE = True
 except ImportError:
     PROMETHEUS_AVAILABLE = False

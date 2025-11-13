@@ -49,11 +49,13 @@ The Marty Microservices Framework follows a layered, plugin-based architecture d
 ### 1. Application Layer
 
 #### Service Templates
+
 - **FastAPI Services**: REST API microservices with automatic documentation
 - **gRPC Services**: High-performance RPC services with protocol buffers
 - **Hybrid Services**: Combined REST and gRPC endpoints in a single service
 
-#### Key Features:
+#### Key Features
+
 - Automatic dependency injection
 - Built-in health checks and metrics endpoints
 - Standardized error handling and logging
@@ -62,12 +64,14 @@ The Marty Microservices Framework follows a layered, plugin-based architecture d
 ### 2. Framework Layer
 
 #### Authentication & Authorization (`src/framework/security/`)
+
 - JWT token validation and generation
 - Role-based access control (RBAC)
 - Rate limiting and throttling
 - Audit logging for security events
 
 #### Database Management (`src/framework/database/`)
+
 - Connection pooling and management
 - Transaction handling with async support
 - Repository pattern implementation
@@ -79,6 +83,7 @@ The Marty Microservices Framework follows a layered, plugin-based architecture d
 The MMF provides a comprehensive unified configuration management system that supports multiple deployment environments and plugin architectures:
 
 **Core Features:**
+
 - **Hierarchical Configuration Loading**: Base configurations with environment-specific overrides (base.yaml → development.yaml → environment variables)
 - **Secret Reference System**: Unified secret management with `${SECRET:key}` syntax across multiple backends (Vault, AWS Secrets Manager, Azure Key Vault, etc.)
 - **Cloud-Agnostic Design**: Automatic detection and configuration for AWS, GCP, Azure, Kubernetes, and self-hosted environments
@@ -100,6 +105,7 @@ The framework supports plugin-based configuration loading that enables modular a
 The MMF provides a comprehensive event-driven architecture with enterprise-grade features:
 
 **Enhanced Event Bus System:**
+
 - **Event Persistence**: Transactional outbox pattern for guaranteed event delivery
 - **Dead Letter Queue**: Automatic handling of failed events with retry mechanisms
 - **Event Routing**: Intelligent event filtering and routing based on metadata
@@ -108,6 +114,7 @@ The MMF provides a comprehensive event-driven architecture with enterprise-grade
 - **Multiple Backends**: Support for in-memory, database, and Kafka backends
 
 **Event Types:**
+
 - **Domain Events**: Business domain-specific events with aggregate context
 - **Integration Events**: Cross-service communication events
 - **System Events**: Infrastructure and operational events
@@ -115,6 +122,7 @@ The MMF provides a comprehensive event-driven architecture with enterprise-grade
 - **Workflow Events**: Workflow orchestration and state management events
 
 **Plugin Event Subscription:**
+
 - **Fault-Tolerant Subscriptions**: Circuit breaker and retry mechanisms for plugin handlers
 - **Event Filtering**: Advanced filtering based on event types, sources, tags, and custom predicates
 - **Subscription Management**: Dynamic subscription/unsubscription with persistence
@@ -126,6 +134,7 @@ The MMF provides a comprehensive event-driven architecture with enterprise-grade
 The MMF includes a sophisticated workflow engine supporting long-running business processes:
 
 **Workflow Engine Features:**
+
 - **Declarative DSL**: Fluent interface for defining complex workflows
 - **Saga Orchestration**: Distributed transaction management with compensation
 - **Step Types**: Action, Decision, Parallel, Wait, and Compensation steps
@@ -135,6 +144,7 @@ The MMF includes a sophisticated workflow engine supporting long-running busines
 - **Retry Logic**: Built-in retry mechanisms with exponential backoff
 
 **Saga Pattern Support:**
+
 - **Compensating Transactions**: Automatic rollback with compensation logic
 - **Forward Recovery**: Failure handling with step-by-step recovery
 - **Parallel Execution**: Concurrent step execution with wait strategies
@@ -142,6 +152,7 @@ The MMF includes a sophisticated workflow engine supporting long-running busines
 - **Long-Running Processes**: Support for workflows spanning hours or days
 
 **Plugin Configuration Structure:**
+
 ```yaml
 # plugins/my-plugin.yaml
 default:
@@ -161,6 +172,7 @@ default:
 ```
 
 **Configuration Loading Process:**
+
 1. Load framework base configuration (`config/base.yaml`)
 2. Apply environment-specific overrides (`config/{environment}.yaml`)
 3. Discover and load plugin configurations (`plugins/*.yaml`)
@@ -169,6 +181,7 @@ default:
 6. Validate final configuration against schemas
 
 **Benefits:**
+
 - **Framework Separation**: Business logic configs separated from framework patterns
 - **Plugin Modularity**: Plugins can be independently configured and managed
 - **Environment Consistency**: Same configuration patterns across all environments
@@ -176,6 +189,7 @@ default:
 - **Developer Experience**: Clear configuration structure with validation and documentation
 
 #### Observability (`src/marty_msf/observability/`)
+
 - **Enhanced Unified OpenTelemetry System**: Complete observability orchestration with standardized defaults across all services
 - **Multi-dimensional Correlation Tracking**: Request, user, session, plugin, and operation correlation with automatic propagation
 - **Zero-config Instrumentation**: Automatic OpenTelemetry instrumentation for FastAPI, gRPC, databases, HTTP clients, and caching layers
@@ -192,6 +206,7 @@ default:
 The framework provides enterprise-grade resilience patterns for building fault-tolerant microservices with comprehensive performance and resilience hardening:
 
 **Core Patterns:**
+
 - **Circuit Breakers**: Automatic fault tolerance with configurable failure thresholds and recovery timeouts
 - **Retry Mechanisms**: Intelligent retry with exponential backoff, jitter, and circuit breaker integration
 - **Bulkhead Isolation**: Resource isolation using thread pools and semaphores to prevent cascade failures
@@ -199,6 +214,7 @@ The framework provides enterprise-grade resilience patterns for building fault-t
 - **Fallback Strategies**: Graceful degradation with cached responses, default values, and alternative flows
 
 **Connection Pooling Layer (2024 Enhancement):**
+
 - **HTTP Connection Pools**: Standardized HTTP client pooling with health monitoring and automatic recovery
 - **Redis Connection Pools**: Redis cluster and sentinel support with background health checking
 - **Database Connection Pools**: Integration with existing SQLAlchemy pools and enhanced monitoring
@@ -206,24 +222,28 @@ The framework provides enterprise-grade resilience patterns for building fault-t
 - **Health Monitoring**: Background health checks with configurable intervals and automatic bad connection replacement
 
 **Middleware Integration:**
+
 - **ResilienceMiddleware**: FastAPI middleware for automatic resilience pattern application
 - **Zero-Configuration Setup**: Default resilience protection for all endpoints without code changes
 - **Request-Level Isolation**: Automatic timeout, rate limiting, and bulkhead application
 - **Circuit Breaker Integration**: Middleware-level circuit breaker protection with graceful error handling
 
 **Load Testing Framework:**
+
 - **Comprehensive Load Testing**: Multiple test types (load, spike, endurance, chaos)
 - **Resilience Validation**: Validates circuit breakers, bulkheads, and connection pools under load
 - **Realistic Traffic Simulation**: User session simulation with think times and realistic patterns
 - **Performance Metrics**: Response time percentiles, throughput, error rates, and resilience pattern effectiveness
 
 **External Dependency Management:**
+
 - **Bulkhead Isolation per Dependency**: Separate resource pools for different external services (database, APIs, cache)
 - **Configurable Timeout Strategies**: Dependency-specific timeouts (database: 10s, APIs: 15s, cache: 2s)
 - **Circuit Breaker Integration**: Automatic circuit breaking based on failure rates and thresholds
 - **Adaptive Configurations**: Environment-specific settings (development, testing, production)
 
 **Implementation Features:**
+
 - **Thread-Pool Bulkheads**: For CPU-intensive operations with configurable worker limits
 - **Semaphore Bulkheads**: For I/O operations with high concurrency support
 - **Connection Pool Health Checks**: Real-time monitoring of pool health and automatic recovery
@@ -231,6 +251,7 @@ The framework provides enterprise-grade resilience patterns for building fault-t
 - **Health Checks**: Integrated health monitoring with resilience pattern statistics
 
 **Configuration Example:**
+
 ```yaml
 resilience:
   connection_pools:
@@ -262,6 +283,7 @@ resilience:
 ```
 
 **Usage Patterns:**
+
 ```python
 # Initialize connection pools and middleware
 from marty_msf.framework.resilience import (
@@ -290,6 +312,7 @@ async def get_user(user_id: str) -> dict:
 ```
 
 #### Event-Driven Architecture (`src/framework/events/`)
+
 - Event bus for inter-service communication
 - Message queue integration (Kafka, RabbitMQ)
 - Event sourcing capabilities
@@ -302,12 +325,14 @@ The framework provides a comprehensive, unified messaging system supporting mult
 **Core Components:**
 
 ##### Unified Event Bus (`unified_event_bus.py`)
+
 - **Single API for All Patterns**: Unified interface supporting pub/sub, request/response, stream processing, and point-to-point messaging
 - **Backend Abstraction**: Automatic backend selection based on messaging pattern and requirements
 - **Pattern-Specific Optimizations**: Each pattern uses the most appropriate backend automatically
 - **Smart Backend Selection**: Uses PatternSelector for intelligent backend recommendation
 
 ##### Supported Backends
+
 1. **NATS Backend** (`nats_backend.py`)
    - High-performance, low-latency messaging
    - JetStream support for stream processing
@@ -340,6 +365,7 @@ The framework provides a comprehensive, unified messaging system supporting mult
 ##### Messaging Patterns
 
 **Publish/Subscribe Pattern:**
+
 ```python
 # Publish domain events
 await event_bus.publish_event(
@@ -355,6 +381,7 @@ await event_bus.subscribe_to_events(
 ```
 
 **Request/Response Pattern:**
+
 ```python
 # Send query and get response
 response = await event_bus.query(
@@ -365,6 +392,7 @@ response = await event_bus.query(
 ```
 
 **Stream Processing Pattern:**
+
 ```python
 # Process event streams in batches
 await event_bus.process_stream(
@@ -376,6 +404,7 @@ await event_bus.process_stream(
 ```
 
 **Point-to-Point Pattern:**
+
 ```python
 # Send commands to specific services
 await event_bus.send_command(
@@ -388,12 +417,14 @@ await event_bus.send_command(
 ##### Enhanced Saga Integration (`saga_integration.py`)
 
 **Distributed Saga Orchestration:**
+
 - **Enhanced Saga Orchestrator**: Uses unified event bus for saga coordination
 - **Multi-Backend Saga Support**: Saga events can use different backends for different steps
 - **Compensation Logic**: Automatic compensation handling with event-driven rollback
 - **Saga State Management**: Persistent saga state with event sourcing
 
 **Example Saga Implementation:**
+
 ```python
 class OrderProcessingSaga:
     def __init__(self):
@@ -438,6 +469,7 @@ saga_id = await saga_manager.create_and_start_saga(
 ##### Configuration and Deployment
 
 **Backend Configuration:**
+
 ```python
 # Configure multiple backends
 nats_config = NATSConfig(servers=["nats://localhost:4222"])
@@ -448,6 +480,7 @@ event_bus.register_backend(MessageBackendType.AWS_SNS, AWSSNSBackend(aws_config)
 ```
 
 **Infrastructure Requirements:**
+
 - **NATS**: Lightweight, minimal infrastructure
 - **AWS SNS**: Managed service, no infrastructure needed
 - **RabbitMQ**: Cluster deployment with persistence
@@ -455,17 +488,20 @@ event_bus.register_backend(MessageBackendType.AWS_SNS, AWSSNSBackend(aws_config)
 - **Redis**: In-memory cluster for caching scenarios
 
 **Deployment Strategy:**
+
 - **Development**: In-memory backend for testing
 - **Staging**: Single-node NATS for integration testing
 - **Production**: Multi-backend setup based on use case requirements
 
 #### **Data Consistency Patterns (`src/marty_msf/patterns/`)**
+
 - **Saga Orchestration**: Long-running transaction coordination with compensation handlers
 - **Transactional Outbox Pattern**: ACID-compliant event publishing with reliability guarantees
 - **CQRS (Command Query Responsibility Segregation)**: Optimized read/write model separation
 - **Event Sourcing Integration**: State reconstruction from event streams with snapshot support
 
 ##### Kafka Infrastructure Decision
+
 The framework adopts **Apache Kafka with KRaft mode** for production event streaming:
 
 - **Modern KRaft Mode**: Uses Kafka's new consensus protocol (KIP-500) eliminating Zookeeper dependency
@@ -474,6 +510,7 @@ The framework adopts **Apache Kafka with KRaft mode** for production event strea
 - **Future-Proof**: Zookeeper-based deployments are deprecated in Kafka 4.0+
 
 **Alternative Configurations Evaluated:**
+
 - **Bitnami Kafka**: Rejected due to unstable `latest` tag and Zookeeper dependency
 - **Confluent Platform 6.x**: Rejected due to outdated version and Zookeeper requirement
 - **Wurstmeister Kafka**: Rejected due to deprecated/unmaintained image
@@ -486,12 +523,14 @@ The framework adopts **Apache Kafka with KRaft mode** for production event strea
 ### 3. Plugin Layer
 
 #### Plugin Management (`src/framework/plugins/`)
+
 - Dynamic plugin discovery and loading
 - Lifecycle management (initialize, start, stop)
 - Dependency resolution between plugins
 - Hot-pluggable architecture
 
 #### Extension Points
+
 - Custom middleware registration
 - Database provider plugins
 - Authentication provider plugins
@@ -500,12 +539,14 @@ The framework adopts **Apache Kafka with KRaft mode** for production event strea
 ### 4. Infrastructure Layer
 
 #### Kubernetes Integration
+
 - Helm charts for service deployment
 - Kustomize configurations for environment management
 - Health check and readiness probes
 - Resource management and scaling
 
 #### Message Streaming Infrastructure
+
 - **Apache Kafka (KRaft Mode)**: Production event streaming without Zookeeper
 - **Development Configuration**: Single-node setup with auto-topic creation
 - **Production Configuration**: Multi-node setup with observability integration
@@ -516,12 +557,14 @@ The framework adopts **Apache Kafka with KRaft mode** for production event strea
 The framework provides a **plugin-based service mesh architecture** that generates customized deployment scripts for each project:
 
 **Framework-Generated Architecture:**
+
 - **Core Library**: Reusable service mesh functions in `src/marty_msf/framework/service_mesh/`
 - **Project Generation**: Automatic deployment script generation with project-specific configuration
 - **Plugin Extensions**: Customizable hooks for domain-specific requirements
 - **Dual Mesh Strategy**: First-class support for both Istio and Linkerd
 
 **Generated Deployment Structure:**
+
 ```
 project/
 ├── deploy-service-mesh.sh          # Generated deployment script
@@ -539,6 +582,7 @@ project/
 ```
 
 **Framework Library Functions:**
+
 - **Core Deployment**: `msf_deploy_service_mesh()` - Main deployment orchestration
 - **Mesh Management**: `msf_deploy_istio_production()`, `msf_deploy_linkerd_production()`
 - **Configuration**: `msf_apply_manifest()`, `msf_create_namespace()`, `msf_enable_mesh_injection()`
@@ -546,6 +590,7 @@ project/
 - **Generation**: `msf_generate_deployment_script()`, `msf_generate_plugin_template()`
 
 **Plugin Hook System:**
+
 ```bash
 # Override in plugins/service-mesh-extensions.sh
 plugin_pre_deploy_hook() {
@@ -565,6 +610,7 @@ plugin_post_deploy_hook() {
 ```
 
 **Service Mesh Features:**
+
 - **Production-Ready Manifests**: Enterprise-grade configurations with mTLS, authorization policies
 - **Circuit Breakers**: Automatic failure detection and service protection with configurable thresholds
 - **Advanced Traffic Management**: Retry policies, rate limiting, fault injection, canary deployments
@@ -573,6 +619,7 @@ plugin_post_deploy_hook() {
 - **Observability Integration**: Comprehensive metrics, distributed tracing, structured logging
 
 **Operational Benefits:**
+
 - **Project Isolation**: Each project gets customized deployment scripts and configurations
 - **Framework Dependency**: Projects depend on stable framework library for core functionality
 - **Extensibility**: Plugin system allows domain-specific customizations without framework changes
@@ -580,6 +627,7 @@ plugin_post_deploy_hook() {
 - **Maintainability**: Framework updates automatically benefit all projects, custom logic stays isolated
 
 **Deployment Workflow:**
+
 1. **Generation**: Framework generates deployment script and plugin template for project
 2. **Customization**: Developers implement project-specific logic in plugin extensions
 3. **Configuration**: Add production manifests to `k8s/service-mesh/` directory
@@ -587,6 +635,7 @@ plugin_post_deploy_hook() {
 5. **Management**: Framework library handles core deployment logic, plugins handle customizations
 
 **Example Usage:**
+
 ```bash
 # Generate for new project
 python -c "
@@ -621,6 +670,7 @@ uv run marty service-mesh install --mesh-type istio --namespace petstore --enabl
 ```
 
 **CLI Command Structure:**
+
 - **`marty service-mesh generate`**: Creates customized deployment scripts and manifests
   - Generates project-specific deployment script with framework dependency
   - Creates plugin template for domain-specific customizations
@@ -675,6 +725,7 @@ The generated deployment scripts are designed for production use with CI/CD pipe
 ```
 
 **Generated Project Structure:**
+
 ```
 my-service/
 ├── deploy-service-mesh.sh              # Main deployment script
@@ -701,6 +752,7 @@ my-service/
 - **Development Efficiency**: Reduces service mesh setup from days to minutes
 
 #### Kustomize Integration
+
 - **Environment Management**: Streamlined configuration across dev/staging/prod
 - **Service Mesh Overlays**: Automated generation of mesh-specific configurations
 - **Policy Templates**: Reusable templates for common resilience patterns
@@ -709,26 +761,31 @@ my-service/
 ## 🔧 Design Principles
 
 ### 1. Modularity
+
 - **Loose Coupling**: Components interact through well-defined interfaces
 - **High Cohesion**: Related functionality is grouped together
 - **Plugin Architecture**: Extensible through plugins without core changes
 
 ### 2. Scalability
+
 - **Horizontal Scaling**: Services can be scaled independently
 - **Asynchronous Processing**: Non-blocking I/O and async/await patterns
 - **Resource Efficiency**: Optimized for containerized environments
 
 ### 3. Reliability
+
 - **Fault Tolerance**: Graceful handling of failures with resilience patterns
 - **Observability**: Comprehensive monitoring and debugging capabilities
 - **Testing**: Built-in testing framework with multiple test types
 
 ### 4. Security
+
 - **Defense in Depth**: Multiple layers of security controls
 - **Zero Trust**: No implicit trust between components
 - **Compliance**: Built-in support for security standards and auditing
 
 ### 5. Fail-Fast Dependency Management
+
 - **No Silent Degradation**: Services fail immediately if required dependencies are missing
 - **Explicit Dependencies**: All required components must be available at startup
 - **Clear Error Messages**: Missing dependencies result in immediate, descriptive failures
@@ -736,6 +793,7 @@ my-service/
 - **Development Safety**: Prevents deployment of misconfigured services to production
 
 **Design Rationale**: The framework follows a fail-fast approach for dependency management to ensure:
+
 - **Operational Clarity**: Teams know immediately when dependencies are missing
 - **Production Safety**: Prevents silent failures that could cause subtle bugs
 - **Configuration Validation**: Forces proper environment setup during deployment
@@ -745,7 +803,7 @@ This approach replaces previous graceful degradation patterns where services wou
 
 ## 🔄 Request Flow
 
-### Typical Request Lifecycle:
+### Typical Request Lifecycle
 
 1. **Ingress**: Request enters through load balancer/ingress controller
 2. **Service Mesh**: Traffic routing and security policies applied
@@ -761,23 +819,26 @@ This approach replaces previous graceful degradation patterns where services wou
 ## 📊 Data Flow Patterns
 
 ### 1. Synchronous Communication
+
 - **REST APIs**: HTTP/HTTPS for external interfaces
 - **gRPC**: High-performance internal service communication
 - **GraphQL**: Flexible data querying (optional)
 
 ### 2. Asynchronous Communication
+
 - **Event Bus**: In-memory event routing
 - **Message Queues**: Persistent message delivery
 - **Event Sourcing**: Immutable event logging
 
 ### 3. Data Persistence
+
 - **Transactional Data**: ACID-compliant database operations
 - **Event Store**: Immutable event history
 - **Caching**: Redis/Memcached for performance optimization
 
 ## 🛡️ Security Architecture
 
-### Multi-Layer Security Model:
+### Multi-Layer Security Model
 
 1. **Network Security**: TLS/mTLS encryption, network policies
 2. **Authentication**: JWT tokens, OAuth2/OIDC integration
@@ -794,12 +855,14 @@ The MMF provides a **comprehensive observability system** built on OpenTelemetry
 ### Unified Observability Components
 
 #### 1. **OpenTelemetry Collector** - Central Telemetry Hub
+
 - **Multi-protocol ingestion**: OTLP, Jaeger, Zipkin support
 - **Enhanced processing**: MMF-specific attribute injection and correlation tracking
 - **Intelligent sampling**: Environment-aware sampling with tail sampling for important traces
 - **Export flexibility**: Multiple exporters for different platforms and tools
 
 #### 2. **Enhanced Correlation System** - Multi-dimensional Tracking
+
 - **Request correlation**: Primary correlation ID for request flow tracking
 - **User context**: User and session correlation for user journey analysis
 - **Plugin debugging**: Plugin-specific correlation for interaction troubleshooting
@@ -807,6 +870,7 @@ The MMF provides a **comprehensive observability system** built on OpenTelemetry
 - **Automatic propagation**: Zero-config correlation across HTTP and gRPC boundaries
 
 #### 3. **Metrics** - Prometheus & Monitoring
+
 - **Standardized metrics**: Consistent metrics across all MMF services
 - **Plugin metrics**: Specialized metrics for plugin operation monitoring
 - **Business metrics**: Framework for custom business-specific metrics
@@ -814,6 +878,7 @@ The MMF provides a **comprehensive observability system** built on OpenTelemetry
 - **Infrastructure metrics**: Database, cache, and messaging system metrics
 
 #### 4. **Distributed Tracing** - Complete Request Flow Visibility
+
 - **Service dependencies**: Automatic service interaction mapping
 - **Plugin interactions**: Detailed plugin-to-plugin communication tracking
 - **Performance bottlenecks**: Latency analysis across the entire request path
@@ -821,6 +886,7 @@ The MMF provides a **comprehensive observability system** built on OpenTelemetry
 - **Correlation linking**: Direct links between logs, metrics, and traces
 
 #### 5. **Structured Logging** - Context-aware Log Management
+
 - **Automatic correlation injection**: All logs include correlation context
 - **Plugin context**: Plugin-specific logging context for debugging
 - **Trace correlation**: Direct links from logs to distributed traces
@@ -830,12 +896,14 @@ The MMF provides a **comprehensive observability system** built on OpenTelemetry
 ### Default Dashboards and Alerting
 
 #### Pre-built Dashboards
+
 1. **MMF Service Overview**: High-level service health and performance metrics
 2. **MMF Plugin Debugging**: Specialized dashboard for plugin interaction analysis
 3. **MMF Distributed Tracing**: Service dependency and trace analysis
 4. **MMF Performance Analysis**: Deep-dive performance and bottleneck analysis
 
 #### Intelligent Alerting
+
 - **Environment-aware**: Different thresholds for dev/staging/production
 - **Service-specific**: Customizable alerts per service type
 - **Plugin monitoring**: Alerts for plugin failures and performance issues
@@ -845,6 +913,7 @@ The MMF provides a **comprehensive observability system** built on OpenTelemetry
 ### Plugin Developer Benefits
 
 #### Enhanced Debugging Capabilities
+
 - **Plugin interaction mapping**: Visualize how plugins communicate
 - **Performance analysis**: Identify slow or failing plugin operations
 - **Correlation tracking**: Follow requests through plugin chains
@@ -852,6 +921,7 @@ The MMF provides a **comprehensive observability system** built on OpenTelemetry
 - **Resource monitoring**: Plugin-specific resource usage tracking
 
 #### Zero-config Integration
+
 - **Automatic instrumentation**: No manual instrumentation required
 - **Standard middleware**: Drop-in correlation middleware for all service types
 - **Graceful fallbacks**: System works even if observability components are unavailable
@@ -891,9 +961,10 @@ The MMF provides a **comprehensive observability system** built on OpenTelemetry
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Three Pillars of Observability:
+### Three Pillars of Observability
 
 #### 1. **Metrics** - Prometheus & Grafana Integration
+
 - **Automatic Collection**: HTTP request metrics, gRPC call metrics, database query metrics
 - **Service-Specific Labeling**: Consistent labeling across all services with service name, version, and environment
 - **Pre-built Dashboards**:
@@ -903,12 +974,14 @@ The MMF provides a **comprehensive observability system** built on OpenTelemetry
 - **Custom Metrics**: Easy creation of business-specific metrics with standardized collection
 
 #### 2. **Logs** - Structured Logging with Correlation
+
 - **Enhanced Correlation System**: Multi-dimensional tracking with correlation_id, request_id, user_id, session_id, and trace_id
 - **Automatic Context Injection**: All log messages include correlation context for end-to-end request tracking
 - **Structured Format**: JSON-formatted logs with standardized fields for parsing and analysis
 - **ELK/EFK Stack Ready**: Formatted for Elasticsearch, Logstash/Fluentd, and Kibana integration
 
 #### 3. **Traces** - Distributed Tracing with Jaeger
+
 - **Zero-Config Instrumentation**: Automatic instrumentation for FastAPI, gRPC, HTTP clients, databases, and Redis
 - **OpenTelemetry Standards**: Full compliance with OpenTelemetry specifications for vendor-neutral observability
 - **Span Context Propagation**: Automatic trace context propagation across service boundaries
@@ -931,6 +1004,7 @@ with with_correlation(
 ```
 
 **Correlation Dimensions:**
+
 - `correlation_id`: Request-level tracking across all services
 - `request_id`: Individual API call identification
 - `user_id`: User-specific operation tracking
@@ -960,17 +1034,20 @@ For plugin developers troubleshooting microservice interactions:
 ### Infrastructure Requirements
 
 **Monitoring Stack Components:**
+
 - **Jaeger**: Distributed tracing backend (containerized deployment available in `ops/observability/`)
 - **Prometheus**: Metrics collection and storage
 - **Grafana**: Visualization and alerting platform with pre-configured dashboards
 - **Optional**: Elasticsearch + Kibana for log aggregation and analysis
 
 **Configuration:**
+
 - Environment-based observability configuration with dev/staging/production profiles
 - Optional dependency handling - services work without observability stack
 - Configurable sampling rates and export endpoints
 
-### Health Monitoring:
+### Health Monitoring
+
 - **Health Checks**: Kubernetes-compatible health endpoints with observability status
 - **SLA/SLO Tracking**: Performance and availability monitoring with correlation insights
 - **Alerting**: Proactive issue detection with correlation context for faster debugging
@@ -979,23 +1056,27 @@ For plugin developers troubleshooting microservice interactions:
 ## 🚀 Deployment Patterns
 
 ### 1. Container-First Design
+
 - **Docker**: Containerized service packaging
 - **Multi-stage Builds**: Optimized container images
 - **Security Scanning**: Vulnerability detection in images
 
 ### 2. Kubernetes Native
+
 - **Helm Charts**: Templated Kubernetes deployments
 - **Operators**: Custom resource management
 - **GitOps**: Declarative deployment workflows
 
 ### 3. Environment Management
+
 - **Configuration**: Environment-specific settings
 - **Secrets**: Secure credential management
 - **Feature Flags**: Runtime behavior control
 
 ## 📈 Performance Considerations
 
-### Optimization Strategies:
+### Optimization Strategies
+
 - **Connection Pooling**: Efficient database connections
 - **Caching**: Multi-level caching strategies
 - **Async Processing**: Non-blocking operation patterns
@@ -1004,13 +1085,15 @@ For plugin developers troubleshooting microservice interactions:
 
 ## 🔮 Extensibility
 
-### Plugin Development:
+### Plugin Development
+
 1. **Interface Implementation**: Follow framework interfaces
 2. **Lifecycle Management**: Proper initialization and cleanup
 3. **Configuration**: Plugin-specific configuration support
 4. **Testing**: Unit and integration test requirements
 
-### Custom Components:
+### Custom Components
+
 - **Middleware**: Request/response processing
 - **Providers**: Database, authentication, monitoring providers
 - **Handlers**: Custom business logic handlers
@@ -1128,6 +1211,7 @@ The petstore domain plugin has been enhanced to demonstrate the outbox pattern:
 The framework provides comprehensive command-line tools for development, migration, and operations:
 
 #### API Documentation and Contract Testing Commands (`marty api`)
+
 - **docs**: Generate unified API documentation across REST and gRPC services with interactive examples
 - **create-contract**: Create consumer-driven contracts for REST and gRPC APIs with interactive prompts
 - **test-contracts**: Verify contracts against running services with detailed validation reports
@@ -1139,22 +1223,26 @@ The framework provides comprehensive command-line tools for development, migrati
 - **monitor-contracts**: Continuous contract compliance monitoring with webhook notifications
 
 #### Migration Commands (`marty migrate`)
+
 - **helm-to-kustomize**: Convert Helm charts to Kustomize manifests with MMF optimizations
 - **generate-overlay**: Create environment-specific Kustomize overlays with service mesh support
 - **validate-migration**: Verify migration consistency and functional parity
 - **check-compatibility**: Assess Helm chart migration readiness and complexity
 
 #### Service Mesh Commands (`marty service-mesh`)
+
 - **install**: Deploy and configure Istio or Linkerd service mesh with MMF integration
 - **apply-policies**: Apply traffic policies (circuit breakers, retries, rate limiting, fault injection)
 - **status**: Monitor service mesh health, injection status, and policy compliance
 
 #### Plugin Commands (`marty plugin`)
+
 - **create**: Generate new microservice plugins with architectural patterns
 - **add-service**: Add services to existing plugins with feature integration
 - **list**: Display available plugins and their configurations
 
 #### API Documentation Features
+
 - **Unified Documentation**: Combines REST (OpenAPI) and gRPC (Protocol Buffers) documentation into cohesive API references
 - **Multi-Format Output**: Generates HTML, Markdown, Postman collections, and interactive documentation sites
 - **Version Management**: Tracks API versions, deprecation schedules, and migration paths across services
@@ -1162,6 +1250,7 @@ The framework provides comprehensive command-line tools for development, migrati
 - **Code Examples**: Automatic generation of client examples in multiple programming languages
 
 #### Contract Testing Capabilities
+
 - **Consumer-Driven Contracts**: Pact-compatible REST contracts and custom gRPC contract specifications
 - **Interactive Creation**: Guided contract creation with validation and type checking
 - **Verification Engine**: Validates provider implementations against consumer expectations
@@ -1169,12 +1258,14 @@ The framework provides comprehensive command-line tools for development, migrati
 - **Proto Integration**: Automatic contract generation from Protocol Buffer service definitions
 
 #### Service Generation Features
+
 - **Architectural Patterns**: Support for layered, hexagonal, clean, and CQRS/ES architectures
 - **Service Templates**: FastAPI, gRPC, and hybrid service scaffolding
 - **Feature Integration**: Database, caching, authentication, and observability components
 - **Service Mesh Integration**: Automatic annotation generation and policy application
 
 #### Development Workflow Integration
+
 - **Environment Management**: Seamless dev/staging/prod configuration management
 - **Policy Templates**: Pre-configured resilience patterns for common scenarios
 - **Monitoring Setup**: Automatic service mesh metrics and dashboard configuration

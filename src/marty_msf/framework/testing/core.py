@@ -300,7 +300,6 @@ class TestReporter:
             "generated_at": datetime.utcnow().isoformat(),
         }
 
-
         os.makedirs(self.output_dir, exist_ok=True)
 
         report_path = os.path.join(self.output_dir, "test_report.json")
@@ -318,7 +317,6 @@ class TestReporter:
             summary=json.dumps(summary),
             results=json.dumps([result.to_dict() for result in self.results]),
         )
-
 
         os.makedirs(self.output_dir, exist_ok=True)
 

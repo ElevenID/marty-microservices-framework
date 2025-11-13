@@ -27,6 +27,7 @@ try:
     SAGA_AVAILABLE = True
 except ImportError:
     SAGA_AVAILABLE = False
+
     # Create placeholder classes for type hints
     class Saga:
         pass
@@ -55,6 +56,7 @@ except ImportError:
     class Command:
         pass
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -78,8 +80,7 @@ class EnhancedSagaOrchestrator:
 
         # Subscribe to saga events
         await self.unified_bus.subscribe_to_events(
-            event_types=["saga.*"],
-            handler=self._handle_saga_event
+            event_types=["saga.*"], handler=self._handle_saga_event
         )
 
         logger.info("Enhanced saga orchestrator started")
@@ -120,8 +121,8 @@ class EnhancedSagaOrchestrator:
             event_data={
                 "saga_name": saga_name,
                 "context": context,
-                "started_at": datetime.utcnow().isoformat()
-            }
+                "started_at": datetime.utcnow().isoformat(),
+            },
         )
 
         # Start saga execution
@@ -151,9 +152,7 @@ class EnhancedSagaOrchestrator:
             saga.completed_at = datetime.utcnow()
 
             await self.saga_event_bus.publish_saga_event(
-                saga_id=saga.saga_id,
-                event_type="SagaCompleted",
-                event_data=saga.get_saga_state()
+                saga_id=saga.saga_id, event_type="SagaCompleted", event_data=saga.get_saga_state()
             )
 
         except Exception as e:
@@ -164,10 +163,7 @@ class EnhancedSagaOrchestrator:
             await self.saga_event_bus.publish_saga_event(
                 saga_id=saga.saga_id,
                 event_type="SagaFailed",
-                event_data={
-                    "error": str(e),
-                    "saga_state": saga.get_saga_state()
-                }
+                event_data={"error": str(e), "saga_state": saga.get_saga_state()},
             )
 
         finally:
@@ -186,11 +182,8 @@ class EnhancedSagaOrchestrator:
             await self.saga_event_bus.publish_saga_event(
                 saga_id=saga.saga_id,
                 event_type="StepStarted",
-                event_data={
-                    "step_name": step.step_name,
-                    "step_order": step.step_order
-                },
-                step_id=step.step_id
+                event_data={"step_name": step.step_name, "step_order": step.step_order},
+                step_id=step.step_id,
             )
 
             # Execute step
@@ -211,9 +204,9 @@ class EnhancedSagaOrchestrator:
                     event_data={
                         "step_name": step.step_name,
                         "step_order": step.step_order,
-                        "result": result
+                        "result": result,
                     },
-                    step_id=step.step_id
+                    step_id=step.step_id,
                 )
                 return True
             else:
@@ -226,9 +219,9 @@ class EnhancedSagaOrchestrator:
                     event_data={
                         "step_name": step.step_name,
                         "step_order": step.step_order,
-                        "error": "Step execution failed"
+                        "error": "Step execution failed",
                     },
-                    step_id=step.step_id
+                    step_id=step.step_id,
                 )
                 return False
 
@@ -243,9 +236,9 @@ class EnhancedSagaOrchestrator:
                 event_data={
                     "step_name": step.step_name,
                     "step_order": step.step_order,
-                    "error": str(e)
+                    "error": str(e),
                 },
-                step_id=step.step_id
+                step_id=step.step_id,
             )
             return False
 
@@ -261,7 +254,7 @@ class EnhancedSagaOrchestrator:
                 "saga_id": saga.saga_id,
                 "step_id": step.step_id,
                 "context": saga.context,
-                "step_data": step.options.get("data", {})
+                "step_data": step.options.get("data", {}),
             }
 
             # Send command and wait for result
@@ -269,7 +262,7 @@ class EnhancedSagaOrchestrator:
                 query_type=command_type,
                 data=command_data,
                 target_service=target_service,
-                timeout=timedelta(seconds=step.options.get("timeout", 30))
+                timeout=timedelta(seconds=step.options.get("timeout", 30)),
             )
 
             return result.get("success", False) if result else False
@@ -286,7 +279,7 @@ class EnhancedSagaOrchestrator:
             await self.saga_event_bus.publish_saga_event(
                 saga_id=saga.saga_id,
                 event_type="SagaCompensating",
-                event_data=saga.get_saga_state()
+                event_data=saga.get_saga_state(),
             )
 
             # Execute compensation in reverse order
@@ -298,9 +291,7 @@ class EnhancedSagaOrchestrator:
             saga.completed_at = datetime.utcnow()
 
             await self.saga_event_bus.publish_saga_event(
-                saga_id=saga.saga_id,
-                event_type="SagaCompensated",
-                event_data=saga.get_saga_state()
+                saga_id=saga.saga_id, event_type="SagaCompensated", event_data=saga.get_saga_state()
             )
 
         except Exception as e:
@@ -322,14 +313,14 @@ class EnhancedSagaOrchestrator:
                 "saga_id": saga.saga_id,
                 "step_id": step.step_id,
                 "context": saga.context,
-                "original_step_data": step.options.get("data", {})
+                "original_step_data": step.options.get("data", {}),
             }
 
             # Send compensation command
             await self.unified_bus.send_command(
                 command_type=compensation_command,
                 data=compensation_data,
-                target_service=target_service
+                target_service=target_service,
             )
 
             await self.saga_event_bus.publish_saga_event(
@@ -337,15 +328,17 @@ class EnhancedSagaOrchestrator:
                 event_type="StepCompensated",
                 event_data={
                     "step_name": step.step_name,
-                    "compensation_command": compensation_command
+                    "compensation_command": compensation_command,
                 },
-                step_id=step.step_id
+                step_id=step.step_id,
             )
 
         except Exception as e:
             logger.error(f"Error compensating step {step.step_name}: {e}")
 
-    async def _handle_saga_event(self, event_type: str, data: Any, metadata: MessageMetadata) -> bool:
+    async def _handle_saga_event(
+        self, event_type: str, data: Any, metadata: MessageMetadata
+    ) -> bool:
         """Handle saga-related events."""
         try:
             # Process saga events for monitoring, logging, etc.
@@ -371,9 +364,7 @@ class EnhancedSagaOrchestrator:
                 saga.status = SagaStatus.CANCELLED
 
                 await self.saga_event_bus.publish_saga_event(
-                    saga_id=saga_id,
-                    event_type="SagaCancelled",
-                    event_data=saga.get_saga_state()
+                    saga_id=saga_id, event_type="SagaCancelled", event_data=saga.get_saga_state()
                 )
 
                 # Start compensation for cancelled saga
@@ -409,11 +400,13 @@ class DistributedSagaManager:
         await self.orchestrator.stop()
         logger.info("Distributed saga manager stopped")
 
-    def register_saga(self,
-                     saga_name: str,
-                     saga_class: type[Saga],
-                     description: str = "",
-                     use_cases: list[str] = None):
+    def register_saga(
+        self,
+        saga_name: str,
+        saga_class: type[Saga],
+        description: str = "",
+        use_cases: list[str] = None,
+    ):
         """Register a saga with metadata."""
         self.orchestrator.register_saga_type(saga_name, saga_class)
 
@@ -421,7 +414,7 @@ class DistributedSagaManager:
             "class": saga_class,
             "description": description,
             "use_cases": use_cases or [],
-            "registered_at": datetime.utcnow().isoformat()
+            "registered_at": datetime.utcnow().isoformat(),
         }
 
         logger.info(f"Registered distributed saga: {saga_name}")
@@ -431,9 +424,7 @@ class DistributedSagaManager:
         self.orchestrator.register_step_handler(step_name, handler)
         logger.info(f"Registered step handler: {step_name} for service: {service_name}")
 
-    async def create_and_start_saga(self,
-                                   saga_name: str,
-                                   context: dict[str, Any]) -> str:
+    async def create_and_start_saga(self, saga_name: str, context: dict[str, Any]) -> str:
         """Create and start a new distributed saga."""
         if saga_name not in self._saga_registry:
             raise ValueError(f"Unknown saga: {saga_name}")
@@ -455,6 +446,8 @@ class DistributedSagaManager:
         return self._saga_registry.copy()
 
 
-def create_distributed_saga_manager(unified_event_bus: UnifiedEventBusImpl) -> DistributedSagaManager:
+def create_distributed_saga_manager(
+    unified_event_bus: UnifiedEventBusImpl,
+) -> DistributedSagaManager:
     """Factory function to create distributed saga manager."""
     return DistributedSagaManager(unified_event_bus)

@@ -53,11 +53,7 @@ class TestTokenValidationResult:
 
     def test_success_result(self):
         """Test creating a successful validation result."""
-        user = AuthenticatedUser(
-            user_id="test-123",
-            username="testuser",
-            auth_method="jwt"
-        )
+        user = AuthenticatedUser(user_id="test-123", username="testuser", auth_method="jwt")
 
         result = TokenValidationResult.success(user)
 
@@ -69,8 +65,7 @@ class TestTokenValidationResult:
     def test_failure_result(self):
         """Test creating a failed validation result."""
         result = TokenValidationResult.failure(
-            message="Token expired",
-            code=AuthenticationErrorCode.TOKEN_INVALID
+            message="Token expired", code=AuthenticationErrorCode.TOKEN_INVALID
         )
 
         assert result.is_valid is False
@@ -88,10 +83,7 @@ class TestValidateTokenUseCase:
         self.use_case = ValidateTokenUseCase(self.mock_token_provider)
 
         self.test_user = AuthenticatedUser(
-            user_id="test-123",
-            username="testuser",
-            email="test@example.com",
-            auth_method="jwt"
+            user_id="test-123", username="testuser", email="test@example.com", auth_method="jwt"
         )
 
     @pytest.mark.asyncio
@@ -194,16 +186,8 @@ class TestValidateTokenUseCase:
         token1 = "token1.jwt"
         token2 = "token2.jwt"
 
-        user1 = AuthenticatedUser(
-            user_id="user1",
-            username="user1",
-            auth_method="jwt"
-        )
-        user2 = AuthenticatedUser(
-            user_id="user2",
-            username="user2",
-            auth_method="jwt"
-        )
+        user1 = AuthenticatedUser(user_id="user1", username="user1", auth_method="jwt")
+        user2 = AuthenticatedUser(user_id="user2", username="user2", auth_method="jwt")
 
         self.mock_token_provider.validate_token = AsyncMock()
         self.mock_token_provider.validate_token.side_effect = [user1, user2]
@@ -239,7 +223,7 @@ class TestValidateTokenUseCase:
             roles={"admin", "user"},
             permissions={"read", "write", "delete"},
             auth_method="jwt",
-            metadata={"department": "IT", "level": "senior"}
+            metadata={"department": "IT", "level": "senior"},
         )
 
         self.mock_token_provider.validate_token = AsyncMock(return_value=user_with_roles)
@@ -270,9 +254,7 @@ class TestValidateTokenUseCase:
         assert result.error_code == AuthenticationErrorCode.TOKEN_INVALID
 
         # Value error
-        self.mock_token_provider.validate_token = AsyncMock(
-            side_effect=ValueError("Bad format")
-        )
+        self.mock_token_provider.validate_token = AsyncMock(side_effect=ValueError("Bad format"))
         result = await self.use_case.execute(ValidateTokenRequest(token=token))
         assert result.error_code == AuthenticationErrorCode.TOKEN_INVALID
 

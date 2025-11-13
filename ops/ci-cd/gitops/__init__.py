@@ -26,19 +26,16 @@ from kubernetes import client, config
 
 # External dependencies
 try:
-
     GIT_AVAILABLE = True
 except ImportError:
     GIT_AVAILABLE = False
 
 try:
-
     KUBERNETES_AVAILABLE = True
 except ImportError:
     KUBERNETES_AVAILABLE = False
 
 try:
-
     REQUESTS_AVAILABLE = True
 except ImportError:
     REQUESTS_AVAILABLE = False

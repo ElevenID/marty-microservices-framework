@@ -59,7 +59,6 @@ def test_config_creation():
 def test_fastapi_integration():
     """Test FastAPI integration."""
     try:
-
         app = FastAPI()
         config = create_testing_config("test-secret")
 

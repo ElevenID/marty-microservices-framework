@@ -42,6 +42,7 @@ T = TypeVar("T")
 @dataclass
 class ConsolidatedResilienceConfig:
     """Extended configuration for consolidated resilience manager."""
+
     # Circuit breaker settings
     circuit_breaker_enabled: bool = True
     circuit_breaker_failure_threshold: int = 5
@@ -105,10 +106,10 @@ class ConsolidatedResilienceManager(IResilienceManager):
         self._bulkheads: dict[str, SemaphoreBulkhead] = {}
         self._metrics = ResilienceMetrics()
 
-    async def execute_resilient(
+    async def execute_with_resilience(
         self,
         func: Callable[[], Awaitable[T]],
-        strategy: ResilienceStrategy = ResilienceStrategy.CIRCUIT_BREAKER,
+        strategy: ResilienceStrategy = ResilienceStrategy.INTERNAL_SERVICE,
         config_override: ConsolidatedResilienceConfig | None = None,
         operation_name: str | None = None,
     ) -> T:
@@ -125,6 +126,7 @@ class ConsolidatedResilienceManager(IResilienceManager):
 
             # Apply timeout if enabled
             if effective_config.timeout_enabled:
+
                 async def timeout_execution():
                     try:
                         return await asyncio.wait_for(
@@ -218,20 +220,17 @@ class ConsolidatedResilienceManager(IResilienceManager):
                 "failure_count": self._metrics.failure_count,
                 "success_rate": self._metrics.get_success_rate(),
                 "average_duration": self._metrics.get_average_duration(),
-            }
+            },
         }
 
-    def execute_resilient_sync(
-        self,
-        func: Callable[..., T],
-        *args: Any,
-        **kwargs: Any
-    ) -> T:
+    def execute_resilient_sync(self, func: Callable[..., T], *args: Any, **kwargs: Any) -> T:
         """Execute a synchronous function with resilience patterns applied."""
+
         # Convert to async and run synchronously
         async def async_wrapper():
             async def sync_to_async():
                 return func(*args, **kwargs)
+
             return await self.execute_resilient(sync_to_async)
 
         loop = asyncio.new_event_loop()
@@ -240,13 +239,9 @@ class ConsolidatedResilienceManager(IResilienceManager):
         finally:
             loop.close()
 
-    async def apply_resilience(
-        self,
-        func: Any,
-        *args: Any,
-        **kwargs: Any
-    ) -> Any:
+    async def apply_resilience(self, func: Any, *args: Any, **kwargs: Any) -> Any:
         """Apply resilience patterns to a function call."""
+
         # Create a wrapper function and execute with resilience
         async def wrapper():
             if asyncio.iscoroutinefunction(func):
@@ -298,7 +293,7 @@ class ConsolidatedResilienceManager(IResilienceManager):
                 recovery_timeout=config.circuit_breaker_recovery_timeout,
                 success_threshold=config.circuit_breaker_success_threshold,
                 failure_exceptions=config.circuit_breaker_exceptions,
-                ignore_exceptions=config.ignore_exceptions
+                ignore_exceptions=config.ignore_exceptions,
             )
             self._circuit_breakers[operation_name] = CircuitBreaker(breaker_config)
 
@@ -311,7 +306,7 @@ class ConsolidatedResilienceManager(IResilienceManager):
         if operation_name not in self._bulkheads:
             bulkhead_config = BulkheadConfig(
                 max_concurrent=config.bulkhead_max_concurrent,
-                timeout_seconds=config.bulkhead_timeout
+                timeout_seconds=config.bulkhead_timeout,
             )
             self._bulkheads[operation_name] = SemaphoreBulkhead(bulkhead_config)
 
@@ -320,7 +315,7 @@ class ConsolidatedResilienceManager(IResilienceManager):
 
 # Convenience function for backward compatibility
 def create_consolidated_resilience_manager(
-    resilience_config: dict[str, Any] | None = None
+    resilience_config: dict[str, Any] | None = None,
 ) -> ConsolidatedResilienceManager:
     """Create a consolidated resilience manager with configuration."""
     if resilience_config is None:
@@ -328,9 +323,15 @@ def create_consolidated_resilience_manager(
 
     config = ConsolidatedResilienceConfig(
         circuit_breaker_enabled=resilience_config.get("circuit_breaker_enabled", True),
-        circuit_breaker_failure_threshold=resilience_config.get("circuit_breaker_failure_threshold", 5),
-        circuit_breaker_recovery_timeout=resilience_config.get("circuit_breaker_recovery_timeout", 60.0),
-        circuit_breaker_success_threshold=resilience_config.get("circuit_breaker_success_threshold", 3),
+        circuit_breaker_failure_threshold=resilience_config.get(
+            "circuit_breaker_failure_threshold", 5
+        ),
+        circuit_breaker_recovery_timeout=resilience_config.get(
+            "circuit_breaker_recovery_timeout", 60.0
+        ),
+        circuit_breaker_success_threshold=resilience_config.get(
+            "circuit_breaker_success_threshold", 3
+        ),
         retry_enabled=resilience_config.get("retry_enabled", True),
         retry_max_attempts=resilience_config.get("retry_max_attempts", 3),
         retry_base_delay=resilience_config.get("retry_base_delay", 1.0),

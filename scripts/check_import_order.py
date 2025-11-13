@@ -24,23 +24,42 @@ from pathlib import Path
 # Built-in exclusions to prevent processing sensitive directories/files
 BUILT_IN_EXCLUSIONS = {
     # Virtual environments
-    '.venv', 'venv', '.env', 'env', 'ENV',
+    ".venv",
+    "venv",
+    ".env",
+    "env",
+    "ENV",
     # Package managers
-    'node_modules', '.npm', '.yarn',
+    "node_modules",
+    ".npm",
+    ".yarn",
     # Version control
-    '.git', '.svn', '.hg',
+    ".git",
+    ".svn",
+    ".hg",
     # IDEs and editors
-    '.vscode', '.idea', '.vs',
+    ".vscode",
+    ".idea",
+    ".vs",
     # Python cache
-    '__pycache__', '.pytest_cache', '.mypy_cache',
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
     # Build artifacts
-    'build', 'dist', '.egg-info', '*.egg-info',
+    "build",
+    "dist",
+    ".egg-info",
+    "*.egg-info",
     # Documentation builds
-    '_build', '.sphinx-build',
+    "_build",
+    ".sphinx-build",
     # Temporary files
-    '.tmp', 'tmp', 'temp',
+    ".tmp",
+    "tmp",
+    "temp",
     # OS specific
-    '.DS_Store', 'Thumbs.db'
+    ".DS_Store",
+    "Thumbs.db",
 }
 
 
@@ -64,18 +83,20 @@ class ImportChecker:
                 return False
             # Check for pattern matches (like *.egg-info)
             for exclusion in BUILT_IN_EXCLUSIONS:
-                if '*' in exclusion and part.endswith(exclusion.replace('*', '')):
+                if "*" in exclusion and part.endswith(exclusion.replace("*", "")):
                     return False
 
         # Only process Python files in reasonable source locations
-        if not file_path.suffix == '.py':
+        if not file_path.suffix == ".py":
             return False
 
         # Ensure we're not processing system or library files
         str_path = str(abs_path)
-        if ('/site-packages/' in str_path or
-            '/lib/python' in str_path or
-            '/Library/Frameworks/Python.framework/' in str_path):
+        if (
+            "/site-packages/" in str_path
+            or "/lib/python" in str_path
+            or "/Library/Frameworks/Python.framework/" in str_path
+        ):
             return False
 
         return True
@@ -93,7 +114,7 @@ class ImportChecker:
             return True  # Skip silently
 
         try:
-            with open(file_path, encoding='utf-8') as f:
+            with open(file_path, encoding="utf-8") as f:
                 content = f.read()
         except (OSError, UnicodeDecodeError) as e:
             self.errors.append((str(file_path), 0, f"Could not read file: {e}"))
@@ -143,25 +164,41 @@ class ImportChecker:
                 # Check if this import comes after non-import code
                 if first_non_import_line and import_line > first_non_import_line:
                     import_stmt = lines[import_line - 1].strip()
-                    self.errors.append((
-                        str(file_path),
-                        import_line,
-                        f"Import statement found after non-import code: {import_stmt}"
-                    ))
+                    self.errors.append(
+                        (
+                            str(file_path),
+                            import_line,
+                            f"Import statement found after non-import code: {import_stmt}",
+                        )
+                    )
                     return False
 
                 if last_import_line is None or import_line > last_import_line:
                     last_import_line = import_line
 
-            elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef |
-                          ast.If | ast.For | ast.While | ast.With | ast.AsyncWith |
-                          ast.Try | ast.Assign | ast.AugAssign | ast.AnnAssign |
-                          ast.Expr):  # For standalone expressions like function calls
+            elif isinstance(
+                node,
+                ast.FunctionDef
+                | ast.AsyncFunctionDef
+                | ast.ClassDef
+                | ast.If
+                | ast.For
+                | ast.While
+                | ast.With
+                | ast.AsyncWith
+                | ast.Try
+                | ast.Assign
+                | ast.AugAssign
+                | ast.AnnAssign
+                | ast.Expr,
+            ):  # For standalone expressions like function calls
                 # Skip if this is a module docstring
-                if (isinstance(node, ast.Expr) and
-                    isinstance(node.value, ast.Constant) and
-                    isinstance(node.value.value, str) and
-                    node.lineno <= start_checking_line):
+                if (
+                    isinstance(node, ast.Expr)
+                    and isinstance(node.value, ast.Constant)
+                    and isinstance(node.value.value, str)
+                    and node.lineno <= start_checking_line
+                ):
                     continue
 
                 # Skip if this is before we start checking
@@ -181,20 +218,23 @@ class ImportChecker:
         start_line = 1
 
         # Skip shebang
-        if lines and lines[0].startswith('#!'):
+        if lines and lines[0].startswith("#!"):
             start_line = 2
 
         # Skip encoding declaration
         for i in range(min(2, len(lines))):
-            if re.match(r'#.*?coding[:=]', lines[i]):
+            if re.match(r"#.*?coding[:=]", lines[i]):
                 start_line = max(start_line, i + 2)
                 break
 
         # Skip module docstring
-        if (isinstance(tree, ast.Module) and tree.body and
-            isinstance(tree.body[0], ast.Expr) and
-            isinstance(tree.body[0].value, ast.Constant) and
-            isinstance(tree.body[0].value.value, str)):
+        if (
+            isinstance(tree, ast.Module)
+            and tree.body
+            and isinstance(tree.body[0], ast.Expr)
+            and isinstance(tree.body[0].value, ast.Constant)
+            and isinstance(tree.body[0].value.value, str)
+        ):
             end_line = tree.body[0].end_lineno
             if end_line is not None:
                 start_line = max(start_line, end_line + 1)
@@ -202,7 +242,7 @@ class ImportChecker:
         # Skip initial comments and blank lines
         for i in range(start_line - 1, len(lines)):
             line = lines[i].strip()
-            if line and not line.startswith('#'):
+            if line and not line.startswith("#"):
                 start_line = i + 1
                 break
 
@@ -220,28 +260,42 @@ class ImportChecker:
         for node in ast.walk(tree):
             if isinstance(node, ast.Import | ast.ImportFrom):
                 import_info = {
-                    'node': node,
-                    'start_line': node.lineno - 1,  # 0-based
-                    'end_line': (node.end_lineno - 1) if node.end_lineno else (node.lineno - 1),
-                    'text_lines': []
+                    "node": node,
+                    "start_line": node.lineno - 1,  # 0-based
+                    "end_line": (node.end_lineno - 1) if node.end_lineno else (node.lineno - 1),
+                    "text_lines": [],
                 }
 
                 # Get the import text
-                for i in range(import_info['start_line'], import_info['end_line'] + 1):
+                for i in range(import_info["start_line"], import_info["end_line"] + 1):
                     if i < len(lines):
-                        import_info['text_lines'].append(lines[i])
+                        import_info["text_lines"].append(lines[i])
 
                 all_imports.append(import_info)
 
                 # Check if this import is misplaced (after non-import code)
-                if import_info['start_line'] > start_checking_line:
+                if import_info["start_line"] > start_checking_line:
                     # Look for non-import code before this import
                     for check_node in ast.walk(tree):
-                        if (isinstance(check_node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef |
-                            ast.If | ast.For | ast.While | ast.With | ast.AsyncWith |
-                            ast.Try | ast.Assign | ast.AugAssign | ast.AnnAssign) and
-                            check_node.lineno - 1 >= start_checking_line and
-                            check_node.lineno - 1 < import_info['start_line']):
+                        if (
+                            isinstance(
+                                check_node,
+                                ast.FunctionDef
+                                | ast.AsyncFunctionDef
+                                | ast.ClassDef
+                                | ast.If
+                                | ast.For
+                                | ast.While
+                                | ast.With
+                                | ast.AsyncWith
+                                | ast.Try
+                                | ast.Assign
+                                | ast.AugAssign
+                                | ast.AnnAssign,
+                            )
+                            and check_node.lineno - 1 >= start_checking_line
+                            and check_node.lineno - 1 < import_info["start_line"]
+                        ):
                             misplaced_imports.append(import_info)
                             break
 
@@ -254,7 +308,7 @@ class ImportChecker:
 
         # Mark all misplaced import lines to skip
         for import_info in misplaced_imports:
-            for i in range(import_info['start_line'], import_info['end_line'] + 1):
+            for i in range(import_info["start_line"], import_info["end_line"] + 1):
                 skip_lines.add(i)
 
         # Copy lines excluding misplaced imports
@@ -266,7 +320,7 @@ class ImportChecker:
         import_texts = []
         for import_info in misplaced_imports:
             # Strip indentation from import lines and normalize them
-            for line in import_info['text_lines']:
+            for line in import_info["text_lines"]:
                 # Remove leading whitespace to ensure imports are at module level
                 stripped_line = line.lstrip()
                 if stripped_line:  # Only add non-empty lines
@@ -289,7 +343,7 @@ class ImportChecker:
             backup_content = content
 
             # Validate the new content can be parsed
-            new_content = '\n'.join(new_lines)
+            new_content = "\n".join(new_lines)
             try:
                 ast.parse(new_content)
             except SyntaxError as e:
@@ -297,7 +351,7 @@ class ImportChecker:
                 return False
 
             # Write the fixed content
-            with open(file_path, 'w', encoding='utf-8') as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 f.write(new_content)
 
             self.fixes.append(str(file_path))
@@ -307,7 +361,7 @@ class ImportChecker:
             self.errors.append((str(file_path), 0, f"Could not write fixed file: {e}"))
             # Try to restore the original content if we can
             try:
-                with open(file_path, 'w', encoding='utf-8') as f:
+                with open(file_path, "w", encoding="utf-8") as f:
                     f.write(backup_content)
             except (OSError, UnicodeEncodeError):
                 pass  # Don't make things worse
@@ -323,7 +377,7 @@ class ImportChecker:
         all_passed = True
 
         for file_path in file_paths:
-            if not file_path.suffix == '.py':
+            if not file_path.suffix == ".py":
                 continue
 
             if not self.check_file(file_path):
@@ -357,18 +411,20 @@ def is_safe_path(file_path: Path) -> bool:
             return False
         # Check for pattern matches (like *.egg-info)
         for exclusion in BUILT_IN_EXCLUSIONS:
-            if '*' in exclusion and part.endswith(exclusion.replace('*', '')):
+            if "*" in exclusion and part.endswith(exclusion.replace("*", "")):
                 return False
 
     # Only process Python files in reasonable source locations
-    if not file_path.suffix == '.py':
+    if not file_path.suffix == ".py":
         return False
 
     # Ensure we're not processing system or library files
     str_path = str(abs_path)
-    if ('/site-packages/' in str_path or
-        '/lib/python' in str_path or
-        '/Library/Frameworks/Python.framework/' in str_path):
+    if (
+        "/site-packages/" in str_path
+        or "/lib/python" in str_path
+        or "/Library/Frameworks/Python.framework/" in str_path
+    ):
         return False
 
     return True
@@ -387,7 +443,7 @@ def get_python_files(paths: list[str]) -> list[Path]:
                 python_files.append(path)
         elif path.is_dir():
             # Walk directory but exclude unsafe paths
-            for py_file in path.rglob('*.py'):
+            for py_file in path.rglob("*.py"):
                 if is_safe_path(py_file):
                     python_files.append(py_file)
 
@@ -400,21 +456,16 @@ def main() -> int:
         description="Check that imports are at the top of Python files"
     )
     parser.add_argument(
-        'paths',
-        nargs='*',
-        default=['.'],
-        help='Paths to check (files or directories)'
+        "paths", nargs="*", default=["."], help="Paths to check (files or directories)"
     )
     parser.add_argument(
-        '--exclude',
-        action='append',
+        "--exclude",
+        action="append",
         default=[],
-        help='Patterns to exclude (can be used multiple times)'
+        help="Patterns to exclude (can be used multiple times)",
     )
     parser.add_argument(
-        '--fix',
-        action='store_true',
-        help='Automatically fix import placement issues'
+        "--fix", action="store_true", help="Automatically fix import placement issues"
     )
 
     args = parser.parse_args()
@@ -459,5 +510,5 @@ def main() -> int:
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

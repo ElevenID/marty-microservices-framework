@@ -16,7 +16,7 @@ from .registry import TypedSingleton, get_service, register_singleton
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class ConfigService(TypedSingleton[Any], ABC):

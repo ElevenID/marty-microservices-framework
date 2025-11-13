@@ -68,7 +68,9 @@ class TestObservabilityValidation:
             pytest.skip("Prometheus/metrics directory not found")
 
         # Look for prometheus config files
-        config_files = list(prometheus_dir.glob("*prometheus*.yml")) + list(prometheus_dir.glob("*prometheus*.yaml"))
+        config_files = list(prometheus_dir.glob("*prometheus*.yml")) + list(
+            prometheus_dir.glob("*prometheus*.yaml")
+        )
 
         if not config_files:
             pytest.skip("No Prometheus config files found")
@@ -160,22 +162,19 @@ class TestObservabilityValidation:
                     sys.path.remove(str(load_testing_dir))
 
         if import_errors:
-            error_msg = "\n".join([
-                f"  {file}: {error}" for file, error in import_errors
-            ])
+            error_msg = "\n".join([f"  {file}: {error}" for file, error in import_errors])
             pytest.fail(f"Load testing import errors:\n{error_msg}")
 
     def test_metrics_collection_components(self):
         """Test metrics collection components."""
         try:
-
             # Basic instantiation test
             collector = MetricsCollector()
             assert collector is not None
 
             # Test basic methods exist
-            assert hasattr(collector, 'increment_counter')
-            assert hasattr(collector, 'set_gauge')
+            assert hasattr(collector, "increment_counter")
+            assert hasattr(collector, "set_gauge")
 
         except ImportError as e:
             pytest.skip(f"Cannot import metrics collector: {e}")
@@ -183,15 +182,14 @@ class TestObservabilityValidation:
     def test_logging_configuration(self):
         """Test logging configuration validation."""
         try:
-
             # Test logger instantiation
             logger = UnifiedServiceLogger("test-service")
             assert logger is not None
 
             # Test basic logging methods
-            assert hasattr(logger, 'info')
-            assert hasattr(logger, 'error')
-            assert hasattr(logger, 'warning')
+            assert hasattr(logger, "info")
+            assert hasattr(logger, "error")
+            assert hasattr(logger, "warning")
 
         except ImportError as e:
             pytest.skip(f"Cannot import logging components: {e}")
@@ -223,7 +221,7 @@ class TestObservabilityValidation:
             except yaml.YAMLError as e:
                 pytest.fail(f"Invalid tracing config {config_file}: {e}")
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_observability_service_health(self, mock_run):
         """Test observability service health checks."""
         # Mock successful health check
@@ -234,7 +232,6 @@ class TestObservabilityValidation:
 
         # Import and test the original validation function
         try:
-
             errors = validate_kafka_configs()
 
             # Should return empty list if no errors
@@ -251,17 +248,21 @@ class TestObservabilityValidation:
             pytest.skip("SLO directory not found")
 
         # Look for SLO configuration files
-        config_files = list(slo_dir.glob("*.yml")) + list(slo_dir.glob("*.yaml")) + list(slo_dir.glob("*.json"))
+        config_files = (
+            list(slo_dir.glob("*.yml"))
+            + list(slo_dir.glob("*.yaml"))
+            + list(slo_dir.glob("*.json"))
+        )
 
         if not config_files:
             pytest.skip("No SLO configuration files found")
 
         for config_file in config_files:
             try:
-                if config_file.suffix in ['.yml', '.yaml']:
+                if config_file.suffix in [".yml", ".yaml"]:
                     with open(config_file) as f:
                         config = yaml.safe_load(f)
-                elif config_file.suffix == '.json':
+                elif config_file.suffix == ".json":
                     with open(config_file) as f:
                         config = json.load(f)
                 else:
@@ -288,8 +289,9 @@ class TestObservabilityValidation:
             pytest.skip("Observability directory not found")
 
         # Look for docker-compose files
-        compose_files = list(observability_dir.glob("**/docker-compose*.yml")) + \
-                      list(observability_dir.glob("**/docker-compose*.yaml"))
+        compose_files = list(observability_dir.glob("**/docker-compose*.yml")) + list(
+            observability_dir.glob("**/docker-compose*.yaml")
+        )
 
         if not compose_files:
             pytest.skip("No Docker Compose files found")
@@ -304,19 +306,25 @@ class TestObservabilityValidation:
                 assert "services" in config, f"No services defined in {compose_file}"
 
                 services = config["services"]
-                assert isinstance(services, dict), f"Services should be a dictionary in {compose_file}"
+                assert isinstance(services, dict), (
+                    f"Services should be a dictionary in {compose_file}"
+                )
                 assert len(services) > 0, f"No services defined in {compose_file}"
 
                 # Check that each service has required fields
                 for service_name, service_config in services.items():
-                    assert isinstance(service_config, dict), f"Service {service_name} config should be a dict"
+                    assert isinstance(service_config, dict), (
+                        f"Service {service_name} config should be a dict"
+                    )
 
                     # Either image or build should be specified
                     has_image = "image" in service_config
                     has_build = "build" in service_config
 
                     if not (has_image or has_build):
-                        print(f"⚠️  Service {service_name} in {compose_file} has no image or build config")
+                        print(
+                            f"⚠️  Service {service_name} in {compose_file} has no image or build config"
+                        )
 
             except yaml.YAMLError as e:
                 pytest.fail(f"Invalid Docker Compose file {compose_file}: {e}")
@@ -324,9 +332,8 @@ class TestObservabilityValidation:
     def test_import_original_validation_script(self):
         """Test that the original validation script can be imported."""
         try:
-
             # Check that main validation functions exist
-            assert hasattr(validate_observability, 'validate_kafka_configs')
+            assert hasattr(validate_observability, "validate_kafka_configs")
 
             # Test that we can call the main functions
             kafka_errors = validate_observability.validate_kafka_configs()

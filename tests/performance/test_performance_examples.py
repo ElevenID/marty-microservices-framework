@@ -27,8 +27,7 @@ class TestMessageBrokerPerformance:
         messages = []
         for i in range(message_count):
             event = Event(
-                event_type="test_event",
-                data={"payload": "x" * payload_size, "sequence": i}
+                event_type="test_event", data={"payload": "x" * payload_size, "sequence": i}
             )
             messages.append(event)
 
@@ -72,21 +71,20 @@ class TestMessageBrokerPerformance:
             await message_broker.subscribe(f"perf.consumer.{consumer_id}", handler)
 
             duration = time.time() - start_time
-            results.append({
-                "consumer_id": consumer_id,
-                "messages": consumed_count,
-                "duration": duration,
-                "rate": consumed_count / duration if duration > 0 else 0
-            })
+            results.append(
+                {
+                    "consumer_id": consumer_id,
+                    "messages": consumed_count,
+                    "duration": duration,
+                    "rate": consumed_count / duration if duration > 0 else 0,
+                }
+            )
 
         # Start producers to generate load
         async def producer_worker():
             for i in range(consumer_count * messages_per_consumer):
                 consumer_id = i % consumer_count
-                event = Event(
-                    event_type="perf_test",
-                    data={"message_id": i}
-                )
+                event = Event(event_type="perf_test", data={"message_id": i})
                 await message_broker.publish(f"perf.consumer.{consumer_id}", event)
 
         # Run concurrent test
@@ -94,8 +92,7 @@ class TestMessageBrokerPerformance:
 
         # Start consumers
         consumer_tasks = [
-            asyncio.create_task(consumer_worker(i, results))
-            for i in range(consumer_count)
+            asyncio.create_task(consumer_worker(i, results)) for i in range(consumer_count)
         ]
 
         # Start producer
@@ -134,10 +131,7 @@ class TestEventProcessingPerformance:
             # Create batch of events
             events = []
             for i in range(batch_size):
-                event = Event(
-                    event_type="processing_test",
-                    data={"batch": batch_size, "index": i}
-                )
+                event = Event(event_type="processing_test", data={"batch": batch_size, "index": i})
                 events.append(event)
 
             # Measure processing time
@@ -169,7 +163,7 @@ class TestEventProcessingPerformance:
         for _ in range(event_count):
             Event(
                 event_type="memory_test",
-                data={"large_payload": "x" * 1024 * 10}  # 10KB payload
+                data={"large_payload": "x" * 1024 * 10},  # 10KB payload
             )
             # Process event (implementation would be provided by fixture)
 
@@ -211,10 +205,9 @@ class TestSystemPerformance:
 
             for _ in range(batch_size):
                 task = asyncio.create_task(
-                    system_under_test.process_request({
-                        "type": "test_request",
-                        "timestamp": time.time()
-                    })
+                    system_under_test.process_request(
+                        {"type": "test_request", "timestamp": time.time()}
+                    )
                 )
                 batch_tasks.append(task)
 
@@ -294,7 +287,7 @@ class TestResourceUtilization:
                 "request_id": request_id,
                 "response_time": (end_time - start_time) * 1000,
                 "status": response.status_code,
-                "success": response.status_code == 200
+                "success": response.status_code == 200,
             }
 
         # Execute concurrent requests

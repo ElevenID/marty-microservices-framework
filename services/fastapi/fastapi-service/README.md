@@ -31,17 +31,18 @@ uvicorn main:app --reload --host 0.0.0.0 --port {{service_port}}
 ### API Documentation
 
 Once running, visit:
-- API docs: http://localhost:{{service_port}}/docs
-- ReDoc: http://localhost:{{service_port}}/redoc
+
+- API docs: <http://localhost:{{service_port}}/docs>
+- ReDoc: <http://localhost:{{service_port}}/redoc>
 
 ### Health Checks
 
-- Health: http://localhost:{{service_port}}/health
-- Readiness: http://localhost:{{service_port}}/ready
+- Health: <http://localhost:{{service_port}}/health>
+- Readiness: <http://localhost:{{service_port}}/ready>
 
 ### Metrics
 
-- Prometheus metrics: http://localhost:{{service_port}}/metrics
+- Prometheus metrics: <http://localhost:{{service_port}}/metrics>
 
 ## Configuration
 

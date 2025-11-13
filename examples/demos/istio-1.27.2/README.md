@@ -54,11 +54,11 @@ Istio is composed of these components:
 
 - **Istiod** - The Istio control plane. It provides service discovery, configuration and certificate management. It consists of the following sub-components:
 
-    - **Pilot** - Responsible for configuring the proxies at runtime.
+  - **Pilot** - Responsible for configuring the proxies at runtime.
 
-    - **Citadel** - Responsible for certificate issuance and rotation.
+  - **Citadel** - Responsible for certificate issuance and rotation.
 
-    - **Galley** - Responsible for validating, ingesting, aggregating, transforming and distributing config within Istio.
+  - **Galley** - Responsible for validating, ingesting, aggregating, transforming and distributing config within Istio.
 
 - **Operator** - The component provides user friendly options to operate the Istio service mesh.
 
@@ -76,16 +76,16 @@ the Istio open source project.
 - [istio/istio](README.md). This is the main code repository. It hosts Istio's
 core components, install artifacts, and sample programs. It includes:
 
-    - [istioctl](istioctl/). This directory contains code for the
+  - [istioctl](istioctl/). This directory contains code for the
 [_istioctl_](https://istio.io/latest/docs/reference/commands/istioctl/) command line utility.
 
-    - [pilot](pilot/). This directory
+  - [pilot](pilot/). This directory
 contains platform-specific code to populate the
 [abstract service model](https://istio.io/docs/concepts/traffic-management/#pilot), dynamically reconfigure the proxies
 when the application topology changes, as well as translate
 [routing rules](https://istio.io/latest/docs/reference/config/networking/) into proxy specific configuration.
 
-    - [security](security/). This directory contains [security](https://istio.io/latest/docs/concepts/security/) related code,
+  - [security](security/). This directory contains [security](https://istio.io/latest/docs/concepts/security/) related code,
 including Citadel (acting as Certificate Authority), citadel agent, etc.
 
 - [istio/proxy](https://github.com/istio/proxy). The Istio proxy contains

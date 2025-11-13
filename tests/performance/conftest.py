@@ -26,6 +26,7 @@ from marty_msf.framework.integration.event_driven import (
 @dataclass
 class PerformanceMetrics:
     """Container for performance test metrics."""
+
     response_times: list[float]
     throughput: float
     error_rate: float
@@ -79,9 +80,9 @@ def performance_monitor():
         final_memory = psutil.virtual_memory().percent
 
         return {
-            'duration': end_time - start_time,
-            'cpu_usage': (initial_cpu + final_cpu) / 2,
-            'memory_usage': (initial_memory + final_memory) / 2
+            "duration": end_time - start_time,
+            "cpu_usage": (initial_cpu + final_cpu) / 2,
+            "memory_usage": (initial_memory + final_memory) / 2,
         }
 
     return monitor
@@ -91,16 +92,12 @@ def performance_monitor():
 def load_test_config():
     """Configuration for load testing scenarios."""
     return {
-        'concurrent_users': [1, 5, 10, 25, 50],
-        'test_duration': 60,  # seconds
-        'ramp_up_time': 10,   # seconds
-        'target_endpoints': [
-            '/health',
-            '/authenticate',
-            '/users'
-        ],
-        'acceptable_response_time': 1.0,  # seconds
-        'acceptable_error_rate': 0.01     # 1%
+        "concurrent_users": [1, 5, 10, 25, 50],
+        "test_duration": 60,  # seconds
+        "ramp_up_time": 10,  # seconds
+        "target_endpoints": ["/health", "/authenticate", "/users"],
+        "acceptable_response_time": 1.0,  # seconds
+        "acceptable_error_rate": 0.01,  # 1%
     }
 
 
@@ -108,11 +105,11 @@ def load_test_config():
 def stress_test_config():
     """Configuration for stress testing scenarios."""
     return {
-        'max_concurrent_users': 1000,
-        'ramp_up_steps': [50, 100, 200, 500, 1000],
-        'step_duration': 30,  # seconds
-        'breaking_point_threshold': 0.05,  # 5% error rate
-        'recovery_time': 60   # seconds
+        "max_concurrent_users": 1000,
+        "ramp_up_steps": [50, 100, 200, 500, 1000],
+        "step_duration": 30,  # seconds
+        "breaking_point_threshold": 0.05,  # 5% error rate
+        "recovery_time": 60,  # seconds
     }
 
 
@@ -120,14 +117,14 @@ def stress_test_config():
 def benchmark_config():
     """Configuration for benchmark testing."""
     return {
-        'baseline_metrics': {
-            'health_check_time': 0.01,    # 10ms
-            'authentication_time': 0.1,   # 100ms
-            'user_list_time': 0.05,       # 50ms
+        "baseline_metrics": {
+            "health_check_time": 0.01,  # 10ms
+            "authentication_time": 0.1,  # 100ms
+            "user_list_time": 0.05,  # 50ms
         },
-        'regression_threshold': 0.1,  # 10% slower than baseline
-        'warmup_requests': 10,
-        'benchmark_requests': 100
+        "regression_threshold": 0.1,  # 10% slower than baseline
+        "warmup_requests": 10,
+        "benchmark_requests": 100,
     }
 
 
@@ -143,6 +140,7 @@ def response_time_tracker():
             end_time = time.time()
             response_times.append(end_time - start_time)
             return result
+
         return wrapper
 
     def get_metrics() -> dict[str, float]:
@@ -150,20 +148,24 @@ def response_time_tracker():
             return {}
 
         return {
-            'count': len(response_times),
-            'avg': statistics.mean(response_times),
-            'min': min(response_times),
-            'max': max(response_times),
-            'p50': statistics.median(response_times),
-            'p95': sorted(response_times)[int(0.95 * len(response_times))],
-            'p99': sorted(response_times)[int(0.99 * len(response_times))],
+            "count": len(response_times),
+            "avg": statistics.mean(response_times),
+            "min": min(response_times),
+            "max": max(response_times),
+            "p50": statistics.median(response_times),
+            "p95": sorted(response_times)[int(0.95 * len(response_times))],
+            "p99": sorted(response_times)[int(0.99 * len(response_times))],
         }
 
-    tracker = type('ResponseTimeTracker', (), {
-        'track': track_request,
-        'metrics': property(lambda self: get_metrics()),
-        'reset': lambda self: response_times.clear()
-    })()
+    tracker = type(
+        "ResponseTimeTracker",
+        (),
+        {
+            "track": track_request,
+            "metrics": property(lambda self: get_metrics()),
+            "reset": lambda self: response_times.clear(),
+        },
+    )()
 
     return tracker
 
@@ -177,7 +179,7 @@ def performance_metrics():
         error_rate=0.0,
         cpu_usage=0.0,
         memory_usage=0.0,
-        concurrent_users=0
+        concurrent_users=0,
     )
 
 
@@ -194,13 +196,13 @@ def message_broker():
         async def publish(self, topic: str, event):
             """Publish an event to a topic."""
             # Convert to EventMessage if needed
-            if hasattr(event, 'event_type') and hasattr(event, 'data'):
+            if hasattr(event, "event_type") and hasattr(event, "data"):
                 # It's already an Event object from marty_msf.framework.events
                 event_message = EventMessage(
-                    message_id=getattr(event, 'event_id', f"perf-{hash(event)}"),
+                    message_id=getattr(event, "event_id", f"perf-{hash(event)}"),
                     event_type=event.event_type,
                     source=topic,
-                    data=event.data
+                    data=event.data,
                 )
             else:
                 # Fallback for simple objects
@@ -208,7 +210,7 @@ def message_broker():
                     message_id=f"perf-{hash(str(event))}",
                     event_type="performance_test",
                     source=topic,
-                    data={"event": str(event)}
+                    data={"event": str(event)},
                 )
 
             return await self.event_bus.publish(event_message)
@@ -219,7 +221,7 @@ def message_broker():
                 subscription_id=f"perf-sub-{hash(topic + str(handler))}",
                 consumer_group="performance_test",
                 event_types=[topic],
-                handler=handler
+                handler=handler,
             )
             return await self.event_bus.subscribe(subscription)
 
@@ -229,6 +231,7 @@ def message_broker():
 @pytest.fixture
 def event_processor():
     """Event processor fixture for testing event processing performance."""
+
     class MockEventProcessor:
         def __init__(self):
             self.processed_events = []
@@ -238,7 +241,7 @@ def event_processor():
             # Simulate some processing time
             await asyncio.sleep(0.001)  # 1ms
             self.processed_events.append(event)
-            return {"status": "processed", "event_id": getattr(event, 'id', 'unknown')}
+            return {"status": "processed", "event_id": getattr(event, "id", "unknown")}
 
         async def process_batch(self, events):
             """Process a batch of events."""
@@ -254,6 +257,7 @@ def event_processor():
 @pytest.fixture
 def resource_monitor():
     """Resource monitor fixture for testing system resource usage."""
+
     class MockResourceMonitor:
         def get_memory_usage(self):
             """Get current memory usage in MB."""
@@ -267,12 +271,7 @@ def resource_monitor():
             """Monitor resources during a load test."""
             # Simulate monitoring
             await asyncio.sleep(0.1)
-            return {
-                "peak_memory": 256.0,
-                "avg_memory": 180.0,
-                "peak_cpu": 75.0,
-                "avg_cpu": 45.0
-            }
+            return {"peak_memory": 256.0, "avg_memory": 180.0, "peak_cpu": 75.0, "avg_cpu": 45.0}
 
     return MockResourceMonitor()
 
@@ -280,6 +279,7 @@ def resource_monitor():
 @pytest.fixture
 def system_under_test():
     """System under test fixture for end-to-end performance testing."""
+
     class MockSystemUnderTest:
         def __init__(self):
             self.requests_processed = 0
@@ -305,6 +305,7 @@ def system_under_test():
 @pytest.fixture
 def network_client():
     """Network client fixture for testing network I/O performance."""
+
     class MockNetworkClient:
         def __init__(self):
             self.requests_made = 0
@@ -314,12 +315,7 @@ def network_client():
             # Simulate network latency
             await asyncio.sleep(0.05)  # 50ms
             self.requests_made += 1
-            return {
-                "status_code": 200,
-                "response_time": 0.05,
-                "url": url,
-                "method": method
-            }
+            return {"status_code": 200, "response_time": 0.05, "url": url, "method": method}
 
         async def make_concurrent_requests(self, urls, concurrency=10):
             """Make multiple concurrent requests."""
@@ -337,12 +333,12 @@ def network_client():
 
 # Performance test thresholds
 PERFORMANCE_THRESHOLDS = {
-    'max_response_time': 1.0,      # 1 second
-    'max_p95_response_time': 2.0,  # 2 seconds
-    'min_throughput': 100,         # requests per second
-    'max_error_rate': 0.01,        # 1%
-    'max_cpu_usage': 80,           # 80%
-    'max_memory_usage': 80,        # 80%
+    "max_response_time": 1.0,  # 1 second
+    "max_p95_response_time": 2.0,  # 2 seconds
+    "min_throughput": 100,  # requests per second
+    "max_error_rate": 0.01,  # 1%
+    "max_cpu_usage": 80,  # 80%
+    "max_memory_usage": 80,  # 80%
 }
 
 

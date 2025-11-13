@@ -5,30 +5,35 @@ This gRPC service template has been enhanced with Phase 2 enterprise infrastruct
 ## Phase 2 Components Integrated
 
 ### 1. Configuration Management
+
 - **ConfigManager**: Centralized configuration with hot-reloading
 - **SecretManager**: Secure secret management with encryption
 - **Environment-specific configuration**: Development, testing, production settings
 - **Type-safe configuration**: Pydantic-based validation
 
 ### 2. Caching Infrastructure
+
 - **Multi-backend support**: Redis, in-memory caching
 - **Cache patterns**: Cache-aside, write-through, write-behind
 - **Performance monitoring**: Cache hit/miss metrics
 - **TTL management**: Configurable time-to-live settings
 
 ### 3. Message Queues
+
 - **Multiple brokers**: RabbitMQ, Kafka, Redis, in-memory
 - **Messaging patterns**: Pub/Sub, request/reply, work queues
 - **Reliable delivery**: Message acknowledgments and retries
 - **Health monitoring**: Queue connectivity checks
 
 ### 4. Event Streaming
+
 - **Event sourcing**: Complete event history storage
 - **CQRS patterns**: Command-query responsibility segregation
 - **Stream processing**: Real-time event processing
 - **Projections**: Materialized views from event streams
 
 ### 5. API Gateway Integration
+
 - **Service discovery**: Automatic service registration
 - **Load balancing**: Multiple algorithms (round-robin, weighted, etc.)
 - **Rate limiting**: Configurable rate limits per service
@@ -38,6 +43,7 @@ This gRPC service template has been enhanced with Phase 2 enterprise infrastruct
 ## Template Features
 
 ### Enhanced Service Configuration
+
 ```python
 class ServiceConfig(BaseServiceConfig):
     # Phase 2 Infrastructure Configuration
@@ -48,6 +54,7 @@ class ServiceConfig(BaseServiceConfig):
 ```
 
 ### Comprehensive Health Checks
+
 - Service health monitoring
 - Cache connectivity checks
 - Message queue health verification
@@ -56,7 +63,9 @@ class ServiceConfig(BaseServiceConfig):
 - Database health (if enabled)
 
 ### Enterprise Patterns Demonstration
+
 The `ProcessData` method showcases Phase 2 infrastructure usage:
+
 - Cache-first data retrieval
 - Dynamic configuration loading
 - Secure secret management
@@ -66,6 +75,7 @@ The `ProcessData` method showcases Phase 2 infrastructure usage:
 ## Usage Example
 
 ### Basic Service Creation
+
 ```bash
 # Generate a new service with Phase 2 infrastructure
 python -m marty_microservices_framework.generators.service_generator \
@@ -76,6 +86,7 @@ python -m marty_microservices_framework.generators.service_generator \
 ```
 
 ### Generated Service Structure
+
 ```
 user-management/
 ├── main.py              # Phase 2 infrastructure setup
@@ -85,7 +96,9 @@ user-management/
 ```
 
 ### Infrastructure Components Initialization
+
 The service automatically initializes:
+
 1. Configuration and secret management
 2. Caching infrastructure
 3. Message queue connections
@@ -96,6 +109,7 @@ The service automatically initializes:
 ## Configuration Options
 
 ### Cache Configuration
+
 ```yaml
 cache:
   backend: "redis"  # or "memory"
@@ -105,6 +119,7 @@ cache:
 ```
 
 ### Message Queue Configuration
+
 ```yaml
 messaging:
   broker: "rabbitmq"  # or "kafka", "redis", "memory"
@@ -114,6 +129,7 @@ messaging:
 ```
 
 ### Event Store Configuration
+
 ```yaml
 events:
   store_backend: "memory"  # or external event store
@@ -122,6 +138,7 @@ events:
 ```
 
 ### API Gateway Configuration
+
 ```yaml
 gateway:
   enabled: true
@@ -135,14 +152,18 @@ gateway:
 ## Advanced Features
 
 ### Dynamic Configuration
+
 Services can reload configuration without restart:
+
 ```python
 # Configuration updates automatically propagated
 new_config = await config_manager.get_config("processing_settings")
 ```
 
 ### Caching Patterns
+
 Multiple caching patterns supported:
+
 ```python
 # Cache-aside pattern
 result = await cache_manager.get(key)
@@ -152,7 +173,9 @@ if not result:
 ```
 
 ### Event Sourcing
+
 Complete event history with projections:
+
 ```python
 # Publish events to stream
 await event_stream_manager.publish_event(
@@ -163,7 +186,9 @@ await event_stream_manager.publish_event(
 ```
 
 ### Service Discovery
+
 Automatic registration with API gateway:
+
 ```python
 # Service automatically registers with metadata
 await api_gateway.register_service(
@@ -176,6 +201,7 @@ await api_gateway.register_service(
 ## Monitoring and Observability
 
 ### Metrics Collection
+
 - Request/response metrics
 - Cache hit/miss ratios
 - Message queue depths
@@ -183,14 +209,18 @@ await api_gateway.register_service(
 - Error rates and latencies
 
 ### Health Checks
+
 Comprehensive health monitoring:
+
 - Service health status
 - Infrastructure component connectivity
 - Resource utilization
 - Performance indicators
 
 ### Distributed Tracing
+
 OpenTelemetry integration:
+
 - Request correlation across services
 - Performance bottleneck identification
 - Error propagation tracking
@@ -199,24 +229,28 @@ OpenTelemetry integration:
 ## Production Considerations
 
 ### Scalability
+
 - Horizontal scaling support
 - Load balancing integration
 - Resource optimization
 - Performance tuning
 
 ### Security
+
 - Secret management encryption
 - Authentication integration
 - Authorization middleware
 - Audit logging
 
 ### Reliability
+
 - Circuit breaker patterns
 - Retry mechanisms
 - Graceful degradation
 - Disaster recovery
 
 ### Operations
+
 - Configuration management
 - Zero-downtime deployments
 - Monitoring and alerting

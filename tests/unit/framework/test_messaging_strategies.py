@@ -26,7 +26,6 @@ from marty_msf.framework.messaging.dlq import (
 def test_import_messaging_strategies():
     """Test importing messaging strategy classes."""
     try:
-
         assert RetryStrategy is not None
         assert DLQManager is not None
         assert RetryConfig is not None
@@ -45,7 +44,6 @@ def test_import_messaging_strategies():
 def test_retry_strategy_enum():
     """Test RetryStrategy enum functionality."""
     try:
-
         # Test all available strategies
         all_strategies = list(RetryStrategy)
         assert RetryStrategy.IMMEDIATE in all_strategies
@@ -179,7 +177,6 @@ async def test_retry_strategy_delay_calculation():
 def test_discover_messaging_strategy_classes():
     """Discover all messaging strategy-related classes."""
     try:
-
         # Find strategy-related classes in DLQ module
         dlq_classes = []
         for name in dir(dlq_module):
@@ -218,7 +215,6 @@ def test_discover_messaging_strategy_classes():
 async def test_messaging_strategy_integration():
     """Test integration between messaging strategies and components."""
     try:
-
         # Create a comprehensive test with multiple components
         RetryConfig(
             strategy=RetryStrategy.EXPONENTIAL_BACKOFF,

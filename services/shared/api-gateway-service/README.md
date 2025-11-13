@@ -5,6 +5,7 @@ A comprehensive API Gateway implementation built on the Marty microservices fram
 ## Features
 
 ### Core Capabilities
+
 - **Dynamic Service Discovery**: In-memory service registry with extensible backend support
   - ⚠️ **Note**: Consul, etcd, and Kubernetes backends are currently stub implementations
   - Production deployments should implement real backend connectors as needed
@@ -17,12 +18,14 @@ A comprehensive API Gateway implementation built on the Marty microservices fram
 - **CORS Support**: Configurable cross-origin resource sharing
 
 ### Monitoring & Observability
+
 - **Metrics**: Prometheus-compatible metrics collection
 - **Distributed Tracing**: Jaeger integration for request tracing
 - **Health Checks**: Service and dependency health monitoring
 - **Structured Logging**: JSON-formatted logs with correlation IDs
 
 ### Resilience Patterns
+
 - **Circuit Breakers**: Prevent cascading failures
 - **Retries**: Configurable retry policies with exponential backoff
 - **Timeouts**: Request-level timeout management
@@ -31,6 +34,7 @@ A comprehensive API Gateway implementation built on the Marty microservices fram
 ## Quick Start
 
 ### Prerequisites
+
 - Python 3.10+
 - Docker (for service discovery backends)
 - Redis (for caching)
@@ -38,6 +42,7 @@ A comprehensive API Gateway implementation built on the Marty microservices fram
 ### Installation
 
 1. **Clone and Install Dependencies**
+
 ```bash
 git clone <repository>
 cd api-gateway-service
@@ -45,6 +50,7 @@ pip install -e .
 ```
 
 2. **Start Required Services**
+
 ```bash
 # Start Consul for service discovery
 docker run -d --name consul -p 8500:8500 consul:latest
@@ -54,6 +60,7 @@ docker run -d --name redis -p 6379:6379 redis:latest
 ```
 
 3. **Configure the Gateway**
+
 ```python
 # config.py - Customize for your environment
 from config import create_development_config
@@ -63,6 +70,7 @@ config = create_development_config()
 ```
 
 4. **Run the Gateway**
+
 ```bash
 python main.py
 ```
@@ -72,6 +80,7 @@ The gateway will be available at `http://localhost:8080`
 ## Configuration
 
 ### Environment Variables
+
 ```bash
 # Service Discovery
 CONSUL_HOST=localhost
@@ -92,6 +101,7 @@ METRICS_PORT=9090
 ```
 
 ### Route Configuration
+
 ```python
 from config import RouteDefinition, RateLimitConfig, CircuitBreakerConfig
 
@@ -114,6 +124,7 @@ routes = [
 ## API Endpoints
 
 ### Core Gateway Endpoints
+
 - `GET /health` - Gateway health status
 - `GET /metrics` - Prometheus metrics
 - `GET /routes` - Configured routes summary
@@ -121,13 +132,16 @@ routes = [
 - `GET /services/{service_name}` - Service instances
 
 ### Service Routing
+
 All configured routes are automatically handled:
+
 - `/{route_pattern}` - Routed to target services
 - Authentication, rate limiting, and circuit breaking applied per route
 
 ## Service Discovery
 
 ### Current Implementation
+
 The gateway currently uses an in-memory service registry for development and testing:
 
 ```python
@@ -138,6 +152,7 @@ service_discovery = ServiceDiscoveryConfig(
 ```
 
 ### Future Backend Support (Stub Implementations)
+
 ⚠️ **Development Status**: The following backends have placeholder implementations:
 
 ```python
@@ -160,7 +175,9 @@ service_discovery = ServiceDiscoveryConfig(
 **Note**: For production use with external service discovery backends, you'll need to implement the actual client connections to replace the current mock implementations.
 
 ### Service Registration
+
 Services register themselves with metadata:
+
 ```python
 await discovery_manager.register_service(ServiceInstance(
     service_name="user-service",
@@ -176,6 +193,7 @@ await discovery_manager.register_service(ServiceInstance(
 ## Load Balancing
 
 ### Strategies
+
 - **Round Robin**: Equal distribution across instances
 - **Least Connections**: Route to instance with fewest active connections
 - **Weighted Round Robin**: Distribution based on instance weights
@@ -183,6 +201,7 @@ await discovery_manager.register_service(ServiceInstance(
 - **Consistent Hash**: Hash-based routing for session affinity
 
 ### Configuration
+
 ```python
 RouteDefinition(
     name="api_route",
@@ -194,6 +213,7 @@ RouteDefinition(
 ## Authentication
 
 ### JWT Authentication
+
 ```python
 auth = AuthConfig(
     type=AuthenticationType.JWT,
@@ -203,6 +223,7 @@ auth = AuthConfig(
 ```
 
 ### API Key Authentication
+
 ```python
 auth = AuthConfig(
     type=AuthenticationType.API_KEY,
@@ -213,6 +234,7 @@ auth = AuthConfig(
 ## Rate Limiting
 
 ### Per-Route Configuration
+
 ```python
 rate_limit = RateLimitConfig(
     requests_per_second=100.0,
@@ -224,11 +246,13 @@ rate_limit = RateLimitConfig(
 ```
 
 ### Global Defaults
+
 Set default rate limits in the main configuration.
 
 ## Circuit Breaker
 
 ### Configuration
+
 ```python
 circuit_breaker = CircuitBreakerConfig(
     failure_threshold=5,
@@ -239,6 +263,7 @@ circuit_breaker = CircuitBreakerConfig(
 ```
 
 ### States
+
 - **Closed**: Normal operation
 - **Open**: Failing fast, requests rejected
 - **Half-Open**: Testing recovery
@@ -246,6 +271,7 @@ circuit_breaker = CircuitBreakerConfig(
 ## Caching
 
 ### Response Caching
+
 ```python
 caching = CachingConfig(
     enabled=True,
@@ -256,7 +282,9 @@ caching = CachingConfig(
 ```
 
 ### Cache Keys
+
 Automatic cache key generation based on:
+
 - Request path and method
 - Query parameters
 - User context (optional)
@@ -264,7 +292,9 @@ Automatic cache key generation based on:
 ## Monitoring
 
 ### Metrics
+
 Available metrics include:
+
 - Request count and rate
 - Response time percentiles
 - Error rates by service
@@ -272,6 +302,7 @@ Available metrics include:
 - Cache hit/miss ratios
 
 ### Health Checks
+
 ```bash
 # Gateway health
 curl http://localhost:8080/health
@@ -281,7 +312,9 @@ curl http://localhost:8080/services
 ```
 
 ### Distributed Tracing
+
 Automatic trace generation with:
+
 - Request ID correlation
 - Service-to-service tracing
 - Performance analysis
@@ -289,6 +322,7 @@ Automatic trace generation with:
 ## Development
 
 ### Running Tests
+
 ```bash
 # Install dev dependencies
 pip install -e .[dev]
@@ -301,6 +335,7 @@ pytest --cov=src --cov-report=html
 ```
 
 ### Code Quality
+
 ```bash
 # Format code
 black .
@@ -315,6 +350,7 @@ mypy .
 ## Deployment
 
 ### Docker
+
 ```dockerfile
 FROM python:3.10-slim
 
@@ -328,6 +364,7 @@ CMD ["python", "main.py"]
 ```
 
 ### Kubernetes
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -376,6 +413,7 @@ The gateway follows a modular architecture:
 ```
 
 ### Request Flow
+
 1. Request received by FastAPI
 2. Authentication validation
 3. Rate limiting check
@@ -390,21 +428,25 @@ The gateway follows a modular architecture:
 ## Best Practices
 
 ### Configuration Management
+
 - Use environment-specific configs
 - Externalize secrets
 - Validate configuration on startup
 
 ### Monitoring
+
 - Set up proper alerting
 - Monitor service health
 - Track business metrics
 
 ### Security
+
 - Use strong JWT secrets
 - Implement proper CORS policies
 - Regular security updates
 
 ### Performance
+
 - Enable response caching
 - Optimize service discovery polling
 - Monitor resource usage

@@ -88,11 +88,17 @@ class StandardObservabilityConfig:
     service_name: str
     service_version: str = "1.0.0"
     service_type: str = "unknown"  # fastapi, grpc, hybrid
-    environment: str = field(default_factory=lambda: os.getenv("DEPLOYMENT_ENVIRONMENT", "development"))
+    environment: str = field(
+        default_factory=lambda: os.getenv("DEPLOYMENT_ENVIRONMENT", "development")
+    )
 
     # OpenTelemetry configuration
-    otlp_endpoint: str = field(default_factory=lambda: os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317"))
-    jaeger_endpoint: str = field(default_factory=lambda: os.getenv("JAEGER_ENDPOINT", "http://localhost:14268/api/traces"))
+    otlp_endpoint: str = field(
+        default_factory=lambda: os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317")
+    )
+    jaeger_endpoint: str = field(
+        default_factory=lambda: os.getenv("JAEGER_ENDPOINT", "http://localhost:14268/api/traces")
+    )
 
     # Sampling configuration based on environment
     trace_sampling_rate: float | None = None
@@ -104,14 +110,16 @@ class StandardObservabilityConfig:
 
     # Correlation ID configuration
     correlation_enabled: bool = True
-    correlation_headers: list[str] = field(default_factory=lambda: [
-        "x-mmf-correlation-id",
-        "x-mmf-request-id",
-        "x-mmf-user-id",
-        "x-mmf-session-id",
-        "x-mmf-operation-id",
-        "x-mmf-plugin-id"
-    ])
+    correlation_headers: list[str] = field(
+        default_factory=lambda: [
+            "x-mmf-correlation-id",
+            "x-mmf-request-id",
+            "x-mmf-user-id",
+            "x-mmf-session-id",
+            "x-mmf-operation-id",
+            "x-mmf-plugin-id",
+        ]
+    )
 
     # Logging configuration
     structured_logging: bool = True
@@ -127,12 +135,7 @@ class StandardObservabilityConfig:
     def __post_init__(self):
         """Set environment-specific defaults."""
         if self.trace_sampling_rate is None:
-            sampling_rates = {
-                "development": 1.0,
-                "testing": 1.0,
-                "staging": 0.5,
-                "production": 0.1
-            }
+            sampling_rates = {"development": 1.0, "testing": 1.0, "staging": 0.5, "production": 0.1}
             self.trace_sampling_rate = sampling_rates.get(self.environment, 0.1)
 
 
@@ -193,14 +196,16 @@ class StandardObservability:
         """Setup OpenTelemetry tracing with standard configuration."""
 
         # Create resource with standard attributes
-        resource = Resource.create({
-            "service.name": self.config.service_name,
-            "service.version": self.config.service_version,
-            "deployment.environment": self.config.environment,
-            "mmf.service.type": self.config.service_type,
-            "mmf.framework.version": "2.0.0",
-            "mmf.observability.standard": "true"
-        })
+        resource = Resource.create(
+            {
+                "service.name": self.config.service_name,
+                "service.version": self.config.service_version,
+                "deployment.environment": self.config.environment,
+                "mmf.service.type": self.config.service_type,
+                "mmf.framework.version": "2.0.0",
+                "mmf.observability.standard": "true",
+            }
+        )
 
         # Setup tracer provider
         self.tracer_provider = TracerProvider(resource=resource)
@@ -229,8 +234,7 @@ class StandardObservability:
         # Add OTLP reader if exporting metrics
         if self.config.export_metrics:
             otlp_reader = PeriodicExportingMetricReader(
-                OTLPMetricExporter(endpoint=self.config.otlp_endpoint),
-                export_interval_millis=30000
+                OTLPMetricExporter(endpoint=self.config.otlp_endpoint), export_interval_millis=30000
             )
             readers.append(otlp_reader)
 
@@ -251,32 +255,27 @@ class StandardObservability:
             self.request_counter = Counter(
                 f"{prefix}_requests_total",
                 "Total requests processed",
-                ["method", "endpoint", "status_code"]
+                ["method", "endpoint", "status_code"],
             )
 
             self.request_duration = Histogram(
                 f"{prefix}_request_duration_seconds",
                 "Request processing duration",
-                ["method", "endpoint"]
+                ["method", "endpoint"],
             )
 
-            self.active_requests = Gauge(
-                f"{prefix}_active_requests",
-                "Currently active requests"
-            )
+            self.active_requests = Gauge(f"{prefix}_active_requests", "Currently active requests")
 
             # Plugin metrics
             self.plugin_operations = Counter(
                 f"{prefix}_plugin_operations_total",
                 "Plugin operations",
-                ["plugin_id", "operation", "status"]
+                ["plugin_id", "operation", "status"],
             )
 
             # Error metrics
             self.error_counter = Counter(
-                f"{prefix}_errors_total",
-                "Total errors",
-                ["error_type", "endpoint"]
+                f"{prefix}_errors_total", "Total errors", ["error_type", "endpoint"]
             )
 
             logger.info("Standard Prometheus metrics configured")
@@ -357,33 +356,23 @@ class StandardObservability:
         """Record request metrics."""
         if self.request_counter:
             self.request_counter.labels(
-                method=method,
-                endpoint=endpoint,
-                status_code=str(status_code)
+                method=method, endpoint=endpoint, status_code=str(status_code)
             ).inc()
 
         if self.request_duration:
-            self.request_duration.labels(
-                method=method,
-                endpoint=endpoint
-            ).observe(duration)
+            self.request_duration.labels(method=method, endpoint=endpoint).observe(duration)
 
     def record_plugin_operation(self, plugin_id: str, operation: str, status: str) -> None:
         """Record plugin operation metrics."""
         if self.plugin_operations:
             self.plugin_operations.labels(
-                plugin_id=plugin_id,
-                operation=operation,
-                status=status
+                plugin_id=plugin_id, operation=operation, status=status
             ).inc()
 
     def record_error(self, error_type: str, endpoint: str = "unknown") -> None:
         """Record error metrics."""
         if self.error_counter:
-            self.error_counter.labels(
-                error_type=error_type,
-                endpoint=endpoint
-            ).inc()
+            self.error_counter.labels(error_type=error_type, endpoint=endpoint).inc()
 
     def get_metrics(self) -> bytes:
         """Get Prometheus metrics output."""
@@ -401,10 +390,7 @@ class StandardObservability:
 
 
 def create_standard_observability(
-    service_name: str,
-    service_version: str = "1.0.0",
-    service_type: str = "unknown",
-    **kwargs
+    service_name: str, service_version: str = "1.0.0", service_type: str = "unknown", **kwargs
 ) -> StandardObservability:
     """
     Create standard observability instance for any MMF service.
@@ -416,7 +402,7 @@ def create_standard_observability(
         service_name=service_name,
         service_version=service_version,
         service_type=service_type,
-        **kwargs
+        **kwargs,
     )
 
     return StandardObservability(config)
@@ -439,10 +425,7 @@ class StandardObservabilityService(ObservabilityService):
             config = {}
 
         # Create configuration from parameters
-        observability_config = StandardObservabilityConfig(
-            service_name=service_name,
-            **config
-        )
+        observability_config = StandardObservabilityConfig(service_name=service_name, **config)
 
         # Create observability instance
         self._observability = StandardObservability(observability_config)

@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 class PermissionAction(Enum):
     """Standard permission actions."""
+
     CREATE = "create"
     READ = "read"
     UPDATE = "update"
@@ -37,6 +38,7 @@ class PermissionAction(Enum):
 
 class ResourceType(Enum):
     """Standard resource types."""
+
     SERVICE = "service"
     CONFIG = "config"
     DEPLOYMENT = "deployment"
@@ -54,8 +56,8 @@ class Permission:
     """Represents a fine-grained permission."""
 
     resource_type: str  # e.g., "service", "config", "user"
-    resource_id: str    # e.g., "*", "user-service", specific ID
-    action: str         # e.g., "read", "write", "delete", "*"
+    resource_id: str  # e.g., "*", "user-service", specific ID
+    action: str  # e.g., "read", "write", "delete", "*"
     constraints: dict[str, Any] = field(default_factory=dict)  # Additional constraints
 
     def __post_init__(self):
@@ -99,11 +101,7 @@ class Permission:
         parts = permission_str.split(":")
         if len(parts) != 3:
             raise ValueError(f"Invalid permission format: {permission_str}")
-        return cls(
-            resource_type=parts[0],
-            resource_id=parts[1],
-            action=parts[2]
-        )
+        return cls(resource_type=parts[0], resource_id=parts[1], action=parts[2])
 
 
 @dataclass
@@ -149,7 +147,7 @@ class Role:
             "metadata": self.metadata,
             "created_at": self.created_at.isoformat(),
             "is_system": self.is_system,
-            "is_active": self.is_active
+            "is_active": self.is_active,
         }
 
 
@@ -172,9 +170,7 @@ class RBACManager:
         """Create default system roles."""
         # Super admin role
         admin_role = Role(
-            name="admin",
-            description="System administrator with full access",
-            is_system=True
+            name="admin", description="System administrator with full access", is_system=True
         )
         admin_role.add_permission(Permission("*", "*", "*"))
         self.add_role(admin_role)
@@ -183,7 +179,7 @@ class RBACManager:
         service_manager = Role(
             name="service_manager",
             description="Can manage services and configurations",
-            is_system=True
+            is_system=True,
         )
         service_manager.add_permission(Permission("service", "*", "*"))
         service_manager.add_permission(Permission("config", "*", "read"))
@@ -195,7 +191,7 @@ class RBACManager:
         developer = Role(
             name="developer",
             description="Developer with read access and limited write access",
-            is_system=True
+            is_system=True,
         )
         developer.add_permission(Permission("service", "*", "read"))
         developer.add_permission(Permission("config", "public", "read"))
@@ -205,9 +201,7 @@ class RBACManager:
 
         # Viewer role
         viewer = Role(
-            name="viewer",
-            description="Read-only access to non-sensitive resources",
-            is_system=True
+            name="viewer", description="Read-only access to non-sensitive resources", is_system=True
         )
         viewer.add_permission(Permission("service", "*", "read"))
         viewer.add_permission(Permission("config", "public", "read"))
@@ -218,7 +212,7 @@ class RBACManager:
         service_account = Role(
             name="service_account",
             description="Limited access for automated systems",
-            is_system=True
+            is_system=True,
         )
         service_account.add_permission(Permission("service", "own", "read"))
         service_account.add_permission(Permission("service", "own", "update"))
@@ -319,11 +313,7 @@ class RBACManager:
             return False
 
     def check_permission(
-        self,
-        user_id: str,
-        resource_type: str,
-        resource_id: str,
-        action: str
+        self, user_id: str, resource_type: str, resource_id: str, action: str
     ) -> bool:
         """Check if user has permission for specific resource and action."""
         try:
@@ -339,20 +329,14 @@ class RBACManager:
             logger.error(f"Permission check failed for user {user_id}: {e}")
             return False
 
-    def require_permission(
-        self,
-        user_id: str,
-        resource_type: str,
-        resource_id: str,
-        action: str
-    ):
+    def require_permission(self, user_id: str, resource_type: str, resource_id: str, action: str):
         """Require permission or raise PermissionDeniedError."""
         if not self.check_permission(user_id, resource_type, resource_id, action):
             raise PermissionDeniedError(
                 f"Permission denied for {action} on {resource_type}:{resource_id}",
                 permission=f"{resource_type}:{resource_id}:{action}",
                 resource=f"{resource_type}:{resource_id}",
-                action=action
+                action=action,
             )
 
     def check_role(self, user_id: str, role_name: str) -> bool:
@@ -363,10 +347,7 @@ class RBACManager:
     def require_role(self, user_id: str, role_name: str):
         """Require role or raise RoleRequiredError."""
         if not self.check_role(user_id, role_name):
-            raise RoleRequiredError(
-                f"Role '{role_name}' required",
-                required_role=role_name
-            )
+            raise RoleRequiredError(f"Role '{role_name}' required", required_role=role_name)
 
     def get_user_roles(self, user_id: str) -> set[str]:
         """Get direct roles assigned to user."""
@@ -396,8 +377,10 @@ class RBACManager:
         cache_key = f"user_permissions:{user_id}"
 
         # Check cache
-        if (cache_key in self.permission_cache and
-            datetime.now(timezone.utc) - self.last_cache_refresh < self.cache_ttl):
+        if (
+            cache_key in self.permission_cache
+            and datetime.now(timezone.utc) - self.last_cache_refresh < self.cache_ttl
+        ):
             return self.permission_cache[cache_key].copy()
 
         # Calculate permissions
@@ -473,7 +456,7 @@ class RBACManager:
                 role = Role(
                     name=role_name,
                     description=role_info.get("description", ""),
-                    inherits_from=set(role_info.get("inherits", []))
+                    inherits_from=set(role_info.get("inherits", [])),
                 )
 
                 # Add permissions
@@ -502,7 +485,7 @@ class RBACManager:
                 roles_data[role.name] = {
                     "description": role.description,
                     "permissions": [p.to_string() for p in role.permissions],
-                    "inherits": list(role.inherits_from)
+                    "inherits": list(role.inherits_from),
                 }
 
         return {"roles": roles_data}
@@ -515,8 +498,10 @@ class RBACManager:
         role = self.roles[role_name]
         return {
             **role.to_dict(),
-            "effective_permissions": [p.to_string() for p in self._get_role_effective_permissions(role_name)],
-            "inherited_roles": list(self.role_hierarchy.get(role_name, set()))
+            "effective_permissions": [
+                p.to_string() for p in self._get_role_effective_permissions(role_name)
+            ],
+            "inherited_roles": list(self.role_hierarchy.get(role_name, set())),
         }
 
     def _get_role_effective_permissions(self, role_name: str) -> set[Permission]:
@@ -574,7 +559,7 @@ def reset_rbac_manager():
 register_service(
     RBACManagerService,
     factory=LambdaFactory(RBACManagerService, lambda _: RBACManagerService()),
-    is_singleton=True
+    is_singleton=True,
 )
 
 
@@ -585,5 +570,5 @@ __all__ = [
     "PermissionAction",
     "ResourceType",
     "get_rbac_manager",
-    "reset_rbac_manager"
+    "reset_rbac_manager",
 ]

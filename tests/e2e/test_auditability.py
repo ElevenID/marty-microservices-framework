@@ -703,7 +703,6 @@ class TestAuditability:
         ]
 
         while (datetime.now() - start_time).seconds < duration:
-
             event_type = random.choice(security_events)
             correlation_id = str(uuid.uuid4())
 

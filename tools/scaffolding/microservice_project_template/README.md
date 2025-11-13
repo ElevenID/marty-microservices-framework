@@ -5,12 +5,14 @@ A production-ready Python microservice template with gRPC, observability, analyt
 ## ✨ Features
 
 ### 🚀 Core Infrastructure
+
 - **AsyncIO gRPC server** with health checks and graceful shutdown
 - **Observability**: Structured logging, OpenTelemetry tracing, Prometheus metrics
 - **Configuration management** with environment-based settings
 - **Docker containerization** with multi-stage builds
 
 ### 📊 Analytics Capabilities
+
 - **Statistical analysis** with pandas, numpy, scipy
 - **Data visualization** with matplotlib and seaborn
 - **Machine learning** with scikit-learn clustering
@@ -21,6 +23,7 @@ A production-ready Python microservice template with gRPC, observability, analyt
   - Distribution analysis with statistical tests
 
 ### ☸️ Kubernetes Ready
+
 - **KinD cluster** setup for local development
 - **Kustomize manifests** for environment-specific deployments
 - **Health probes** for liveness and readiness
@@ -28,6 +31,7 @@ A production-ready Python microservice template with gRPC, observability, analyt
 - **ServiceMonitor** for Prometheus scraping
 
 ### 🛠️ Developer Experience
+
 - **UV package management** for fast dependency resolution
 - **Ruff** for linting and formatting
 - **MyPy** for static type checking
@@ -38,12 +42,14 @@ A production-ready Python microservice template with gRPC, observability, analyt
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Python 3.11+
 - [UV](https://github.com/astral-sh/uv) package manager
 - Docker
 - [KinD](https://kind.sigs.k8s.io/) for local Kubernetes
 
 ### 1. Setup Development Environment
+
 ```bash
 # Install dependencies
 make install
@@ -60,6 +66,7 @@ make typecheck
 ```
 
 ### 2. Run Locally
+
 ```bash
 # Start the server
 make run
@@ -69,6 +76,7 @@ uv run python examples/analytics_demo.py
 ```
 
 ### 3. Docker Development
+
 ```bash
 # Build image
 make docker-build
@@ -78,6 +86,7 @@ docker run -p 50051:50051 -p 9000:9000 -p 8080:8080 microservice-template:latest
 ```
 
 ### 4. Kubernetes Development
+
 ```bash
 # Start KinD cluster and deploy
 make kind-up
@@ -103,28 +112,36 @@ make kind-down
 The service provides several analytics endpoints accessible via gRPC:
 
 ### `GenerateSampleData`
+
 Creates sample datasets for analysis:
+
 ```python
 request = greeter_pb2.SampleDataRequest(n_samples=1000, seed=42)
 response = await stub.GenerateSampleData(request)
 ```
 
 ### `AnalyzeCorrelation`
+
 Performs correlation analysis with visualization:
+
 ```python
 request = greeter_pb2.CorrelationRequest(data_csv=csv_data)
 response = await stub.AnalyzeCorrelation(request)
 ```
 
 ### `AnalyzeClustering`
+
 K-means clustering with silhouette analysis:
+
 ```python
 request = greeter_pb2.ClusteringRequest(data_csv=csv_data, n_clusters=3)
 response = await stub.AnalyzeClustering(request)
 ```
 
 ### `AnalyzeDistribution`
+
 Statistical distribution analysis:
+
 ```python
 request = greeter_pb2.DistributionRequest(values=data, column_name="age")
 response = await stub.AnalyzeDistribution(request)
@@ -175,19 +192,24 @@ APP_LOG_LEVEL=INFO
 ## 📈 Observability
 
 ### Metrics
+
 Available at `http://localhost:9000/metrics`:
+
 - Request duration histograms
 - Request count by method and status
 - Process metrics (CPU, memory)
 - Python-specific metrics
 
 ### Health Checks
+
 - **Liveness**: `http://localhost:8080/health/live`
 - **Readiness**: `http://localhost:8080/health/ready`
 - **Custom checks**: Extensible health check system
 
 ### Tracing
+
 OpenTelemetry spans for:
+
 - gRPC method calls
 - Analytics operations
 - Database queries (when applicable)
@@ -210,11 +232,14 @@ make test-coverage
 ## 📦 Deployment
 
 ### Environment Overlays
+
 - `k8s/overlays/dev/` - Development configuration
 - `k8s/overlays/prod/` - Production configuration
 
 ### CI/CD
+
 GitHub Actions workflow includes:
+
 - Code quality checks (lint, typecheck)
 - Unit and integration tests
 - Docker image building

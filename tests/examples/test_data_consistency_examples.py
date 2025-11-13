@@ -15,6 +15,7 @@ import pytest
 @dataclass
 class ExampleOrder:
     """Simple order for testing."""
+
     order_id: str
     customer_id: str
     total_amount: int
@@ -24,6 +25,7 @@ class ExampleOrder:
 @dataclass
 class ExamplePayment:
     """Simple payment for testing."""
+
     payment_id: str
     order_id: str
     amount: int
@@ -70,26 +72,26 @@ class TestDataConsistencyPatterns:
 
         async def save_order_and_event(order: ExampleOrder, event_data: dict):
             # In a real implementation, this would be in a transaction
-            outbox_events.append({
-                "event_id": str(uuid.uuid4()),
-                "aggregate_id": order.order_id,
-                "event_type": "order_created",
-                "payload": event_data,
-                "created_at": datetime.now(timezone.utc)
-            })
+            outbox_events.append(
+                {
+                    "event_id": str(uuid.uuid4()),
+                    "aggregate_id": order.order_id,
+                    "event_type": "order_created",
+                    "payload": event_data,
+                    "created_at": datetime.now(timezone.utc),
+                }
+            )
             return True
 
         # Create order with event
         order = ExampleOrder(
-            order_id=str(uuid.uuid4()),
-            customer_id="customer_123",
-            total_amount=5000
+            order_id=str(uuid.uuid4()), customer_id="customer_123", total_amount=5000
         )
 
         event_data = {
             "order_id": order.order_id,
             "customer_id": order.customer_id,
-            "total_amount": order.total_amount
+            "total_amount": order.total_amount,
         }
 
         await save_order_and_event(order, event_data)
@@ -107,10 +109,7 @@ class TestDataConsistencyPatterns:
         async def handle_create_order_command(customer_id: str, amount: int):
             order_id = str(uuid.uuid4())
             order = ExampleOrder(
-                order_id=order_id,
-                customer_id=customer_id,
-                total_amount=amount,
-                status="created"
+                order_id=order_id, customer_id=customer_id, total_amount=amount, status="created"
             )
             orders_write[order_id] = order
             return order_id
@@ -129,7 +128,7 @@ class TestDataConsistencyPatterns:
                     "customer_id": order.customer_id,
                     "total_amount": order.total_amount,
                     "status": order.status,
-                    "created_at": datetime.now(timezone.utc).isoformat()
+                    "created_at": datetime.now(timezone.utc).isoformat(),
                 }
 
         # Execute command
@@ -161,10 +160,7 @@ class TestDataConsistencyPatterns:
 
             # 1. Create order (Command side)
             order = ExampleOrder(
-                order_id=order_id,
-                customer_id=customer_id,
-                total_amount=amount,
-                status="processing"
+                order_id=order_id, customer_id=customer_id, total_amount=amount, status="processing"
             )
             orders[order_id] = order
 
@@ -173,22 +169,20 @@ class TestDataConsistencyPatterns:
                 "order_id": order_id,
                 "steps": ["reserve_inventory", "process_payment"],
                 "current_step": 0,
-                "status": "running"
+                "status": "running",
             }
 
             # 3. Add outbox event
-            events.append({
-                "event_id": str(uuid.uuid4()),
-                "event_type": "order_processing_started",
-                "aggregate_id": order_id,
-                "saga_id": saga_id,
-                "payload": {
-                    "order_id": order_id,
-                    "customer_id": customer_id,
-                    "amount": amount
-                },
-                "created_at": datetime.now(timezone.utc)
-            })
+            events.append(
+                {
+                    "event_id": str(uuid.uuid4()),
+                    "event_type": "order_processing_started",
+                    "aggregate_id": order_id,
+                    "saga_id": saga_id,
+                    "payload": {"order_id": order_id, "customer_id": customer_id, "amount": amount},
+                    "created_at": datetime.now(timezone.utc),
+                }
+            )
 
             # 4. Update read model (Query side)
             read_models[order_id] = {
@@ -197,7 +191,7 @@ class TestDataConsistencyPatterns:
                 "total_amount": amount,
                 "status": "processing",
                 "saga_id": saga_id,
-                "last_updated": datetime.now(timezone.utc).isoformat()
+                "last_updated": datetime.now(timezone.utc).isoformat(),
             }
 
             return order_id, saga_id
@@ -228,24 +222,24 @@ class TestDataConsistencyPatterns:
                 "orchestrator_name": "test-orchestrator",
                 "worker_count": 2,
                 "retry_attempts": 3,
-                "timeout_seconds": 30
+                "timeout_seconds": 30,
             },
             "outbox": {
                 "batch_size": 100,
                 "polling_interval_ms": 1000,
                 "max_retry_attempts": 5,
-                "dead_letter_threshold": 10
+                "dead_letter_threshold": 10,
             },
             "cqrs": {
                 "enable_caching": True,
                 "cache_ttl_seconds": 300,
-                "enable_read_model_validation": True
+                "enable_read_model_validation": True,
             },
             "event_store": {
                 "connection_string": "test_connection",
                 "table_name": "events",
-                "enable_snapshots": True
-            }
+                "enable_snapshots": True,
+            },
         }
 
         # Verify configuration structure

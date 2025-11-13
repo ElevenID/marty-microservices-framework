@@ -9,9 +9,7 @@ from uuid import UUID, uuid4
 class DomainEvent:
     """Base class for domain events."""
 
-    def __init__(
-        self, event_id: str | None = None, timestamp: datetime | None = None, **kwargs
-    ):
+    def __init__(self, event_id: str | None = None, timestamp: datetime | None = None, **kwargs):
         self.event_id = event_id or str(uuid4())
         self.timestamp = timestamp or datetime.now(timezone.utc)
         self.data = kwargs

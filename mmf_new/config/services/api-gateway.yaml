@@ -1,0 +1,196 @@
+# API Gateway Configuration
+# Service-specific configuration for the API gateway
+
+service:
+  name: "api-gateway"
+  description: "Main API gateway for routing and cross-cutting concerns"
+  version: "1.0.0"
+  type: "hexagonal"
+
+# Gateway-specific ports
+ports:
+  http: 8000
+  https: 8443
+  health: 8080
+  metrics: 9090
+  admin: 8081
+
+# Gateway security
+security:
+  authentication:
+    # Gateway validates JWTs but doesn't issue them
+    jwt:
+      verification_only: true
+      public_key_path: "/etc/keys/jwt-public.pem"
+      issuer_whitelist: ["identity-service"]
+
+    # API key authentication for service-to-service
+    api_keys:
+      enabled: true
+      header_name: "X-API-Key"
+      keys_config_path: "/etc/config/api-keys.yaml"
+
+  authorization:
+    enabled: true
+    policy_file: "/etc/config/gateway-authz-policy.yaml"
+
+  cors:
+    enabled: true
+    allow_origins: ["${CORS_ALLOWED_ORIGINS}"]
+    allow_methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
+    allow_headers: ["Authorization", "Content-Type", "X-API-Key"]
+    allow_credentials: true
+    max_age: 3600
+
+# Route configuration
+routing:
+  services:
+    identity:
+      upstream: "http://identity-service:8001"
+      path_prefix: "/api/v1/identity"
+      strip_prefix: false
+      timeout: 30s
+
+    account:
+      upstream: "http://account-service:8002"
+      path_prefix: "/api/v1/accounts"
+      strip_prefix: false
+      timeout: 30s
+
+    file_upload:
+      upstream: "http://file-upload-service:8003"
+      path_prefix: "/api/v1/files"
+      strip_prefix: false
+      timeout: 300s  # Longer timeout for file uploads
+
+    form:
+      upstream: "http://form-service:8004"
+      path_prefix: "/api/v1/forms"
+      strip_prefix: false
+      timeout: 30s
+
+    report:
+      upstream: "http://report-service:8006"
+      path_prefix: "/api/v1/reports"
+      strip_prefix: false
+      timeout: 120s  # Longer timeout for report generation
+
+  # Static routes
+  static:
+    docs:
+      path: "/docs"
+      target: "/app/static/docs"
+
+    health:
+      path: "/health"
+      handler: "health_check"
+
+# Load balancing
+load_balancing:
+  algorithm: "round_robin"  # Options: round_robin, least_connections, weighted
+  health_check:
+    enabled: true
+    interval: "30s"
+    timeout: "10s"
+    path: "/health"
+
+# Rate limiting
+rate_limiting:
+  enabled: true
+  default_policy:
+    requests_per_minute: 100
+    burst_size: 20
+
+  per_service_policies:
+    file_upload:
+      requests_per_minute: 10
+      burst_size: 5
+    report:
+      requests_per_minute: 20
+      burst_size: 5
+
+  per_user_policies:
+    authenticated:
+      requests_per_minute: 200
+      burst_size: 50
+    anonymous:
+      requests_per_minute: 20
+      burst_size: 10
+
+# Request/Response transformation
+transformations:
+  request:
+    add_headers:
+      X-Gateway-Version: "${SERVICE_VERSION}"
+      X-Request-ID: "${REQUEST_ID}"
+      X-Forwarded-For: "${CLIENT_IP}"
+
+  response:
+    add_headers:
+      X-Gateway: "mmf-api-gateway"
+      Cache-Control: "no-cache, no-store, must-revalidate"
+
+# Gateway-specific resilience
+resilience:
+  circuit_breaker:
+    per_service:
+      failure_threshold: 5
+      recovery_timeout: 60
+      half_open_max_calls: 3
+
+  retry_policy:
+    max_attempts: 3
+    backoff_multiplier: 1.5
+    retry_on_status: [502, 503, 504]
+
+  timeout:
+    default: 30s
+    file_upload: 300s
+    report_generation: 120s
+
+# Caching
+caching:
+  enabled: true
+  default_ttl: 300  # 5 minutes
+
+  per_route_policies:
+    "/api/v1/identity/profile":
+      ttl: 600  # 10 minutes
+      vary_by: ["user_id"]
+    "/api/v1/forms/templates":
+      ttl: 3600  # 1 hour
+      vary_by: ["form_type"]
+
+# Gateway-specific observability
+observability:
+  request_logging:
+    enabled: true
+    include_body: false  # For security
+    include_headers: ["Content-Type", "User-Agent"]
+    exclude_headers: ["Authorization", "X-API-Key"]
+
+  custom_metrics:
+    - name: "gateway_requests_total"
+      type: "counter"
+      labels: ["method", "path", "status_code", "service"]
+    - name: "gateway_request_duration_seconds"
+      type: "histogram"
+      labels: ["method", "path", "service"]
+    - name: "gateway_active_connections"
+      type: "gauge"
+    - name: "gateway_rate_limit_hits_total"
+      type: "counter"
+      labels: ["policy", "user_type"]
+
+# API documentation aggregation
+documentation:
+  enabled: true
+  swagger_ui: true
+  redoc_ui: true
+
+  service_specs:
+    identity: "/api/v1/identity/openapi.json"
+    account: "/api/v1/accounts/openapi.json"
+    file_upload: "/api/v1/files/openapi.json"
+    form: "/api/v1/forms/openapi.json"
+    report: "/api/v1/reports/openapi.json"

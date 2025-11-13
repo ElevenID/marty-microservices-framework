@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     && mv /root/.local/bin/uv /usr/local/bin/uv \
     && mv /root/.local/bin/uvx /usr/local/bin/uvx
 
-# Install only the essential dependencies for the identity service
+# Install dependencies for the identity service
 RUN uv pip install --system \
     fastapi>=0.104.0 \
     uvicorn[standard]>=0.24.0 \
@@ -22,7 +22,8 @@ RUN uv pip install --system \
     asyncpg>=0.29.0 \
     pydantic-settings>=2.11.0 \
     aiofiles>=24.1.0 \
-    click>=8.1.0
+    click>=8.1.0 \
+    pyyaml>=6.0.0
 
 # Copy application code
 COPY mmf_new/ ./mmf_new/
@@ -38,5 +39,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Run the application using uv
-CMD ["uv", "run", "uvicorn", "mmf_new.services.identity.infrastructure.adapters.http_adapter:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the application using system Python
+CMD ["python", "-m", "uvicorn", "mmf_new.services.identity.infrastructure.adapters.http_adapter:app", "--host", "0.0.0.0", "--port", "8000"]

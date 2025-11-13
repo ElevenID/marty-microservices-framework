@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 
 def _ensure_utc(dt: datetime | None) -> datetime | None:
@@ -40,7 +41,7 @@ class SecurityPrincipal:
         session_id: str | None = None,
         expires_at: datetime | None = None,
         created_at: datetime | None = None,
-    ) -> "SecurityPrincipal":
+    ) -> SecurityPrincipal:
         created = _ensure_utc(created_at) or datetime.now(timezone.utc)
         expiry = _ensure_utc(expires_at)
 
@@ -65,12 +66,12 @@ class SecurityPrincipal:
         reference = _ensure_utc(reference_time) or datetime.now(timezone.utc)
         return reference >= self.expires_at
 
-    def with_role(self, role: str) -> "SecurityPrincipal":
+    def with_role(self, role: str) -> SecurityPrincipal:
         if not role:
             return self
         return replace(self, roles=self.roles.union({role}))
 
-    def with_permission(self, permission: str) -> "SecurityPrincipal":
+    def with_permission(self, permission: str) -> SecurityPrincipal:
         if not permission:
             return self
         return replace(self, permissions=self.permissions.union({permission}))
@@ -81,7 +82,7 @@ class SecurityPrincipal:
     def has_permission(self, permission: str) -> bool:
         return permission in self.permissions
 
-    def with_session(self, session_id: str | None) -> "SecurityPrincipal":
+    def with_session(self, session_id: str | None) -> SecurityPrincipal:
         return replace(self, session_id=session_id)
 
     def to_audit_record(

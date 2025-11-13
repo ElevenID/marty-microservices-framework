@@ -23,14 +23,12 @@ from . import DistributedTracing, setup_distributed_tracing
 
 # FastAPI imports
 try:
-
     FASTAPI_AVAILABLE = True
 except ImportError:
     FASTAPI_AVAILABLE = False
 
 # gRPC imports
 try:
-
     GRPC_AVAILABLE = True
 except ImportError:
     GRPC_AVAILABLE = False

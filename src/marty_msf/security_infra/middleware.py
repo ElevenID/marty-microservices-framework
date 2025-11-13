@@ -80,7 +80,9 @@ class SecurityMiddleware:
         # Fallback to specific authenticator implementations
         return await self._authenticate_with_specific_methods(request_info)
 
-    def _extract_credentials_from_request(self, request_info: builtins.dict[str, Any]) -> dict[str, Any] | None:
+    def _extract_credentials_from_request(
+        self, request_info: builtins.dict[str, Any]
+    ) -> dict[str, Any] | None:
         """Extract credentials from request info for canonical authentication."""
         credentials = {}
 
@@ -117,8 +119,8 @@ class SecurityMiddleware:
             user_id=user.id,
             username=user.username,
             roles=user.roles,
-            permissions=getattr(user, 'permissions', []),
-            metadata=getattr(user, 'metadata', {})
+            permissions=getattr(user, "permissions", []),
+            metadata=getattr(user, "metadata", {}),
         )
 
     async def _authenticate_with_specific_methods(
@@ -375,7 +377,9 @@ def require_permission_dependency(permission: str):
         user: AuthenticatedUser = Depends(require_authentication),
     ) -> AuthenticatedUser:
         # Use canonical authorization function
-        security_user = User(id=user.user_id, username=user.username or user.user_id, roles=user.roles)
+        security_user = User(
+            id=user.user_id, username=user.username or user.user_id, roles=user.roles
+        )
 
         if not authorize_principal(security_user, "api", permission):
             raise HTTPException(status_code=403, detail=f"Permission required: {permission}")
@@ -391,7 +395,9 @@ def require_role_dependency(role: str):
         user: AuthenticatedUser = Depends(require_authentication),
     ) -> AuthenticatedUser:
         # Use canonical authorization function
-        security_user = User(id=user.user_id, username=user.username or user.user_id, roles=user.roles)
+        security_user = User(
+            id=user.user_id, username=user.username or user.user_id, roles=user.roles
+        )
 
         if not authorize_principal(security_user, "api", f"role:{role}"):
             raise HTTPException(status_code=403, detail=f"Role required: {role}")

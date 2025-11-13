@@ -71,9 +71,7 @@ class TokenProvider(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def refresh_token(
-        self, token: str, new_expires_at: datetime | None = None
-    ) -> str:
+    async def refresh_token(self, token: str, new_expires_at: datetime | None = None) -> str:
         """
         Refresh an existing JWT token with new expiration.
 

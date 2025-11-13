@@ -17,6 +17,7 @@ A comprehensive management dashboard for the Marty Microservices Framework.
 The dashboard consists of two main components:
 
 ### Backend (FastAPI)
+
 - **FastAPI** web framework with async support
 - **PostgreSQL** database for data persistence
 - **Redis** for caching and real-time features
@@ -25,6 +26,7 @@ The dashboard consists of two main components:
 - **JWT** authentication and authorization
 
 ### Frontend (React)
+
 - **React** with TypeScript for type safety
 - **TailwindCSS** for modern styling
 - **React Query** for efficient data fetching
@@ -44,23 +46,27 @@ The dashboard consists of two main components:
 ### Backend Setup
 
 1. **Install dependencies:**
+
    ```bash
    cd backend
    pip install -e .
    ```
 
 2. **Configure environment:**
+
    ```bash
    cp .env.example .env
    # Edit .env with your configuration
    ```
 
 3. **Initialize database:**
+
    ```bash
    marty-dashboard init
    ```
 
 4. **Start the server:**
+
    ```bash
    marty-dashboard serve --reload
    ```
@@ -68,12 +74,14 @@ The dashboard consists of two main components:
 ### Frontend Setup
 
 1. **Install dependencies:**
+
    ```bash
    cd frontend
    npm install
    ```
 
 2. **Start development server:**
+
    ```bash
    npm run dev
    ```
@@ -247,11 +255,13 @@ alembic upgrade head
 ### Production Deployment
 
 1. **Docker Compose** (Recommended):
+
    ```bash
    docker-compose -f docker-compose.prod.yml up -d
    ```
 
 2. **Kubernetes**:
+
    ```bash
    kubectl apply -f k8s/
    ```
@@ -283,6 +293,7 @@ The dashboard implements several security best practices:
 ## API Documentation
 
 Interactive API documentation is available at:
+
 - **Swagger UI**: `http://localhost:8000/api/docs`
 - **ReDoc**: `http://localhost:8000/api/redoc`
 
@@ -301,6 +312,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Support
 
 For support and questions:
+
 - **Documentation**: [Link to docs]
 - **Issues**: [GitHub Issues]
 - **Community**: [Discord/Slack]

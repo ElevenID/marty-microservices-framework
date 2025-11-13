@@ -38,9 +38,7 @@ class ReadModelStore(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def count(
-        self, model_type: str, filters: dict[str, Any] | None = None
-    ) -> int:
+    async def count(self, model_type: str, filters: dict[str, Any] | None = None) -> int:
         """Count read models."""
         raise NotImplementedError
 
@@ -100,9 +98,7 @@ class InMemoryReadModelStore(ReadModelStore):
             if model_id in self._models[model_type]:
                 del self._models[model_type][model_id]
 
-    async def count(
-        self, model_type: str, filters: dict[str, Any] | None = None
-    ) -> int:
+    async def count(self, model_type: str, filters: dict[str, Any] | None = None) -> int:
         """Count read models."""
         async with self._lock:
             models = self._models[model_type].values()
@@ -134,9 +130,7 @@ class InMemoryReadModelStore(ReadModelStore):
 
         return True
 
-    def _apply_filter_operation(
-        self, field_value: Any, operation: str, op_value: Any
-    ) -> bool:
+    def _apply_filter_operation(self, field_value: Any, operation: str, op_value: Any) -> bool:
         """Apply filter operation."""
         if operation == "$eq":
             return field_value == op_value

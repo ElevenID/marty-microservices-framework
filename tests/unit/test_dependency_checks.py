@@ -21,13 +21,7 @@ class TestDependencyChecks:
 
     def test_core_dependencies_available(self):
         """Test that core framework dependencies are available."""
-        core_deps = [
-            'fastapi',
-            'pydantic',
-            'uvicorn',
-            'pytest',
-            'pytest_asyncio'
-        ]
+        core_deps = ["fastapi", "pydantic", "uvicorn", "pytest", "pytest_asyncio"]
 
         missing_deps = []
         for dep in core_deps:
@@ -63,7 +57,7 @@ class TestDependencyChecks:
         if current_version >= (3, 13):
             print("⚠️  Running on Python 3.13+, checking for compatibility issues...")
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_command_availability(self, mock_run):
         """Test that required system commands are available."""
         # Mock successful command execution
@@ -72,7 +66,6 @@ class TestDependencyChecks:
         mock_result.stdout = "version 1.0.0"
         mock_run.return_value = mock_result
 
-
         # Test that the function works
         result = check_command("uv")
         assert result is True
@@ -80,12 +73,11 @@ class TestDependencyChecks:
         # Verify subprocess was called
         assert mock_run.called
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_command_not_found(self, mock_run):
         """Test handling of missing commands."""
         # Mock command not found
         mock_run.side_effect = FileNotFoundError()
-
 
         result = check_command("nonexistent-command")
         assert result is False
@@ -93,9 +85,9 @@ class TestDependencyChecks:
     def test_development_dependencies(self):
         """Test that development dependencies are available."""
         dev_deps = [
-            ('pytest', 'pytest'),
-            ('black', 'black'),
-            ('ruff', 'ruff'),
+            ("pytest", "pytest"),
+            ("black", "black"),
+            ("ruff", "ruff"),
         ]
 
         for module_name, package_name in dev_deps:
@@ -108,8 +100,8 @@ class TestDependencyChecks:
     def test_e2e_dependencies(self):
         """Test E2E testing dependencies."""
         e2e_deps = [
-            ('playwright', 'playwright'),
-            ('docker', 'docker'),
+            ("playwright", "playwright"),
+            ("docker", "docker"),
         ]
 
         missing_e2e = []
@@ -126,9 +118,9 @@ class TestDependencyChecks:
     def test_framework_imports(self):
         """Test that framework modules can be imported."""
         framework_modules = [
-            'src.framework.config',
-            'src.framework.events',
-            'src.framework.logging',
+            "src.framework.config",
+            "src.framework.events",
+            "src.framework.logging",
         ]
 
         import_errors = []
@@ -139,9 +131,7 @@ class TestDependencyChecks:
                 import_errors.append((module, str(e)))
 
         if import_errors:
-            error_msg = "\n".join([
-                f"  {module}: {error}" for module, error in import_errors
-            ])
+            error_msg = "\n".join([f"  {module}: {error}" for module, error in import_errors])
             pytest.fail(f"Framework import errors:\n{error_msg}")
 
     def test_pyproject_toml_dependencies(self):
@@ -149,8 +139,6 @@ class TestDependencyChecks:
         pyproject_path = Path("pyproject.toml")
         if not pyproject_path.exists():
             pytest.skip("pyproject.toml not found")
-
-
 
         try:
             with open(pyproject_path, "rb") as f:
@@ -177,13 +165,13 @@ class TestDependencyChecks:
 
         # Check if we're in a virtual environment
         in_venv = (
-            hasattr(sys, 'prefix') and
-            hasattr(sys, 'base_prefix') and
-            sys.prefix != sys.base_prefix
-        ) or (
-            hasattr(sys, 'real_prefix')
-        ) or (
-            'VIRTUAL_ENV' in __import__('os').environ
+            (
+                hasattr(sys, "prefix")
+                and hasattr(sys, "base_prefix")
+                and sys.prefix != sys.base_prefix
+            )
+            or (hasattr(sys, "real_prefix"))
+            or ("VIRTUAL_ENV" in __import__("os").environ)
         )
 
         if not in_venv:
@@ -212,9 +200,9 @@ class TestDependencyChecks:
     def test_security_dependencies(self):
         """Test security-related dependencies."""
         security_deps = [
-            'cryptography',
-            'passlib',
-            'python_jose',
+            "cryptography",
+            "passlib",
+            "python_jose",
         ]
 
         for dep in security_deps:
@@ -228,11 +216,7 @@ class TestDependencyChecks:
         """Test for known vulnerabilities in dependencies."""
         try:
             result = subprocess.run(
-                ["uv", "pip", "check"],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False
+                ["uv", "pip", "check"], capture_output=True, text=True, timeout=30, check=False
             )
 
             if result.returncode != 0:

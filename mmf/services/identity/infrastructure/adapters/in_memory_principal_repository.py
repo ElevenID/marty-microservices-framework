@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Mapping
 
 from mmf.services.identity.application.ports_out.principal_repository import (
     PrincipalRepository,

@@ -51,6 +51,7 @@ WorkflowBase = declarative_base()
 
 class WorkflowStatus(Enum):
     """Workflow execution status."""
+
     CREATED = "created"
     RUNNING = "running"
     PAUSED = "paused"
@@ -63,6 +64,7 @@ class WorkflowStatus(Enum):
 
 class StepStatus(Enum):
     """Individual step status."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -73,6 +75,7 @@ class StepStatus(Enum):
 
 class StepType(Enum):
     """Types of workflow steps."""
+
     ACTION = "action"
     DECISION = "decision"
     PARALLEL = "parallel"
@@ -84,6 +87,7 @@ class StepType(Enum):
 @dataclass
 class StepResult:
     """Result of step execution."""
+
     success: bool
     data: dict[str, Any] = field(default_factory=dict)
     error: str | None = None
@@ -94,6 +98,7 @@ class StepResult:
 @dataclass
 class WorkflowContext:
     """Workflow execution context."""
+
     workflow_id: str
     data: dict[str, Any] = field(default_factory=dict)
     step_results: dict[str, StepResult] = field(default_factory=dict)
@@ -115,7 +120,7 @@ class WorkflowStep(ABC):
         retry_count: int = 0,
         retry_delay: timedelta | None = None,
         compensation_step: WorkflowStep | None = None,
-        condition: Callable[[WorkflowContext], bool] | None = None
+        condition: Callable[[WorkflowContext], bool] | None = None,
     ):
         self.step_id = step_id
         self.name = name
@@ -148,13 +153,7 @@ class WorkflowStep(ABC):
 class ActionStep(WorkflowStep):
     """Step that executes a specific action."""
 
-    def __init__(
-        self,
-        step_id: str,
-        name: str,
-        action: Callable[[WorkflowContext], Any],
-        **kwargs
-    ):
+    def __init__(self, step_id: str, name: str, action: Callable[[WorkflowContext], Any], **kwargs):
         super().__init__(step_id, name, StepType.ACTION, **kwargs)
         self.action = action
 
@@ -166,17 +165,10 @@ class ActionStep(WorkflowStep):
             else:
                 result = self.action(context)
 
-            return StepResult(
-                success=True,
-                data={"result": result} if result is not None else {}
-            )
+            return StepResult(success=True, data={"result": result} if result is not None else {})
         except Exception as e:
             logger.error(f"Action step {self.step_id} failed: {e}")
-            return StepResult(
-                success=False,
-                error=str(e),
-                should_retry=self.retry_count > 0
-            )
+            return StepResult(success=False, error=str(e), should_retry=self.retry_count > 0)
 
 
 class DecisionStep(WorkflowStep):
@@ -188,7 +180,7 @@ class DecisionStep(WorkflowStep):
         name: str,
         decision_logic: Callable[[WorkflowContext], str],
         branches: dict[str, list[WorkflowStep]],
-        **kwargs
+        **kwargs,
     ):
         super().__init__(step_id, name, StepType.DECISION, **kwargs)
         self.decision_logic = decision_logic
@@ -198,10 +190,7 @@ class DecisionStep(WorkflowStep):
         """Execute decision logic."""
         try:
             branch = self.decision_logic(context)
-            return StepResult(
-                success=True,
-                data={"branch": branch}
-            )
+            return StepResult(success=True, data={"branch": branch})
         except Exception as e:
             logger.error(f"Decision step {self.step_id} failed: {e}")
             return StepResult(success=False, error=str(e))
@@ -216,7 +205,7 @@ class ParallelStep(WorkflowStep):
         name: str,
         parallel_steps: list[WorkflowStep],
         wait_for_all: bool = True,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(step_id, name, StepType.PARALLEL, **kwargs)
         self.parallel_steps = parallel_steps
@@ -245,13 +234,11 @@ class ParallelStep(WorkflowStep):
             # Aggregate results
             all_success = all(
                 isinstance(r, StepResult) and r.success
-                for r in results if not isinstance(r, Exception)
+                for r in results
+                if not isinstance(r, Exception)
             )
 
-            return StepResult(
-                success=all_success,
-                data={"parallel_results": results}
-            )
+            return StepResult(success=all_success, data={"parallel_results": results})
         except Exception as e:
             logger.error(f"Parallel step {self.step_id} failed: {e}")
             return StepResult(success=False, error=str(e))
@@ -271,7 +258,7 @@ class WaitStep(WorkflowStep):
         wait_duration: timedelta | None = None,
         wait_condition: Callable[[WorkflowContext], bool] | None = None,
         check_interval: timedelta | None = None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(step_id, name, StepType.WAIT, **kwargs)
         self.wait_duration = wait_duration
@@ -311,8 +298,12 @@ class WorkflowInstance(WorkflowBase):
     status = Column(String(50), nullable=False, default=WorkflowStatus.CREATED.value, index=True)
     context_data = Column(Text, nullable=False)
     current_step = Column(String(255), nullable=True, index=True)
-    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at = Column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
     started_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
     correlation_id = Column(String(255), nullable=True, index=True)
@@ -332,7 +323,9 @@ class WorkflowStepExecution(WorkflowBase):
     workflow_id = Column(String(255), nullable=False, index=True)
     step_id = Column(String(255), nullable=False, index=True)
     status = Column(String(50), nullable=False, index=True)
-    started_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    started_at = Column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
     completed_at = Column(DateTime(timezone=True), nullable=True)
     result_data = Column(Text, nullable=True)
     error_message = Column(Text, nullable=True)
@@ -348,7 +341,7 @@ class WorkflowDefinition:
         name: str,
         description: str = "",
         version: str = "1.0",
-        timeout: timedelta | None = None
+        timeout: timedelta | None = None,
     ):
         self.workflow_type = workflow_type
         self.name = name
@@ -365,11 +358,7 @@ class WorkflowDefinition:
         return self
 
     def add_action(
-        self,
-        step_id: str,
-        name: str,
-        action: Callable[[WorkflowContext], Any],
-        **kwargs
+        self, step_id: str, name: str, action: Callable[[WorkflowContext], Any], **kwargs
     ) -> WorkflowDefinition:
         """Add an action step."""
         step = ActionStep(step_id, name, action, **kwargs)
@@ -381,18 +370,14 @@ class WorkflowDefinition:
         name: str,
         decision_logic: Callable[[WorkflowContext], str],
         branches: dict[str, list[WorkflowStep]],
-        **kwargs
+        **kwargs,
     ) -> WorkflowDefinition:
         """Add a decision step."""
         step = DecisionStep(step_id, name, decision_logic, branches, **kwargs)
         return self.add_step(step)
 
     def add_parallel(
-        self,
-        step_id: str,
-        name: str,
-        parallel_steps: list[WorkflowStep],
-        **kwargs
+        self, step_id: str, name: str, parallel_steps: list[WorkflowStep], **kwargs
     ) -> WorkflowDefinition:
         """Add a parallel execution step."""
         step = ParallelStep(step_id, name, parallel_steps, **kwargs)
@@ -404,7 +389,7 @@ class WorkflowDefinition:
         name: str,
         wait_duration: timedelta | None = None,
         wait_condition: Callable[[WorkflowContext], bool] | None = None,
-        **kwargs
+        **kwargs,
     ) -> WorkflowDefinition:
         """Add a wait step."""
         step = WaitStep(step_id, name, wait_duration, wait_condition, **kwargs)
@@ -428,7 +413,7 @@ class WorkflowEngine:
         event_bus: EventBus,
         session_factory: Callable[[], AsyncSession] | None = None,
         processing_interval: float = 5.0,
-        max_concurrent_workflows: int = 100
+        max_concurrent_workflows: int = 100,
     ):
         self.event_bus = event_bus
         self.session_factory = session_factory
@@ -452,7 +437,7 @@ class WorkflowEngine:
             "workflows_completed": 0,
             "workflows_failed": 0,
             "steps_executed": 0,
-            "compensations_executed": 0
+            "compensations_executed": 0,
         }
 
     def register_workflow(self, definition: WorkflowDefinition) -> None:
@@ -467,7 +452,7 @@ class WorkflowEngine:
         initial_data: dict[str, Any] | None = None,
         correlation_id: str | None = None,
         user_id: str | None = None,
-        tenant_id: str | None = None
+        tenant_id: str | None = None,
     ) -> str:
         """Start a new workflow instance."""
         if workflow_type not in self.workflow_definitions:
@@ -481,7 +466,7 @@ class WorkflowEngine:
             data=initial_data or {},
             correlation_id=correlation_id,
             user_id=user_id,
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
         # Persist workflow instance
@@ -501,7 +486,7 @@ class WorkflowEngine:
             workflow_type=workflow_type,
             event_type="WorkflowStarted",
             workflow_status=WorkflowStatus.CREATED.value,
-            correlation_id=correlation_id
+            correlation_id=correlation_id,
         )
         await self.event_bus.publish(event)
 
@@ -531,7 +516,7 @@ class WorkflowEngine:
             workflow_id=workflow_id,
             workflow_type="",  # Will be filled from persistence
             event_type="WorkflowCancelled",
-            workflow_status=WorkflowStatus.CANCELLED.value
+            workflow_status=WorkflowStatus.CANCELLED.value,
         )
         await self.event_bus.publish(event)
 
@@ -544,7 +529,6 @@ class WorkflowEngine:
             return None
 
         async with self._get_session() as session:
-
             query = select(WorkflowInstance).where(WorkflowInstance.workflow_id == workflow_id)
             result = await session.execute(query)
             instance = result.scalar_one_or_none()
@@ -562,7 +546,7 @@ class WorkflowEngine:
                 "started_at": instance.started_at,
                 "completed_at": instance.completed_at,
                 "error_message": instance.error_message,
-                "retry_count": instance.retry_count
+                "retry_count": instance.retry_count,
             }
 
     async def retry_failed_workflow(self, workflow_id: str) -> bool:
@@ -641,7 +625,7 @@ class WorkflowEngine:
                     workflow_type=workflow_type,
                     event_type="WorkflowRunning",
                     workflow_status=WorkflowStatus.RUNNING.value,
-                    correlation_id=context.correlation_id
+                    correlation_id=context.correlation_id,
                 )
                 await self.event_bus.publish(event)
 
@@ -658,7 +642,9 @@ class WorkflowEngine:
                         return
 
                 # Workflow completed successfully
-                await self._complete_workflow(context.workflow_id, workflow_type, WorkflowStatus.COMPLETED)
+                await self._complete_workflow(
+                    context.workflow_id, workflow_type, WorkflowStatus.COMPLETED
+                )
 
             except Exception as e:
                 logger.error(f"Workflow {context.workflow_id} failed: {e}")
@@ -671,10 +657,7 @@ class WorkflowEngine:
                     del self.running_workflows[context.workflow_id]
 
     async def _execute_step(
-        self,
-        step: WorkflowStep,
-        context: WorkflowContext,
-        workflow_type: str
+        self, step: WorkflowStep, context: WorkflowContext, workflow_type: str
     ) -> bool:
         """Execute a single workflow step with retry logic."""
         attempts = 0
@@ -689,8 +672,7 @@ class WorkflowEngine:
                 # Execute step
                 step.status = StepStatus.RUNNING
                 result = await asyncio.wait_for(
-                    step.execute(context),
-                    timeout=step.timeout.total_seconds()
+                    step.execute(context), timeout=step.timeout.total_seconds()
                 )
 
                 # Process result
@@ -715,7 +697,7 @@ class WorkflowEngine:
                         event_type="StepCompleted",
                         workflow_step=step.step_id,
                         workflow_data=result.data,
-                        correlation_id=context.correlation_id
+                        correlation_id=context.correlation_id,
                     )
                     await self.event_bus.publish(event)
 
@@ -746,7 +728,7 @@ class WorkflowEngine:
                             event_type="StepFailed",
                             workflow_step=step.step_id,
                             workflow_data={"error": result.error},
-                            correlation_id=context.correlation_id
+                            correlation_id=context.correlation_id,
                         )
                         await self.event_bus.publish(event)
 
@@ -777,10 +759,7 @@ class WorkflowEngine:
         return False
 
     async def _compensate_workflow(
-        self,
-        definition: WorkflowDefinition,
-        context: WorkflowContext,
-        workflow_type: str
+        self, definition: WorkflowDefinition, context: WorkflowContext, workflow_type: str
     ) -> None:
         """Execute compensation logic for failed workflow."""
         logger.info(f"Starting compensation for workflow {context.workflow_id}")
@@ -795,13 +774,14 @@ class WorkflowEngine:
             workflow_type=workflow_type,
             event_type="WorkflowCompensating",
             workflow_status=WorkflowStatus.COMPENSATING.value,
-            correlation_id=context.correlation_id
+            correlation_id=context.correlation_id,
         )
         await self.event_bus.publish(event)
 
         # Execute compensation in reverse order
         completed_steps = [
-            step for step in reversed(definition.steps)
+            step
+            for step in reversed(definition.steps)
             if step.step_id in context.step_results and context.step_results[step.step_id].success
         ]
 
@@ -821,7 +801,7 @@ class WorkflowEngine:
                         workflow_type=workflow_type,
                         event_type="StepCompensated",
                         workflow_step=step.step_id,
-                        correlation_id=context.correlation_id
+                        correlation_id=context.correlation_id,
                     )
                     await self.event_bus.publish(event)
 
@@ -844,7 +824,7 @@ class WorkflowEngine:
         workflow_id: str,
         workflow_type: str,
         status: WorkflowStatus,
-        error_message: str | None = None
+        error_message: str | None = None,
     ) -> None:
         """Complete workflow execution."""
         # Update persistence
@@ -856,14 +836,14 @@ class WorkflowEngine:
             WorkflowStatus.COMPLETED: "WorkflowCompleted",
             WorkflowStatus.FAILED: "WorkflowFailed",
             WorkflowStatus.CANCELLED: "WorkflowCancelled",
-            WorkflowStatus.COMPENSATED: "WorkflowCompensated"
+            WorkflowStatus.COMPENSATED: "WorkflowCompensated",
         }
 
         event = create_workflow_event(
             workflow_id=workflow_id,
             workflow_type=workflow_type,
             event_type=event_type_map.get(status, "WorkflowStatusChanged"),
-            workflow_status=status.value
+            workflow_status=status.value,
         )
         await self.event_bus.publish(event)
 
@@ -893,14 +873,18 @@ class WorkflowEngine:
             return
 
         async with self._get_session() as session:
-
             # Find workflows that were running but have no active task
-            query = select(WorkflowInstance).where(
-                and_(
-                    WorkflowInstance.status == WorkflowStatus.RUNNING.value,
-                    WorkflowInstance.updated_at < datetime.now(timezone.utc) - timedelta(minutes=5)
+            query = (
+                select(WorkflowInstance)
+                .where(
+                    and_(
+                        WorkflowInstance.status == WorkflowStatus.RUNNING.value,
+                        WorkflowInstance.updated_at
+                        < datetime.now(timezone.utc) - timedelta(minutes=5),
+                    )
                 )
-            ).limit(10)
+                .limit(10)
+            )
 
             result = await session.execute(query)
             interrupted_workflows = result.scalars().all()
@@ -930,11 +914,7 @@ class WorkflowEngine:
             await session.close()
 
     async def _persist_workflow_instance(
-        self,
-        workflow_id: str,
-        workflow_type: str,
-        context: WorkflowContext,
-        status: WorkflowStatus
+        self, workflow_id: str, workflow_type: str, context: WorkflowContext, status: WorkflowStatus
     ) -> None:
         """Persist workflow instance to database."""
         async with self._get_session() as session:
@@ -945,7 +925,7 @@ class WorkflowEngine:
                 context_data=json.dumps(context.__dict__, default=str),
                 correlation_id=context.correlation_id,
                 user_id=context.user_id,
-                tenant_id=context.tenant_id
+                tenant_id=context.tenant_id,
             )
 
             session.add(instance)
@@ -954,12 +934,10 @@ class WorkflowEngine:
     async def _update_workflow_status(self, workflow_id: str, status: WorkflowStatus) -> None:
         """Update workflow status."""
         async with self._get_session() as session:
-
-            query = update(WorkflowInstance).where(
-                WorkflowInstance.workflow_id == workflow_id
-            ).values(
-                status=status.value,
-                updated_at=datetime.now(timezone.utc)
+            query = (
+                update(WorkflowInstance)
+                .where(WorkflowInstance.workflow_id == workflow_id)
+                .values(status=status.value, updated_at=datetime.now(timezone.utc))
             )
 
             await session.execute(query)
@@ -968,44 +946,36 @@ class WorkflowEngine:
     async def _update_current_step(self, workflow_id: str, step_id: str) -> None:
         """Update current step."""
         async with self._get_session() as session:
-
-            query = update(WorkflowInstance).where(
-                WorkflowInstance.workflow_id == workflow_id
-            ).values(
-                current_step=step_id,
-                updated_at=datetime.now(timezone.utc)
+            query = (
+                update(WorkflowInstance)
+                .where(WorkflowInstance.workflow_id == workflow_id)
+                .values(current_step=step_id, updated_at=datetime.now(timezone.utc))
             )
 
             await session.execute(query)
             await session.commit()
 
     async def _update_workflow_completion(
-        self,
-        workflow_id: str,
-        status: WorkflowStatus,
-        error_message: str | None = None
+        self, workflow_id: str, status: WorkflowStatus, error_message: str | None = None
     ) -> None:
         """Update workflow completion."""
         async with self._get_session() as session:
-
-            query = update(WorkflowInstance).where(
-                WorkflowInstance.workflow_id == workflow_id
-            ).values(
-                status=status.value,
-                completed_at=datetime.now(timezone.utc),
-                updated_at=datetime.now(timezone.utc),
-                error_message=error_message
+            query = (
+                update(WorkflowInstance)
+                .where(WorkflowInstance.workflow_id == workflow_id)
+                .values(
+                    status=status.value,
+                    completed_at=datetime.now(timezone.utc),
+                    updated_at=datetime.now(timezone.utc),
+                    error_message=error_message,
+                )
             )
 
             await session.execute(query)
             await session.commit()
 
     async def _persist_step_execution(
-        self,
-        workflow_id: str,
-        step_id: str,
-        status: StepStatus,
-        result: StepResult
+        self, workflow_id: str, step_id: str, status: StepStatus, result: StepResult
     ) -> None:
         """Persist step execution result."""
         async with self._get_session() as session:
@@ -1013,9 +983,11 @@ class WorkflowEngine:
                 workflow_id=workflow_id,
                 step_id=step_id,
                 status=status.value,
-                completed_at=datetime.now(timezone.utc) if status in [StepStatus.COMPLETED, StepStatus.FAILED] else None,
+                completed_at=datetime.now(timezone.utc)
+                if status in [StepStatus.COMPLETED, StepStatus.FAILED]
+                else None,
                 result_data=json.dumps(result.data) if result.data else None,
-                error_message=result.error
+                error_message=result.error,
             )
 
             session.add(execution)
@@ -1024,7 +996,6 @@ class WorkflowEngine:
     async def _load_workflow_context(self, workflow_id: str) -> WorkflowContext | None:
         """Load workflow context from database."""
         async with self._get_session() as session:
-
             query = select(WorkflowInstance).where(WorkflowInstance.workflow_id == workflow_id)
             result = await session.execute(query)
             instance = result.scalar_one_or_none()
@@ -1064,11 +1035,7 @@ class WorkflowBuilder:
         return self
 
     def action(
-        self,
-        step_id: str,
-        name: str,
-        action: Callable[[WorkflowContext], Any],
-        **kwargs
+        self, step_id: str, name: str, action: Callable[[WorkflowContext], Any], **kwargs
     ) -> WorkflowBuilder:
         """Add an action step."""
         self.definition.add_action(step_id, name, action, **kwargs)
@@ -1080,18 +1047,14 @@ class WorkflowBuilder:
         name: str,
         decision_logic: Callable[[WorkflowContext], str],
         branches: dict[str, list[WorkflowStep]],
-        **kwargs
+        **kwargs,
     ) -> WorkflowBuilder:
         """Add a decision step."""
         self.definition.add_decision(step_id, name, decision_logic, branches, **kwargs)
         return self
 
     def parallel(
-        self,
-        step_id: str,
-        name: str,
-        parallel_steps: list[WorkflowStep],
-        **kwargs
+        self, step_id: str, name: str, parallel_steps: list[WorkflowStep], **kwargs
     ) -> WorkflowBuilder:
         """Add a parallel step."""
         self.definition.add_parallel(step_id, name, parallel_steps, **kwargs)
@@ -1103,16 +1066,14 @@ class WorkflowBuilder:
         name: str,
         wait_duration: timedelta | None = None,
         wait_condition: Callable[[WorkflowContext], bool] | None = None,
-        **kwargs
+        **kwargs,
     ) -> WorkflowBuilder:
         """Add a wait step."""
         self.definition.add_wait(step_id, name, wait_duration, wait_condition, **kwargs)
         return self
 
     def on_event(
-        self,
-        event_type: str,
-        handler: Callable[[BaseEvent, WorkflowContext], Any]
+        self, event_type: str, handler: Callable[[BaseEvent, WorkflowContext], Any]
     ) -> WorkflowBuilder:
         """Register event handler."""
         self.definition.on_event(event_type, handler)
@@ -1131,9 +1092,7 @@ class WorkflowBuilder:
 # Context manager for workflow engine
 @asynccontextmanager
 async def workflow_engine_context(
-    event_bus: EventBus,
-    session_factory: Callable[[], AsyncSession] | None = None,
-    **kwargs
+    event_bus: EventBus, session_factory: Callable[[], AsyncSession] | None = None, **kwargs
 ):
     """Context manager for workflow engine lifecycle."""
     engine = WorkflowEngine(event_bus, session_factory, **kwargs)

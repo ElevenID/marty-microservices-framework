@@ -23,8 +23,10 @@ from typing import Any, Protocol, runtime_checkable
 
 # --- Core Enums ---
 
+
 class MessagePriority(Enum):
     """Message priority levels."""
+
     LOW = 1
     NORMAL = 5
     HIGH = 10
@@ -33,6 +35,7 @@ class MessagePriority(Enum):
 
 class MessageStatus(Enum):
     """Message processing status."""
+
     PENDING = "pending"
     PROCESSING = "processing"
     PROCESSED = "processed"
@@ -43,6 +46,7 @@ class MessageStatus(Enum):
 
 class BackendType(Enum):
     """Message backend types."""
+
     RABBITMQ = "rabbitmq"
     REDIS = "redis"
     KAFKA = "kafka"
@@ -53,6 +57,7 @@ class BackendType(Enum):
 
 class MessagePattern(Enum):
     """Message pattern types."""
+
     REQUEST_REPLY = "request_reply"
     PUBLISH_SUBSCRIBE = "publish_subscribe"
     WORK_QUEUE = "work_queue"
@@ -62,6 +67,7 @@ class MessagePattern(Enum):
 
 class ConsumerMode(Enum):
     """Consumer processing modes."""
+
     PULL = "pull"
     PUSH = "push"
     STREAMING = "streaming"
@@ -69,6 +75,7 @@ class ConsumerMode(Enum):
 
 class MiddlewareType(Enum):
     """Middleware types for different stages."""
+
     AUTHENTICATION = "authentication"
     AUTHORIZATION = "authorization"
     LOGGING = "logging"
@@ -83,6 +90,7 @@ class MiddlewareType(Enum):
 
 class MiddlewareStage(Enum):
     """Middleware execution stages."""
+
     PRE_PUBLISH = "pre_publish"
     POST_PUBLISH = "post_publish"
     PRE_CONSUME = "pre_consume"
@@ -92,9 +100,11 @@ class MiddlewareStage(Enum):
 
 # --- Core Data Models ---
 
+
 @dataclass
 class MessageHeaders:
     """Message headers container."""
+
     data: dict[str, Any] = field(default_factory=dict)
 
     def get(self, key: str, default: Any = None) -> Any:
@@ -113,6 +123,7 @@ class MessageHeaders:
 @dataclass
 class Message:
     """Core message abstraction."""
+
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     body: Any = None
     headers: MessageHeaders = field(default_factory=MessageHeaders)
@@ -144,6 +155,7 @@ class Message:
 @dataclass
 class QueueConfig:
     """Queue configuration."""
+
     name: str
     durable: bool = True
     exclusive: bool = False
@@ -159,6 +171,7 @@ class QueueConfig:
 @dataclass
 class ExchangeConfig:
     """Exchange configuration."""
+
     name: str
     type: str = "direct"  # direct, topic, fanout, headers
     durable: bool = True
@@ -169,6 +182,7 @@ class ExchangeConfig:
 @dataclass
 class BackendConfig:
     """Message backend configuration."""
+
     type: BackendType
     connection_url: str
     connection_params: dict[str, Any] = field(default_factory=dict)
@@ -183,6 +197,7 @@ class BackendConfig:
 @dataclass
 class ProducerConfig:
     """Configuration for message producers."""
+
     name: str
     exchange: str | None = None
     routing_key: str = ""
@@ -200,6 +215,7 @@ class ProducerConfig:
 @dataclass
 class ConsumerConfig:
     """Configuration for message consumers."""
+
     name: str
     queue: str
     mode: ConsumerMode = ConsumerMode.PULL
@@ -219,6 +235,7 @@ class ConsumerConfig:
 @dataclass
 class RoutingRule:
     """Message routing rule."""
+
     pattern: str
     exchange: str
     routing_key: str
@@ -230,6 +247,7 @@ class RoutingRule:
 @dataclass
 class RoutingConfig:
     """Routing configuration."""
+
     rules: list[RoutingRule] = field(default_factory=list)
     default_exchange: str | None = None
     default_routing_key: str = ""
@@ -239,6 +257,7 @@ class RoutingConfig:
 
 class DLQPolicy(Enum):
     """Dead Letter Queue policies."""
+
     DROP = "drop"
     RETRY = "retry"
     FORWARD = "forward"
@@ -248,6 +267,7 @@ class DLQPolicy(Enum):
 @dataclass
 class DLQMessage:
     """Dead Letter Queue message wrapper."""
+
     message: Message
     failure_count: int = 0
     retry_attempts: int = 0
@@ -265,6 +285,7 @@ class DLQMessage:
 @dataclass
 class DLQConfig:
     """Dead Letter Queue configuration."""
+
     enabled: bool = True
     queue_name: str | None = None
     exchange_name: str | None = None
@@ -279,6 +300,7 @@ class DLQConfig:
 @dataclass
 class MessagingConfig:
     """Overall messaging configuration."""
+
     backend: BackendConfig
     default_exchange: ExchangeConfig | None = None
     default_queue: QueueConfig | None = None
@@ -291,6 +313,7 @@ class MessagingConfig:
 
 
 # --- Core Interfaces ---
+
 
 @runtime_checkable
 class IMessageSerializer(Protocol):
@@ -353,7 +376,9 @@ class IMessageExchange(ABC):
         """Delete the exchange."""
 
     @abstractmethod
-    async def bind(self, destination: str, routing_key: str = "", arguments: dict[str, Any] | None = None) -> bool:
+    async def bind(
+        self, destination: str, routing_key: str = "", arguments: dict[str, Any] | None = None
+    ) -> bool:
         """Bind exchange to another exchange or queue."""
 
     @abstractmethod
@@ -519,8 +544,10 @@ class IMessagingManager(ABC):
 
 # --- Exception Classes ---
 
+
 class MessagingError(Exception):
     """Base messaging exception."""
+
     pass
 
 
@@ -530,26 +557,31 @@ class MessagingConnectionError(MessagingError):
 
 class SerializationError(MessagingError):
     """Serialization-related errors."""
+
     pass
 
 
 class RoutingError(MessagingError):
     """Routing-related errors."""
+
     pass
 
 
 class ConsumerError(MessagingError):
     """Consumer-related errors."""
+
     pass
 
 
 class ProducerError(MessagingError):
     """Producer-related errors."""
+
     pass
 
 
 class DLQError(MessagingError):
     """DLQ-related errors."""
+
     pass
 
 
@@ -559,8 +591,10 @@ class MiddlewareError(MessagingError):
 
 # --- Additional Enums for Compatibility ---
 
+
 class RoutingType(Enum):
     """Message routing types."""
+
     DIRECT = "direct"
     TOPIC = "topic"
     FANOUT = "fanout"
@@ -569,6 +603,7 @@ class RoutingType(Enum):
 
 class MatchType(Enum):
     """Routing pattern match types."""
+
     EXACT = "exact"
     PREFIX = "prefix"
     SUFFIX = "suffix"
@@ -578,6 +613,7 @@ class MatchType(Enum):
 
 class RetryStrategy(Enum):
     """Retry strategies for failed messages."""
+
     FIXED_DELAY = "fixed_delay"
     EXPONENTIAL_BACKOFF = "exponential_backoff"
     LINEAR_BACKOFF = "linear_backoff"
@@ -586,6 +622,7 @@ class RetryStrategy(Enum):
 @dataclass
 class RetryConfig:
     """Retry configuration for failed messages."""
+
     strategy: RetryStrategy = RetryStrategy.EXPONENTIAL_BACKOFF
     max_attempts: int = 3
     initial_delay: float = 1.0  # seconds

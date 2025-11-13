@@ -30,7 +30,7 @@ from ..security_core.exceptions import (
 logger = logging.getLogger(__name__)
 
 # Type variable for decorated functions
-F = TypeVar('F', bound=Callable[..., Any])
+F = TypeVar("F", bound=Callable[..., Any])
 
 
 class SecurityContext:
@@ -83,7 +83,7 @@ class SecurityContext:
     @property
     def token_claims(self) -> dict[str, Any]:
         """Get token claims from user metadata."""
-        return self.user.metadata.get('token_claims', {})
+        return self.user.metadata.get("token_claims", {})
 
     def has_role(self, role: str) -> bool:
         """Check if context has role."""
@@ -143,6 +143,7 @@ def requires_auth(func: F) -> F:
     Returns:
         Decorated function that checks authentication
     """
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         try:
@@ -152,16 +153,16 @@ def requires_auth(func: F) -> F:
             # Look for request object in args
             request = None
             for arg in args:
-                if hasattr(arg, 'headers'):  # Likely a request object
+                if hasattr(arg, "headers"):  # Likely a request object
                     request = arg
                     break
 
-            if request and hasattr(request, 'headers'):
-                auth_header = request.headers.get('authorization')
-                if auth_header and auth_header.startswith('Bearer '):
-                    credentials['token'] = auth_header[7:]
-                elif request.headers.get('x-api-key'):
-                    credentials['api_key'] = request.headers.get('x-api-key')
+            if request and hasattr(request, "headers"):
+                auth_header = request.headers.get("authorization")
+                if auth_header and auth_header.startswith("Bearer "):
+                    credentials["token"] = auth_header[7:]
+                elif request.headers.get("x-api-key"):
+                    credentials["api_key"] = request.headers.get("x-api-key")
 
             # If no credentials found, check if user is already authenticated
             current_user = get_current_user()
@@ -193,6 +194,7 @@ def requires_role(role: str) -> Callable[[F], F]:
     Returns:
         Decorator function
     """
+
     def decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -210,6 +212,7 @@ def requires_role(role: str) -> Callable[[F], F]:
                 return handle_security_exception(e)
 
         return wrapper
+
     return decorator
 
 
@@ -223,6 +226,7 @@ def requires_permission(permission: str) -> Callable[[F], F]:
     Returns:
         Decorator function
     """
+
     def decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -236,7 +240,9 @@ def requires_permission(permission: str) -> Callable[[F], F]:
                 permissions = authorizer.get_user_permissions(current_user)
 
                 if permission not in permissions:
-                    raise PermissionDeniedError(f"Permission '{permission}' required", permission=permission)
+                    raise PermissionDeniedError(
+                        f"Permission '{permission}' required", permission=permission
+                    )
 
                 return func(*args, **kwargs)
 
@@ -244,6 +250,7 @@ def requires_permission(permission: str) -> Callable[[F], F]:
                 return handle_security_exception(e)
 
         return wrapper
+
     return decorator
 
 
@@ -257,6 +264,7 @@ def requires_any_role(*roles: str) -> Callable[[F], F]:
     Returns:
         Decorator function
     """
+
     def decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -269,7 +277,9 @@ def requires_any_role(*roles: str) -> Callable[[F], F]:
                 required_roles = set(roles)
 
                 if not user_roles.intersection(required_roles):
-                    raise RoleRequiredError(f"One of roles {roles} required", required_role=str(roles))
+                    raise RoleRequiredError(
+                        f"One of roles {roles} required", required_role=str(roles)
+                    )
 
                 return func(*args, **kwargs)
 
@@ -277,6 +287,7 @@ def requires_any_role(*roles: str) -> Callable[[F], F]:
                 return handle_security_exception(e)
 
         return wrapper
+
     return decorator
 
 
@@ -291,6 +302,7 @@ def requires_rbac(resource: str, action: str) -> Callable[[F], F]:
     Returns:
         Decorator function
     """
+
     def decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -308,13 +320,11 @@ def requires_rbac(resource: str, action: str) -> Callable[[F], F]:
                 return handle_security_exception(e)
 
         return wrapper
+
     return decorator
 
 
-def requires_abac(
-    resource: str,
-    action: str
-) -> Callable[[F], F]:
+def requires_abac(resource: str, action: str) -> Callable[[F], F]:
     """
     Decorator that requires ABAC authorization.
 
@@ -326,6 +336,7 @@ def requires_abac(
     Returns:
         Decorator function
     """
+
     def decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -345,6 +356,7 @@ def requires_abac(
                 return handle_security_exception(e)
 
         return wrapper
+
     return decorator
 
 
@@ -359,7 +371,7 @@ def verify_jwt_token(token: str) -> User | None:
         User if token is valid, None otherwise
     """
     try:
-        credentials = {'token': token}
+        credentials = {"token": token}
         return authenticate_credentials(credentials)
     except Exception as e:
         logger.error("JWT token verification failed: %s", e)

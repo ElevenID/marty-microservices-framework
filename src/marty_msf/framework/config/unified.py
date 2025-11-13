@@ -71,8 +71,10 @@ T = TypeVar("T", bound=BaseModel)
 
 # ==================== Enums and Configuration ==================== #
 
+
 class HostingEnvironment(Enum):
     """Supported hosting environments."""
+
     LOCAL = "local"
     SELF_HOSTED = "self_hosted"
     AWS = "aws"
@@ -85,6 +87,7 @@ class HostingEnvironment(Enum):
 
 class SecretBackend(Enum):
     """Available secret management backends."""
+
     VAULT = "vault"
     AWS_SECRETS_MANAGER = "aws_secrets_manager"
     AZURE_KEY_VAULT = "azure_key_vault"
@@ -97,6 +100,7 @@ class SecretBackend(Enum):
 
 class ConfigurationStrategy(Enum):
     """Configuration loading strategies."""
+
     HIERARCHICAL = "hierarchical"  # base -> env -> secrets
     EXPLICIT = "explicit"  # only specified sources
     FALLBACK = "fallback"  # try backends in order until success
@@ -106,6 +110,7 @@ class ConfigurationStrategy(Enum):
 @dataclass
 class SecretMetadata:
     """Metadata for secrets."""
+
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     expires_at: datetime | None = None
     rotation_interval: timedelta | None = None
@@ -118,6 +123,7 @@ class SecretMetadata:
 @dataclass
 class ConfigurationContext:
     """Context for configuration loading."""
+
     service_name: str
     environment: Environment
     config_dir: Path | None = None
@@ -131,6 +137,7 @@ class ConfigurationContext:
 
 # ==================== Backend Interfaces ==================== #
 
+
 class SecretBackendInterface(ABC):
     """Abstract interface for secret backends."""
 
@@ -140,7 +147,9 @@ class SecretBackendInterface(ABC):
         pass
 
     @abstractmethod
-    async def set_secret(self, key: str, value: str, metadata: SecretMetadata | None = None) -> bool:
+    async def set_secret(
+        self, key: str, value: str, metadata: SecretMetadata | None = None
+    ) -> bool:
         """Store a secret value."""
         pass
 
@@ -176,6 +185,7 @@ class ConfigurationBackendInterface(ABC):
 
 # ==================== Backend Implementations ==================== #
 
+
 class VaultSecretBackend(SecretBackendInterface):
     """HashiCorp Vault backend for secrets."""
 
@@ -186,13 +196,15 @@ class VaultSecretBackend(SecretBackendInterface):
         """Get secret from Vault."""
         try:
             secret = await self.vault_client.read_secret(key)
-            if secret and 'value' in secret.data:
-                return secret.data['value']
+            if secret and "value" in secret.data:
+                return secret.data["value"]
         except Exception as e:
             logger.error(f"Failed to get secret from Vault: {e}")
         return None
 
-    async def set_secret(self, key: str, value: str, metadata: SecretMetadata | None = None) -> bool:
+    async def set_secret(
+        self, key: str, value: str, metadata: SecretMetadata | None = None
+    ) -> bool:
         """Set secret in Vault."""
         try:
             data = {"value": value}
@@ -261,7 +273,7 @@ class AWSSecretsManagerBackend(SecretBackendInterface):
 
         if self._client is None:
             session = boto3.Session(profile_name=self.profile_name)
-            self._client = session.client('secretsmanager', region_name=self.region_name)
+            self._client = session.client("secretsmanager", region_name=self.region_name)
         return self._client
 
     async def get_secret(self, key: str) -> str | None:
@@ -271,12 +283,14 @@ class AWSSecretsManagerBackend(SecretBackendInterface):
 
         try:
             response = self.client.get_secret_value(SecretId=key)
-            return response.get('SecretString')
+            return response.get("SecretString")
         except Exception as e:
             logger.error(f"Failed to get secret from AWS Secrets Manager: {e}")
             return None
 
-    async def set_secret(self, key: str, value: str, metadata: SecretMetadata | None = None) -> bool:
+    async def set_secret(
+        self, key: str, value: str, metadata: SecretMetadata | None = None
+    ) -> bool:
         """Set secret in AWS Secrets Manager."""
         if not self._check_availability():
             return False
@@ -284,21 +298,15 @@ class AWSSecretsManagerBackend(SecretBackendInterface):
         try:
             # Try to update existing secret
             try:
-                self.client.update_secret(
-                    SecretId=key,
-                    SecretString=value
-                )
+                self.client.update_secret(SecretId=key, SecretString=value)
             except self.client.exceptions.ResourceNotFoundException:
                 # Create new secret
-                create_params = {
-                    'Name': key,
-                    'SecretString': value
-                }
+                create_params = {"Name": key, "SecretString": value}
 
                 if metadata and metadata.tags:
                     # Convert tags to AWS format
-                    aws_tags = [{'Key': k, 'Value': v} for k, v in metadata.tags.items()]
-                    create_params.update({'Tags': aws_tags})
+                    aws_tags = [{"Key": k, "Value": v} for k, v in metadata.tags.items()]
+                    create_params.update({"Tags": aws_tags})
 
                 self.client.create_secret(**create_params)
 
@@ -313,10 +321,7 @@ class AWSSecretsManagerBackend(SecretBackendInterface):
             return False
 
         try:
-            self.client.delete_secret(
-                SecretId=key,
-                ForceDeleteWithoutRecovery=True
-            )
+            self.client.delete_secret(SecretId=key, ForceDeleteWithoutRecovery=True)
             return True
         except Exception as e:
             logger.error(f"Failed to delete secret from AWS Secrets Manager: {e}")
@@ -328,12 +333,12 @@ class AWSSecretsManagerBackend(SecretBackendInterface):
             return []
 
         try:
-            paginator = self.client.get_paginator('list_secrets')
+            paginator = self.client.get_paginator("list_secrets")
             secrets = []
 
             for page in paginator.paginate():
-                for secret in page['SecretList']:
-                    name = secret['Name']
+                for secret in page["SecretList"]:
+                    name = secret["Name"]
                     if not prefix or name.startswith(prefix):
                         secrets.append(name)
 
@@ -359,7 +364,7 @@ class GCPSecretManagerBackend(SecretBackendInterface):
     """Google Cloud Secret Manager backend with optional google-cloud-secret-manager dependency."""
 
     def __init__(self, project_id: str | None = None):
-        self.project_id = project_id or os.getenv('GOOGLE_CLOUD_PROJECT')
+        self.project_id = project_id or os.getenv("GOOGLE_CLOUD_PROJECT")
         self._client = None
         self._available = None
 
@@ -370,14 +375,18 @@ class GCPSecretManagerBackend(SecretBackendInterface):
                 self._available = True
             except ImportError:
                 self._available = False
-                logger.warning("google-cloud-secret-manager not available - GCP Secret Manager backend disabled")
+                logger.warning(
+                    "google-cloud-secret-manager not available - GCP Secret Manager backend disabled"
+                )
         return self._available
 
     @property
     def client(self):
         """Lazy initialization of GCP client."""
         if not self._check_availability():
-            raise RuntimeError("google-cloud-secret-manager is required for GCP Secret Manager backend")
+            raise RuntimeError(
+                "google-cloud-secret-manager is required for GCP Secret Manager backend"
+            )
 
         if self._client is None:
             self._client = secretmanager.SecretManagerServiceClient()
@@ -396,7 +405,9 @@ class GCPSecretManagerBackend(SecretBackendInterface):
             logger.error(f"Failed to get secret from GCP Secret Manager: {e}")
             return None
 
-    async def set_secret(self, key: str, value: str, metadata: SecretMetadata | None = None) -> bool:
+    async def set_secret(
+        self, key: str, value: str, metadata: SecretMetadata | None = None
+    ) -> bool:
         """Set secret in GCP Secret Manager."""
         if not self._check_availability() or not self.project_id:
             return False
@@ -411,11 +422,7 @@ class GCPSecretManagerBackend(SecretBackendInterface):
                     secret["labels"] = metadata.tags
 
                 self.client.create_secret(
-                    request={
-                        "parent": parent,
-                        "secret_id": key,
-                        "secret": secret
-                    }
+                    request={"parent": parent, "secret_id": key, "secret": secret}
                 )
             except Exception:
                 # Secret might already exist
@@ -424,10 +431,7 @@ class GCPSecretManagerBackend(SecretBackendInterface):
             # Add version
             secret_name = f"{parent}/secrets/{key}"
             self.client.add_secret_version(
-                request={
-                    "parent": secret_name,
-                    "payload": {"data": value.encode("UTF-8")}
-                }
+                request={"parent": secret_name, "payload": {"data": value.encode("UTF-8")}}
             )
             return True
         except Exception as e:
@@ -457,7 +461,7 @@ class GCPSecretManagerBackend(SecretBackendInterface):
             secrets = []
 
             for secret in self.client.list_secrets(request={"parent": parent}):
-                secret_id = secret.name.split('/')[-1]
+                secret_id = secret.name.split("/")[-1]
                 if not prefix or secret_id.startswith(prefix):
                     secrets.append(secret_id)
 
@@ -484,7 +488,7 @@ class AzureKeyVaultBackend(SecretBackendInterface):
     """Azure Key Vault backend with optional azure-keyvault-secrets dependency."""
 
     def __init__(self, vault_url: str | None = None):
-        self.vault_url = vault_url or os.getenv('AZURE_KEY_VAULT_URL')
+        self.vault_url = vault_url or os.getenv("AZURE_KEY_VAULT_URL")
         self._client = None
         self._available = None
 
@@ -495,7 +499,9 @@ class AzureKeyVaultBackend(SecretBackendInterface):
                 self._available = True
             except ImportError:
                 self._available = False
-                logger.warning("azure-keyvault-secrets not available - Azure Key Vault backend disabled")
+                logger.warning(
+                    "azure-keyvault-secrets not available - Azure Key Vault backend disabled"
+                )
         return self._available
 
     @property
@@ -505,7 +511,6 @@ class AzureKeyVaultBackend(SecretBackendInterface):
             raise RuntimeError("azure-keyvault-secrets is required for Azure Key Vault backend")
 
         if self._client is None:
-
             credential = DefaultAzureCredential()
             self._client = SecretClient(vault_url=self.vault_url, credential=credential)
         return self._client
@@ -522,7 +527,9 @@ class AzureKeyVaultBackend(SecretBackendInterface):
             logger.error(f"Failed to get secret from Azure Key Vault: {e}")
             return None
 
-    async def set_secret(self, key: str, value: str, metadata: SecretMetadata | None = None) -> bool:
+    async def set_secret(
+        self, key: str, value: str, metadata: SecretMetadata | None = None
+    ) -> bool:
         """Set secret in Azure Key Vault."""
         if not self._check_availability() or not self.vault_url:
             return False
@@ -578,6 +585,7 @@ class AzureKeyVaultBackend(SecretBackendInterface):
 
 # ==================== Environment Detection ==================== #
 
+
 class EnvironmentDetector:
     """Automatically detect the hosting environment and suggest appropriate backends."""
 
@@ -585,32 +593,37 @@ class EnvironmentDetector:
     def detect_hosting_environment() -> HostingEnvironment:
         """Detect the current hosting environment."""
         # Check for AWS
-        if any(var in os.environ for var in ['AWS_EXECUTION_ENV', 'AWS_LAMBDA_FUNCTION_NAME', 'AWS_REGION']):
+        if any(
+            var in os.environ
+            for var in ["AWS_EXECUTION_ENV", "AWS_LAMBDA_FUNCTION_NAME", "AWS_REGION"]
+        ):
             return HostingEnvironment.AWS
 
         # Check for Google Cloud
-        if any(var in os.environ for var in ['GOOGLE_CLOUD_PROJECT', 'GCLOUD_PROJECT', 'GCP_PROJECT']):
+        if any(
+            var in os.environ for var in ["GOOGLE_CLOUD_PROJECT", "GCLOUD_PROJECT", "GCP_PROJECT"]
+        ):
             return HostingEnvironment.GOOGLE_CLOUD
 
         # Check for Azure
-        if any(var in os.environ for var in ['AZURE_CLIENT_ID', 'AZURE_SUBSCRIPTION_ID']):
+        if any(var in os.environ for var in ["AZURE_CLIENT_ID", "AZURE_SUBSCRIPTION_ID"]):
             return HostingEnvironment.AZURE
 
         # Check for Kubernetes
-        if os.path.exists('/var/run/secrets/kubernetes.io/serviceaccount'):
+        if os.path.exists("/var/run/secrets/kubernetes.io/serviceaccount"):
             return HostingEnvironment.KUBERNETES
 
         # Check for Docker
-        if os.path.exists('/.dockerenv') or os.path.exists('/proc/1/cgroup'):
+        if os.path.exists("/.dockerenv") or os.path.exists("/proc/1/cgroup"):
             try:
-                with open('/proc/1/cgroup') as f:
-                    if 'docker' in f.read():
+                with open("/proc/1/cgroup") as f:
+                    if "docker" in f.read():
                         return HostingEnvironment.DOCKER
             except (FileNotFoundError, PermissionError):
                 pass
 
         # Check if running locally
-        if os.getenv('ENVIRONMENT', '').lower() in ['local', 'development', 'dev']:
+        if os.getenv("ENVIRONMENT", "").lower() in ["local", "development", "dev"]:
             return HostingEnvironment.LOCAL
 
         # Default to self-hosted
@@ -623,38 +636,38 @@ class EnvironmentDetector:
             HostingEnvironment.AWS: [
                 SecretBackend.AWS_SECRETS_MANAGER,
                 SecretBackend.ENVIRONMENT,
-                SecretBackend.FILE
+                SecretBackend.FILE,
             ],
             HostingEnvironment.GOOGLE_CLOUD: [
                 SecretBackend.GCP_SECRET_MANAGER,
                 SecretBackend.ENVIRONMENT,
-                SecretBackend.FILE
+                SecretBackend.FILE,
             ],
             HostingEnvironment.AZURE: [
                 SecretBackend.AZURE_KEY_VAULT,
                 SecretBackend.ENVIRONMENT,
-                SecretBackend.FILE
+                SecretBackend.FILE,
             ],
             HostingEnvironment.KUBERNETES: [
                 SecretBackend.KUBERNETES,
                 SecretBackend.VAULT,
-                SecretBackend.ENVIRONMENT
+                SecretBackend.ENVIRONMENT,
             ],
             HostingEnvironment.DOCKER: [
                 SecretBackend.ENVIRONMENT,
                 SecretBackend.FILE,
-                SecretBackend.VAULT
+                SecretBackend.VAULT,
             ],
             HostingEnvironment.LOCAL: [
                 SecretBackend.FILE,
                 SecretBackend.ENVIRONMENT,
-                SecretBackend.MEMORY
+                SecretBackend.MEMORY,
             ],
             HostingEnvironment.SELF_HOSTED: [
                 SecretBackend.VAULT,
                 SecretBackend.FILE,
-                SecretBackend.ENVIRONMENT
-            ]
+                SecretBackend.ENVIRONMENT,
+            ],
         }
 
         return recommendations.get(hosting_env, [SecretBackend.ENVIRONMENT, SecretBackend.FILE])
@@ -687,7 +700,7 @@ class EnvironmentDetector:
             pass
 
         # Check Kubernetes
-        if os.path.exists('/var/run/secrets/kubernetes.io/serviceaccount'):
+        if os.path.exists("/var/run/secrets/kubernetes.io/serviceaccount"):
             available.append(SecretBackend.KUBERNETES)
 
         return available
@@ -702,18 +715,20 @@ class EnvironmentSecretBackend(SecretBackendInterface):
     async def get_secret(self, key: str) -> str | None:
         """Get secret from environment variables."""
         env_key = f"{self.prefix}{key}" if self.prefix else key
-        return os.getenv(env_key.upper().replace('/', '_'))
+        return os.getenv(env_key.upper().replace("/", "_"))
 
-    async def set_secret(self, key: str, value: str, metadata: SecretMetadata | None = None) -> bool:
+    async def set_secret(
+        self, key: str, value: str, metadata: SecretMetadata | None = None
+    ) -> bool:
         """Set secret in environment (not persistent)."""
         env_key = f"{self.prefix}{key}" if self.prefix else key
-        os.environ[env_key.upper().replace('/', '_')] = value
+        os.environ[env_key.upper().replace("/", "_")] = value
         return True
 
     async def delete_secret(self, key: str) -> bool:
         """Delete secret from environment."""
         env_key = f"{self.prefix}{key}" if self.prefix else key
-        env_var = env_key.upper().replace('/', '_')
+        env_var = env_key.upper().replace("/", "_")
         if env_var in os.environ:
             del os.environ[env_var]
             return True
@@ -722,12 +737,9 @@ class EnvironmentSecretBackend(SecretBackendInterface):
     async def list_secrets(self, prefix: str = "") -> list[str]:
         """List environment variables matching pattern."""
         full_prefix = f"{self.prefix}{prefix}" if self.prefix else prefix
-        full_prefix = full_prefix.upper().replace('/', '_')
+        full_prefix = full_prefix.upper().replace("/", "_")
 
-        return [
-            key for key in os.environ.keys()
-            if key.startswith(full_prefix)
-        ]
+        return [key for key in os.environ.keys() if key.startswith(full_prefix)]
 
     async def health_check(self) -> bool:
         """Environment variables are always available."""
@@ -743,7 +755,7 @@ class FileSecretBackend(SecretBackendInterface):
 
     async def get_secret(self, key: str) -> str | None:
         """Get secret from file."""
-        secret_file = self.secrets_dir / key.replace('/', '_')
+        secret_file = self.secrets_dir / key.replace("/", "_")
         try:
             if secret_file.exists():
                 return secret_file.read_text().strip()
@@ -751,9 +763,11 @@ class FileSecretBackend(SecretBackendInterface):
             logger.error(f"Failed to read secret file {secret_file}: {e}")
         return None
 
-    async def set_secret(self, key: str, value: str, metadata: SecretMetadata | None = None) -> bool:
+    async def set_secret(
+        self, key: str, value: str, metadata: SecretMetadata | None = None
+    ) -> bool:
         """Set secret in file."""
-        secret_file = self.secrets_dir / key.replace('/', '_')
+        secret_file = self.secrets_dir / key.replace("/", "_")
         try:
             secret_file.write_text(value)
             secret_file.chmod(0o600)  # Restrict permissions
@@ -764,7 +778,7 @@ class FileSecretBackend(SecretBackendInterface):
 
     async def delete_secret(self, key: str) -> bool:
         """Delete secret file."""
-        secret_file = self.secrets_dir / key.replace('/', '_')
+        secret_file = self.secrets_dir / key.replace("/", "_")
         try:
             if secret_file.exists():
                 secret_file.unlink()
@@ -788,6 +802,7 @@ class FileSecretBackend(SecretBackendInterface):
 
 
 # ==================== Main Unified Configuration Manager ==================== #
+
 
 class UnifiedConfigurationManager(Generic[T]):
     """
@@ -888,9 +903,9 @@ class UnifiedConfigurationManager(Generic[T]):
         if self.context.enable_plugins and self.context.plugins_dir:
             plugin_configs = await self._load_plugin_configurations()
             if plugin_configs:
-                if 'plugins' not in config_data:
-                    config_data['plugins'] = {}
-                config_data['plugins'].update(plugin_configs)
+                if "plugins" not in config_data:
+                    config_data["plugins"] = {}
+                config_data["plugins"].update(plugin_configs)
 
         # 4. Load environment variables
         env_config = self._load_environment_variables()
@@ -932,10 +947,10 @@ class UnifiedConfigurationManager(Generic[T]):
 
         for key, value in os.environ.items():
             if key.startswith(prefix):
-                config_key = key[len(prefix):].lower()
+                config_key = key[len(prefix) :].lower()
                 # Handle nested keys (e.g., DATABASE_HOST -> database.host)
-                if '_' in config_key:
-                    parts = config_key.split('_')
+                if "_" in config_key:
+                    parts = config_key.split("_")
                     current = config
                     for part in parts[:-1]:
                         if part not in current:
@@ -963,10 +978,10 @@ class UnifiedConfigurationManager(Generic[T]):
                 plugin_config = self._load_yaml_file(plugin_file)
                 if plugin_config:
                     # Add metadata about the plugin source
-                    plugin_config['_metadata'] = {
-                        'source_file': str(plugin_file),
-                        'plugin_name': plugin_name,
-                        'loaded_at': datetime.now().isoformat()
+                    plugin_config["_metadata"] = {
+                        "source_file": str(plugin_file),
+                        "plugin_name": plugin_name,
+                        "loaded_at": datetime.now().isoformat(),
                     }
                     plugin_configs[plugin_name] = plugin_config
                     logger.info(f"✓ Loaded plugin configuration: {plugin_name}")
@@ -1009,7 +1024,7 @@ class UnifiedConfigurationManager(Generic[T]):
         self,
         key: str,
         use_cache: bool = True,
-        backend_preference: list[SecretBackend] | None = None
+        backend_preference: list[SecretBackend] | None = None,
     ) -> str | None:
         """
         Get secret value from configured backends.
@@ -1062,7 +1077,7 @@ class UnifiedConfigurationManager(Generic[T]):
         key: str,
         value: str,
         backend: SecretBackend = SecretBackend.VAULT,
-        metadata: SecretMetadata | None = None
+        metadata: SecretMetadata | None = None,
     ) -> bool:
         """
         Set secret value in specified backend.
@@ -1184,6 +1199,7 @@ class UnifiedConfigurationManager(Generic[T]):
 
 # ==================== Factory Functions ==================== #
 
+
 def create_unified_config_manager(
     service_name: str,
     environment: Environment = Environment.DEVELOPMENT,
@@ -1204,7 +1220,7 @@ def create_unified_config_manager(
     azure_vault_url: str | None = None,
     enable_kubernetes_secrets: bool = False,
     enable_file_secrets: bool = True,
-    secrets_dir: str | None = None
+    secrets_dir: str | None = None,
 ) -> UnifiedConfigurationManager[T]:
     """
     Factory function to create a cloud-agnostic unified configuration manager.
@@ -1245,7 +1261,7 @@ def create_unified_config_manager(
         config_dir=Path(config_dir) if config_dir else None,
         plugins_dir=Path(plugins_dir) if plugins_dir else None,
         enable_plugins=enable_plugins,
-        strategy=strategy
+        strategy=strategy,
     )
 
     # Setup secret backends based on strategy
@@ -1261,22 +1277,36 @@ def create_unified_config_manager(
 
             try:
                 if backend_type == SecretBackend.ENVIRONMENT:
-                    secret_backends.append(EnvironmentSecretBackend(prefix=f"{service_name.upper()}_"))
+                    secret_backends.append(
+                        EnvironmentSecretBackend(prefix=f"{service_name.upper()}_")
+                    )
 
-                elif backend_type == SecretBackend.AWS_SECRETS_MANAGER and detected_env == HostingEnvironment.AWS:
+                elif (
+                    backend_type == SecretBackend.AWS_SECRETS_MANAGER
+                    and detected_env == HostingEnvironment.AWS
+                ):
                     secret_backends.append(AWSSecretsManagerBackend(region_name=aws_region))
 
-                elif backend_type == SecretBackend.GCP_SECRET_MANAGER and detected_env == HostingEnvironment.GOOGLE_CLOUD:
-                    project_id = gcp_project_id or os.getenv('GOOGLE_CLOUD_PROJECT')
+                elif (
+                    backend_type == SecretBackend.GCP_SECRET_MANAGER
+                    and detected_env == HostingEnvironment.GOOGLE_CLOUD
+                ):
+                    project_id = gcp_project_id or os.getenv("GOOGLE_CLOUD_PROJECT")
                     if project_id:
                         secret_backends.append(GCPSecretManagerBackend(project_id=project_id))
 
-                elif backend_type == SecretBackend.AZURE_KEY_VAULT and detected_env == HostingEnvironment.AZURE:
-                    vault_url = azure_vault_url or os.getenv('AZURE_KEY_VAULT_URL')
+                elif (
+                    backend_type == SecretBackend.AZURE_KEY_VAULT
+                    and detected_env == HostingEnvironment.AZURE
+                ):
+                    vault_url = azure_vault_url or os.getenv("AZURE_KEY_VAULT_URL")
                     if vault_url:
                         secret_backends.append(AzureKeyVaultBackend(vault_url=vault_url))
 
-                elif backend_type == SecretBackend.KUBERNETES and detected_env == HostingEnvironment.KUBERNETES:
+                elif (
+                    backend_type == SecretBackend.KUBERNETES
+                    and detected_env == HostingEnvironment.KUBERNETES
+                ):
                     # Kubernetes backend would be implemented here
                     logger.info("Kubernetes secrets backend would be enabled")
 
@@ -1319,7 +1349,7 @@ def create_unified_config_manager(
 
         if enable_gcp_secrets:
             try:
-                project_id = gcp_project_id or os.getenv('GOOGLE_CLOUD_PROJECT')
+                project_id = gcp_project_id or os.getenv("GOOGLE_CLOUD_PROJECT")
                 if project_id:
                     secret_backends.append(GCPSecretManagerBackend(project_id=project_id))
                     logger.info("GCP Secret Manager backend enabled")
@@ -1328,7 +1358,7 @@ def create_unified_config_manager(
 
         if enable_azure_keyvault:
             try:
-                vault_url = azure_vault_url or os.getenv('AZURE_KEY_VAULT_URL')
+                vault_url = azure_vault_url or os.getenv("AZURE_KEY_VAULT_URL")
                 if vault_url:
                     secret_backends.append(AzureKeyVaultBackend(vault_url=vault_url))
                     logger.info("Azure Key Vault backend enabled")
@@ -1343,16 +1373,12 @@ def create_unified_config_manager(
     logger.info(f"Configured {len(secret_backends)} secret backends for {service_name}")
 
     return UnifiedConfigurationManager(
-        context=context,
-        config_class=config_class,
-        secret_backends=secret_backends
+        context=context, config_class=config_class, secret_backends=secret_backends
     )
 
 
 async def get_unified_config(
-    service_name: str,
-    config_class: builtins.type[T] = BaseSettings,
-    **kwargs
+    service_name: str, config_class: builtins.type[T] = BaseSettings, **kwargs
 ) -> T:
     """
     Convenience function to get configuration using unified manager.
@@ -1366,9 +1392,7 @@ async def get_unified_config(
         Configured configuration object
     """
     manager = create_unified_config_manager(
-        service_name=service_name,
-        config_class=config_class,
-        **kwargs
+        service_name=service_name, config_class=config_class, **kwargs
     )
 
     await manager.initialize()

@@ -359,7 +359,6 @@ class JWTAuthenticator(Authenticator):
     def __init__(self, config: AuthConfig):
         self.config = config
         try:
-
             self.jwt = jwt
         except ImportError:
             raise ImportError("JWT authentication requires PyJWT: pip install PyJWT")

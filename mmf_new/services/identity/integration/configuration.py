@@ -3,7 +3,7 @@ Configuration integration for JWT authentication using the new core framework.
 
 This module provides configuration classes and factory functions
 for setting up JWT authentication in different environments using
-the hexagonal architecture core framework.
+the hexagonal architecture core framework and MMFConfiguration.
 """
 
 import os
@@ -13,7 +13,8 @@ from typing import Any
 
 import yaml
 
-from mmf_new.core.infrastructure.database import CoreDatabaseManager, DatabaseConfig
+from mmf_new.core.application.database import DatabaseConfig
+from mmf_new.core.infrastructure.config import MMFConfiguration
 from mmf_new.services.identity.application.use_cases.authenticate_with_jwt import (
     AuthenticateWithJWTUseCase,
 )
@@ -253,9 +254,7 @@ def load_config_from_env() -> JWTAuthConfig:
 
     # Fall back to environment-specific defaults
     if env == "production":
-        raise ValueError(
-            "JWT_SECRET_KEY environment variable is required for production"
-        )
+        raise ValueError("JWT_SECRET_KEY environment variable is required for production")
     elif env == "testing":
         return create_testing_config()
     else:  # development
@@ -325,9 +324,77 @@ def get_config_for_environment(environment: str, **kwargs) -> JWTAuthConfig:
     """
     if environment not in CONFIG_REGISTRY:
         raise ValueError(
-            f"Unsupported environment: {environment}. "
-            f"Supported: {list(CONFIG_REGISTRY.keys())}"
+            f"Unsupported environment: {environment}. Supported: {list(CONFIG_REGISTRY.keys())}"
         )
 
     config_factory = CONFIG_REGISTRY[environment]
     return config_factory(**kwargs)
+
+
+def load_config_from_mmf(
+    service_name: str = "identity-service", environment: str | None = None
+) -> JWTAuthConfig:
+    """
+    Load JWT configuration from MMFConfiguration system.
+
+    This function integrates with the new hierarchical configuration system
+    and converts it to JWTAuthConfig for use with the identity service.
+
+    Args:
+        service_name: Name of the service for configuration loading
+        environment: Environment name (development, production, etc.)
+
+    Returns:
+        JWT configuration loaded from MMF configuration system
+
+    Raises:
+        ValueError: If required configuration is missing
+    """
+    try:
+        # Find config directory relative to project root
+        current_dir = Path(__file__).parent
+        for parent in current_dir.parents:
+            config_path = parent / "mmf_new" / "config"
+            if config_path.exists() and config_path.is_dir():
+                config = MMFConfiguration.load(
+                    config_dir=config_path,
+                    environment=environment or "development",
+                    service_name=service_name,
+                )
+                break
+        else:
+            raise ValueError("Could not find MMF configuration directory")
+
+        # Get JWT configuration from the hierarchical system
+        jwt_config = config.get("security.authentication.jwt", {})
+
+        # Extract required settings
+        secret_key = jwt_config.get("secret")
+        if not secret_key:
+            raise ValueError("JWT secret is required but not configured")
+
+        # Build JWTAuthConfig from MMF configuration
+        return JWTAuthConfig(
+            secret_key=secret_key,
+            algorithm=jwt_config.get("algorithm", "HS256"),
+            issuer=jwt_config.get("issuer", "identity-service"),
+            audience=jwt_config.get("audience", ["mmf-services"]),
+            expires_delta_minutes=jwt_config.get("expiration_minutes", 60),
+            excluded_paths=jwt_config.get(
+                "excluded_paths",
+                [
+                    "/health",
+                    "/docs",
+                    "/openapi.json",
+                    "/redoc",
+                    "/auth/jwt/health",
+                ],
+            ),
+            optional_paths=jwt_config.get("optional_paths", []),
+            verify_signature=jwt_config.get("verify_signature", True),
+            verify_expiration=jwt_config.get("verify_expiration", True),
+            verify_issuer=jwt_config.get("verify_issuer", True),
+            verify_audience=jwt_config.get("verify_audience", True),
+        )
+    except Exception as e:
+        raise ValueError(f"Failed to load JWT configuration from MMF system: {e}") from e

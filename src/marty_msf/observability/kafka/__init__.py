@@ -7,7 +7,9 @@ Please use marty_msf.framework.events.enhanced_event_bus instead.
 
 # Re-export from enhanced event bus for backward compatibility
 from marty_msf.framework.events.enhanced_event_bus import EnhancedEventBus as EventBus
-from marty_msf.framework.events.enhanced_event_bus import KafkaConfig
+from marty_msf.framework.events.enhanced_event_bus import (
+    KafkaConfig,
+)
 from marty_msf.framework.events.enhanced_event_bus import (
     enhanced_event_bus_context as event_bus_context,
 )

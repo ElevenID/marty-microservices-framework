@@ -77,9 +77,7 @@ class ExternalDependencyManager:
         )
 
         # Create bulkhead
-        self._bulkhead_manager.create_bulkhead(
-            config.dependency_name, bulkhead_config
-        )
+        self._bulkhead_manager.create_bulkhead(config.dependency_name, bulkhead_config)
 
         # Create circuit breaker if enabled
         if bulkhead_config.enable_circuit_breaker:
@@ -183,8 +181,7 @@ class ExternalDependencyManager:
             )
         else:
             return await self._timeout_manager.execute_with_timeout(
-                lambda: bulkhead.execute_async(protected_func),
-                operation=operation
+                lambda: bulkhead.execute_async(protected_func), operation=operation
             )
 
     def get_dependency_stats(self, dependency_name: str) -> builtins.dict[str, Any]:
@@ -208,10 +205,7 @@ class ExternalDependencyManager:
 
     def get_all_dependencies_stats(self) -> builtins.dict[str, builtins.dict[str, Any]]:
         """Get statistics for all registered dependencies."""
-        return {
-            name: self.get_dependency_stats(name)
-            for name in self._dependency_configs.keys()
-        }
+        return {name: self.get_dependency_stats(name) for name in self._dependency_configs.keys()}
 
 
 # Global external dependency manager
@@ -287,32 +281,41 @@ def register_cache_dependency(
 # Convenience decorators for external dependencies
 def database_call(dependency_name: str, operation_name: str = "db_operation"):
     """Decorator for database operations."""
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         async def wrapper(*args, **kwargs) -> T:
             return await _external_dependency_manager.execute_with_resilience(
                 dependency_name, func, operation_name, *args, **kwargs
             )
+
         return wrapper
+
     return decorator
 
 
 def api_call(dependency_name: str, operation_name: str = "api_operation"):
     """Decorator for external API operations."""
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         async def wrapper(*args, **kwargs) -> T:
             return await _external_dependency_manager.execute_with_resilience(
                 dependency_name, func, operation_name, *args, **kwargs
             )
+
         return wrapper
+
     return decorator
 
 
 def cache_call(dependency_name: str, operation_name: str = "cache_operation"):
     """Decorator for cache operations."""
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         async def wrapper(*args, **kwargs) -> T:
             return await _external_dependency_manager.execute_with_resilience(
                 dependency_name, func, operation_name, *args, **kwargs
             )
+
         return wrapper
+
     return decorator

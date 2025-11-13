@@ -34,7 +34,6 @@ from prometheus_client import Counter, Gauge, Histogram
 
 # External dependencies (optional)
 try:
-
     EXTERNAL_DEPS_AVAILABLE = True
 except ImportError:
     EXTERNAL_DEPS_AVAILABLE = False
@@ -159,7 +158,6 @@ class AccessPolicy:
                     return False
             elif isinstance(expected, dict):
                 if "regex" in expected:
-
                     if not re.match(expected["regex"], str(data[key])):
                         return False
                 elif "in" in expected:

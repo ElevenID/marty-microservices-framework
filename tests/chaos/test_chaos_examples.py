@@ -16,6 +16,7 @@ import pytest
 @dataclass
 class ChaosTestResult:
     """Result of a chaos engineering test."""
+
     test_name: str
     chaos_type: str
     success: bool
@@ -34,7 +35,6 @@ class TestNetworkChaos:
         partition_duration = 30  # seconds
 
         # Establish baseline performance
-        baseline_start = time.time()
         baseline_success_count = 0
 
         for _ in range(baseline_requests):
@@ -44,7 +44,6 @@ class TestNetworkChaos:
             except Exception:
                 pass
 
-        baseline_duration = time.time() - baseline_start
         baseline_success_rate = baseline_success_count / baseline_requests
 
         # Inject network partition
@@ -65,8 +64,7 @@ class TestNetworkChaos:
                 await asyncio.sleep(0.1)
 
             partition_success_rate = (
-                partition_success_count / partition_requests
-                if partition_requests > 0 else 0
+                partition_success_count / partition_requests if partition_requests > 0 else 0
             )
 
         # Measure recovery time
@@ -110,7 +108,6 @@ class TestNetworkChaos:
 
         for latency_ms in latency_values:
             async with chaos_experiment.network_latency(latency_ms):
-                start_time = time.time()
                 success_count = 0
                 timeout_count = 0
                 total_requests = 50
@@ -182,7 +179,6 @@ class TestResourceChaos:
         for pressure_level in memory_pressure_levels:
             async with chaos_experiment.memory_pressure(pressure_level):
                 # Monitor system behavior under memory pressure
-                start_time = time.time()
                 success_count = 0
                 oom_errors = 0
                 total_requests = 50
@@ -203,10 +199,14 @@ class TestResourceChaos:
 
                 # System should handle memory pressure gracefully
                 if pressure_level <= 0.8:
-                    assert success_rate >= 0.8, f"High failure rate under {pressure_level:.0%} memory pressure"
+                    assert success_rate >= 0.8, (
+                        f"High failure rate under {pressure_level:.0%} memory pressure"
+                    )
                     assert oom_rate == 0, "Should not have OOM errors at moderate memory pressure"
                 else:
-                    assert success_rate >= 0.5, f"System fails completely under {pressure_level:.0%} memory pressure"
+                    assert success_rate >= 0.5, (
+                        f"System fails completely under {pressure_level:.0%} memory pressure"
+                    )
                     assert oom_rate < 0.3, "Too many OOM errors under high memory pressure"
 
     async def test_cpu_stress_resilience(self, chaos_experiment, system_under_test):
@@ -230,7 +230,9 @@ class TestResourceChaos:
                         pass
 
                 success_rate = success_count / total_requests
-                avg_response_time = sum(response_times) / len(response_times) if response_times else float('inf')
+                avg_response_time = (
+                    sum(response_times) / len(response_times) if response_times else float("inf")
+                )
 
                 # System should remain responsive under CPU stress
                 assert success_rate >= 0.7, f"High failure rate under {cpu_load:.0%} CPU load"
@@ -246,7 +248,7 @@ class TestResourceChaos:
         io_scenarios = [
             {"type": "slow_disk", "latency_ms": 1000},
             {"type": "disk_full", "usage_percent": 95},
-            {"type": "io_errors", "error_rate": 0.1}
+            {"type": "io_errors", "error_rate": 0.1},
         ]
 
         for scenario in io_scenarios:
@@ -298,7 +300,6 @@ class TestServiceChaos:
 
         for dependency in dependencies:
             async with chaos_experiment.service_failure(dependency):
-                start_time = time.time()
                 success_count = 0
                 degraded_count = 0
                 failure_count = 0
@@ -320,7 +321,6 @@ class TestServiceChaos:
 
                 success_rate = success_count / total_requests
                 degraded_rate = degraded_count / total_requests
-                failure_rate = failure_count / total_requests
 
                 # Expectations vary by dependency criticality
                 if dependency in ["database", "message_queue"]:
@@ -361,7 +361,9 @@ class TestServiceChaos:
                         pass
 
                 success_rate = success_count / total_requests
-                avg_response_time = sum(response_times) / len(response_times) if response_times else 0
+                avg_response_time = (
+                    sum(response_times) / len(response_times) if response_times else 0
+                )
 
                 # System should implement circuit breakers and fail-safes
                 failure_count = len(failed_services)
@@ -424,7 +426,9 @@ class TestServiceChaos:
                 # System should handle traffic spikes gracefully
                 if multiplier <= 5:
                     assert success_rate >= 0.7, f"High failure rate at {multiplier}x traffic"
-                    assert rate_limited_rate <= 0.3, f"Excessive rate limiting at {multiplier}x traffic"
+                    assert rate_limited_rate <= 0.3, (
+                        f"Excessive rate limiting at {multiplier}x traffic"
+                    )
                 else:
                     # High traffic - rate limiting expected
                     assert success_rate + rate_limited_rate >= 0.8, (
@@ -471,18 +475,22 @@ class TestChaosMonkey:
             while time.time() - start_time < test_duration:
                 try:
                     health_status = await kubernetes_cluster.check_system_health()
-                    health_checks.append({
-                        "timestamp": time.time(),
-                        "status": health_status,
-                        "healthy": health_status.overall_health >= 0.8
-                    })
+                    health_checks.append(
+                        {
+                            "timestamp": time.time(),
+                            "status": health_status,
+                            "healthy": health_status.overall_health >= 0.8,
+                        }
+                    )
                 except Exception as e:
-                    health_checks.append({
-                        "timestamp": time.time(),
-                        "status": None,
-                        "healthy": False,
-                        "error": str(e)
-                    })
+                    health_checks.append(
+                        {
+                            "timestamp": time.time(),
+                            "status": None,
+                            "healthy": False,
+                            "error": str(e),
+                        }
+                    )
 
                 await asyncio.sleep(10)
 
@@ -551,20 +559,24 @@ class TestChaosMonkey:
                     result = await system_under_test.make_request()
                     response_time = time.time() - response_start
 
-                    metrics.append({
-                        "timestamp": time.time(),
-                        "response_time": response_time,
-                        "success": True,
-                        "status": getattr(result, 'status', 'success')
-                    })
+                    metrics.append(
+                        {
+                            "timestamp": time.time(),
+                            "response_time": response_time,
+                            "success": True,
+                            "status": getattr(result, "status", "success"),
+                        }
+                    )
 
                 except Exception as e:
-                    metrics.append({
-                        "timestamp": time.time(),
-                        "response_time": None,
-                        "success": False,
-                        "error": str(e)
-                    })
+                    metrics.append(
+                        {
+                            "timestamp": time.time(),
+                            "response_time": None,
+                            "success": False,
+                            "error": str(e),
+                        }
+                    )
 
                 await asyncio.sleep(2)
 
@@ -572,8 +584,7 @@ class TestChaosMonkey:
 
         # Run all chaos scenarios and monitoring concurrently
         chaos_tasks = [
-            asyncio.create_task(run_chaos_scenario(scenario))
-            for scenario in chaos_scenarios
+            asyncio.create_task(run_chaos_scenario(scenario)) for scenario in chaos_scenarios
         ]
         monitor_task = asyncio.create_task(monitor_system_performance())
 

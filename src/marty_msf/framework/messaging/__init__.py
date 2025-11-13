@@ -87,7 +87,7 @@ __all__ = [
     "RoutingType",
     "MatchType",
     "RetryConfig",
-    "RetryStrategy",    # Bootstrap Layer - Concrete Implementations
+    "RetryStrategy",  # Bootstrap Layer - Concrete Implementations
     "DLQHandler",
     "DLQManager",
     "JSONMessageSerializer",

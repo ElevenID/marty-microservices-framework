@@ -5,6 +5,7 @@ A production-ready service discovery template for the Marty Microservices Framew
 ## Features
 
 ### Core Capabilities
+
 - **Multi-Backend Support**: In-memory registry (production-ready), with extensible architecture for external backends
   - ⚠️ **Backend Status**: Consul, etcd, and Kubernetes integrations are currently stub implementations
   - **In-Memory Registry**: Fully functional for development and small-scale production deployments
@@ -16,6 +17,7 @@ A production-ready service discovery template for the Marty Microservices Framew
 - **API Gateway Integration**: Seamless integration with gateway services
 
 ### Enterprise Features
+
 - **High Availability**: Clustering and failover support via in-memory registry replication
 - **Security**: TLS, API keys, JWT authentication
 - **Monitoring**: Prometheus metrics, Jaeger tracing, structured logging
@@ -27,6 +29,7 @@ A production-ready service discovery template for the Marty Microservices Framew
 ### Using In-Memory Registry (Recommended)
 
 1. **Start the Service Discovery Service**:
+
 ```bash
 # Using the template directly
 
@@ -35,11 +38,13 @@ consul agent -dev
 ```
 
 2. **Install Dependencies**:
+
 ```bash
 pip install -e .
 ```
 
 3. **Run Service Discovery**:
+
 ```bash
 # Development mode
 python main.py
@@ -49,6 +54,7 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8090
 ```
 
 4. **Verify Installation**:
+
 ```bash
 curl http://localhost:8090/health
 curl http://localhost:8090/api/v1/services
@@ -57,11 +63,13 @@ curl http://localhost:8090/api/v1/services
 ### Using Kubernetes
 
 1. **Deploy to Kubernetes**:
+
 ```bash
 kubectl apply -f k8s/
 ```
 
 2. **Verify Deployment**:
+
 ```bash
 kubectl get pods -l app=service-discovery
 kubectl port-forward service/service-discovery 8090:8090
@@ -230,6 +238,7 @@ The service exposes Prometheus metrics at `/metrics`:
 ### Tracing
 
 OpenTelemetry tracing integration with support for:
+
 - Jaeger
 - Zipkin
 - Custom OTLP exporters
@@ -237,6 +246,7 @@ OpenTelemetry tracing integration with support for:
 ### Logging
 
 Structured logging with configurable formats:
+
 - JSON format for production
 - Human-readable format for development
 - Configurable log levels and filtering
@@ -406,6 +416,7 @@ Typical performance characteristics:
 ### Common Issues
 
 1. **Service Not Found**
+
    ```bash
    # Check service registration
    curl http://localhost:8090/api/v1/services/your-service
@@ -415,6 +426,7 @@ Typical performance characteristics:
    ```
 
 2. **Health Check Failures**
+
    ```bash
    # Check health check configuration
    curl http://localhost:8090/api/v1/health/your-service
@@ -424,6 +436,7 @@ Typical performance characteristics:
    ```
 
 3. **Registry Backend Issues**
+
    ```bash
    # Check Consul connectivity
    consul members

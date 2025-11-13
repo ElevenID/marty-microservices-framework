@@ -40,6 +40,7 @@ pytest -k "test_authentication"
 ## Writing Tests
 
 ### Unit Tests
+
 ```python
 import pytest
 from marty_msf.framework.config import create_service_config
@@ -51,6 +52,7 @@ def test_service_configuration():
 ```
 
 ### Integration Tests
+
 ```python
 import pytest
 from marty_msf.framework.database import DatabaseManager
@@ -63,6 +65,7 @@ async def test_database_connection(db_config):
 ```
 
 ### E2E Tests
+
 ```python
 import pytest
 import httpx
@@ -78,6 +81,7 @@ async def test_service_health_endpoint(service_url):
 ## Test Fixtures
 
 ### Common Fixtures
+
 ```python
 # In conftest.py
 @pytest.fixture
@@ -98,6 +102,7 @@ async def test_client():
 ```
 
 ### Database Fixtures
+
 ```python
 @pytest.fixture
 async def clean_database(db_manager):
@@ -111,17 +116,20 @@ async def clean_database(db_manager):
 ## Testing Best Practices
 
 ### General
+
 - **Test behavior, not implementation**
 - **Use descriptive test names** (`test_should_reject_invalid_email`)
 - **Arrange, Act, Assert** structure
 - **One assertion per test** (when possible)
 
 ### Data Management
+
 - **Use factories** for test data creation
 - **Clean state** between tests
 - **Realistic test data** that reflects production scenarios
 
 ### Async Testing
+
 ```python
 @pytest.mark.asyncio
 async def test_async_operation():
@@ -130,6 +138,7 @@ async def test_async_operation():
 ```
 
 ### Mock External Dependencies
+
 ```python
 @pytest.fixture
 def mock_external_api(mocker):
@@ -143,18 +152,21 @@ def test_external_integration(mock_external_api):
 ## Test Categories
 
 ### Unit Tests (70%)
+
 - Test individual functions/methods
 - Mock external dependencies
 - Fast execution (< 1s per test)
 - No network or file I/O
 
 ### Integration Tests (20%)
+
 - Test component interactions
 - Use real databases/message queues
 - Test configuration loading
 - Test database queries
 
 ### E2E Tests (10%)
+
 - Test complete user workflows
 - Full service stack
 - Real external dependencies

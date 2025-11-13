@@ -24,18 +24,15 @@ from .logger import AuditLogger, get_audit_logger
 
 # FastAPI imports
 try:
-
     FASTAPI_AVAILABLE = True
 except ImportError:
     FASTAPI_AVAILABLE = False
 
 # gRPC imports
 try:
-
     GRPC_AVAILABLE = True
 except ImportError:
     GRPC_AVAILABLE = False
-
 
 
 logger = logging.getLogger(__name__)

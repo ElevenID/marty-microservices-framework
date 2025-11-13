@@ -552,6 +552,7 @@ def upcast_order_created_v1_to_v2(event_v1):
 ### Patterns ✅
 
 #### 1. Saga Choreography for Simple Flows
+
 ```python
 # Use event-driven choreography for simple, linear flows
 class OrderService:
@@ -566,6 +567,7 @@ class InventoryService:
 ```
 
 #### 2. Outbox with Event Sourcing
+
 ```python
 # Combine outbox pattern with event sourcing
 async def save_aggregate_with_outbox(aggregate, outbox_events):
@@ -579,6 +581,7 @@ async def save_aggregate_with_outbox(aggregate, outbox_events):
 ```
 
 #### 3. CQRS with Event Projections
+
 ```python
 # Build read models from domain events
 class OrderProjectionHandler:
@@ -592,6 +595,7 @@ class OrderProjectionHandler:
 ### Anti-Patterns ❌
 
 #### 1. Distributed Transactions (2PC)
+
 ```python
 # Avoid: Two-Phase Commit across services
 # async def transfer_money_2pc(from_account, to_account, amount):
@@ -614,6 +618,7 @@ async def transfer_money_saga(from_account, to_account, amount):
 ```
 
 #### 2. Synchronous Read-after-Write
+
 ```python
 # Avoid: Immediately reading from read model after write
 # async def create_order_and_return(command):
@@ -627,6 +632,7 @@ async def create_order_and_return(command):
 ```
 
 #### 3. Large Event Payloads
+
 ```python
 # Avoid: Including large data in events
 # class OrderCreatedEvent:
@@ -646,6 +652,7 @@ class OrderCreatedEvent:
 ### 1. Saga Performance
 
 #### Optimize Step Execution
+
 ```python
 # Use parallel execution where possible
 parallel_config = {
@@ -661,6 +668,7 @@ async def validate_customer_step(context):
 ```
 
 #### Monitor Saga Metrics
+
 ```python
 # Track saga performance
 saga_metrics = {
@@ -676,6 +684,7 @@ saga_metrics = {
 ### 2. Outbox Performance
 
 #### Batch Processing Optimization
+
 ```python
 # Configure optimal batch sizes
 config = OutboxConfig(
@@ -687,6 +696,7 @@ config = OutboxConfig(
 ```
 
 #### Connection Pooling
+
 ```python
 # Use connection pooling for message brokers
 kafka_config = {
@@ -701,6 +711,7 @@ kafka_config = {
 ### 3. CQRS Performance
 
 #### Read Model Optimization
+
 ```python
 # Use appropriate indexes for read models
 class OrderReadModel:
@@ -714,6 +725,7 @@ class OrderReadModel:
 ```
 
 #### Caching Strategy
+
 ```python
 # Multi-level caching
 cache_config = {
@@ -733,6 +745,7 @@ cache_config = {
 ### 4. Event Sourcing Performance
 
 #### Snapshot Strategy
+
 ```python
 # Configure snapshot frequency based on aggregate activity
 class SnapshotConfig:
@@ -744,6 +757,7 @@ class SnapshotConfig:
 ```
 
 #### Event Store Partitioning
+
 ```python
 # Partition events by aggregate ID for better performance
 class EventStoreConfig:
@@ -759,11 +773,13 @@ class EventStoreConfig:
 #### 1. Saga Stuck in Running State
 
 **Symptoms:**
+
 - Saga remains in "running" status for extended periods
 - No progress on saga steps
 - Memory usage increasing
 
 **Diagnosis:**
+
 ```python
 # Check saga status
 saga_status = await orchestrator.get_saga_status(saga_id)
@@ -774,6 +790,7 @@ print(f"Last error: {saga_status.last_error}")
 ```
 
 **Solutions:**
+
 ```python
 # 1. Increase timeout values
 config.saga.timeout_seconds = 600
@@ -794,11 +811,13 @@ async def payment_step_handler(context):
 #### 2. Outbox Events Not Being Processed
 
 **Symptoms:**
+
 - Events accumulating in outbox table
 - No events being published to message broker
 - Application logs showing connection errors
 
 **Diagnosis:**
+
 ```python
 # Check outbox metrics
 metrics = outbox_processor.get_metrics()
@@ -812,6 +831,7 @@ print(f"Broker status: {broker_health.status}")
 ```
 
 **Solutions:**
+
 ```python
 # 1. Verify broker configuration
 broker_config = {
@@ -833,11 +853,13 @@ config.outbox.dead_letter_topic = "failed.events"
 #### 3. Read Model Inconsistency
 
 **Symptoms:**
+
 - Read queries returning stale data
 - Data inconsistency between write and read models
 - Missing or duplicate records in read models
 
 **Diagnosis:**
+
 ```python
 # Check projection lag
 projection_status = await projection_manager.get_status()
@@ -852,6 +874,7 @@ print(f"Inconsistencies: {validation_result.issues}")
 ```
 
 **Solutions:**
+
 ```python
 # 1. Rebuild read models
 await projection_builder.rebuild_projection("order_summary")
@@ -871,11 +894,13 @@ class OrderSummaryV2(ReadModel):
 #### 4. Event Store Performance Issues
 
 **Symptoms:**
+
 - Slow aggregate loading
 - High memory usage during event replay
 - Database connection timeouts
 
 **Diagnosis:**
+
 ```python
 # Profile event store performance
 profiler = EventStoreProfiler()
@@ -889,6 +914,7 @@ print(f"Events per second: {aggregate.version / load_time}")
 ```
 
 **Solutions:**
+
 ```python
 # 1. Implement snapshotting
 snapshot_config = SnapshotConfig(

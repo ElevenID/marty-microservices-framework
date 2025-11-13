@@ -39,13 +39,20 @@ class MonitoringInitializer:
             event_collector=event_collector,
             analytics_engine=analytics_engine,
             siem_integration=siem_integration,
-            dashboard=dashboard
+            dashboard=dashboard,
         )
 
         # The monitoring system constructor already registers all components in DI
-        logger.info("Security monitoring services registered: %s",
-                    [type(monitoring_system).__name__])
-        logger.debug("Monitoring system components: %s",
-                   [SecurityEventCollector.__name__, SecurityAnalyticsEngine.__name__,
-                    SIEMIntegration.__name__, SecurityMonitoringDashboard.__name__,
-                    SecurityMonitoringSystem.__name__])
+        logger.info(
+            "Security monitoring services registered: %s", [type(monitoring_system).__name__]
+        )
+        logger.debug(
+            "Monitoring system components: %s",
+            [
+                SecurityEventCollector.__name__,
+                SecurityAnalyticsEngine.__name__,
+                SIEMIntegration.__name__,
+                SecurityMonitoringDashboard.__name__,
+                SecurityMonitoringSystem.__name__,
+            ],
+        )

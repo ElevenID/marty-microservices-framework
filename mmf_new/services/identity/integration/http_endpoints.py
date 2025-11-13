@@ -212,9 +212,7 @@ async def validate_token(
 
             return TokenValidationResponse(is_valid=True, user=user_response)
         else:
-            return TokenValidationResponse(
-                is_valid=False, error_message=result.error_message
-            )
+            return TokenValidationResponse(is_valid=False, error_message=result.error_message)
 
     except Exception as e:
         raise HTTPException(

@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 
 class SecurityEventType(Enum):
     """Types of security events for audit logging."""
+
     AUTHENTICATION_SUCCESS = "authentication_success"
     AUTHENTICATION_FAILURE = "authentication_failure"
     AUTHORIZATION_GRANTED = "authorization_granted"
@@ -58,6 +59,7 @@ class SecurityEventType(Enum):
 
 class AuditLevel(Enum):
     """Audit logging levels."""
+
     DEBUG = "debug"
     INFO = "info"
     WARNING = "warning"
@@ -92,9 +94,9 @@ class SecurityAuditEvent:
         """Convert event to dictionary for serialization."""
         data = asdict(self)
         # Convert enums to strings
-        data['event_type'] = self.event_type.value
-        data['level'] = self.level.value
-        data['timestamp'] = self.timestamp.isoformat()
+        data["event_type"] = self.event_type.value
+        data["level"] = self.level.value
+        data["timestamp"] = self.timestamp.isoformat()
         return data
 
     def to_json(self) -> str:
@@ -138,8 +140,8 @@ class FileAuditSink(AuditSink):
                 if self._should_rotate():
                     self._rotate_file()
 
-                with open(self.file_path, 'a', encoding='utf-8') as f:
-                    f.write(event.to_json() + '\n')
+                with open(self.file_path, "a", encoding="utf-8") as f:
+                    f.write(event.to_json() + "\n")
 
                 return True
 
@@ -221,8 +223,7 @@ class SecurityAuditor:
         """Initialize default audit sinks."""
         # File sink for security events
         file_sink = FileAuditSink(
-            name="security_audit_file",
-            file_path=f"/tmp/security_audit_{self.service_name}.log"
+            name="security_audit_file", file_path=f"/tmp/security_audit_{self.service_name}.log"
         )
         self.add_sink(file_sink)
 
@@ -251,7 +252,7 @@ class SecurityAuditor:
         if thread_id is not None:
             self.correlation_context[thread_id] = correlation_id
         if session_id:
-            self.default_context['session_id'] = session_id
+            self.default_context["session_id"] = session_id
 
     def clear_correlation_context(self):
         """Clear correlation context for current thread."""
@@ -344,13 +345,15 @@ class SecurityAuditor:
         action: str | None = None,
         result: str | None = None,
         level: AuditLevel = AuditLevel.INFO,
-        **details
+        **details,
     ):
         """Log a security audit event."""
         try:
             # Get correlation ID from context
             thread_id = threading.current_thread().ident
-            correlation_id = self.correlation_context.get(thread_id) if thread_id is not None else None
+            correlation_id = (
+                self.correlation_context.get(thread_id) if thread_id is not None else None
+            )
 
             # Create audit event
             event = SecurityAuditEvent(
@@ -363,7 +366,7 @@ class SecurityAuditor:
                 level=level,
                 correlation_id=correlation_id,
                 service_name=self.service_name,
-                details=details
+                details=details,
             )
 
             # Add default context
@@ -382,11 +385,7 @@ class SecurityAuditor:
             logger.error("Failed to create audit event: %s", e)
 
     def audit_authentication_success(
-        self,
-        principal_id: str,
-        auth_method: str,
-        session_id: str | None = None,
-        **details
+        self, principal_id: str, auth_method: str, session_id: str | None = None, **details
     ):
         """Audit successful authentication."""
         self.audit(
@@ -395,15 +394,11 @@ class SecurityAuditor:
             result="success",
             session_id=session_id,
             auth_method=auth_method,
-            **details
+            **details,
         )
 
     def audit_authentication_failure(
-        self,
-        principal_id: str | None,
-        auth_method: str,
-        reason: str,
-        **details
+        self, principal_id: str | None, auth_method: str, reason: str, **details
     ):
         """Audit failed authentication."""
         self.audit(
@@ -413,16 +408,11 @@ class SecurityAuditor:
             level=AuditLevel.WARNING,
             auth_method=auth_method,
             reason=reason,
-            **details
+            **details,
         )
 
     def audit_authorization_granted(
-        self,
-        principal_id: str,
-        resource: str,
-        action: str,
-        policy_id: str | None = None,
-        **details
+        self, principal_id: str, resource: str, action: str, policy_id: str | None = None, **details
     ):
         """Audit successful authorization."""
         self.audit(
@@ -432,16 +422,11 @@ class SecurityAuditor:
             action=action,
             result="granted",
             policy_id=policy_id,
-            **details
+            **details,
         )
 
     def audit_authorization_denied(
-        self,
-        principal_id: str,
-        resource: str,
-        action: str,
-        reason: str,
-        **details
+        self, principal_id: str, resource: str, action: str, reason: str, **details
     ):
         """Audit denied authorization."""
         self.audit(
@@ -452,7 +437,7 @@ class SecurityAuditor:
             result="denied",
             level=AuditLevel.WARNING,
             reason=reason,
-            **details
+            **details,
         )
 
     def audit_policy_evaluation(
@@ -463,7 +448,7 @@ class SecurityAuditor:
         action: str,
         decision: str,
         evaluation_time_ms: float,
-        **details
+        **details,
     ):
         """Audit policy evaluation."""
         self.audit(
@@ -474,16 +459,10 @@ class SecurityAuditor:
             result=decision,
             policy_id=policy_id,
             evaluation_time_ms=evaluation_time_ms,
-            **details
+            **details,
         )
 
-    def audit_admin_action(
-        self,
-        principal_id: str,
-        action: str,
-        target: str,
-        **details
-    ):
+    def audit_admin_action(self, principal_id: str, action: str, target: str, **details):
         """Audit administrative action."""
         self.audit(
             event_type=SecurityEventType.ADMIN_ACTION,
@@ -491,15 +470,11 @@ class SecurityAuditor:
             action=action,
             resource=target,
             level=AuditLevel.WARNING,
-            **details
+            **details,
         )
 
     def audit_security_violation(
-        self,
-        principal_id: str | None,
-        violation_type: str,
-        description: str,
-        **details
+        self, principal_id: str | None, violation_type: str, description: str, **details
     ):
         """Audit security violation."""
         self.audit(
@@ -509,7 +484,7 @@ class SecurityAuditor:
             level=AuditLevel.ERROR,
             violation_type=violation_type,
             description=description,
-            **details
+            **details,
         )
 
     def audit_error(self, error: SecurityError):
@@ -520,7 +495,7 @@ class SecurityAuditor:
             level=AuditLevel.ERROR,
             error_type=error.error_type.value,
             error_message=error.message,
-            **error.context
+            **error.context,
         )
 
     def get_statistics(self) -> dict[str, Any]:
@@ -533,7 +508,7 @@ class SecurityAuditor:
             "events_filtered": self.events_filtered,
             "queue_size": self.event_queue.qsize(),
             "active_sinks": len([s for s in self.sinks.values() if s.is_active]),
-            "total_sinks": len(self.sinks)
+            "total_sinks": len(self.sinks),
         }
 
 
@@ -573,7 +548,9 @@ def audit_auth_success(principal_id: str, auth_method: str, **details):
 
 def audit_auth_failure(principal_id: str | None, auth_method: str, reason: str, **details):
     """Convenience function for authentication failure audit."""
-    get_security_auditor().audit_authentication_failure(principal_id, auth_method, reason, **details)
+    get_security_auditor().audit_authentication_failure(
+        principal_id, auth_method, reason, **details
+    )
 
 
 def audit_authz_granted(principal_id: str, resource: str, action: str, **details):
@@ -583,7 +560,9 @@ def audit_authz_granted(principal_id: str, resource: str, action: str, **details
 
 def audit_authz_denied(principal_id: str, resource: str, action: str, reason: str, **details):
     """Convenience function for authorization denied audit."""
-    get_security_auditor().audit_authorization_denied(principal_id, resource, action, reason, **details)
+    get_security_auditor().audit_authorization_denied(
+        principal_id, resource, action, reason, **details
+    )
 
 
 __all__ = [
@@ -600,5 +579,5 @@ __all__ = [
     "audit_auth_success",
     "audit_auth_failure",
     "audit_authz_granted",
-    "audit_authz_denied"
+    "audit_authz_denied",
 ]

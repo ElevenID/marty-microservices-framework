@@ -282,9 +282,7 @@ class TestCommandQueryIntegration:
                     "id": str(uuid4()),
                     "created_at": datetime.now().isoformat(),
                 }
-                return CommandResult(
-                    success=True, data=user_data, status=Status.COMPLETED
-                )
+                return CommandResult(success=True, data=user_data, status=Status.COMPLETED)
 
         command = CreateUserCommand(name="John", email="john@example.com")
         handler = CreateUserHandler()

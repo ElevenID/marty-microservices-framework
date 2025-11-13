@@ -29,15 +29,15 @@ class FastCircularDependencyChecker:
         try:
             # Get staged files
             result = subprocess.run(
-                ['git', 'diff', '--cached', '--name-only', '--diff-filter=ACM'],
+                ["git", "diff", "--cached", "--name-only", "--diff-filter=ACM"],
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
 
             changed_files = []
-            for file_path in result.stdout.strip().split('\n'):
-                if file_path.endswith('.py') and self.project_name in file_path:
+            for file_path in result.stdout.strip().split("\n"):
+                if file_path.endswith(".py") and self.project_name in file_path:
                     full_path = self.project_root / file_path
                     if full_path.exists():
                         changed_files.append(str(full_path))
@@ -55,12 +55,12 @@ class FastCircularDependencyChecker:
             relative_path = path.relative_to(self.project_root / "src")
             parts = list(relative_path.parts)
 
-            if parts[-1] == '__init__.py':
+            if parts[-1] == "__init__.py":
                 parts = parts[:-1]
             else:
                 parts[-1] = parts[-1][:-3]  # Remove .py extension
 
-            return '.'.join(parts)
+            return ".".join(parts)
         except (ValueError, IndexError):
             return str(file_path)
 
@@ -68,7 +68,7 @@ class FastCircularDependencyChecker:
         """Parse imports from a single file."""
         imports = set()
         try:
-            with open(file_path, encoding='utf-8') as f:
+            with open(file_path, encoding="utf-8") as f:
                 content = f.read()
 
             tree = ast.parse(content)
@@ -84,14 +84,16 @@ class FastCircularDependencyChecker:
                         imports.add(node.module)
                     elif node.level > 0:  # Relative import
                         current_module = self.get_module_name(file_path)
-                        current_parts = current_module.split('.')
+                        current_parts = current_module.split(".")
 
                         if node.level <= len(current_parts):
-                            base_parts = current_parts[:-node.level] if node.level > 0 else current_parts
+                            base_parts = (
+                                current_parts[: -node.level] if node.level > 0 else current_parts
+                            )
                             if node.module:
-                                full_module = '.'.join(base_parts + [node.module])
+                                full_module = ".".join(base_parts + [node.module])
                             else:
-                                full_module = '.'.join(base_parts)
+                                full_module = ".".join(base_parts)
 
                             if full_module.startswith(self.project_name):
                                 imports.add(full_module)
@@ -113,10 +115,10 @@ class FastCircularDependencyChecker:
 
         # Find files that import these modules (reverse dependencies)
         for root, dirs, files in os.walk(self.src_path):
-            dirs[:] = [d for d in dirs if d != '__pycache__']
+            dirs[:] = [d for d in dirs if d != "__pycache__"]
 
             for file in files:
-                if file.endswith('.py'):
+                if file.endswith(".py"):
                     file_path = Path(root) / file
                     if str(file_path) not in related_files:
                         imports = self.parse_imports(str(file_path))
@@ -127,7 +129,7 @@ class FastCircularDependencyChecker:
 
     def module_name_to_path(self, module_name: str) -> Path | None:
         """Convert module name back to file path."""
-        parts = module_name.split('.')
+        parts = module_name.split(".")
         if parts[0] != self.project_name:
             return None
 
@@ -139,12 +141,12 @@ class FastCircularDependencyChecker:
         for part in parts:
             file_path = file_path / part
 
-        py_file = file_path.with_suffix('.py')
+        py_file = file_path.with_suffix(".py")
         if py_file.exists():
             return py_file
 
         # Try as a package
-        init_file = file_path / '__init__.py'
+        init_file = file_path / "__init__.py"
         if init_file.exists():
             return init_file
 

@@ -15,7 +15,6 @@ from marty_msf.framework.events.types import Event, EventMetadata, EventPriority
 def test_import_event_types():
     """Test that event types can be imported."""
     try:
-
         assert issubclass(EventPriority, Enum)
         print("✓ EventPriority imported successfully")
     except ImportError as e:
@@ -25,7 +24,6 @@ def test_import_event_types():
 def test_event_priority_enum():
     """Test EventPriority enum values."""
     try:
-
         # Test enum members exist
         assert hasattr(EventPriority, "LOW")
         assert hasattr(EventPriority, "NORMAL")
@@ -47,7 +45,6 @@ def test_event_priority_enum():
 def test_event_priority_iteration():
     """Test that event priorities can be iterated."""
     try:
-
         priorities = list(EventPriority)
         assert len(priorities) == 4
 
@@ -66,7 +63,6 @@ def test_event_priority_iteration():
 def test_event_models():
     """Test basic event model imports."""
     try:
-
         # Test classes exist
         assert Event is not None
         assert EventMetadata is not None
@@ -80,8 +76,6 @@ def test_event_models():
 def test_event_data_creation():
     """Test event data object creation."""
     try:
-
-
         # Create basic event
         event_data = {
             "id": str(uuid.uuid4()),
@@ -109,7 +103,6 @@ def test_event_data_creation():
 def test_event_validation():
     """Test event validation and constraints."""
     try:
-
         # Test priority values
         assert EventPriority.CRITICAL != EventPriority.LOW
         assert EventPriority.HIGH != EventPriority.NORMAL

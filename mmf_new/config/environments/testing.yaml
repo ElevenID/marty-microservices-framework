@@ -1,0 +1,106 @@
+# Testing Environment Configuration
+# Optimized for automated testing
+
+# Import base configuration
+base: "../base.yaml"
+
+# Environment metadata
+environment:
+  name: "testing"
+  debug: true
+  hot_reload: false
+  strict_validation: true
+
+# Testing security (minimal for test speed)
+security:
+  authentication:
+    jwt:
+      secret: "test_jwt_secret_fixed_for_determinism"  # pragma: allowlist secret
+      expires_delta_minutes: 60
+      algorithm: "HS256"
+    required: false  # Simplified for testing
+
+  authorization:
+    enabled: false
+
+  tls:
+    enabled: false
+
+# In-memory/test database
+database:
+  host: "localhost"
+  port: 5432
+  database: "mmf_test"
+  username: "mmf_test_user"
+  password: "mmf_test_pass"  # pragma: allowlist secret
+  ssl_mode: "disable"
+
+  pool:
+    min_size: 1
+    max_size: 3
+    timeout: 5
+
+# Testing observability (minimal logging)
+observability:
+  logging:
+    level: "WARNING"
+    format: "console"
+    handlers: ["console"]
+
+  tracing:
+    enabled: false
+
+  metrics:
+    enabled: false
+
+# Testing messaging (mock or in-memory)
+messaging:
+  connection:
+    host: "localhost"
+    port: 6379
+    database: 2  # Separate test database
+    username: ""
+    password: ""
+
+# Testing cache (in-memory)
+cache:
+  connection:
+    host: "localhost"
+    port: 6379
+    database: 3  # Separate test cache
+    username: ""
+    password: ""
+  default_ttl: 60
+
+# Test resilience (fast failures for testing)
+resilience:
+  circuit_breaker:
+    failure_threshold: 2
+    recovery_timeout: 5
+    half_open_max_calls: 1
+
+  retry_policy:
+    max_attempts: 1  # No retries in tests
+    backoff_multiplier: 1.0
+    max_delay_seconds: 1
+
+  timeout:
+    default: 5.0
+    database: 2.0
+    external_api: 3.0
+    cache: 1.0
+
+# Test secrets
+secrets:
+  database_host: "localhost"
+  database_name: "mmf_test"
+  database_username: "mmf_test_user"
+  database_password: "mmf_test_pass"  # pragma: allowlist secret
+  jwt_secret: "test_jwt_secret_fixed_for_determinism"  # pragma: allowlist secret
+  message_broker_host: "localhost"
+  message_broker_username: ""
+  message_broker_password: ""
+  cache_host: "localhost"
+  cache_username: ""
+  cache_password: ""
+  jaeger_endpoint: ""

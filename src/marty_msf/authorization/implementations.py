@@ -33,7 +33,7 @@ class RoleBasedAuthorizer(IAuthorizer):
         self.role_permissions = role_permissions or {
             "admin": ["*"],
             "user": ["read", "write"],
-            "guest": ["read"]
+            "guest": ["read"],
         }
 
     def authorize(self, context: AuthorizationContext) -> AuthorizationResult:
@@ -48,8 +48,8 @@ class RoleBasedAuthorizer(IAuthorizer):
                 metadata={
                     "authorizer": "rbac",
                     "user_roles": context.user.roles,
-                    "user_permissions": list(user_permissions)
-                }
+                    "user_permissions": list(user_permissions),
+                },
             )
 
         return AuthorizationResult(
@@ -58,8 +58,8 @@ class RoleBasedAuthorizer(IAuthorizer):
             metadata={
                 "authorizer": "rbac",
                 "user_roles": context.user.roles,
-                "required_permission": context.action
-            }
+                "required_permission": context.action,
+            },
         )
 
     def get_user_permissions(self, user: User) -> set[str]:
@@ -95,17 +95,14 @@ class AttributeBasedAuthorizer(IAuthorizer):
                     metadata={
                         "authorizer": "abac",
                         "matched_rule": rule.get("name"),
-                        "rule_id": rule.get("id")
-                    }
+                        "rule_id": rule.get("id"),
+                    },
                 )
 
         return AuthorizationResult(
             allowed=False,
             reason="No policy rules matched the request",
-            metadata={
-                "authorizer": "abac",
-                "rules_evaluated": len(self.policy_rules)
-            }
+            metadata={"authorizer": "abac", "rules_evaluated": len(self.policy_rules)},
         )
 
     def get_user_permissions(self, user: User) -> set[str]:
@@ -114,11 +111,7 @@ class AttributeBasedAuthorizer(IAuthorizer):
 
         # Create dummy contexts for permission evaluation
         for action in ["read", "write", "delete", "execute", "admin"]:
-            context = AuthorizationContext(
-                user=user,
-                resource="test_resource",
-                action=action
-            )
+            context = AuthorizationContext(user=user, resource="test_resource", action=action)
 
             result = self.authorize(context)
             if result.allowed:
@@ -126,8 +119,7 @@ class AttributeBasedAuthorizer(IAuthorizer):
 
         return permissions
 
-    def _evaluate_rule(self, rule: builtins.dict[str, Any],
-                       context: AuthorizationContext) -> bool:
+    def _evaluate_rule(self, rule: builtins.dict[str, Any], context: AuthorizationContext) -> bool:
         """Evaluate a single ABAC rule."""
         conditions = rule.get("conditions", {})
 
@@ -178,26 +170,25 @@ class PermissionBasedAuthorizer(IAuthorizer):
         required_permission = f"{context.resource}:{context.action}"
         global_permission = f"*:{context.action}"
 
-        if (required_permission in user_permissions or
-            global_permission in user_permissions or
-            "*:*" in user_permissions):
+        if (
+            required_permission in user_permissions
+            or global_permission in user_permissions
+            or "*:*" in user_permissions
+        ):
             return AuthorizationResult(
                 allowed=True,
                 reason=f"User has required permission: {required_permission}",
                 metadata={
                     "authorizer": "permission",
                     "user_permissions": list(user_permissions),
-                    "required_permission": required_permission
-                }
+                    "required_permission": required_permission,
+                },
             )
 
         return AuthorizationResult(
             allowed=False,
             reason=f"User lacks required permission: {required_permission}",
-            metadata={
-                "authorizer": "permission",
-                "required_permission": required_permission
-            }
+            metadata={"authorizer": "permission", "required_permission": required_permission},
         )
 
     def get_user_permissions(self, user: User) -> set[str]:
@@ -208,8 +199,7 @@ class PermissionBasedAuthorizer(IAuthorizer):
 class CompositeAuthorizer(IAuthorizer):
     """Composite authorizer that combines multiple authorization strategies."""
 
-    def __init__(self, authorizers: builtins.list[IAuthorizer],
-                 strategy: str = "any"):
+    def __init__(self, authorizers: builtins.list[IAuthorizer], strategy: str = "any"):
         """
         Initialize composite authorizer.
 
@@ -244,8 +234,8 @@ class CompositeAuthorizer(IAuthorizer):
                 metadata={
                     "composite_strategy": "any",
                     "authorizers_evaluated": len(self.authorizers),
-                    "all_results": [r.reason for r in results]
-                }
+                    "all_results": [r.reason for r in results],
+                },
             )
 
         elif self.strategy == "all":
@@ -258,8 +248,8 @@ class CompositeAuthorizer(IAuthorizer):
                         metadata={
                             "composite_strategy": "all",
                             "authorizers_evaluated": len(self.authorizers),
-                            "failing_reason": result.reason
-                        }
+                            "failing_reason": result.reason,
+                        },
                     )
 
             # All allowed
@@ -268,8 +258,8 @@ class CompositeAuthorizer(IAuthorizer):
                 reason="All authorizers allowed access",
                 metadata={
                     "composite_strategy": "all",
-                    "authorizers_evaluated": len(self.authorizers)
-                }
+                    "authorizers_evaluated": len(self.authorizers),
+                },
             )
 
         else:

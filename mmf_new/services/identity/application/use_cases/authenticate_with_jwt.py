@@ -34,9 +34,7 @@ class AuthenticateWithJWTRequest:
             raise ValidationError("Token must be a string")
 
 
-class AuthenticateWithJWTUseCase(
-    UseCase[AuthenticateWithJWTRequest, AuthenticationResult]
-):
+class AuthenticateWithJWTUseCase(UseCase[AuthenticateWithJWTRequest, AuthenticationResult]):
     """
     Use case for authenticating users with JWT tokens.
 
@@ -53,9 +51,7 @@ class AuthenticateWithJWTUseCase(
         """
         self._token_provider = token_provider
 
-    async def execute(
-        self, request: AuthenticateWithJWTRequest
-    ) -> AuthenticationResult:
+    async def execute(self, request: AuthenticateWithJWTRequest) -> AuthenticationResult:
         """
         Execute JWT authentication for a user.
 
@@ -67,9 +63,7 @@ class AuthenticateWithJWTUseCase(
         """
         try:
             # Validate and extract user from token
-            authenticated_user = await self._token_provider.validate_token(
-                request.token
-            )
+            authenticated_user = await self._token_provider.validate_token(request.token)
 
             # Return successful authentication
             return AuthenticationResult.create_success(

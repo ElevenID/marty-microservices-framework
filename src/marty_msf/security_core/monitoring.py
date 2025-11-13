@@ -12,6 +12,7 @@ from typing import Any
 
 class SecurityEventType(Enum):
     """Types of security events."""
+
     AUTHENTICATION = "authentication"
     AUTHORIZATION = "authorization"
     ACCESS_DENIED = "access_denied"
@@ -22,6 +23,7 @@ class SecurityEventType(Enum):
 
 class SecurityEventSeverity(Enum):
     """Severity levels for security events."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -31,6 +33,7 @@ class SecurityEventSeverity(Enum):
 @dataclass
 class SecurityEvent:
     """Security event data structure."""
+
     event_type: SecurityEventType
     severity: SecurityEventSeverity
     message: str

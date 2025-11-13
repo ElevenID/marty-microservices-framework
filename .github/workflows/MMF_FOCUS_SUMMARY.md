@@ -20,6 +20,7 @@ paths:
 ```
 
 This means:
+
 - ✅ **Efficient CI**: Only runs when MMF code changes
 - ✅ **Fast Feedback**: No unnecessary workflow runs
 - ✅ **Resource Saving**: Workflows skip unrelated changes
@@ -27,23 +28,27 @@ This means:
 ### 🔧 Updated Workflows
 
 #### 1. **`pr-validation.yml`** → **`MMF PR Validation`**
+
 - **Trigger**: Only on MMF directory changes
 - **Working Directory**: `./mmf`
 - **Test Runner**: `../tests/run_mmf_tests.sh`
 - **Focus**: MMF services, platform core, infrastructure
 
 #### 2. **`comprehensive-e2e.yml`** → **`MMF Comprehensive E2E Testing`**
+
 - **Trigger**: MMF path changes + manual dispatch
 - **Matrix Testing**: e2e, integration with MMF focus
 - **Test Runner**: `../tests/run_mmf_tests.sh`
 - **Modes**: quick, smoke, comprehensive, chaos
 
 #### 3. **`quick-e2e-kind.yml`** → **`MMF Quick E2E with KIND`**
+
 - **Purpose**: Manual MMF debugging and quick validation
 - **Focus**: MMF E2E tests with KIND clusters
 - **Scopes**: smoke, quick, full MMF testing
 
 #### 4. **`e2e-tests.yml`** → **`MMF E2E Tests`**
+
 - **Trigger**: Push/PR with MMF path filtering
 - **Focus**: Standard MMF E2E validation
 - **Infrastructure**: KIND-based testing
@@ -53,6 +58,7 @@ This means:
 Created **`tests/run_mmf_tests.sh`** - A focused test runner specifically for the MMF minimal example:
 
 **Features:**
+
 - ✅ **MMF-Specific**: Targets `mmf/services/`, `mmf/infrastructure/`, `mmf/platform_core/`
 - ✅ **Minimal Configuration**: Bypasses complex pytest configs
 - ✅ **Fast Execution**: Optimized for your minimal example
@@ -60,6 +66,7 @@ Created **`tests/run_mmf_tests.sh`** - A focused test runner specifically for th
 - ✅ **KIND Integration**: E2E tests with Kubernetes
 
 **Usage Examples:**
+
 ```bash
 # Quick MMF validation
 ./tests/run_mmf_tests.sh --unit --smoke
@@ -74,7 +81,9 @@ Created **`tests/run_mmf_tests.sh`** - A focused test runner specifically for th
 ### 🛠️ Technical Changes
 
 #### Working Directory Updates
+
 All test steps now use:
+
 ```yaml
 working-directory: ./mmf
 run: |
@@ -82,14 +91,18 @@ run: |
 ```
 
 #### PATH-Based Efficiency
+
 Workflows only trigger on relevant changes:
+
 - `mmf/**` - Your microservices code
 - `tests/**` - Testing infrastructure
 - `pyproject.toml` - Python dependencies
 - `requirements.txt` - Package requirements
 
 #### KIND Infrastructure
+
 All E2E tests use:
+
 - **KIND Version**: v0.20.0
 - **kubectl Version**: v1.28.0
 - **Python Version**: 3.11
@@ -107,16 +120,19 @@ All E2E tests use:
 ### 🎯 Benefits for Your Development
 
 #### Faster Feedback
+
 - **No Wasted Runs**: Only tests MMF changes
 - **Quick Modes**: Smoke tests for rapid iteration
 - **Focused Scope**: Tests only what matters for MMF
 
 #### Better Resource Usage
+
 - **PATH Filtering**: Skips workflows for non-MMF changes
 - **Efficient KIND**: Proper cluster cleanup
 - **Smart Execution**: Matrix strategies for parallel testing
 
 #### Enhanced Debugging
+
 - **MMF-Specific Logs**: Clear MMF service identification
 - **Debug Mode**: Enhanced logging for troubleshooting
 - **Artifact Collection**: MMF-focused test results
@@ -124,12 +140,14 @@ All E2E tests use:
 ### 🚦 Ready to Use
 
 #### Immediate Benefits
+
 1. **Create a PR touching MMF files** → Workflows run automatically
 2. **Add `[quick]` to PR title** → Runs in quick mode
 3. **Add `[smoke]` to PR title** → Basic validation only
 4. **Manual testing** → Use "MMF Quick E2E with KIND"
 
 #### Example Workflow Triggers
+
 ```bash
 # These changes will trigger MMF workflows:
 git add mmf/services/identity/
@@ -145,14 +163,17 @@ git add examples/legacy/
 ### 🔄 Migration Complete
 
 #### From Generic to MMF-Focused
+
 - ✅ **Before**: Workflows tested entire workspace
 - ✅ **After**: Workflows focus on MMF directory only
 
 #### From Broad to Targeted
+
 - ✅ **Before**: `./tests/run_tests.sh` (comprehensive)
 - ✅ **After**: `./tests/run_mmf_tests.sh` (MMF-focused)
 
 #### From Slow to Fast
+
 - ✅ **Before**: Always ran all tests regardless of changes
 - ✅ **After**: Path-based triggering with MMF scope
 

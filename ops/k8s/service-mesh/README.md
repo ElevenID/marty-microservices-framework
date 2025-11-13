@@ -68,11 +68,13 @@ service-mesh/
 ## Usage
 
 Install Istio service mesh:
+
 ```bash
 istioctl install --set values.defaultRevision=default
 ```
 
 Enable sidecar injection:
+
 ```bash
 kubectl label namespace microservices-dev istio-injection=enabled
 kubectl label namespace microservices-test istio-injection=enabled
@@ -80,6 +82,7 @@ kubectl label namespace microservices-prod istio-injection=enabled
 ```
 
 Deploy service mesh configuration:
+
 ```bash
 kubectl apply -f service-mesh/gateway/
 kubectl apply -f service-mesh/traffic/
@@ -90,6 +93,7 @@ kubectl apply -f service-mesh/observability/
 ## Integration with Phase 2
 
 The service mesh is specifically configured to support:
+
 - Configuration management service discovery
 - Cache backend traffic policies
 - Message queue connection pooling

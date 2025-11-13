@@ -107,7 +107,6 @@ def main():
 
     # Check if playwright browsers are installed
     try:
-
         with sync_playwright() as p:
             try:
                 browser = p.chromium.launch(headless=True)

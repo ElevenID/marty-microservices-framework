@@ -28,7 +28,13 @@ from .domain.repository import (
     RepositoryError,
     RepositoryValidationError,
 )
-from .infrastructure.database import CoreDatabaseManager, DatabaseConfig
+from .infrastructure.config import (
+    ConfigurationLoader,
+    MMFConfiguration,
+    SecretResolver,
+    load_platform_configuration,
+    load_service_configuration,
+)
 from .infrastructure.messaging import CommandBus, QueryBus
 from .infrastructure.persistence import InMemoryReadModelStore, ReadModelStore
 from .infrastructure.repository import SQLAlchemyDomainRepository, SQLAlchemyRepository
@@ -60,8 +66,11 @@ __all__ = [
     "SQLAlchemyDomainRepository",
     "ReadModelStore",
     "InMemoryReadModelStore",
-    "CoreDatabaseManager",
-    "DatabaseConfig",
+    "MMFConfiguration",
+    "ConfigurationLoader",
+    "SecretResolver",
+    "load_service_configuration",
+    "load_platform_configuration",
     "CommandError",
     "ValidationError",
     "BusinessRuleError",

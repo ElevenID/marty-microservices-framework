@@ -53,7 +53,7 @@ class NATSMessage(GenericMessage):
     async def ack(self) -> bool:
         """Acknowledge NATS message."""
         try:
-            if self._nats_msg and hasattr(self._nats_msg, 'ack'):
+            if self._nats_msg and hasattr(self._nats_msg, "ack"):
                 await self._nats_msg.ack()
                 self._acknowledged = True
                 return True
@@ -65,7 +65,7 @@ class NATSMessage(GenericMessage):
     async def nack(self, requeue: bool = True) -> bool:
         """Negative acknowledge NATS message."""
         try:
-            if self._nats_msg and hasattr(self._nats_msg, 'nak'):
+            if self._nats_msg and hasattr(self._nats_msg, "nak"):
                 if requeue:
                     await self._nats_msg.nak()
                 else:
@@ -140,10 +140,9 @@ class NATSBackend(EnhancedMessageBackend):
             logger.error(f"Failed to disconnect from NATS: {e}")
             return False
 
-    async def publish(self,
-                     topic: str,
-                     message: GenericMessage,
-                     pattern_config: MessagingPatternConfig) -> bool:
+    async def publish(
+        self, topic: str, message: GenericMessage, pattern_config: MessagingPatternConfig
+    ) -> bool:
         """Publish message to NATS."""
         if not self._connected or not self.nc:
             logger.error("NATS not connected")
@@ -165,10 +164,10 @@ class NATSBackend(EnhancedMessageBackend):
                     "routing_key": message.metadata.routing_key,
                     "reply_to": message.metadata.reply_to,
                     "message_type": message.metadata.message_type,
-                }
+                },
             }
 
-            message_bytes = json.dumps(payload).encode('utf-8')
+            message_bytes = json.dumps(payload).encode("utf-8")
 
             # Choose publishing method based on pattern
             if pattern_config.pattern == MessagingPattern.STREAM_PROCESSING:
@@ -188,10 +187,7 @@ class NATSBackend(EnhancedMessageBackend):
             logger.error(f"Failed to publish message to NATS topic {topic}: {e}")
             return False
 
-    async def subscribe(self,
-                       topic: str,
-                       handler,
-                       pattern_config: MessagingPatternConfig) -> str:
+    async def subscribe(self, topic: str, handler, pattern_config: MessagingPatternConfig) -> str:
         """Subscribe to NATS topic."""
         if not self._connected or not self.nc:
             logger.error("NATS not connected")
@@ -203,7 +199,7 @@ class NATSBackend(EnhancedMessageBackend):
             async def message_handler(msg):
                 try:
                     # Deserialize message
-                    payload = json.loads(msg.data.decode('utf-8'))
+                    payload = json.loads(msg.data.decode("utf-8"))
 
                     # Reconstruct metadata
                     metadata_dict = payload.get("metadata", {})
@@ -211,21 +207,25 @@ class NATSBackend(EnhancedMessageBackend):
                         message_id=metadata_dict.get("message_id", str(uuid.uuid4())),
                         correlation_id=metadata_dict.get("correlation_id"),
                         causation_id=metadata_dict.get("causation_id"),
-                        timestamp=datetime.fromisoformat(metadata_dict["timestamp"]) if metadata_dict.get("timestamp") else datetime.utcnow(),
-                        ttl=timedelta(seconds=metadata_dict["ttl"]) if metadata_dict.get("ttl") else None,
+                        timestamp=datetime.fromisoformat(metadata_dict["timestamp"])
+                        if metadata_dict.get("timestamp")
+                        else datetime.utcnow(),
+                        ttl=timedelta(seconds=metadata_dict["ttl"])
+                        if metadata_dict.get("ttl")
+                        else None,
                         priority=metadata_dict.get("priority", 0),
                         content_type=metadata_dict.get("content_type", "application/json"),
                         headers=metadata_dict.get("headers", {}),
                         routing_key=metadata_dict.get("routing_key"),
                         reply_to=metadata_dict.get("reply_to"),
-                        message_type=metadata_dict.get("message_type")
+                        message_type=metadata_dict.get("message_type"),
                     )
 
                     # Create message object
                     nats_message = NATSMessage(
                         payload=payload.get("data"),
                         metadata=metadata,
-                        pattern=pattern_config.pattern
+                        pattern=pattern_config.pattern,
                     )
                     nats_message._set_nats_context(msg, self.nc)
 
@@ -254,11 +254,7 @@ class NATSBackend(EnhancedMessageBackend):
                 else:
                     consumer_config["ack_policy"] = "none"
 
-                subscription = await self.js.subscribe(
-                    topic,
-                    cb=message_handler,
-                    **consumer_config
-                )
+                subscription = await self.js.subscribe(topic, cb=message_handler, **consumer_config)
             else:
                 # Standard subscription
                 subscription = await self.nc.subscribe(topic, cb=message_handler)
@@ -286,10 +282,9 @@ class NATSBackend(EnhancedMessageBackend):
             logger.error(f"Failed to unsubscribe from NATS: {e}")
             return False
 
-    async def request(self,
-                     topic: str,
-                     message: GenericMessage,
-                     timeout: timedelta = timedelta(seconds=30)) -> GenericMessage:
+    async def request(
+        self, topic: str, message: GenericMessage, timeout: timedelta = timedelta(seconds=30)
+    ) -> GenericMessage:
         """Send request and wait for response via NATS."""
         if not self._connected or not self.nc:
             raise RuntimeError("NATS not connected")
@@ -310,16 +305,16 @@ class NATSBackend(EnhancedMessageBackend):
                     "routing_key": message.metadata.routing_key,
                     "reply_to": message.metadata.reply_to,
                     "message_type": message.metadata.message_type,
-                }
+                },
             }
 
-            message_bytes = json.dumps(payload).encode('utf-8')
+            message_bytes = json.dumps(payload).encode("utf-8")
 
             # Send request and wait for response
             response = await self.nc.request(topic, message_bytes, timeout=timeout.total_seconds())
 
             # Deserialize response
-            response_payload = json.loads(response.data.decode('utf-8'))
+            response_payload = json.loads(response.data.decode("utf-8"))
 
             # Reconstruct response metadata
             metadata_dict = response_payload.get("metadata", {})
@@ -327,21 +322,23 @@ class NATSBackend(EnhancedMessageBackend):
                 message_id=metadata_dict.get("message_id", str(uuid.uuid4())),
                 correlation_id=metadata_dict.get("correlation_id"),
                 causation_id=metadata_dict.get("causation_id"),
-                timestamp=datetime.fromisoformat(metadata_dict["timestamp"]) if metadata_dict.get("timestamp") else datetime.utcnow(),
+                timestamp=datetime.fromisoformat(metadata_dict["timestamp"])
+                if metadata_dict.get("timestamp")
+                else datetime.utcnow(),
                 ttl=timedelta(seconds=metadata_dict["ttl"]) if metadata_dict.get("ttl") else None,
                 priority=metadata_dict.get("priority", 0),
                 content_type=metadata_dict.get("content_type", "application/json"),
                 headers=metadata_dict.get("headers", {}),
                 routing_key=metadata_dict.get("routing_key"),
                 reply_to=metadata_dict.get("reply_to"),
-                message_type=metadata_dict.get("message_type")
+                message_type=metadata_dict.get("message_type"),
             )
 
             # Create response message
             response_message = NATSMessage(
                 payload=response_payload.get("data"),
                 metadata=response_metadata,
-                pattern=MessagingPattern.REQUEST_RESPONSE
+                pattern=MessagingPattern.REQUEST_RESPONSE,
             )
 
             return response_message
@@ -350,9 +347,7 @@ class NATSBackend(EnhancedMessageBackend):
             logger.error(f"Failed to send NATS request to {topic}: {e}")
             raise
 
-    async def reply(self,
-                   original_message: GenericMessage,
-                   response: GenericMessage) -> bool:
+    async def reply(self, original_message: GenericMessage, response: GenericMessage) -> bool:
         """Reply to a request message via NATS."""
         if not self._connected or not self.nc:
             logger.error("NATS not connected")
@@ -379,10 +374,10 @@ class NATSBackend(EnhancedMessageBackend):
                     "routing_key": response.metadata.routing_key,
                     "reply_to": response.metadata.reply_to,
                     "message_type": response.metadata.message_type,
-                }
+                },
             }
 
-            message_bytes = json.dumps(payload).encode('utf-8')
+            message_bytes = json.dumps(payload).encode("utf-8")
 
             # Send reply
             await self.nc.publish(reply_to, message_bytes)
@@ -405,7 +400,7 @@ class NATSBackend(EnhancedMessageBackend):
             return [
                 DeliveryGuarantee.AT_MOST_ONCE,
                 DeliveryGuarantee.AT_LEAST_ONCE,
-                DeliveryGuarantee.EXACTLY_ONCE
+                DeliveryGuarantee.EXACTLY_ONCE,
             ]
         else:
             return [DeliveryGuarantee.AT_MOST_ONCE]

@@ -33,7 +33,6 @@ async def async_call_with_resilience(
     # Create circuit breaker if config provided
     circuit_breaker = None
     if circuit_breaker_config is not None:
-
         circuit_breaker = get_circuit_breaker(circuit_breaker_name, circuit_breaker_config)
 
     async def resilient_call() -> T:

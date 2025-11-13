@@ -114,10 +114,7 @@ class APIDocumentationGenerator(ABC):
     def _setup_templates(self) -> Environment:
         """Setup Jinja2 template environment."""
         template_dir = self.config.template_dir or Path(__file__).parent / "templates"
-        return Environment(
-            loader=FileSystemLoader(str(template_dir)),
-            autoescape=True
-        )
+        return Environment(loader=FileSystemLoader(str(template_dir)), autoescape=True)
 
     @abstractmethod
     async def generate_documentation(self, service: APIService) -> dict[str, Path]:
@@ -142,19 +139,19 @@ class OpenAPIGenerator(APIDocumentationGenerator):
 
         # Write OpenAPI JSON
         openapi_file = self.config.output_dir / f"{service.name}-openapi.json"
-        with open(openapi_file, 'w') as f:
+        with open(openapi_file, "w") as f:
             json.dump(openapi_spec, f, indent=2)
-        output_files['openapi_spec'] = openapi_file
+        output_files["openapi_spec"] = openapi_file
 
         # Generate HTML documentation
         if self.config.generate_openapi:
             html_file = await self._generate_html_docs(service, openapi_spec)
-            output_files['html_docs'] = html_file
+            output_files["html_docs"] = html_file
 
         # Generate Postman collection
         if self.config.generate_postman:
             postman_file = await self._generate_postman_collection(service, openapi_spec)
-            output_files['postman_collection'] = postman_file
+            output_files["postman_collection"] = postman_file
 
         return output_files
 
@@ -169,9 +166,7 @@ class OpenAPIGenerator(APIDocumentationGenerator):
             },
             "servers": service.servers or [{"url": service.base_url}],
             "paths": {},
-            "components": {
-                "schemas": service.schemas
-            }
+            "components": {"schemas": service.schemas},
         }
 
         # Add contact and license if available
@@ -191,16 +186,12 @@ class OpenAPIGenerator(APIDocumentationGenerator):
                 "description": endpoint.description,
                 "tags": endpoint.tags,
                 "parameters": endpoint.parameters,
-                "responses": endpoint.response_schemas
+                "responses": endpoint.response_schemas,
             }
 
             if endpoint.request_schema:
                 operation["requestBody"] = {
-                    "content": {
-                        "application/json": {
-                            "schema": endpoint.request_schema
-                        }
-                    }
+                    "content": {"application/json": {"schema": endpoint.request_schema}}
                 }
 
             if endpoint.deprecated:
@@ -222,25 +213,27 @@ class OpenAPIGenerator(APIDocumentationGenerator):
             service=service,
             openapi_spec=json.dumps(openapi_spec, indent=2),
             theme=self.config.theme,
-            timestamp=datetime.utcnow().isoformat()
+            timestamp=datetime.utcnow().isoformat(),
         )
 
         html_file = self.config.output_dir / f"{service.name}-docs.html"
-        with open(html_file, 'w') as f:
+        with open(html_file, "w") as f:
             f.write(html_content)
 
         return html_file
 
-    async def _generate_postman_collection(self, service: APIService, openapi_spec: dict[str, Any]) -> Path:
+    async def _generate_postman_collection(
+        self, service: APIService, openapi_spec: dict[str, Any]
+    ) -> Path:
         """Generate Postman collection from OpenAPI spec."""
         collection = {
             "info": {
                 "name": service.name,
                 "description": service.description,
                 "version": service.version,
-                "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+                "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
             },
-            "item": []
+            "item": [],
         }
 
         # Convert endpoints to Postman requests
@@ -249,32 +242,25 @@ class OpenAPIGenerator(APIDocumentationGenerator):
                 "name": endpoint.summary,
                 "request": {
                     "method": endpoint.method.upper(),
-                    "header": [
-                        {
-                            "key": "Content-Type",
-                            "value": "application/json"
-                        }
-                    ],
+                    "header": [{"key": "Content-Type", "value": "application/json"}],
                     "url": {
                         "raw": f"{service.base_url}{endpoint.path}",
                         "host": [service.base_url.replace("https://", "").replace("http://", "")],
-                        "path": endpoint.path.strip("/").split("/")
-                    }
-                }
+                        "path": endpoint.path.strip("/").split("/"),
+                    },
+                },
             }
 
             if endpoint.request_schema:
                 request_item["request"]["body"] = {
                     "mode": "raw",
-                    "raw": json.dumps({
-                        "example": "Add your request data here"
-                    }, indent=2)
+                    "raw": json.dumps({"example": "Add your request data here"}, indent=2),
                 }
 
             collection["item"].append(request_item)
 
         postman_file = self.config.output_dir / f"{service.name}-postman.json"
-        with open(postman_file, 'w') as f:
+        with open(postman_file, "w") as f:
             json.dump(collection, f, indent=2)
 
         return postman_file
@@ -331,7 +317,7 @@ class OpenAPIGenerator(APIDocumentationGenerator):
                 name=service_name,
                 version=version,
                 description=description,
-                base_url="http://localhost:8000"
+                base_url="http://localhost:8000",
             )
 
         except Exception as e:
@@ -352,17 +338,17 @@ class GRPCDocumentationGenerator(APIDocumentationGenerator):
         # Generate protobuf documentation
         proto_docs = await self._generate_proto_docs(service)
         proto_file = self.config.output_dir / f"{service.name}-grpc-docs.html"
-        with open(proto_file, 'w') as f:
+        with open(proto_file, "w") as f:
             f.write(proto_docs)
-        output_files['grpc_docs'] = proto_file
+        output_files["grpc_docs"] = proto_file
 
         # Generate gRPC-web client code documentation
         if self.config.include_examples:
             client_docs = await self._generate_client_examples(service)
             client_file = self.config.output_dir / f"{service.name}-grpc-clients.md"
-            with open(client_file, 'w') as f:
+            with open(client_file, "w") as f:
                 f.write(client_docs)
-            output_files['client_examples'] = client_file
+            output_files["client_examples"] = client_file
 
         return output_files
 
@@ -370,19 +356,13 @@ class GRPCDocumentationGenerator(APIDocumentationGenerator):
         """Generate HTML documentation for protobuf services."""
         template = self.template_env.get_template("grpc_docs.html")
 
-        return template.render(
-            service=service,
-            timestamp=datetime.utcnow().isoformat()
-        )
+        return template.render(service=service, timestamp=datetime.utcnow().isoformat())
 
     async def _generate_client_examples(self, service: APIService) -> str:
         """Generate client code examples for different languages."""
         template = self.template_env.get_template("grpc_client_examples.md")
 
-        return template.render(
-            service=service,
-            timestamp=datetime.utcnow().isoformat()
-        )
+        return template.render(service=service, timestamp=datetime.utcnow().isoformat())
 
     async def discover_apis(self, source_path: Path) -> list[APIService]:
         """Discover gRPC services from .proto files."""
@@ -401,11 +381,11 @@ class GRPCDocumentationGenerator(APIDocumentationGenerator):
             content = proto_file.read_text()
 
             # Extract package name
-            package_match = re.search(r'package\s+([^;]+);', content)
+            package_match = re.search(r"package\s+([^;]+);", content)
             package_name = package_match.group(1) if package_match else "unknown"
 
             # Extract service definitions
-            service_pattern = r'service\s+(\w+)\s*\{([^}]+)\}'
+            service_pattern = r"service\s+(\w+)\s*\{([^}]+)\}"
             services = re.findall(service_pattern, content, re.DOTALL)
 
             if not services:
@@ -415,24 +395,26 @@ class GRPCDocumentationGenerator(APIDocumentationGenerator):
             service_name, service_body = services[0]
 
             # Extract methods
-            method_pattern = r'rpc\s+(\w+)\s*\(([^)]+)\)\s*returns\s*\(([^)]+)\)'
+            method_pattern = r"rpc\s+(\w+)\s*\(([^)]+)\)\s*returns\s*\(([^)]+)\)"
             methods = re.findall(method_pattern, service_body)
 
             grpc_methods = []
             for method_name, input_type, output_type in methods:
-                grpc_methods.append(GRPCMethod(
-                    name=method_name,
-                    full_name=f"{package_name}.{service_name}.{method_name}",
-                    input_type=input_type.strip(),
-                    output_type=output_type.strip(),
-                    description=f"gRPC method {method_name}"
-                ))
+                grpc_methods.append(
+                    GRPCMethod(
+                        name=method_name,
+                        full_name=f"{package_name}.{service_name}.{method_name}",
+                        input_type=input_type.strip(),
+                        output_type=output_type.strip(),
+                        description=f"gRPC method {method_name}",
+                    )
+                )
 
             return APIService(
                 name=service_name,
                 version="1.0.0",
                 description=f"gRPC service {service_name}",
-                grpc_methods=grpc_methods
+                grpc_methods=grpc_methods,
             )
 
         except Exception as e:
@@ -466,17 +448,17 @@ class UnifiedAPIDocumentationGenerator(APIDocumentationGenerator):
         if self.config.generate_unified_docs:
             unified_docs = await self._generate_unified_docs(service)
             unified_file = self.config.output_dir / f"{service.name}-unified-docs.html"
-            with open(unified_file, 'w') as f:
+            with open(unified_file, "w") as f:
                 f.write(unified_docs)
-            output_files['unified_docs'] = unified_file
+            output_files["unified_docs"] = unified_file
 
         # Generate grpc-gateway configuration if needed
         if service.endpoints and service.grpc_methods:
             gateway_config = await self._generate_grpc_gateway_config(service)
             gateway_file = self.config.output_dir / f"{service.name}-gateway.yaml"
-            with open(gateway_file, 'w') as f:
+            with open(gateway_file, "w") as f:
                 yaml.dump(gateway_config, f, default_flow_style=False)
-            output_files['grpc_gateway_config'] = gateway_file
+            output_files["grpc_gateway_config"] = gateway_file
 
         return output_files
 
@@ -488,7 +470,7 @@ class UnifiedAPIDocumentationGenerator(APIDocumentationGenerator):
             service=service,
             has_rest=bool(service.endpoints),
             has_grpc=bool(service.grpc_methods),
-            timestamp=datetime.utcnow().isoformat()
+            timestamp=datetime.utcnow().isoformat(),
         )
 
     async def _generate_grpc_gateway_config(self, service: APIService) -> dict[str, Any]:
@@ -499,15 +481,8 @@ class UnifiedAPIDocumentationGenerator(APIDocumentationGenerator):
             "name": f"{service.name}.api",
             "title": f"{service.name} API",
             "description": service.description,
-            "apis": [
-                {
-                    "name": f"{service.name}",
-                    "version": service.version
-                }
-            ],
-            "http": {
-                "rules": []
-            }
+            "apis": [{"name": f"{service.name}", "version": service.version}],
+            "http": {"rules": []},
         }
 
         # Map gRPC methods to HTTP endpoints
@@ -515,7 +490,7 @@ class UnifiedAPIDocumentationGenerator(APIDocumentationGenerator):
             rule = {
                 "selector": method.full_name,
                 "post": f"/api/v1/{method.name.lower()}",
-                "body": "*"
+                "body": "*",
             }
             config["http"]["rules"].append(rule)
 
@@ -549,9 +524,13 @@ class APIVersionManager:
         self.base_path = base_path
         self.versions_file = base_path / "api_versions.yaml"
 
-    async def register_version(self, service_name: str, version: str,
-                              deprecation_date: str | None = None,
-                              migration_guide: str | None = None) -> bool:
+    async def register_version(
+        self,
+        service_name: str,
+        version: str,
+        deprecation_date: str | None = None,
+        migration_guide: str | None = None,
+    ) -> bool:
         """Register a new API version."""
         versions = await self._load_versions()
 
@@ -562,22 +541,25 @@ class APIVersionManager:
             "created_date": datetime.utcnow().isoformat(),
             "deprecation_date": deprecation_date,
             "migration_guide": migration_guide,
-            "status": "active"
+            "status": "active",
         }
 
         return await self._save_versions(versions)
 
-    async def deprecate_version(self, service_name: str, version: str,
-                               deprecation_date: str, migration_guide: str) -> bool:
+    async def deprecate_version(
+        self, service_name: str, version: str, deprecation_date: str, migration_guide: str
+    ) -> bool:
         """Mark a version as deprecated."""
         versions = await self._load_versions()
 
         if service_name in versions and version in versions[service_name]:
-            versions[service_name][version].update({
-                "status": "deprecated",
-                "deprecation_date": deprecation_date,
-                "migration_guide": migration_guide
-            })
+            versions[service_name][version].update(
+                {
+                    "status": "deprecated",
+                    "deprecation_date": deprecation_date,
+                    "migration_guide": migration_guide,
+                }
+            )
             return await self._save_versions(versions)
 
         return False
@@ -590,7 +572,8 @@ class APIVersionManager:
             return []
 
         return [
-            version for version, info in versions[service_name].items()
+            version
+            for version, info in versions[service_name].items()
             if info.get("status") == "active"
         ]
 
@@ -604,11 +587,13 @@ class APIVersionManager:
         deprecated = []
         for version, info in versions[service_name].items():
             if info.get("status") == "deprecated":
-                deprecated.append({
-                    "version": version,
-                    "deprecation_date": info.get("deprecation_date"),
-                    "migration_guide": info.get("migration_guide")
-                })
+                deprecated.append(
+                    {
+                        "version": version,
+                        "deprecation_date": info.get("deprecation_date"),
+                        "migration_guide": info.get("migration_guide"),
+                    }
+                )
 
         return deprecated
 
@@ -628,7 +613,7 @@ class APIVersionManager:
         """Save version information to file."""
         try:
             self.versions_file.parent.mkdir(parents=True, exist_ok=True)
-            with open(self.versions_file, 'w') as f:
+            with open(self.versions_file, "w") as f:
                 yaml.dump(versions, f, default_flow_style=False)
             return True
         except Exception as e:
@@ -642,13 +627,13 @@ class APIDocumentationManager:
 
     def __init__(self, base_path: Path, config: DocumentationConfig | None = None):
         self.base_path = base_path
-        self.config = config or DocumentationConfig(
-            output_dir=base_path / "docs" / "api"
-        )
+        self.config = config or DocumentationConfig(output_dir=base_path / "docs" / "api")
         self.generator = UnifiedAPIDocumentationGenerator(self.config)
         self.version_manager = APIVersionManager(base_path)
 
-    async def generate_all_documentation(self, source_paths: list[Path]) -> dict[str, dict[str, Path]]:
+    async def generate_all_documentation(
+        self, source_paths: list[Path]
+    ) -> dict[str, dict[str, Path]]:
         """Generate documentation for all services in the given paths."""
         all_services = []
 
@@ -675,19 +660,17 @@ class APIDocumentationManager:
         """Generate an index page listing all services."""
         template = self.generator.template_env.get_template("index.html")
 
-        html_content = template.render(
-            services=services,
-            timestamp=datetime.utcnow().isoformat()
-        )
+        html_content = template.render(services=services, timestamp=datetime.utcnow().isoformat())
 
         index_file = self.config.output_dir / "index.html"
-        with open(index_file, 'w') as f:
+        with open(index_file, "w") as f:
             f.write(html_content)
 
 
 # Command-line interface functions
-async def generate_api_docs(source_paths: list[str], output_dir: str,
-                           config_file: str | None = None) -> None:
+async def generate_api_docs(
+    source_paths: list[str], output_dir: str, config_file: str | None = None
+) -> None:
     """Generate API documentation from source paths."""
     # Load configuration
     config = DocumentationConfig(output_dir=Path(output_dir))
@@ -715,7 +698,6 @@ async def generate_api_docs(source_paths: list[str], output_dir: str,
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(description="Generate API documentation")
     parser.add_argument("source_paths", nargs="+", help="Source code paths to scan")
     parser.add_argument("--output-dir", default="./docs/api", help="Output directory")

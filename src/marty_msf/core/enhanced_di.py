@@ -40,6 +40,7 @@ class ServiceLifecycle(Protocol):
 @dataclass
 class ServiceRegistration(Generic[T]):
     """Registration information for a service."""
+
     service_type: type[T]
     factory: ServiceFactory[T] | None = None
     instance: T | None = None
@@ -101,7 +102,7 @@ class EnhancedDIContainer(DIContainer):
         factory: ServiceFactory[T] | None = None,
         instance: T | None = None,
         config: dict[str, Any] | None = None,
-        is_singleton: bool = True
+        is_singleton: bool = True,
     ) -> ServiceRegistration[T]:
         """Register a service with optional factory or instance."""
         with self._lock:
@@ -110,7 +111,7 @@ class EnhancedDIContainer(DIContainer):
                 factory=factory,
                 instance=instance,
                 config=config or {},
-                is_singleton=is_singleton
+                is_singleton=is_singleton,
             )
             self._registrations[service_type] = registration
 
@@ -161,8 +162,8 @@ class EnhancedDIContainer(DIContainer):
                 instance = super().get(service_type)
 
             # Initialize if needed
-            if hasattr(instance, 'initialize') and not registration.initialized:
-                if hasattr(instance, 'configure'):
+            if hasattr(instance, "initialize") and not registration.initialized:
+                if hasattr(instance, "configure"):
                     instance.configure(registration.config)
                 registration.initialized = True
 
@@ -196,7 +197,7 @@ class EnhancedDIContainer(DIContainer):
             for service_type, registration in self._registrations.items():
                 if not registration.initialized:
                     instance = self._get_or_create_service(service_type)
-                    if hasattr(instance, 'initialize'):
+                    if hasattr(instance, "initialize"):
                         await instance.initialize()
                     registration.initialized = True
 
@@ -204,7 +205,7 @@ class EnhancedDIContainer(DIContainer):
         """Shutdown all services."""
         with self._initialization_lock:
             for registration in self._registrations.values():
-                if registration.instance and hasattr(registration.instance, 'shutdown'):
+                if registration.instance and hasattr(registration.instance, "shutdown"):
                     await registration.instance.shutdown()
                 registration.initialized = False
 
@@ -269,7 +270,7 @@ def register_service(
     factory: ServiceFactory[T] | None = None,
     instance: T | None = None,
     config: dict[str, Any] | None = None,
-    is_singleton: bool = True
+    is_singleton: bool = True,
 ) -> ServiceRegistration[T]:
     """Register a service with the enhanced container."""
     return get_enhanced_container().register_service(
@@ -342,9 +343,10 @@ class SingletonFactory(ServiceFactory[T]):
 def service(
     service_type: type[T] | None = None,
     is_singleton: bool = True,
-    config: dict[str, Any] | None = None
+    config: dict[str, Any] | None = None,
 ) -> Callable[[type[T]], type[T]]:
     """Decorator to automatically register a service."""
+
     def decorator(cls: type[T]) -> type[T]:
         actual_service_type = service_type or cls
 

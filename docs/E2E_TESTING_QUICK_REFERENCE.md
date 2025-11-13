@@ -28,11 +28,13 @@
 ## Available Scripts
 
 ### Main Test Scripts
+
 - `tests/e2e/kind/automated/e2e-test.sh` - Core e2e test runner
 - `tests/e2e/kind/test-e2e.sh` - Local development runner
 - `scripts/generate-report.sh` - Test report generator
 
 ### GitHub Actions
+
 - `.github/workflows/e2e-tests.yml` - Automated CI/CD testing
 
 ## Common Commands
@@ -60,17 +62,20 @@ docker rmi mmf/identity-service:e2e-test
 ## Test Results Interpretation
 
 ### Success Indicators
+
 - ✅ Green checkmarks for passed tests
 - 🎉 "All tests passed!" message
 - Exit code 0
 
 ### Failure Indicators
+
 - ❌ Red X marks for failed tests
 - 💥 "Some tests failed" message
 - Exit code 1
 - Detailed error messages in output
 
 ### Expected Failures
+
 - Empty Credentials: Returns validation error (working as designed)
 - Resource Monitoring: Metrics server not available in KIND (expected)
 
@@ -85,6 +90,7 @@ docker rmi mmf/identity-service:e2e-test
 ## Troubleshooting
 
 ### Cannot create cluster
+
 ```bash
 # Check Docker is running
 docker info
@@ -94,6 +100,7 @@ kind delete clusters --all
 ```
 
 ### Tests timeout
+
 ```bash
 # Check cluster resources
 kubectl get pods --all-namespaces
@@ -103,12 +110,14 @@ kubectl get nodes
 ```
 
 ### Port conflicts
+
 ```bash
 # Use different cluster name
 ./tests/e2e/kind/test-e2e.sh -c my-test-cluster
 ```
 
 ### Image build fails
+
 ```bash
 # Check Dockerfile and requirements
 docker build -t test-image .
@@ -120,7 +129,9 @@ docker system prune -f
 ## Integration with IDE
 
 ### VS Code Tasks
+
 Add to `.vscode/tasks.json`:
+
 ```json
 {
   "label": "Run E2E Tests",
@@ -132,6 +143,7 @@ Add to `.vscode/tasks.json`:
 ```
 
 ### Test Discovery
+
 - Tests are automatically discovered by the framework
 - No need to manually register new test cases
 - API endpoints are tested systematically
@@ -139,6 +151,7 @@ Add to `.vscode/tasks.json`:
 ## Performance Benchmarks
 
 ### Typical Execution Times (MacBook Pro M1)
+
 - Cluster creation: 30-45 seconds
 - Image build: 20-30 seconds
 - Application deployment: 15-20 seconds
@@ -146,6 +159,7 @@ Add to `.vscode/tasks.json`:
 - Cleanup: 5-10 seconds
 
 ### Resource Usage
+
 - RAM: ~2GB for KIND cluster
 - CPU: Moderate during build, minimal during tests
 - Disk: ~500MB for images and logs
@@ -153,6 +167,7 @@ Add to `.vscode/tasks.json`:
 ## Next Steps
 
 After successful e2e tests:
+
 1. **Migrate more services** from `mmf/` to `mmf_new/`
 2. **Add service-specific tests** for each migrated component
 3. **Implement integration tests** between services
