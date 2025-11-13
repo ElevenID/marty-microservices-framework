@@ -34,6 +34,7 @@ from .http_endpoints import (
 # Middleware for automatic authentication
 from .middleware import (
     JWTAuthenticationMiddleware,
+    JWTBearer,
     get_current_user,
     require_authenticated_user,
     require_permission,
@@ -54,6 +55,7 @@ __all__ = [
     "get_validate_token_use_case",
     # Middleware
     "JWTAuthenticationMiddleware",
+    "JWTBearer",
     "get_current_user",
     "require_authenticated_user",
     "require_permission",
