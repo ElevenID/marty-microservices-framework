@@ -1,0 +1,141 @@
+# Identity Service Configuration
+# Service-specific overrides for the identity service
+
+service:
+  name: "identity-service"
+  description: "Core identity and authentication service"
+  version: "1.0.0"
+  type: "hexagonal"
+
+# Service-specific ports
+ports:
+  http: 8001
+  grpc: 50051
+  health: 8080
+  metrics: 9090
+
+# Identity-specific security
+security:
+  authentication:
+    jwt:
+      secret: "${SECRET:JWT_SECRET}"  # pragma: allowlist secret
+      algorithm: "HS256"
+      expiration_minutes: 60
+      issuer: "identity-service"
+      audience: ["mmf-services", "external-clients"]
+      # JWT signing keys - should be different per environment
+      private_key_path: "/etc/keys/jwt-private.pem"
+      public_key_path: "/etc/keys/jwt-public.pem"
+
+    # Identity service specific auth settings
+    password_policy:
+      min_length: 8
+      require_uppercase: true
+      require_lowercase: true
+      require_numbers: true
+      require_special_chars: true
+
+    session_management:
+      max_sessions_per_user: 5
+      session_timeout_minutes: 60
+      remember_me_timeout_days: 30
+
+# Identity database schema
+database:
+  schema: "identity"
+  migrations_path: "/app/migrations"
+  tables:
+    - "users"
+    - "user_sessions"
+    - "user_roles"
+    - "permissions"
+    - "audit_log"
+
+# Identity-specific business rules
+business_rules:
+  user_registration:
+    enabled: true
+    require_email_verification: true
+    allowed_domains: []  # Empty means all domains allowed
+
+  password_reset:
+    enabled: true
+    token_expiry_minutes: 15
+    max_attempts_per_hour: 3
+
+  account_lockout:
+    enabled: true
+    max_failed_attempts: 5
+    lockout_duration_minutes: 15
+
+# Identity service APIs
+apis:
+  rest:
+    enabled: true
+    path_prefix: "/api/v1/identity"
+    endpoints:
+      - "/authenticate"
+      - "/register"
+      - "/profile"
+      - "/password/reset"
+      - "/sessions"
+
+  grpc:
+    enabled: true
+    services:
+      - "AuthenticationService"
+      - "UserManagementService"
+      - "SessionService"
+
+# Integration with other services
+integrations:
+  notification_service:
+    enabled: true
+    endpoints:
+      email_verification: "/api/v1/notifications/email"
+      password_reset: "/api/v1/notifications/email"
+
+  audit_service:
+    enabled: true
+    endpoints:
+      audit_log: "/api/v1/audit/log"
+
+# Identity-specific resilience
+resilience:
+  circuit_breaker:
+    authentication_attempts:
+      failure_threshold: 10
+      recovery_timeout: 300  # 5 minutes
+
+  rate_limiting:
+    login_attempts:
+      max_attempts: 5
+      window_minutes: 15
+    registration_attempts:
+      max_attempts: 3
+      window_minutes: 60
+    password_reset_attempts:
+      max_attempts: 3
+      window_minutes: 60
+
+# Identity-specific observability
+observability:
+  custom_metrics:
+    - name: "authentication_attempts_total"
+      type: "counter"
+      labels: ["method", "result"]
+    - name: "active_sessions_count"
+      type: "gauge"
+      labels: ["user_type"]
+    - name: "password_reset_requests_total"
+      type: "counter"
+      labels: ["delivery_method"]
+
+  audit_events:
+    - "user_login"
+    - "user_logout"
+    - "user_registration"
+    - "password_change"
+    - "password_reset"
+    - "account_locked"
+    - "account_unlocked"

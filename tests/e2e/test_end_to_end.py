@@ -602,8 +602,13 @@ class TestEndToEnd:
             cwd=Path.cwd(),
         )
 
-        # Verify environment-specific configs were created
-        config_files = ["config/development.yaml", "config/testing.yaml", "config/production.yaml"]
+        # Verify environment-specific configs were created (new MMF structure)
+        config_files = [
+            "mmf_new/config/base.yaml",
+            "mmf_new/config/environments/development.yaml",
+            "mmf_new/config/environments/testing.yaml",
+            "mmf_new/config/environments/production.yaml",
+        ]
 
         for config_file in config_files:
             config_path = service_dir / config_file

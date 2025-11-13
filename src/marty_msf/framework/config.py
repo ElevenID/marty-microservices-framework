@@ -531,7 +531,7 @@ class ServiceConfig:
         """Load base configuration file."""
         base_config = {}
 
-        # Try MMF style first (config/base.yaml)
+        # Try MMF style first (config/base.yaml) - legacy path, new system in mmf_new/config/
         if self.config_path:
             base_path = self.config_path / "base.yaml"
         else:

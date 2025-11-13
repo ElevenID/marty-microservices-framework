@@ -1,0 +1,183 @@
+# MMF Base Configuration
+# Core configuration for the new hexagonal architecture
+# This file contains common patterns shared across all environments and services
+
+# Core service metadata
+core:
+  framework_version: "2.0.0"
+  architecture: "hexagonal"
+  unified_config:
+    enabled: true
+    secret_backends: ["environment", "file"]
+    cache_ttl_minutes: 15
+    enable_hot_reload: false
+    strategy: "hierarchical"
+
+# Default service patterns
+service_defaults: &service_defaults
+  version: "1.0.0"
+  health_check:
+    enabled: true
+    port: 8080
+    path: "/health"
+  metrics:
+    enabled: true
+    port: 9090
+    path: "/metrics"
+
+# Port allocations for service types
+ports: &default_ports
+  identity_service: 8001
+  account_service: 8002
+  file_upload_service: 8003
+  form_service: 8004
+  health_check_service: 8005
+  report_service: 8006
+  api_gateway: 8000
+  grpc_services: 50051
+
+# Core security configuration (enforced by default)
+security: &core_security
+  authentication:
+    jwt:
+      algorithm: "HS256"
+      expires_delta_minutes: 30
+      issuer: "mmf-core"
+      audience: "mmf-services"
+    required_paths: ["/api/*"]
+    excluded_paths: ["/health", "/metrics", "/docs", "/openapi.json"]
+
+  authorization:
+    enabled: true
+    default_policy: "deny"
+    policy_file: "/etc/config/authz-policy.yaml"
+
+  tls:
+    enabled: true
+    mutual_tls: false
+    server_cert_path: "/etc/tls/server/tls.crt"
+    server_key_path: "/etc/tls/server/tls.key"
+    ca_cert_path: "/etc/tls/ca/ca.crt"
+
+# Database configuration templates
+database: &core_database
+  driver: "postgresql"
+  host: "${SECRET:database_host}"  # pragma: allowlist secret
+  port: 5432
+  database: "${SECRET:database_name}"  # pragma: allowlist secret
+  username: "${SECRET:database_username}"  # pragma: allowlist secret
+  password: "${SECRET:database_password}"  # pragma: allowlist secret
+  ssl_mode: "prefer"
+
+  # Connection pool settings
+  pool:
+    min_size: 2
+    max_size: 10
+    timeout: 30
+    recycle_time: 3600
+
+  # Transaction settings
+  transaction:
+    isolation_level: "READ_COMMITTED"
+    timeout: 30
+    auto_commit: false
+
+# Observability configuration
+observability: &core_observability
+  logging:
+    level: "INFO"
+    format: "structured"
+    handlers: ["console", "file"]
+    correlation_id: true
+
+  tracing:
+    enabled: true
+    service_name: "${SERVICE_NAME}"
+    jaeger_endpoint: "${SECRET:jaeger_endpoint}"  # pragma: allowlist secret
+    sample_rate: 0.1
+
+  metrics:
+    enabled: true
+    prometheus_enabled: true
+    custom_metrics: true
+
+# Resilience patterns
+resilience: &core_resilience
+  circuit_breaker:
+    failure_threshold: 5
+    recovery_timeout: 60
+    half_open_max_calls: 3
+
+  retry_policy:
+    max_attempts: 3
+    backoff_multiplier: 1.5
+    max_delay_seconds: 30
+
+  timeout:
+    default: 30.0
+    database: 10.0
+    external_api: 15.0
+    cache: 2.0
+
+  bulkhead:
+    database_operations:
+      max_concurrent: 10
+      timeout: 15.0
+    external_api_calls:
+      max_concurrent: 15
+      timeout: 20.0
+    cache_operations:
+      max_concurrent: 50
+      timeout: 2.0
+
+# Message broker configuration
+messaging: &core_messaging
+  provider: "redis"  # or "rabbitmq", "kafka"
+  connection:
+    host: "${SECRET:message_broker_host}"  # pragma: allowlist secret
+    port: 6379
+    database: 0
+    username: "${SECRET:message_broker_username}"  # pragma: allowlist secret
+    password: "${SECRET:message_broker_password}"  # pragma: allowlist secret
+
+  patterns:
+    publish_subscribe: true
+    request_reply: true
+    message_queue: true
+
+  serialization: "json"  # or "protobuf", "avro"
+
+# Cache configuration
+cache: &core_cache
+  provider: "redis"
+  connection:
+    host: "${SECRET:cache_host}"  # pragma: allowlist secret
+    port: 6379
+    database: 1
+    username: "${SECRET:cache_username}"  # pragma: allowlist secret
+    password: "${SECRET:cache_password}"  # pragma: allowlist secret
+
+  default_ttl: 3600
+  max_memory_policy: "allkeys-lru"
+
+# Default service configuration template
+service_template: &service_template
+  <<: *service_defaults
+  ports: *default_ports
+  security: *core_security
+  database: *core_database
+  observability: *core_observability
+  resilience: *core_resilience
+  messaging: *core_messaging
+  cache: *core_cache
+
+# Export common patterns
+defaults:
+  service: *service_template
+  ports: *default_ports
+  security: *core_security
+  database: *core_database
+  observability: *core_observability
+  resilience: *core_resilience
+  messaging: *core_messaging
+  cache: *core_cache
