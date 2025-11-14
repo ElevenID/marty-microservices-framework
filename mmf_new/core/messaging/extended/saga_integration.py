@@ -10,23 +10,20 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any
 
+from mmf_new.core.patterns.event_streaming.saga import (
+    Saga,
+    SagaManager,
+    SagaOrchestrator,
+    SagaStatus,
+    SagaStep,
+)
+
 from .extended_architecture import MessageMetadata, SagaEventBus
 from .unified_event_bus import UnifiedEventBusImpl
 
-# TODO: Restore these imports once patterns module (CQRS, Saga, Event Streaming) is migrated
-# from mmf_new.core.patterns.event_streaming import Command, CommandBus, Event, EventBus
-# from mmf_new.core.patterns.event_streaming.saga import (
-#     Saga,
-#     SagaManager,
-#     SagaOrchestrator,
-#     SagaStatus,
-#     SagaStep,
-# )
-
-
 # Import existing saga components
 try:
-    SAGA_AVAILABLE = False  # Temporarily disabled until patterns migration
+    SAGA_AVAILABLE = True
 except ImportError:
     SAGA_AVAILABLE = False
 
