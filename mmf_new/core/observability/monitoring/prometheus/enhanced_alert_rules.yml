@@ -1,0 +1,311 @@
+# Enhanced Production Alert Rules for Marty Microservices Framework
+# These rules provide comprehensive monitoring for microservices environments
+
+groups:
+  # Service Health and Availability Alerts
+  - name: service_health
+    rules:
+      # Service Down Alert
+      - alert: ServiceDown
+        expr: up == 0
+        for: 30s
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "Service {{ $labels.job }} on instance {{ $labels.instance }} has been down for more than 30 seconds."
+          runbook_url: "https://runbooks.company.com/alerts/service-down"
+
+      # High Memory Usage
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is above 85% on {{ $labels.instance }} for more than 5 minutes."
+
+      # High CPU Usage
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is above 80% on {{ $labels.instance }} for more than 5 minutes."
+
+      # Disk Space Warning
+      - alert: DiskSpaceWarning
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 20
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Disk space running low on {{ $labels.instance }}"
+          description: "Disk space is below 20% on {{ $labels.instance }} mount {{ $labels.mountpoint }}."
+
+      # Disk Space Critical
+      - alert: DiskSpaceCritical
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 10
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Disk space critically low on {{ $labels.instance }}"
+          description: "Disk space is below 10% on {{ $labels.instance }} mount {{ $labels.mountpoint }}."
+
+  # Application Performance Alerts
+  - name: application_performance
+    rules:
+      # High HTTP Response Time
+      - alert: HighHTTPResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.5
+        for: 3m
+        labels:
+          severity: warning
+          team: application
+        annotations:
+          summary: "High HTTP response time for {{ $labels.service_name }}"
+          description: "95th percentile HTTP response time is above 500ms for {{ $labels.service_name }} for more than 3 minutes."
+
+      # High HTTP Error Rate
+      - alert: HighHTTPErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          team: application
+        annotations:
+          summary: "High HTTP error rate for {{ $labels.service_name }}"
+          description: "HTTP error rate is above 5% for {{ $labels.service_name }} for more than 2 minutes."
+
+      # gRPC High Error Rate
+      - alert: HighGRPCErrorRate
+        expr: rate(grpc_server_handled_total{grpc_code!~"OK|NotFound|InvalidArgument"}[5m]) / rate(grpc_server_handled_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          team: application
+        annotations:
+          summary: "High gRPC error rate for {{ $labels.grpc_service }}"
+          description: "gRPC error rate is above 5% for {{ $labels.grpc_service }} method {{ $labels.grpc_method }}."
+
+      # gRPC High Response Time
+      - alert: HighGRPCResponseTime
+        expr: histogram_quantile(0.95, rate(grpc_server_handling_seconds_bucket[5m])) > 1.0
+        for: 3m
+        labels:
+          severity: warning
+          team: application
+        annotations:
+          summary: "High gRPC response time for {{ $labels.grpc_service }}"
+          description: "95th percentile gRPC response time is above 1 second for {{ $labels.grpc_service }}."
+
+  # Business Logic Alerts
+  - name: business_metrics
+    rules:
+      # Low Conversion Rate
+      - alert: LowConversionRate
+        expr: rate(business_conversions_total[10m]) / rate(business_visits_total[10m]) < 0.02
+        for: 10m
+        labels:
+          severity: warning
+          team: business
+        annotations:
+          summary: "Conversion rate is low"
+          description: "Conversion rate has dropped below 2% for the last 10 minutes."
+
+      # High Payment Failure Rate
+      - alert: HighPaymentFailureRate
+        expr: rate(payment_transactions_total{status="failed"}[5m]) / rate(payment_transactions_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          team: payments
+        annotations:
+          summary: "High payment failure rate"
+          description: "Payment failure rate is above 10% for the last 5 minutes."
+
+      # Authentication Failures
+      - alert: HighAuthenticationFailures
+        expr: rate(auth_attempts_total{status="failed"}[5m]) > 10
+        for: 3m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "High authentication failure rate"
+          description: "Authentication failures are above 10 per second for the last 3 minutes."
+
+  # Database Performance Alerts
+  - name: database_performance
+    rules:
+      # Database Connection Pool Exhaustion
+      - alert: DatabaseConnectionPoolExhaustion
+        expr: database_connections_active / database_connections_max > 0.8
+        for: 2m
+        labels:
+          severity: critical
+          team: database
+        annotations:
+          summary: "Database connection pool near exhaustion"
+          description: "Database connection pool usage is above 80% for {{ $labels.database }}."
+
+      # Slow Database Queries
+      - alert: SlowDatabaseQueries
+        expr: histogram_quantile(0.95, rate(database_query_duration_seconds_bucket[5m])) > 2.0
+        for: 5m
+        labels:
+          severity: warning
+          team: database
+        annotations:
+          summary: "Slow database queries detected"
+          description: "95th percentile database query time is above 2 seconds for {{ $labels.database }}."
+
+      # High Database Error Rate
+      - alert: HighDatabaseErrorRate
+        expr: rate(database_operations_total{status="error"}[5m]) / rate(database_operations_total[5m]) > 0.02
+        for: 3m
+        labels:
+          severity: critical
+          team: database
+        annotations:
+          summary: "High database error rate"
+          description: "Database error rate is above 2% for {{ $labels.database }}."
+
+  # Kubernetes Cluster Alerts
+  - name: kubernetes_cluster
+    rules:
+      # Pod Crash Looping
+      - alert: PodCrashLooping
+        expr: rate(kube_pod_container_status_restarts_total[15m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Pod is crash looping"
+          description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is crash looping."
+
+      # Pod Not Ready
+      - alert: PodNotReady
+        expr: kube_pod_status_ready{condition="false"} == 1
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Pod not ready"
+          description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has been not ready for more than 10 minutes."
+
+      # Deployment Replica Mismatch
+      - alert: DeploymentReplicaMismatch
+        expr: kube_deployment_status_replicas != kube_deployment_spec_replicas
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Deployment replica mismatch"
+          description: "Deployment {{ $labels.deployment }} in namespace {{ $labels.namespace }} has replica mismatch."
+
+      # Node Not Ready
+      - alert: NodeNotReady
+        expr: kube_node_status_ready{condition="false"} == 1
+        for: 5m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Node not ready"
+          description: "Node {{ $labels.node }} has been not ready for more than 5 minutes."
+
+  # Service Level Objective (SLO) Alerts
+  - name: slo_alerts
+    rules:
+      # SLO Error Budget Burn Rate - Fast (5m)
+      - alert: SLOErrorBudgetBurnRateFast
+        expr: |
+          (
+            slo_sli_error_rate_5m > (14.4 * 0.001)
+            and
+            slo_sli_error_rate_1h > (14.4 * 0.001)
+          )
+        labels:
+          severity: critical
+          team: sre
+        annotations:
+          summary: "SLO error budget burning fast for {{ $labels.service_name }}"
+          description: "SLO error budget for {{ $labels.service_name }} is burning at 14.4x rate. At this rate, error budget will be exhausted in 2 hours."
+
+      # SLO Error Budget Burn Rate - Slow (6h)
+      - alert: SLOErrorBudgetBurnRateSlow
+        expr: |
+          (
+            slo_sli_error_rate_30m > (6 * 0.001)
+            and
+            slo_sli_error_rate_6h > (6 * 0.001)
+          )
+        labels:
+          severity: warning
+          team: sre
+        annotations:
+          summary: "SLO error budget burning slowly for {{ $labels.service_name }}"
+          description: "SLO error budget for {{ $labels.service_name }} is burning at 6x rate. At this rate, error budget will be exhausted in 1 day."
+
+  # Security Alerts
+  - name: security_alerts
+    rules:
+      # Unusual API Access Patterns
+      - alert: UnusualAPIAccessPattern
+        expr: rate(http_requests_total[5m]) > (avg_over_time(rate(http_requests_total[5m])[1d:5m]) + 3 * stddev_over_time(rate(http_requests_total[5m])[1d:5m]))
+        for: 10m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "Unusual API access pattern detected"
+          description: "API access rate for {{ $labels.service_name }} is significantly higher than normal."
+
+      # Multiple Authentication Failures
+      - alert: MultipleAuthenticationFailures
+        expr: increase(auth_attempts_total{status="failed"}[5m]) > 50
+        for: 1m
+        labels:
+          severity: critical
+          team: security
+        annotations:
+          summary: "Multiple authentication failures detected"
+          description: "More than 50 authentication failures in the last 5 minutes from {{ $labels.source_ip }}."
+
+  # Rate Limiting Alerts
+  - name: rate_limiting
+    rules:
+      # High Rate Limit Hits
+      - alert: HighRateLimitHits
+        expr: rate(rate_limit_hits_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High rate limit hits for {{ $labels.service_name }}"
+          description: "Rate limit hits are above 10 per second for {{ $labels.service_name }}."
+
+      # Rate Limiting Service Down
+      - alert: RateLimitingServiceDown
+        expr: up{job="rate-limiting"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Rate limiting service is down"
+          description: "Rate limiting service is unavailable."

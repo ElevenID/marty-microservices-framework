@@ -1,0 +1,10 @@
+# Pipeline Configuration
+- pipeline.id: main
+  path.config: "/usr/share/logstash/pipeline/logstash.conf"
+  pipeline.workers: 4
+  pipeline.batch.size: 1000
+
+- pipeline.id: metrics
+  path.config: "/usr/share/logstash/pipeline/metrics.conf"
+  pipeline.workers: 1
+  pipeline.batch.size: 100

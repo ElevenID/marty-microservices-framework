@@ -1,0 +1,297 @@
+# Recording Rules for Marty Microservices Framework
+# Pre-computed metrics for efficient dashboard queries and alerting
+
+groups:
+  # Application Performance Recording Rules
+  - name: application_performance_recording
+    interval: 30s
+    rules:
+      # HTTP Request Rate (per service)
+      - record: http:request_rate_5m
+        expr: |
+          sum(rate(http_requests_total[5m])) by (service_name, namespace, method, status)
+
+      # HTTP Request Rate (total)
+      - record: http:request_rate_total_5m
+        expr: |
+          sum(rate(http_requests_total[5m])) by (service_name, namespace)
+
+      # HTTP Error Rate
+      - record: http:error_rate_5m
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m])) by (service_name, namespace) /
+          sum(rate(http_requests_total[5m])) by (service_name, namespace)
+
+      # HTTP Response Time Percentiles
+      - record: http:response_time_p50_5m
+        expr: |
+          histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (service_name, namespace, le))
+
+      - record: http:response_time_p95_5m
+        expr: |
+          histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (service_name, namespace, le))
+
+      - record: http:response_time_p99_5m
+        expr: |
+          histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (service_name, namespace, le))
+
+  # gRPC Performance Recording Rules
+  - name: grpc_performance_recording
+    interval: 30s
+    rules:
+      # gRPC Request Rate
+      - record: grpc:request_rate_5m
+        expr: |
+          sum(rate(grpc_server_handled_total[5m])) by (grpc_service, grpc_method, grpc_code)
+
+      # gRPC Error Rate
+      - record: grpc:error_rate_5m
+        expr: |
+          sum(rate(grpc_server_handled_total{grpc_code!~"OK|NotFound|InvalidArgument"}[5m])) by (grpc_service, grpc_method) /
+          sum(rate(grpc_server_handled_total[5m])) by (grpc_service, grpc_method)
+
+      # gRPC Response Time Percentiles
+      - record: grpc:response_time_p50_5m
+        expr: |
+          histogram_quantile(0.50, sum(rate(grpc_server_handling_seconds_bucket[5m])) by (grpc_service, grpc_method, le))
+
+      - record: grpc:response_time_p95_5m
+        expr: |
+          histogram_quantile(0.95, sum(rate(grpc_server_handling_seconds_bucket[5m])) by (grpc_service, grpc_method, le))
+
+      - record: grpc:response_time_p99_5m
+        expr: |
+          histogram_quantile(0.99, sum(rate(grpc_server_handling_seconds_bucket[5m])) by (grpc_service, grpc_method, le))
+
+  # System Resource Recording Rules
+  - name: system_resources_recording
+    interval: 60s
+    rules:
+      # CPU Usage by Instance
+      - record: node:cpu_utilization_5m
+        expr: |
+          100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+
+      # Memory Usage by Instance
+      - record: node:memory_utilization_5m
+        expr: |
+          (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100
+
+      # Disk Usage by Instance and Mount
+      - record: node:disk_utilization_5m
+        expr: |
+          (node_filesystem_size_bytes - node_filesystem_avail_bytes) / node_filesystem_size_bytes * 100
+
+      # Network Traffic Rate
+      - record: node:network_receive_rate_5m
+        expr: |
+          rate(node_network_receive_bytes_total[5m])
+
+      - record: node:network_transmit_rate_5m
+        expr: |
+          rate(node_network_transmit_bytes_total[5m])
+
+  # Database Performance Recording Rules
+  - name: database_performance_recording
+    interval: 30s
+    rules:
+      # Database Query Rate
+      - record: database:query_rate_5m
+        expr: |
+          sum(rate(database_operations_total[5m])) by (database, operation)
+
+      # Database Error Rate
+      - record: database:error_rate_5m
+        expr: |
+          sum(rate(database_operations_total{status="error"}[5m])) by (database) /
+          sum(rate(database_operations_total[5m])) by (database)
+
+      # Database Response Time Percentiles
+      - record: database:response_time_p95_5m
+        expr: |
+          histogram_quantile(0.95, sum(rate(database_query_duration_seconds_bucket[5m])) by (database, le))
+
+      # Database Connection Pool Usage
+      - record: database:connection_pool_utilization
+        expr: |
+          database_connections_active / database_connections_max * 100
+
+  # Business Metrics Recording Rules
+  - name: business_metrics_recording
+    interval: 60s
+    rules:
+      # Conversion Rate
+      - record: business:conversion_rate_10m
+        expr: |
+          sum(rate(business_conversions_total[10m])) /
+          sum(rate(business_visits_total[10m]))
+
+      # Revenue Rate
+      - record: business:revenue_rate_10m
+        expr: |
+          sum(rate(business_revenue_total[10m])) by (currency)
+
+      # User Signup Rate
+      - record: business:signup_rate_10m
+        expr: |
+          sum(rate(user_signups_total[10m]))
+
+      # Payment Success Rate
+      - record: business:payment_success_rate_5m
+        expr: |
+          sum(rate(payment_transactions_total{status="success"}[5m])) /
+          sum(rate(payment_transactions_total[5m]))
+
+  # Security Metrics Recording Rules
+  - name: security_metrics_recording
+    interval: 30s
+    rules:
+      # Authentication Rate
+      - record: security:auth_rate_5m
+        expr: |
+          sum(rate(auth_attempts_total[5m])) by (status)
+
+      # Authentication Failure Rate
+      - record: security:auth_failure_rate_5m
+        expr: |
+          sum(rate(auth_attempts_total{status="failed"}[5m])) /
+          sum(rate(auth_attempts_total[5m]))
+
+      # Rate Limit Hit Rate
+      - record: security:rate_limit_hit_rate_5m
+        expr: |
+          sum(rate(rate_limit_hits_total[5m])) by (service_name, endpoint)
+
+      # Security Scan Results
+      - record: security:vulnerability_count
+        expr: |
+          sum(security_vulnerabilities_total) by (severity, service_name)
+
+  # Service Level Indicators (SLI) Recording Rules
+  - name: sli_recording
+    interval: 30s
+    rules:
+      # Availability SLI
+      - record: sli:availability_5m
+        expr: |
+          sum(rate(http_requests_total{status!~"5.."}[5m])) by (service_name) /
+          sum(rate(http_requests_total[5m])) by (service_name)
+
+      # Latency SLI (requests served under SLO threshold)
+      - record: sli:latency_5m
+        expr: |
+          sum(rate(http_request_duration_seconds_bucket{le="0.1"}[5m])) by (service_name) /
+          sum(rate(http_request_duration_seconds_count[5m])) by (service_name)
+
+      # Quality SLI (non-error requests)
+      - record: sli:quality_5m
+        expr: |
+          sum(rate(http_requests_total{status!~"4..|5.."}[5m])) by (service_name) /
+          sum(rate(http_requests_total[5m])) by (service_name)
+
+  # Service Level Indicators - Different Time Windows
+  - name: sli_multiwindow_recording
+    interval: 60s
+    rules:
+      # 30-minute windows for SLO burn rate alerting
+      - record: sli:availability_30m
+        expr: |
+          sum(rate(http_requests_total{status!~"5.."}[30m])) by (service_name) /
+          sum(rate(http_requests_total[30m])) by (service_name)
+
+      - record: sli:latency_30m
+        expr: |
+          sum(rate(http_request_duration_seconds_bucket{le="0.1"}[30m])) by (service_name) /
+          sum(rate(http_request_duration_seconds_count[30m])) by (service_name)
+
+      # 1-hour windows
+      - record: sli:availability_1h
+        expr: |
+          sum(rate(http_requests_total{status!~"5.."}[1h])) by (service_name) /
+          sum(rate(http_requests_total[1h])) by (service_name)
+
+      - record: sli:latency_1h
+        expr: |
+          sum(rate(http_request_duration_seconds_bucket{le="0.1"}[1h])) by (service_name) /
+          sum(rate(http_request_duration_seconds_count[1h])) by (service_name)
+
+      # 6-hour windows
+      - record: sli:availability_6h
+        expr: |
+          sum(rate(http_requests_total{status!~"5.."}[6h])) by (service_name) /
+          sum(rate(http_requests_total[6h])) by (service_name)
+
+      - record: sli:latency_6h
+        expr: |
+          sum(rate(http_request_duration_seconds_bucket{le="0.1"}[6h])) by (service_name) /
+          sum(rate(http_request_duration_seconds_count[6h])) by (service_name)
+
+  # Error Budget Recording Rules
+  - name: error_budget_recording
+    interval: 300s  # 5 minutes
+    rules:
+      # Error budget burn rate (how fast we're consuming error budget)
+      - record: slo:error_budget_burn_rate_5m
+        expr: |
+          (1 - sli:availability_5m) / (1 - 0.999)  # Assuming 99.9% SLO
+
+      - record: slo:error_budget_burn_rate_30m
+        expr: |
+          (1 - sli:availability_30m) / (1 - 0.999)
+
+      - record: slo:error_budget_burn_rate_1h
+        expr: |
+          (1 - sli:availability_1h) / (1 - 0.999)
+
+      - record: slo:error_budget_burn_rate_6h
+        expr: |
+          (1 - sli:availability_6h) / (1 - 0.999)
+
+  # Kubernetes Recording Rules
+  - name: kubernetes_recording
+    interval: 60s
+    rules:
+      # Pod CPU Usage
+      - record: k8s:pod_cpu_usage_5m
+        expr: |
+          sum(rate(container_cpu_usage_seconds_total[5m])) by (namespace, pod, container)
+
+      # Pod Memory Usage
+      - record: k8s:pod_memory_usage
+        expr: |
+          sum(container_memory_working_set_bytes) by (namespace, pod, container)
+
+      # Node Resource Utilization
+      - record: k8s:node_cpu_utilization_5m
+        expr: |
+          sum(rate(container_cpu_usage_seconds_total[5m])) by (node) /
+          sum(kube_node_status_allocatable{resource="cpu"}) by (node) * 100
+
+      - record: k8s:node_memory_utilization
+        expr: |
+          sum(container_memory_working_set_bytes) by (node) /
+          sum(kube_node_status_allocatable{resource="memory"}) by (node) * 100
+
+      # Service Health
+      - record: k8s:service_up
+        expr: |
+          up{job=~"kubernetes-.*"}
+
+  # Infrastructure Cost Recording Rules
+  - name: infrastructure_cost_recording
+    interval: 300s
+    rules:
+      # CPU Cost (based on usage)
+      - record: cost:cpu_hourly
+        expr: |
+          sum(k8s:pod_cpu_usage_5m) by (namespace, pod) * 0.05  # $0.05 per CPU hour
+
+      # Memory Cost (based on usage)
+      - record: cost:memory_hourly
+        expr: |
+          sum(k8s:pod_memory_usage) by (namespace, pod) / (1024^3) * 0.01  # $0.01 per GB hour
+
+      # Total Infrastructure Cost per Service
+      - record: cost:service_hourly
+        expr: |
+          sum(cost:cpu_hourly + cost:memory_hourly) by (namespace, service_name)

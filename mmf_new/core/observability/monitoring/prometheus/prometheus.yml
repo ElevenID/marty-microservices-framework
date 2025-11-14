@@ -1,0 +1,238 @@
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+
+rule_files:
+  - "alert_rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    metrics_path: /metrics
+    scrape_interval: 15s
+
+  # Microservices discovery
+  - job_name: 'marty-microservices'
+    static_configs:
+      - targets: []  # Dynamically populated by service discovery
+    metrics_path: /metrics
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - source_labels: [__meta_docker_container_label_service_name]
+        target_label: service_name
+      - source_labels: [__meta_docker_container_label_service_version]
+        target_label: version
+
+  # gRPC specific metrics
+  - job_name: 'grpc-services'
+    static_configs:
+      - targets: []  # Populated by service discovery
+    metrics_path: /metrics
+    scrape_interval: 10s
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'grpc_.*'
+        target_label: __tmp_grpc_metric
+      - source_labels: [grpc_method]
+        target_label: method
+      - source_labels: [grpc_service]
+        target_label: service
+
+  # Kafka monitoring
+  - job_name: 'kafka-exporter'
+    static_configs:
+      - targets: ['kafka-exporter:9308']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  # Node exporter for system metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    metrics_path: /metrics
+    scrape_interval: 15s
+
+  # Docker container metrics
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+    # Business metrics from framework services
+  - job_name: 'business-metrics'
+    static_configs:
+      - targets: []  # Populated by service discovery
+    metrics_path: /metrics
+    scrape_interval: 30s
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'business_.*'
+        action: keep
+
+  # Istio service mesh metrics
+  - job_name: 'istio-mesh'
+    kubernetes_sd_configs:
+    - role: endpoints
+      namespaces:
+        names:
+        - istio-system
+        - microservice-framework
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+      action: keep
+      regex: istio-proxy;http-monitoring
+    - source_labels: [__address__, __meta_kubernetes_endpoint_port_number]
+      action: replace
+      regex: ([^:]+)(?::\d+)?;(\d+)
+      replacement: $1:15090
+      target_label: __address__
+    - action: labelmap
+      regex: __meta_kubernetes_service_label_(.+)
+    - source_labels: [__meta_kubernetes_namespace]
+      action: replace
+      target_label: namespace
+    - source_labels: [__meta_kubernetes_service_name]
+      action: replace
+      target_label: service_name
+    metrics_path: /stats/prometheus
+    scrape_interval: 15s
+
+  # Istio control plane metrics
+  - job_name: 'istio-policy'
+    kubernetes_sd_configs:
+    - role: endpoints
+      namespaces:
+        names:
+        - istio-system
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+      action: keep
+      regex: istio-policy;http-monitoring
+    - source_labels: [__address__, __meta_kubernetes_endpoint_port_number]
+      action: replace
+      regex: ([^:]+)(?::\d+)?;(\d+)
+      replacement: $1:15014
+      target_label: __address__
+    - action: labelmap
+      regex: __meta_kubernetes_service_label_(.+)
+    - source_labels: [__meta_kubernetes_namespace]
+      action: replace
+      target_label: namespace
+    - source_labels: [__meta_kubernetes_service_name]
+      action: replace
+      target_label: service_name
+    metrics_path: /metrics
+    scrape_interval: 15s
+
+  # Istio pilot metrics
+  - job_name: 'istio-pilot'
+    kubernetes_sd_configs:
+    - role: endpoints
+      namespaces:
+        names:
+        - istio-system
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+      action: keep
+      regex: istiod;http-monitoring
+    - source_labels: [__address__, __meta_kubernetes_endpoint_port_number]
+      action: replace
+      regex: ([^:]+)(?::\d+)?;(\d+)
+      replacement: $1:15014
+      target_label: __address__
+    - action: labelmap
+      regex: __meta_kubernetes_service_label_(.+)
+    - source_labels: [__meta_kubernetes_namespace]
+      action: replace
+      target_label: namespace
+    - source_labels: [__meta_kubernetes_service_name]
+      action: replace
+      target_label: service_name
+    metrics_path: /metrics
+    scrape_interval: 15s
+
+  # Linkerd service mesh metrics
+  - job_name: 'linkerd-controller'
+    kubernetes_sd_configs:
+    - role: pod
+      namespaces:
+        names:
+        - linkerd
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_pod_container_port_name]
+      action: keep
+      regex: admin-http
+    - source_labels: [__meta_kubernetes_pod_container_name]
+      action: keep
+      regex: destination
+    - source_labels: [__address__]
+      action: replace
+      regex: ([^:]+)(?::\d+)?
+      replacement: $1:4191
+      target_label: __address__
+    - action: labelmap
+      regex: __meta_kubernetes_pod_label_(.+)
+    - source_labels: [__meta_kubernetes_namespace]
+      action: replace
+      target_label: namespace
+    - source_labels: [__meta_kubernetes_pod_name]
+      action: replace
+      target_label: pod
+    metrics_path: /metrics
+    scrape_interval: 10s
+
+  # Linkerd proxy metrics
+  - job_name: 'linkerd-proxy'
+    kubernetes_sd_configs:
+    - role: pod
+      namespaces:
+        names:
+        - microservice-framework
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_pod_container_name]
+      action: keep
+      regex: linkerd-proxy
+    - source_labels: [__address__]
+      action: replace
+      regex: ([^:]+)(?::\d+)?
+      replacement: $1:4191
+      target_label: __address__
+    - action: labelmap
+      regex: __meta_kubernetes_pod_label_(.+)
+    - source_labels: [__meta_kubernetes_namespace]
+      action: replace
+      target_label: namespace
+    - source_labels: [__meta_kubernetes_pod_name]
+      action: replace
+      target_label: pod
+    metrics_path: /metrics
+    scrape_interval: 10s
+
+  # Business metrics from framework services
+  - job_name: 'business-metrics'
+    static_configs:
+      - targets: []  # Service-specific endpoints
+    metrics_path: /business-metrics
+    scrape_interval: 30s
+    honor_labels: true
+
+  # Load testing metrics
+  - job_name: 'load-test-metrics'
+    static_configs:
+      - targets: []  # Populated during load tests
+    metrics_path: /metrics
+    scrape_interval: 5s
+    scrape_timeout: 3s

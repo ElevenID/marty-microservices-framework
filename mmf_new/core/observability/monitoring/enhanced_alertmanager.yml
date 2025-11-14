@@ -1,0 +1,382 @@
+# Enhanced Alertmanager Configuration for Marty Microservices Framework
+# Production-grade alerting with intelligent routing, escalation, and integrations
+
+global:
+  # Global SMTP configuration
+  smtp_smarthost: 'smtp.company.com:587'
+  smtp_from: 'alerts@company.com'
+  smtp_auth_username: 'alerts@company.com'
+  smtp_auth_password: 'smtp_password'  # pragma: allowlist secret
+
+  # Global Slack configuration
+  slack_api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+
+  # PagerDuty integration key
+  pagerduty_url: 'https://events.pagerduty.com/v2/enqueue'
+
+  # OpsGenie configuration
+  opsgenie_api_url: 'https://api.opsgenie.com/'
+  opsgenie_api_key: 'your-opsgenie-api-key'  # pragma: allowlist secret
+
+# Template definitions for alerts
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# Alert routing configuration
+route:
+  # Root route configuration
+  group_by: ['alertname', 'service_name', 'cluster']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  receiver: 'default-receiver'
+
+  # Routing tree
+  routes:
+    # Critical Production Alerts - Immediate response
+    - match:
+        severity: critical
+        environment: production
+      group_by: ['alertname', 'service_name']
+      group_wait: 10s
+      group_interval: 2m
+      repeat_interval: 30m
+      receiver: 'critical-alerts'
+      routes:
+        # Service down alerts - highest priority
+        - match:
+            alertname: ServiceDown
+          receiver: 'service-down-alerts'
+          group_wait: 5s
+          repeat_interval: 15m
+
+        # Security alerts - immediate security team notification
+        - match_re:
+            alertname: '.*Security.*|.*Auth.*Failure.*|.*Breach.*'
+          receiver: 'security-alerts'
+          group_wait: 5s
+          repeat_interval: 5m
+
+    # SLO Violation Alerts - SRE team
+    - match_re:
+        alertname: 'SLO.*'
+      receiver: 'slo-alerts'
+      group_by: ['service_name', 'slo_type']
+      group_wait: 15s
+      group_interval: 5m
+      repeat_interval: 2h
+
+    # Database Alerts - Database team
+    - match_re:
+        alertname: '.*Database.*|.*Connection.*Pool.*'
+      receiver: 'database-alerts'
+      group_by: ['database', 'alertname']
+      group_wait: 30s
+      repeat_interval: 1h
+
+    # Infrastructure Alerts - Platform team
+    - match:
+        team: platform
+      receiver: 'platform-alerts'
+      group_by: ['instance', 'alertname']
+      group_wait: 1m
+      repeat_interval: 2h
+      routes:
+        # Node alerts require immediate attention
+        - match_re:
+            alertname: 'Node.*|.*DiskSpace.*'
+          receiver: 'infrastructure-critical'
+          repeat_interval: 30m
+
+    # Application Performance Alerts - Development teams
+    - match:
+        team: application
+      receiver: 'application-alerts'
+      group_by: ['service_name', 'namespace']
+      group_wait: 2m
+      repeat_interval: 4h
+      routes:
+        # High error rate requires immediate attention
+        - match:
+            alertname: HighHTTPErrorRate
+          receiver: 'error-rate-alerts'
+          repeat_interval: 1h
+
+    # Business Metrics Alerts - Business team
+    - match:
+        team: business
+      receiver: 'business-alerts'
+      group_by: ['alertname']
+      group_wait: 5m
+      repeat_interval: 6h
+
+    # Warning alerts - Lower priority
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+      group_wait: 5m
+      group_interval: 10m
+      repeat_interval: 24h
+
+    # Development environment alerts - Dev teams only
+    - match:
+        environment: development
+      receiver: 'dev-alerts'
+      group_wait: 10m
+      repeat_interval: 24h
+
+    # Test inhibition - Don't alert during maintenance
+    - match:
+        maintenance: 'true'
+      receiver: 'null-receiver'
+
+# Alert receivers configuration
+receivers:
+  # Default catch-all receiver
+  - name: 'default-receiver'
+    email_configs:
+      - to: 'platform-team@company.com'
+        subject: 'Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Labels: {{ range .Labels.SortedPairs }}{{ .Name }}={{ .Value }} {{ end }}
+          {{ end }}
+
+  # Critical production alerts - Multi-channel notification
+  - name: 'critical-alerts'
+    pagerduty_configs:
+      - routing_key: 'your-pagerduty-integration-key'
+        description: 'Critical Alert: {{ .GroupLabels.alertname }}'
+        details:
+          firing: '{{ .Alerts.Firing | len }}'
+          resolved: '{{ .Alerts.Resolved | len }}'
+          service: '{{ .GroupLabels.service_name }}'
+        client: 'Alertmanager'
+        client_url: 'http://alertmanager.company.com'
+
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/YOUR/CRITICAL/WEBHOOK'
+        channel: '#critical-alerts'
+        title: 'Critical Alert: {{ .GroupLabels.alertname }}'
+        text: |
+          {{ range .Alerts }}
+          *Service:* {{ .Labels.service_name }}
+          *Summary:* {{ .Annotations.summary }}
+          *Description:* {{ .Annotations.description }}
+          *Runbook:* {{ .Annotations.runbook_url }}
+          {{ end }}
+        color: 'danger'
+        send_resolved: true
+
+    email_configs:
+      - to: 'oncall-engineer@company.com'
+        subject: '[CRITICAL] {{ .GroupLabels.alertname }} - {{ .GroupLabels.service_name }}'
+        headers:
+          Priority: 'high'
+
+  # Service down alerts - Immediate escalation
+  - name: 'service-down-alerts'
+    pagerduty_configs:
+      - routing_key: 'service-down-pagerduty-key'
+        description: 'SERVICE DOWN: {{ .GroupLabels.service_name }}'
+        severity: 'critical'
+
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/YOUR/INCIDENTS/WEBHOOK'
+        channel: '#incidents'
+        title: '🚨 SERVICE DOWN 🚨'
+        text: |
+          *Service:* {{ .GroupLabels.service_name }}
+          *Instance:* {{ .GroupLabels.instance }}
+          *Time:* {{ .Alerts.Firing | len }} services affected
+        color: 'danger'
+
+    # Phone call for service down (using external service)
+    webhook_configs:
+      - url: 'https://api.twilio.com/voice/call-oncall'
+        http_config:
+          bearer_token: 'twilio-api-token'
+        send_resolved: false
+
+  # Security alerts - Security team + SIEM integration
+  - name: 'security-alerts'
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/YOUR/SECURITY/WEBHOOK'
+        channel: '#security-alerts'
+        title: '🔒 Security Alert: {{ .GroupLabels.alertname }}'
+        text: |
+          {{ range .Alerts }}
+          *Alert:* {{ .Annotations.summary }}
+          *Description:* {{ .Annotations.description }}
+          *Source IP:* {{ .Labels.source_ip }}
+          *Time:* {{ .StartsAt }}
+          {{ end }}
+        color: 'warning'
+
+    email_configs:
+      - to: 'security-team@company.com'
+        subject: '[SECURITY] {{ .GroupLabels.alertname }}'
+
+    webhook_configs:
+      - url: 'https://siem.company.com/api/alerts'
+        http_config:
+          bearer_token: 'siem-api-token'
+
+  # SLO alerts - SRE team with burn rate context
+  - name: 'slo-alerts'
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/YOUR/SRE/WEBHOOK'
+        channel: '#sre-alerts'
+        title: '📊 SLO Alert: {{ .GroupLabels.service_name }}'
+        text: |
+          {{ range .Alerts }}
+          *Service:* {{ .Labels.service_name }}
+          *SLO Type:* {{ .Labels.slo_type }}
+          *Current SLI:* {{ .Labels.current_sli }}%
+          *Error Budget:* {{ .Labels.error_budget_remaining }}%
+          *Burn Rate:* {{ .Labels.burn_rate }}x
+          {{ end }}
+        color: 'warning'
+
+    email_configs:
+      - to: 'sre-team@company.com'
+        subject: '[SLO] {{ .GroupLabels.service_name }} - {{ .GroupLabels.alertname }}'
+
+  # Database alerts - DBA team
+  - name: 'database-alerts'
+    slack_configs:
+      - channel: '#database-alerts'
+        title: '🗄️ Database Alert: {{ .GroupLabels.alertname }}'
+        text: |
+          {{ range .Alerts }}
+          *Database:* {{ .Labels.database }}
+          *Issue:* {{ .Annotations.summary }}
+          *Description:* {{ .Annotations.description }}
+          {{ end }}
+
+    email_configs:
+      - to: 'dba-team@company.com'
+        subject: '[DATABASE] {{ .GroupLabels.database }} - {{ .GroupLabels.alertname }}'
+
+  # Platform/Infrastructure alerts
+  - name: 'platform-alerts'
+    slack_configs:
+      - channel: '#platform-alerts'
+        title: '🏗️ Platform Alert: {{ .GroupLabels.alertname }}'
+        color: 'warning'
+
+    email_configs:
+      - to: 'platform-team@company.com'
+        subject: '[PLATFORM] {{ .GroupLabels.alertname }}'
+
+  # Infrastructure critical alerts
+  - name: 'infrastructure-critical'
+    pagerduty_configs:
+      - routing_key: 'infrastructure-pagerduty-key'
+        description: 'Infrastructure Critical: {{ .GroupLabels.alertname }}'
+
+    slack_configs:
+      - channel: '#infrastructure-critical'
+        title: '🚨 Infrastructure Critical: {{ .GroupLabels.alertname }}'
+        color: 'danger'
+
+  # Application performance alerts
+  - name: 'application-alerts'
+    slack_configs:
+      - channel: '#app-performance'
+        title: '📈 Performance Alert: {{ .GroupLabels.service_name }}'
+        text: |
+          {{ range .Alerts }}
+          *Service:* {{ .Labels.service_name }}
+          *Namespace:* {{ .Labels.namespace }}
+          *Issue:* {{ .Annotations.summary }}
+          {{ end }}
+
+  # Error rate specific alerts
+  - name: 'error-rate-alerts'
+    slack_configs:
+      - channel: '#error-alerts'
+        title: '❌ High Error Rate: {{ .GroupLabels.service_name }}'
+        color: 'danger'
+
+    email_configs:
+      - to: 'dev-team-{{ .GroupLabels.service_name }}@company.com'
+        subject: '[ERROR RATE] {{ .GroupLabels.service_name }}'
+
+  # Business metrics alerts
+  - name: 'business-alerts'
+    slack_configs:
+      - channel: '#business-metrics'
+        title: '💼 Business Alert: {{ .GroupLabels.alertname }}'
+        text: |
+          {{ range .Alerts }}
+          *Metric:* {{ .Annotations.summary }}
+          *Impact:* {{ .Annotations.description }}
+          {{ end }}
+
+    email_configs:
+      - to: 'business-team@company.com'
+        subject: '[BUSINESS] {{ .GroupLabels.alertname }}'
+
+  # Warning level alerts
+  - name: 'warning-alerts'
+    slack_configs:
+      - channel: '#warnings'
+        title: '⚠️ Warning: {{ .GroupLabels.alertname }}'
+        color: 'warning'
+
+  # Development environment alerts
+  - name: 'dev-alerts'
+    slack_configs:
+      - channel: '#dev-alerts'
+        title: '🧪 Dev Alert: {{ .GroupLabels.alertname }}'
+        color: 'good'
+
+  # Null receiver for maintenance windows
+  - name: 'null-receiver'
+
+# Inhibition rules to prevent alert spam
+inhibit_rules:
+  # Service down inhibits all other alerts for that service
+  - source_match:
+      alertname: 'ServiceDown'
+    target_match_re:
+      service_name: '.*'
+    equal: ['service_name']
+
+  # Critical alerts inhibit warnings for the same service
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['service_name']
+
+  # Node down inhibits all alerts from that node
+  - source_match:
+      alertname: 'NodeNotReady'
+    target_match_re:
+      alertname: '.*'
+    equal: ['instance']
+
+  # High error rate inhibits individual error alerts
+  - source_match:
+      alertname: 'HighHTTPErrorRate'
+    target_match_re:
+      alertname: 'HTTP.*Error.*'
+    equal: ['service_name']
+
+  # SLO burn rate alerts inhibit individual SLI alerts
+  - source_match_re:
+      alertname: 'SLO.*BurnRate.*'
+    target_match_re:
+      alertname: 'High.*ResponseTime|High.*ErrorRate'
+    equal: ['service_name']
+
+  # Disk space critical inhibits disk space warnings
+  - source_match:
+      alertname: 'DiskSpaceCritical'
+    target_match:
+      alertname: 'DiskSpaceWarning'
+    equal: ['instance', 'mountpoint']

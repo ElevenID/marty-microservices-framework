@@ -1,0 +1,198 @@
+groups:
+  - name: marty_microservice_alerts
+    rules:
+      # Service availability alerts
+      - alert: MicroserviceDown
+        expr: up{job="marty-microservices"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Microservice {{ $labels.service_name }} is down"
+          description: "Microservice {{ $labels.service_name }} has been down for more than 1 minute."
+          runbook_url: "https://github.com/marty-microservices-framework/runbooks/service-down"
+
+      # gRPC-specific error rate alerts
+      - alert: MicroserviceHighErrorRate
+        expr: |
+          (
+            rate(grpc_server_handled_total{grpc_code!="OK"}[5m]) /
+            rate(grpc_server_handled_total[5m])
+          ) * 100 > 5
+        for: 2m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High gRPC error rate on {{ $labels.service_name }}"
+          description: "gRPC error rate for {{ $labels.service_name }} is {{ $value | printf \"%.2f\" }}% over the last 5 minutes."
+          runbook_url: "https://github.com/marty-microservices-framework/runbooks/high-error-rate"
+
+      - alert: MicroserviceCriticalErrorRate
+        expr: |
+          (
+            rate(grpc_server_handled_total{grpc_code!="OK"}[5m]) /
+            rate(grpc_server_handled_total[5m])
+          ) * 100 > 20
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "CRITICAL: Very high gRPC error rate on {{ $labels.service_name }}"
+          description: "gRPC error rate for {{ $labels.service_name }} is {{ $value | printf \"%.2f\" }}% over the last 5 minutes."
+          runbook_url: "https://github.com/marty-microservices-framework/runbooks/critical-error-rate"
+
+      # gRPC latency alerts
+      - alert: MicroserviceHighLatency
+        expr: |
+          histogram_quantile(0.95,
+            rate(grpc_server_handling_seconds_bucket[5m])
+          ) > 1.0
+        for: 3m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High latency on {{ $labels.service_name }}"
+          description: "95th percentile latency for {{ $labels.service_name }} is {{ $value | printf \"%.2f\" }}s over the last 5 minutes."
+          runbook_url: "https://github.com/marty-microservices-framework/runbooks/high-latency"
+
+      - alert: MicroserviceCriticalLatency
+        expr: |
+          histogram_quantile(0.95,
+            rate(grpc_server_handling_seconds_bucket[5m])
+          ) > 3.0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "CRITICAL: Very high latency on {{ $labels.service_name }}"
+          description: "95th percentile latency for {{ $labels.service_name }} is {{ $value | printf \"%.2f\" }}s over the last 5 minutes."
+
+      # Memory usage alerts
+      - alert: MicroserviceHighMemoryUsage
+        expr: |
+          (
+            container_memory_usage_bytes{name=~".*microservice.*"} /
+            container_spec_memory_limit_bytes{name=~".*microservice.*"}
+          ) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High memory usage on {{ $labels.name }}"
+          description: "Memory usage for {{ $labels.name }} is {{ $value | printf \"%.2f\" }}% of limit."
+
+      # CPU usage alerts
+      - alert: MicroserviceHighCPUUsage
+        expr: |
+          rate(container_cpu_usage_seconds_total{name=~".*microservice.*"}[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High CPU usage on {{ $labels.name }}"
+          description: "CPU usage for {{ $labels.name }} is {{ $value | printf \"%.2f\" }}%."
+
+  - name: kafka_alerts
+    rules:
+      # Kafka broker alerts
+      - alert: KafkaBrokerDown
+        expr: kafka_brokers < 1
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Kafka broker is down"
+          description: "No Kafka brokers are available."
+
+      # Kafka consumer lag alerts
+      - alert: KafkaConsumerLagHigh
+        expr: kafka_consumer_lag_sum > 1000
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High Kafka consumer lag"
+          description: "Consumer lag is {{ $value }} messages for topic {{ $labels.topic }}."
+
+      # Kafka disk usage alerts
+      - alert: KafkaDiskUsageHigh
+        expr: |
+          (
+            kafka_log_size_bytes /
+            (kafka_log_size_bytes + kafka_log_free_bytes)
+          ) * 100 > 85
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "High Kafka disk usage"
+          description: "Kafka disk usage is {{ $value | printf \"%.2f\" }}% on {{ $labels.instance }}."
+
+  - name: performance_alerts
+    rules:
+      # Request rate alerts
+      - alert: UnusuallyHighRequestRate
+        expr: |
+          rate(grpc_server_handled_total[5m]) >
+          (
+            avg_over_time(rate(grpc_server_handled_total[5m])[1h:5m]) * 3
+          )
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+        annotations:
+          summary: "Unusually high request rate on {{ $labels.service_name }}"
+          description: "Request rate is 3x higher than normal for {{ $labels.service_name }}."
+
+      # Database connection pool alerts
+      - alert: DatabaseConnectionPoolExhausted
+        expr: db_connections_active / db_connections_max > 0.9
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Database connection pool nearly exhausted"
+          description: "{{ $labels.service_name }} is using {{ $value | printf \"%.2f\" }}% of database connections."
+
+  - name: business_metrics_alerts
+    rules:
+      # Business-specific alerts (examples)
+      - alert: ProcessingVolumeAnomaly
+        expr: |
+          abs(
+            rate(business_transactions_total[1h]) -
+            avg_over_time(rate(business_transactions_total[1h])[24h:1h])
+          ) / avg_over_time(rate(business_transactions_total[1h])[24h:1h]) > 0.5
+        for: 15m
+        labels:
+          severity: warning
+          team: business
+        annotations:
+          summary: "Unusual business transaction volume"
+          description: "Transaction volume is significantly different from normal patterns."
+
+      - alert: SuccessRateDropped
+        expr: |
+          (
+            rate(business_transactions_total{status="success"}[10m]) /
+            rate(business_transactions_total[10m])
+          ) < 0.95
+        for: 5m
+        labels:
+          severity: critical
+          team: business
+        annotations:
+          summary: "Business transaction success rate dropped"
+          description: "Success rate is {{ $value | printf \"%.2f\" }}% for {{ $labels.service_name }}."

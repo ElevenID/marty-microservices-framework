@@ -1,0 +1,231 @@
+# OpenTelemetry Collector Configuration for Marty Microservices Framework
+# Comprehensive telemetry data collection, processing, and export
+
+receivers:
+  # OTLP receiver for traces, metrics, and logs
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+  # Jaeger receiver for backward compatibility
+  jaeger:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:14250
+      thrift_http:
+        endpoint: 0.0.0.0:14268
+      thrift_compact:
+        endpoint: 0.0.0.0:6831
+      thrift_binary:
+        endpoint: 0.0.0.0:6832
+
+  # Zipkin receiver for Zipkin traces
+  zipkin:
+    endpoint: 0.0.0.0:9411
+
+  # Prometheus receiver for metrics scraping
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: 'otel-collector'
+          scrape_interval: 15s
+          static_configs:
+            - targets: ['0.0.0.0:8888']
+
+  # Host metrics receiver
+  hostmetrics:
+    collection_interval: 30s
+    scrapers:
+      cpu:
+        metrics:
+          system.cpu.utilization:
+            enabled: true
+      disk:
+      filesystem:
+      memory:
+      network:
+      process:
+
+processors:
+  # Memory limiter to prevent OOM
+  memory_limiter:
+    limit_mib: 512
+    spike_limit_mib: 128
+    check_interval: 5s
+
+  # Batch processor for efficient export
+  batch:
+    send_batch_size: 1024
+    timeout: 5s
+    send_batch_max_size: 2048
+
+  # Resource processor to add service information
+  resource:
+    attributes:
+      - key: deployment.environment
+        value: production
+        action: upsert
+      - key: service.instance.id
+        from_attribute: host.name
+        action: insert
+
+  # Probabilistic sampler for trace sampling
+  probabilistic_sampler:
+    sampling_percentage: 10.0  # Sample 10% of traces
+
+  # Span processor for custom span modifications
+  span:
+    name:
+      # Rename spans with specific patterns
+      to_attributes:
+        rules:
+          - pattern: ^\/api\/v\d+\/(.*)$
+            name_pattern: "api.$1"
+
+  # Attributes processor for custom attribute handling
+  attributes:
+    actions:
+      # Remove sensitive attributes
+      - key: http.request.header.authorization
+        action: delete
+      - key: http.request.header.cookie
+        action: delete
+      # Add custom attributes
+      - key: environment
+        value: production
+        action: insert
+
+  # Filter processor to exclude unwanted telemetry
+  filter:
+    traces:
+      span:
+        # Exclude health check endpoints
+        - 'attributes["http.route"] == "/health"'
+        - 'attributes["http.route"] == "/metrics"'
+        - 'attributes["http.route"] == "/ready"'
+    metrics:
+      metric:
+        # Exclude high-cardinality metrics
+        - 'name == "http_request_duration_bucket" and attributes["http.route"] matches ".*health.*"'
+
+  # Tail sampling processor for complex sampling decisions
+  tail_sampling:
+    decision_wait: 10s
+    num_traces: 50000
+    expected_new_traces_per_sec: 10
+    policies:
+      # Always sample error traces
+      - name: errors
+        type: status_code
+        status_code:
+          status_codes: [ERROR]
+      # Sample slow traces
+      - name: slow_traces
+        type: latency
+        latency:
+          threshold_ms: 1000
+      # Sample traces with specific attributes
+      - name: important_services
+        type: string_attribute
+        string_attribute:
+          key: service.name
+          values: [auth-service, payment-service]
+      # Probabilistic sampling for normal traces
+      - name: randomized
+        type: probabilistic
+        probabilistic:
+          sampling_percentage: 5
+
+exporters:
+  # Jaeger exporter
+  jaeger:
+    endpoint: jaeger-collector:14250
+    tls:
+      insecure: true
+
+  # OTLP exporter (for external observability platforms)
+  otlp:
+    endpoint: "https://api.honeycomb.io"
+    headers:
+      "x-honeycomb-team": "${HONEYCOMB_API_KEY}"
+    compression: gzip
+
+  # Prometheus metrics exporter
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    const_labels:
+      environment: production
+
+  # Logging exporter for debugging
+  logging:
+    loglevel: info
+    sampling_initial: 2
+    sampling_thereafter: 500
+
+  # File exporter for backup
+  file:
+    path: /tmp/otel-traces.json
+    rotation:
+      max_megabytes: 100
+      max_days: 3
+      max_backups: 3
+
+service:
+  # Configure telemetry for the collector itself
+  telemetry:
+    logs:
+      level: info
+      development: false
+      sampling:
+        enabled: true
+        tick: 10s
+        initial: 5
+        thereafter: 200
+    metrics:
+      level: detailed
+      address: 0.0.0.0:8888
+
+  # Pipeline configuration
+  pipelines:
+    # Traces pipeline
+    traces:
+      receivers: [otlp, jaeger, zipkin]
+      processors: [memory_limiter, resource, batch, probabilistic_sampler, span, attributes, filter]
+      exporters: [jaeger, logging]
+
+    # Advanced traces pipeline with tail sampling
+    traces/advanced:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, tail_sampling, batch, attributes]
+      exporters: [jaeger, otlp]
+
+    # Metrics pipeline
+    metrics:
+      receivers: [otlp, prometheus, hostmetrics]
+      processors: [memory_limiter, resource, batch, filter]
+      exporters: [prometheus, logging]
+
+    # Logs pipeline
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch, attributes]
+      exporters: [logging, file]
+
+  # Health check configuration
+  extensions: [health_check, pprof, zpages]
+
+extensions:
+  # Health check extension
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+  # Performance profiling
+  pprof:
+    endpoint: 0.0.0.0:1777
+
+  # ZPages for debugging
+  zpages:
+    endpoint: 0.0.0.0:55679

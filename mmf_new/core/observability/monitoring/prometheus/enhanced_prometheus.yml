@@ -1,0 +1,309 @@
+# Enhanced Prometheus Configuration for Marty Microservices Framework
+# Production-grade configuration with service discovery, advanced scraping, and security
+
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'marty-microservices'
+    environment: 'production'
+    region: 'us-west-2'
+
+rule_files:
+  - "alert_rules.yml"
+  - "enhanced_alert_rules.yml"
+  - "slo_rules.yml"
+  - "recording_rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+      path_prefix: /
+      scheme: http
+      timeout: 10s
+      api_version: v2
+
+# Enhanced scrape configurations with service discovery
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    metrics_path: /metrics
+    scrape_interval: 15s
+    scrape_timeout: 10s
+
+  # Node Exporter for system metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    metrics_path: /metrics
+    scrape_interval: 15s
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'node_.*'
+        target_label: __tmp_node_metric
+
+  # Kubernetes service discovery for microservices
+  - job_name: 'kubernetes-services'
+    kubernetes_sd_configs:
+      - role: service
+        namespaces:
+          names:
+            - microservice-framework
+            - microservice-template-dev
+            - production
+    relabel_configs:
+      # Only scrape services with prometheus.io/scrape annotation
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      # Use custom metrics path if specified
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      # Use custom port if specified
+      - source_labels: [__address__, __meta_kubernetes_service_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      # Add service labels
+      - source_labels: [__meta_kubernetes_service_name]
+        target_label: service_name
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_service_label_app]
+        target_label: app
+      - source_labels: [__meta_kubernetes_service_label_version]
+        target_label: version
+
+  # Kubernetes pod discovery for detailed metrics
+  - job_name: 'kubernetes-pods'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - microservice-framework
+            - microservice-template-dev
+            - production
+    relabel_configs:
+      # Only scrape pods with prometheus.io/scrape annotation
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      # Use custom metrics path if specified
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      # Use custom port if specified
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      # Add pod labels
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod_name
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        target_label: app
+      - source_labels: [__meta_kubernetes_pod_label_version]
+        target_label: version
+
+  # FastAPI applications with detailed metrics
+  - job_name: 'fastapi-services'
+    kubernetes_sd_configs:
+      - role: service
+        namespaces:
+          names:
+            - microservice-framework
+            - production
+    relabel_configs:
+      # Only scrape FastAPI services
+      - source_labels: [__meta_kubernetes_service_label_framework]
+        action: keep
+        regex: fastapi
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      # Add service metadata
+      - source_labels: [__meta_kubernetes_service_name]
+        target_label: service_name
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+    metrics_path: /metrics
+    scrape_interval: 10s
+    scrape_timeout: 8s
+
+  # gRPC services with specialized metrics
+  - job_name: 'grpc-services'
+    kubernetes_sd_configs:
+      - role: service
+        namespaces:
+          names:
+            - microservice-framework
+            - production
+    relabel_configs:
+      # Only scrape gRPC services
+      - source_labels: [__meta_kubernetes_service_label_protocol]
+        action: keep
+        regex: grpc
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      # Add service metadata
+      - source_labels: [__meta_kubernetes_service_name]
+        target_label: service_name
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+    metrics_path: /metrics
+    scrape_interval: 10s
+    metric_relabel_configs:
+      # Enhance gRPC metrics with labels
+      - source_labels: [__name__]
+        regex: 'grpc_.*'
+        target_label: __tmp_grpc_metric
+      - source_labels: [grpc_method]
+        target_label: method
+      - source_labels: [grpc_service]
+        target_label: grpc_service_name
+
+  # Database metrics (Redis, PostgreSQL, etc.)
+  - job_name: 'database-metrics'
+    static_configs:
+      - targets:
+          - 'redis-exporter:9121'
+          - 'postgres-exporter:9187'
+    metrics_path: /metrics
+    scrape_interval: 30s
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '(.+)-exporter.*'
+        target_label: database_type
+        replacement: '${1}'
+
+  # Message queue metrics (Kafka, RabbitMQ)
+  - job_name: 'kafka-metrics'
+    static_configs:
+      - targets: ['kafka-exporter:9308']
+    metrics_path: /metrics
+    scrape_interval: 30s
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'kafka_.*'
+        target_label: __tmp_kafka_metric
+
+  # Load balancer and ingress metrics
+  - job_name: 'ingress-metrics'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - ingress-nginx
+            - istio-system
+    relabel_configs:
+      # Nginx Ingress Controller
+      - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+        action: keep
+        regex: ingress-nginx
+      # Istio Proxy
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: istio-proxy
+    metrics_path: /stats/prometheus
+    scrape_interval: 15s
+
+  # Security metrics from security framework
+  - job_name: 'security-metrics'
+    kubernetes_sd_configs:
+      - role: service
+        namespaces:
+          names:
+            - microservice-framework
+            - production
+    relabel_configs:
+      # Only scrape services with security metrics enabled
+      - source_labels: [__meta_kubernetes_service_annotation_security_metrics_enabled]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_service_name]
+        target_label: service_name
+    metrics_path: /security/metrics
+    scrape_interval: 30s
+
+  # Business metrics collection
+  - job_name: 'business-metrics'
+    kubernetes_sd_configs:
+      - role: service
+        namespaces:
+          names:
+            - microservice-framework
+            - production
+    relabel_configs:
+      # Only scrape services with business metrics
+      - source_labels: [__meta_kubernetes_service_annotation_business_metrics_enabled]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_service_name]
+        target_label: service_name
+    metrics_path: /business/metrics
+    scrape_interval: 60s
+
+  # SLO/SLI metrics collection
+  - job_name: 'slo-metrics'
+    kubernetes_sd_configs:
+      - role: service
+        namespaces:
+          names:
+            - microservice-framework
+            - production
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_service_annotation_slo_enabled]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_service_name]
+        target_label: service_name
+    metrics_path: /slo/metrics
+    scrape_interval: 30s
+
+  # Custom application metrics
+  - job_name: 'custom-app-metrics'
+    file_sd_configs:
+      - files:
+          - '/etc/prometheus/targets/*.yml'
+        refresh_interval: 30s
+    relabel_configs:
+      - source_labels: [__meta_filepath]
+        target_label: target_file
+
+# Remote write configuration for long-term storage
+remote_write:
+  - url: "https://prometheus-remote-write.company.com/api/v1/write"
+    name: "production-remote-storage"
+    queue_config:
+      max_samples_per_send: 1000
+      max_shards: 200
+      capacity: 2500
+    metadata_config:
+      send: true
+      send_interval: 30s
+
+# Remote read configuration for querying historical data
+remote_read:
+  - url: "https://prometheus-remote-read.company.com/api/v1/read"
+    name: "production-remote-storage"
+    read_recent: true
+
+# Storage configuration
+storage:
+  tsdb:
+    retention.time: 15d
+    retention.size: 50GB
+    wal-compression: true

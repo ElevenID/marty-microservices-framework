@@ -1,0 +1,300 @@
+# Service Level Objective (SLO) Rules for Marty Microservices Framework
+# Comprehensive SLO tracking with error budget monitoring and burn rate alerts
+
+groups:
+  # SLO Definitions and Error Budget Calculations
+  - name: slo_definitions
+    interval: 60s
+    rules:
+      # Define SLO targets (can be customized per service)
+      - record: slo:availability_target
+        expr: 0.999  # 99.9% availability SLO
+        labels:
+          slo_type: "availability"
+
+      - record: slo:latency_target
+        expr: 0.95   # 95% of requests under 100ms
+        labels:
+          slo_type: "latency"
+
+      - record: slo:quality_target
+        expr: 0.99   # 99% non-error requests
+        labels:
+          slo_type: "quality"
+
+  # Service-specific SLO Configurations
+  - name: service_slo_config
+    interval: 300s
+    rules:
+      # Critical services with stricter SLOs
+      - record: slo:service_availability_target
+        expr: |
+          label_replace(
+            label_replace(
+              vector(0.9999), "service_name", "auth-service", "", ""
+            ), "slo_type", "availability", "", ""
+          ) or
+          label_replace(
+            label_replace(
+              vector(0.999), "service_name", "payment-service", "", ""
+            ), "slo_type", "availability", "", ""
+          ) or
+          label_replace(
+            label_replace(
+              vector(0.995), "service_name", "user-service", "", ""
+            ), "slo_type", "availability", "", ""
+          )
+
+      # Latency SLOs by service
+      - record: slo:service_latency_target
+        expr: |
+          label_replace(
+            label_replace(
+              vector(0.99), "service_name", "auth-service", "", ""
+            ), "slo_type", "latency", "", ""
+          ) or
+          label_replace(
+            label_replace(
+              vector(0.95), "service_name", "payment-service", "", ""
+            ), "slo_type", "latency", "", ""
+          ) or
+          label_replace(
+            label_replace(
+              vector(0.90), "service_name", "notification-service", "", ""
+            ), "slo_type", "latency", "", ""
+          )
+
+  # Current SLI Measurements
+  - name: sli_measurements
+    interval: 30s
+    rules:
+      # Availability SLI (ratio of successful requests)
+      - record: sli:availability_ratio_5m
+        expr: |
+          (
+            sum(rate(http_requests_total{status!~"5.."}[5m])) by (service_name, namespace) /
+            sum(rate(http_requests_total[5m])) by (service_name, namespace)
+          ) * 100
+
+      # Latency SLI (ratio of fast requests)
+      - record: sli:latency_ratio_5m
+        expr: |
+          (
+            sum(rate(http_request_duration_seconds_bucket{le="0.1"}[5m])) by (service_name, namespace) /
+            sum(rate(http_request_duration_seconds_count[5m])) by (service_name, namespace)
+          ) * 100
+
+      # Quality SLI (ratio of non-error requests)
+      - record: sli:quality_ratio_5m
+        expr: |
+          (
+            sum(rate(http_requests_total{status!~"4..|5.."}[5m])) by (service_name, namespace) /
+            sum(rate(http_requests_total[5m])) by (service_name, namespace)
+          ) * 100
+
+  # Error Budget Calculations
+  - name: error_budget_calculation
+    interval: 60s
+    rules:
+      # Availability Error Budget (28 days rolling window)
+      - record: slo:availability_error_budget_28d
+        expr: |
+          (
+            1 - (
+              sum(increase(http_requests_total{status!~"5.."}[28d])) by (service_name, namespace) /
+              sum(increase(http_requests_total[28d])) by (service_name, namespace)
+            )
+          ) / (1 - 0.999) * 100
+
+      # Latency Error Budget (28 days rolling window)
+      - record: slo:latency_error_budget_28d
+        expr: |
+          (
+            1 - (
+              sum(increase(http_request_duration_seconds_bucket{le="0.1"}[28d])) by (service_name, namespace) /
+              sum(increase(http_request_duration_seconds_count[28d])) by (service_name, namespace)
+            )
+          ) / (1 - 0.95) * 100
+
+      # Error Budget Remaining (percentage)
+      - record: slo:error_budget_remaining_28d
+        expr: |
+          100 - slo:availability_error_budget_28d
+
+  # Burn Rate Calculations for Multi-Window Alerting
+  - name: burn_rate_calculation
+    interval: 30s
+    rules:
+      # Fast burn rate (1% budget in 1 hour = 14.4x normal rate)
+      - record: slo:burn_rate_1h
+        expr: |
+          (
+            1 - (
+              sum(rate(http_requests_total{status!~"5.."}[1h])) by (service_name, namespace) /
+              sum(rate(http_requests_total[1h])) by (service_name, namespace)
+            )
+          ) / (1 - 0.999) * 24 * 28  # 28-day window normalization
+
+      # Medium burn rate (5% budget in 6 hours = 6x normal rate)
+      - record: slo:burn_rate_6h
+        expr: |
+          (
+            1 - (
+              sum(rate(http_requests_total{status!~"5.."}[6h])) by (service_name, namespace) /
+              sum(rate(http_requests_total[6h])) by (service_name, namespace)
+            )
+          ) / (1 - 0.999) * 4 * 28   # 28-day window normalization
+
+      # Slow burn rate (10% budget in 3 days = 2.8x normal rate)
+      - record: slo:burn_rate_3d
+        expr: |
+          (
+            1 - (
+              sum(rate(http_requests_total{status!~"5.."}[3d])) by (service_name, namespace) /
+              sum(rate(http_requests_total[3d])) by (service_name, namespace)
+            )
+          ) / (1 - 0.999) * 28 / 3   # 28-day window normalization
+
+  # SLO Compliance Status
+  - name: slo_compliance
+    interval: 300s
+    rules:
+      # Availability SLO compliance (1 = compliant, 0 = non-compliant)
+      - record: slo:availability_compliance
+        expr: |
+          (sli:availability_ratio_5m / 100) >= bool 0.999
+
+      # Latency SLO compliance
+      - record: slo:latency_compliance
+        expr: |
+          (sli:latency_ratio_5m / 100) >= bool 0.95
+
+      # Overall SLO compliance (all SLIs must pass)
+      - record: slo:overall_compliance
+        expr: |
+          slo:availability_compliance * slo:latency_compliance
+
+      # Time to exhaustion (how long until error budget is depleted)
+      - record: slo:time_to_exhaustion_hours
+        expr: |
+          (100 - slo:availability_error_budget_28d) / (slo:burn_rate_1h / 24)
+
+  # Business Impact Calculations
+  - name: business_impact
+    interval: 300s
+    rules:
+      # Revenue impact of SLO violations (estimated)
+      - record: business:revenue_impact_hourly
+        expr: |
+          (1 - slo:availability_compliance) *
+          sum(rate(business_revenue_total[1h])) by (service_name) *
+          3600  # Convert to hourly rate
+
+      # Customer impact (affected requests)
+      - record: business:affected_requests_5m
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m])) by (service_name, namespace) * 300
+
+      # User experience impact score (0-100)
+      - record: business:user_experience_score
+        expr: |
+          (sli:availability_ratio_5m * 0.4) +
+          (sli:latency_ratio_5m * 0.4) +
+          (sli:quality_ratio_5m * 0.2)
+
+  # Trend Analysis
+  - name: slo_trends
+    interval: 900s  # 15 minutes
+    rules:
+      # SLI trend over 24 hours
+      - record: slo:availability_trend_24h
+        expr: |
+          deriv(sli:availability_ratio_5m[24h])
+
+      - record: slo:latency_trend_24h
+        expr: |
+          deriv(sli:latency_ratio_5m[24h])
+
+      # Error budget burn rate trend
+      - record: slo:burn_rate_trend_6h
+        expr: |
+          deriv(slo:burn_rate_1h[6h])
+
+  # Multi-Service SLO Aggregations
+  - name: service_group_slos
+    interval: 300s
+    rules:
+      # Critical services overall SLO
+      - record: slo:critical_services_availability
+        expr: |
+          avg(sli:availability_ratio_5m{service_name=~"auth-service|payment-service|user-service"})
+
+      # User-facing services SLO
+      - record: slo:user_facing_availability
+        expr: |
+          avg(sli:availability_ratio_5m{service_name=~".*-api|.*-frontend|gateway.*"})
+
+      # Backend services SLO
+      - record: slo:backend_services_availability
+        expr: |
+          avg(sli:availability_ratio_5m{service_name=~".*-worker|.*-processor|.*-engine"})
+
+  # SLO Reporting Metrics
+  - name: slo_reporting
+    interval: 3600s  # 1 hour
+    rules:
+      # Monthly SLO summary (30 days)
+      - record: slo:monthly_availability_30d
+        expr: |
+          (
+            sum(increase(http_requests_total{status!~"5.."}[30d])) by (service_name, namespace) /
+            sum(increase(http_requests_total[30d])) by (service_name, namespace)
+          ) * 100
+
+      # Monthly uptime percentage
+      - record: slo:monthly_uptime_percentage
+        expr: |
+          avg_over_time(up[30d]) * 100
+
+      # SLO achievement rate (percentage of time SLO was met)
+      - record: slo:achievement_rate_30d
+        expr: |
+          avg_over_time(slo:availability_compliance[30d]) * 100
+
+      # Number of SLO violations in the last 30 days
+      - record: slo:violations_count_30d
+        expr: |
+          sum(increase((slo:availability_compliance == 0)[30d:5m])) by (service_name)
+
+  # Predictive SLO Metrics
+  - name: slo_predictions
+    interval: 1800s  # 30 minutes
+    rules:
+      # Predicted error budget exhaustion (linear extrapolation)
+      - record: slo:predicted_budget_exhaustion_hours
+        expr: |
+          predict_linear(slo:error_budget_remaining_28d[6h], 0) / 3600
+
+      # SLO risk score (0-100, higher is more risk)
+      - record: slo:risk_score
+        expr: |
+          (
+            (100 - slo:error_budget_remaining_28d) * 0.4 +
+            (slo:burn_rate_1h / 14.4) * 30 * 0.6
+          )
+
+  # Integration with External Systems
+  - name: slo_integration
+    interval: 300s
+    rules:
+      # Incident correlation (when SLO violations align with incidents)
+      - record: slo:incident_correlation
+        expr: |
+          (slo:availability_compliance == 0) and bool
+          (incident_active{service_name="$1"} == 1)
+
+      # Deployment impact on SLO
+      - record: slo:deployment_impact
+        expr: |
+          rate(sli:availability_ratio_5m[1h]) and bool
+          (increase(deployment_events_total[1h]) > 0)
