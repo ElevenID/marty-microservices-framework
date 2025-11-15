@@ -19,10 +19,8 @@ from typing import Any, Optional
 
 import yaml
 
+from ...infrastructure import get_container
 from ..core.services import ConfigService
-
-# TODO: Migrate framework.config.injection - using simple dict for now
-# from ..framework.config.injection import container
 from .cqrs.enhanced_cqrs import QueryExecutionMode
 from .outbox.enhanced_outbox import (
     BatchConfig,
@@ -591,20 +589,12 @@ class DataConsistencyConfigService(ConfigService):
         self._mark_loaded()
 
 
-# Simple singleton pattern to replace DI container until framework.config is migrated
-class _ConfigServiceSingleton:
-    _instance: Optional["DataConsistencyConfigService"] = None
-
-    @classmethod
-    def get_instance(cls) -> "DataConsistencyConfigService":
-        if cls._instance is None:
-            cls._instance = DataConsistencyConfigService()
-        return cls._instance
-
-
 def get_config_service() -> DataConsistencyConfigService:
-    """Get the configuration service instance from simple singleton."""
-    return _ConfigServiceSingleton.get_instance()
+    """Get the configuration service instance from DI container."""
+    container = get_container()
+    return container.get_or_create(
+        DataConsistencyConfigService, lambda: DataConsistencyConfigService()
+    )
 
 
 def get_config() -> DataConsistencyConfig:
