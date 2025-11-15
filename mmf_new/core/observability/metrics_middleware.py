@@ -20,8 +20,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 # Framework imports
-# TODO: Re-enable once grpc is migrated to mmf_new
-# from mmf_new.core.grpc import UnifiedGrpcServer
+from mmf_new.core.grpc import UnifiedGrpcServer
 
 logger = logging.getLogger(__name__)
 

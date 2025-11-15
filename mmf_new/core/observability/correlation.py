@@ -26,8 +26,7 @@ from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
 # Framework imports
-# TODO: Re-enable once grpc is migrated to mmf_new
-# from mmf_new.core.grpc import ServiceRegistrationProtocol
+from mmf_new.core.grpc import ServiceRegistrationProtocol
 
 logger = logging.getLogger(__name__)
 

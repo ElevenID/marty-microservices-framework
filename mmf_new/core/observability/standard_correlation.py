@@ -21,8 +21,7 @@ from grpc import ServicerContext
 from opentelemetry import trace
 from starlette.middleware.base import BaseHTTPMiddleware
 
-# TODO: Re-enable once grpc is migrated to mmf_new
-# from mmf_new.core.grpc import ServiceDefinition
+from mmf_new.core.grpc import ServiceDefinition
 
 logger = logging.getLogger(__name__)
 
