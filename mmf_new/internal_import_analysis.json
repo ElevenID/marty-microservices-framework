@@ -1,0 +1,33 @@
+{
+  "summary": {
+    "total_modules": 0,
+    "total_internal_imports": 0,
+    "circular_dependencies_count": 0,
+    "highly_coupled_modules_count": 0
+  },
+  "circular_dependencies": [],
+  "highly_coupled_modules": [],
+  "module_statistics": {},
+  "architectural_layers": {
+    "core": [],
+    "domain": [],
+    "services": [],
+    "api": [],
+    "infrastructure": [],
+    "utils": [],
+    "other": []
+  },
+  "recommendations": [
+    "\ud83d\udccb GENERAL RECOMMENDATIONS:",
+    "   - Follow layered architecture: API \u2192 Services \u2192 Domain \u2192 Infrastructure",
+    "   - Use dependency inversion for external dependencies",
+    "   - Consider using events/messaging for loose coupling",
+    "   - Implement proper abstractions and interfaces"
+  ],
+  "metadata": {
+    "generated_at": "2025-11-16T09:14:21.946219",
+    "analysis_type": "real_time",
+    "parse_errors": [],
+    "skipped_files": []
+  }
+}
