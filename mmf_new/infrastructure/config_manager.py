@@ -28,6 +28,7 @@ import yaml
 from pydantic import BaseModel, Field, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from .cache import CacheBackend, CacheConfig, SerializationFormat, create_cache_manager
 from .dependency_injection import get_container
 
 logger = logging.getLogger(__name__)
@@ -216,15 +217,37 @@ class ConfigManager(Generic[T]):
         self.providers = providers
         self.cache_ttl = cache_ttl
         self.auto_reload = auto_reload
-        self._cache: builtins.dict[str, Any] = {}
         self._metadata: builtins.dict[str, ConfigMetadata] = {}
         self._watchers: builtins.dict[str, builtins.list] = {}
+
+        # Initialize enterprise cache
+        cache_config = CacheConfig(
+            backend=CacheBackend.MEMORY,
+            serialization=SerializationFormat.JSON,
+            default_ttl=cache_ttl,
+            namespace="config_manager",
+        )
+        self._cache = create_cache_manager("config_manager", cache_config)
+
+    @property
+    def cache(self):
+        """Access to the cache manager."""
+        return self._cache
+
+    async def start(self) -> None:
+        """Start the configuration manager and cache."""
+        await self._cache.start()
+
+    async def stop(self) -> None:
+        """Stop the configuration manager and clean up cache."""
+        await self._cache.stop()
 
     async def get_config(self, key: str) -> T:
         """Get validated configuration for the given key."""
         # Check cache first
-        if key in self._cache:
-            return self._cache[key]
+        cached_config = await self._cache.get(key)
+        if cached_config:
+            return self.config_class(**cached_config)
 
         # Load from providers
         merged_config = {}
@@ -234,12 +257,16 @@ class ConfigManager(Generic[T]):
                 provider_config = await provider.load_config(key)
                 merged_config.update(provider_config)
             except Exception as e:
-                logger.warning(f"Provider {provider.__class__.__name__} failed for key {key}: {e}")
+                logger.warning(
+                    "Provider %s failed for key %s: %s", provider.__class__.__name__, key, e
+                )
 
         # Validate and create config instance
         try:
             config_instance = self.config_class(**merged_config)
-            self._cache[key] = config_instance
+
+            # Cache the raw dict for serialization, not the pydantic model
+            await self._cache.set(key, merged_config, ttl=self.cache_ttl)
 
             # Setup watching if auto_reload is enabled
             if self.auto_reload:
@@ -248,13 +275,12 @@ class ConfigManager(Generic[T]):
             return config_instance
 
         except ValidationError as e:
-            logger.error(f"Configuration validation failed for key {key}: {e}")
+            logger.error("Configuration validation failed for key %s: %s", key, e)
             raise
 
     async def reload_config(self, key: str) -> T:
         """Force reload configuration from providers."""
-        if key in self._cache:
-            del self._cache[key]
+        await self._cache.delete(key)
         return await self.get_config(key)
 
     async def _setup_watching(self, key: str) -> None:
@@ -265,9 +291,9 @@ class ConfigManager(Generic[T]):
         async def reload_callback():
             try:
                 await self.reload_config(key)
-                logger.info(f"Configuration reloaded for key: {key}")
+                logger.info("Configuration reloaded for key: %s", key)
             except Exception as e:
-                logger.error(f"Failed to reload configuration for key {key}: {e}")
+                logger.error("Failed to reload configuration for key %s: %s", key, e)
 
         for provider in self.providers:
             try:
@@ -275,33 +301,56 @@ class ConfigManager(Generic[T]):
                 self._watchers[key].append(reload_callback)
             except Exception as e:
                 logger.warning(
-                    f"Failed to setup watching for provider {provider.__class__.__name__}: {e}"
+                    "Failed to setup watching for provider %s: %s", provider.__class__.__name__, e
                 )
 
 
 class SecretManager:
-    """Secure secrets management."""
+    """Secure secrets management with enterprise cache."""
 
     def __init__(self, provider: ConfigProvider):
         self.provider = provider
-        self._secret_cache: builtins.dict[str, Any] = {}
+
+        # Initialize enterprise cache for secrets with short TTL for security
+        cache_config = CacheConfig(
+            backend=CacheBackend.MEMORY,
+            serialization=SerializationFormat.JSON,
+            default_ttl=300,  # 5 minutes for security
+            namespace="secrets",
+        )
+        self._secret_cache = create_cache_manager("secret_manager", cache_config)
+
+    @property
+    def cache(self):
+        """Access to the cache manager."""
+        return self._secret_cache
+
+    async def start(self) -> None:
+        """Start the secret manager and cache."""
+        await self._secret_cache.start()
+
+    async def stop(self) -> None:
+        """Stop the secret manager and clear cache for security."""
+        await self.clear_cache()
+        await self._secret_cache.stop()
 
     async def get_secret(self, key: str) -> str | None:
         """Get secret value securely."""
-        if key in self._secret_cache:
-            return self._secret_cache[key]
+        cached_value = await self._secret_cache.get(key)
+        if cached_value:
+            return cached_value
 
         try:
             secrets = await self.provider.load_config("secrets")
             secret_value = secrets.get(key)
 
             if secret_value:
-                self._secret_cache[key] = secret_value
+                await self._secret_cache.set(key, secret_value, ttl=300)  # 5 min TTL
 
             return secret_value
 
         except Exception as e:
-            logger.error(f"Failed to retrieve secret {key}: {e}")
+            logger.error("Failed to retrieve secret %s: %s", key, e)
             return None
 
     async def set_secret(self, key: str, value: str) -> bool:
@@ -312,17 +361,19 @@ class SecretManager:
 
             success = await self.provider.save_config("secrets", secrets)
             if success:
-                self._secret_cache[key] = value
+                await self._secret_cache.set(key, value, ttl=300)
 
             return success
 
         except Exception as e:
-            logger.error(f"Failed to set secret {key}: {e}")
+            logger.error("Failed to set secret %s: %s", key, e)
             return False
 
-    def clear_cache(self) -> None:
+    async def clear_cache(self) -> None:
         """Clear secrets cache for security."""
-        self._secret_cache.clear()
+        stats = await self._secret_cache.get_stats()
+        await self._secret_cache.backend.clear()
+        logger.info("Cleared secrets cache - had %d entries", stats.total_size)
 
 
 # Global configuration instances
@@ -408,14 +459,14 @@ def get_secret_manager() -> SecretManager | None:
 async def config_context(service_name: str, config_class: builtins.type[T] = BaseServiceConfig):
     """Context manager for configuration lifecycle."""
     manager = create_config_manager(service_name, config_class)
+    await manager.start()  # Start the cache
     config = await manager.get_config(service_name)
 
     try:
         yield config
     finally:
-        # Cleanup if needed
-        if hasattr(manager, "cleanup"):
-            await manager.cleanup()
+        # Cleanup the cache
+        await manager.stop()
 
 
 # Utility functions

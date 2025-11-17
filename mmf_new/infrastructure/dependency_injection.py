@@ -16,6 +16,8 @@ from typing import Any, Generic, Optional, TypeVar, Union, cast, overload
 
 from typing_extensions import Protocol
 
+from .cache import CacheBackend, CacheConfig, SerializationFormat, create_cache_manager
+
 T = TypeVar("T")
 ServiceType = TypeVar("ServiceType")
 _MISSING = object()  # Sentinel value for missing defaults
@@ -70,10 +72,53 @@ class DIContainer(metaclass=SingletonMeta):
     """
 
     def __init__(self) -> None:
-        self._services: dict[type[Any], Any] = {}
-        self._factories: dict[type[Any], ServiceFactory[Any]] = {}
-        self._configurations: dict[type[Any], dict[str, Any]] = {}
+        # Initialize enterprise caches for DI container
+
+        # Cache for service instances
+        services_cache_config = CacheConfig(
+            backend=CacheBackend.MEMORY,
+            serialization=SerializationFormat.PICKLE,  # Services may not be JSON serializable
+            default_ttl=0,  # Services persist for app lifetime
+            namespace="di_services",
+        )
+        self._services_cache = create_cache_manager("di_services", services_cache_config)
+
+        # Cache for service factories
+        factories_cache_config = CacheConfig(
+            backend=CacheBackend.MEMORY,
+            serialization=SerializationFormat.PICKLE,  # Factories may not be JSON serializable
+            default_ttl=0,  # Factories persist for app lifetime
+            namespace="di_factories",
+        )
+        self._factories_cache = create_cache_manager("di_factories", factories_cache_config)
+
+        # Cache for service configurations (JSON safe)
+        config_cache_config = CacheConfig(
+            backend=CacheBackend.MEMORY,
+            serialization=SerializationFormat.JSON,
+            default_ttl=0,  # Configurations persist for app lifetime
+            namespace="di_config",
+        )
+        self._configurations_cache = create_cache_manager("di_config", config_cache_config)
+
         self._lock = threading.RLock()
+        self._started = False
+
+    async def start(self) -> None:
+        """Start the DI container and initialize caches."""
+        if self._started:
+            return
+        await self._services_cache.start()
+        await self._factories_cache.start()
+        await self._configurations_cache.start()
+        self._started = True
+
+    async def stop(self) -> None:
+        """Stop the DI container and clean up caches."""
+        await self._services_cache.stop()
+        await self._factories_cache.stop()
+        await self._configurations_cache.stop()
+        self._started = False
 
     def register_factory(self, service_type: type[T], factory: ServiceFactory[T]) -> None:
         """Register a factory for a service type."""

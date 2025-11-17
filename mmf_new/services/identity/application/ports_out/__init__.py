@@ -4,6 +4,19 @@ from abc import ABC, abstractmethod
 
 from mmf_new.services.identity.domain.models import Credentials, UserId
 
+from .authentication_provider import (
+    APIKeyAuthenticationProvider,
+    AuthenticationContext,
+    AuthenticationCredentials,
+    AuthenticationError,
+    AuthenticationMethod,
+    AuthenticationMethodNotSupportedError,
+    AuthenticationProvider,
+    AuthenticationProviderError,
+    AuthenticationResult,
+    BasicAuthenticationProvider,
+    CredentialValidationError,
+)
 from .token_provider import (
     TokenCreationError,
     TokenError,
@@ -39,4 +52,27 @@ __all__ = [
     "TokenError",
     "TokenCreationError",
     "TokenValidationError",
+]
+
+# Authentication provider interfaces
+
+__all__ = [
+    # Existing exports
+    "TokenProvider",
+    "TokenError",
+    "TokenCreationError",
+    "TokenValidationError",
+    "UserRepository",
+    # New authentication provider exports
+    "AuthenticationProvider",
+    "BasicAuthenticationProvider",
+    "APIKeyAuthenticationProvider",
+    "AuthenticationMethod",
+    "AuthenticationCredentials",
+    "AuthenticationContext",
+    "AuthenticationResult",
+    "AuthenticationError",
+    "CredentialValidationError",
+    "AuthenticationMethodNotSupportedError",
+    "AuthenticationProviderError",
 ]

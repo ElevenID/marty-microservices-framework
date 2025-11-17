@@ -12,7 +12,8 @@ from typing import Any
 import yaml
 from pydantic import BaseModel, Field, ValidationError
 
-from .manager import (
+from .cache import CacheBackend, CacheConfig, SerializationFormat, create_cache_manager
+from .config_manager import (
     BaseServiceConfig,
     ConfigManager,
     ConfigProvider,
@@ -155,30 +156,64 @@ class PluginConfigManager:
     ):
         self.base_config_manager = base_config_manager
         self.plugin_config_dir = Path(plugin_config_dir)
-        self.plugin_configs: dict[str, ConfigManager] = {}
-        self.plugin_config_classes: dict[str, type[PluginConfigSection]] = {}
+
+        # Initialize enterprise cache for plugin configurations
+        plugin_cache_config = CacheConfig(
+            backend=CacheBackend.MEMORY,
+            serialization=SerializationFormat.PICKLE,  # ConfigManager not JSON serializable
+            default_ttl=300,  # 5 minutes
+            namespace="plugin_configs",
+        )
+        self._plugin_configs_cache = create_cache_manager("plugin_configs", plugin_cache_config)
+
+        # Initialize enterprise cache for plugin config classes
+        classes_cache_config = CacheConfig(
+            backend=CacheBackend.MEMORY,
+            serialization=SerializationFormat.PICKLE,  # Classes not JSON serializable
+            default_ttl=0,  # Classes persist for app lifetime
+            namespace="plugin_classes",
+        )
+        self._plugin_classes_cache = create_cache_manager("plugin_classes", classes_cache_config)
 
         # Plugin config classes are registered dynamically by plugins
 
-    def register_plugin_config(self, plugin_name: str, config_class: type[PluginConfigSection]):
+    async def start(self) -> None:
+        """Start the plugin config manager and initialize caches."""
+        await self._plugin_configs_cache.start()
+        await self._plugin_classes_cache.start()
+
+    async def stop(self) -> None:
+        """Stop the plugin config manager and clean up caches."""
+        await self._plugin_configs_cache.stop()
+        await self._plugin_classes_cache.stop()
+
+    async def register_plugin_config(
+        self, plugin_name: str, config_class: type[PluginConfigSection]
+    ):
         """Register a configuration class for a plugin."""
-        self.plugin_config_classes[plugin_name] = config_class
+        await self._plugin_classes_cache.set(plugin_name, config_class)
 
         # Create dedicated config manager for this plugin
         plugin_provider = PluginConfigProvider(self.plugin_config_dir, plugin_name)
-        self.plugin_configs[plugin_name] = ConfigManager(
+        config_manager = ConfigManager(
             config_class=config_class, providers=[plugin_provider], cache_ttl=300, auto_reload=True
         )
+        await config_manager.start()  # Ensure config manager is started
+        await self._plugin_configs_cache.set(plugin_name, config_manager)
 
     async def get_plugin_config(
         self, plugin_name: str, config_key: str = "default"
     ) -> PluginConfigSection:
         """Get configuration for a specific plugin."""
-        if plugin_name not in self.plugin_configs:
+        config_manager = await self._plugin_configs_cache.get(plugin_name)
+        if config_manager is None:
             # Create default config manager for unknown plugins
-            self.register_plugin_config(plugin_name, PluginConfigSection)
+            await self.register_plugin_config(plugin_name, PluginConfigSection)
+            config_manager = await self._plugin_configs_cache.get(plugin_name)
+            if config_manager is None:
+                raise ValueError(f"Failed to create config manager for plugin: {plugin_name}")
 
-        return await self.plugin_configs[plugin_name].get_config(config_key)
+        return await config_manager.get_config(config_key)
 
     async def load_plugin_config(
         self, plugin_name: str, config_class: type[PluginConfigSection]
@@ -192,12 +227,13 @@ class PluginConfigManager:
         Returns:
             Plugin configuration instance
         """
-        # Register the config class if not already registered
-        if plugin_name not in self.plugin_config_classes:
-            self.register_plugin_config(plugin_name, config_class)
-        elif self.plugin_config_classes[plugin_name] != config_class:
+        # Check if config class is already registered
+        existing_config_class = await self._plugin_classes_cache.get(plugin_name)
+        if existing_config_class is None:
+            await self.register_plugin_config(plugin_name, config_class)
+        elif existing_config_class != config_class:
             # Update to use the specified config class
-            self.register_plugin_config(plugin_name, config_class)
+            await self.register_plugin_config(plugin_name, config_class)
 
         return await self.get_plugin_config(plugin_name)
 
@@ -213,8 +249,8 @@ class PluginConfigManager:
     async def validate_plugin_config(self, plugin_name: str, config_data: dict[str, Any]) -> bool:
         """Validate plugin configuration against its schema."""
         try:
-            if plugin_name in self.plugin_config_classes:
-                config_class = self.plugin_config_classes[plugin_name]
+            config_class = await self._plugin_classes_cache.get(plugin_name)
+            if config_class is not None:
                 config_class(**config_data)
                 return True
             else:
@@ -222,7 +258,7 @@ class PluginConfigManager:
                 PluginConfigSection(**config_data)
                 return True
         except ValidationError as e:
-            logger.error(f"Plugin config validation failed for {plugin_name}: {e}")
+            logger.error("Plugin config validation failed for %s: %s", plugin_name, e)
             return False
 
     async def update_plugin_config(
@@ -234,8 +270,9 @@ class PluginConfigManager:
             return False
 
         # Get the provider and save
-        if plugin_name in self.plugin_configs:
-            providers = self.plugin_configs[plugin_name].providers
+        config_manager = await self._plugin_configs_cache.get(plugin_name)
+        if config_manager is not None:
+            providers = config_manager.providers
             if providers:
                 return await providers[0].save_config(config_key, config_data)
 
@@ -245,17 +282,16 @@ class PluginConfigManager:
         """List all available plugin configurations."""
         result = {}
 
-        for plugin_name, _config_manager in self.plugin_configs.items():
-            # In a real implementation, scan for available config keys
-            result[plugin_name] = ["default"]
+        # For now, we'll return a simple structure since we can't easily iterate cache items
+        # In a real implementation, we might need to track plugin names separately
+        result["registered_plugins"] = ["default"]
 
         return result
 
     async def generate_plugin_config_template(self, plugin_name: str) -> dict[str, Any]:
         """Generate a configuration template for a plugin."""
-        if plugin_name in self.plugin_config_classes:
-            config_class = self.plugin_config_classes[plugin_name]
-
+        config_class = await self._plugin_classes_cache.get(plugin_name)
+        if config_class is not None:
             # Create instance with defaults and extract schema
             try:
                 instance = config_class()

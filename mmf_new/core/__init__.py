@@ -5,6 +5,13 @@ This package provides the foundational components for building microservices
 using hexagonal (ports and adapters) architecture.
 """
 
+from ..infrastructure import (
+    ConfigurationLoader,
+    MMFConfiguration,
+    SecretResolver,
+    load_platform_configuration,
+    load_service_configuration,
+)
 from .application.base import (
     BusinessRuleError,
     Command,
@@ -27,13 +34,6 @@ from .domain.repository import (
     Repository,
     RepositoryError,
     RepositoryValidationError,
-)
-from .infrastructure.config import (
-    ConfigurationLoader,
-    MMFConfiguration,
-    SecretResolver,
-    load_platform_configuration,
-    load_service_configuration,
 )
 from .infrastructure.messaging import CommandBus, QueryBus
 from .infrastructure.persistence import InMemoryReadModelStore, ReadModelStore

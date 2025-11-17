@@ -52,6 +52,7 @@ from google.cloud import secretmanager  # type: ignore
 from pydantic import BaseModel, Field, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from .cache import CacheBackend, CacheConfig, SerializationFormat, create_cache_manager
 from .config_manager import Environment
 
 # Import from new modular security structure
@@ -828,11 +829,31 @@ class UnifiedConfigurationManager(Generic[T]):
 
         # Secret management
         self.secret_backends = secret_backends or []
-        self.secret_cache: dict[str, tuple[str, datetime]] = {}
         self.secret_metadata: dict[str, SecretMetadata] = {}
 
-        # Configuration cache
-        self.config_cache: dict[str, tuple[Any, datetime]] = {}
+        # Initialize enterprise cache for secrets with security considerations
+        secret_cache_config = CacheConfig(
+            backend=CacheBackend.MEMORY,
+            serialization=SerializationFormat.JSON,
+            default_ttl=int(self.context.cache_ttl.total_seconds()),
+            namespace="secrets",
+            key_prefix="unified_config",
+        )
+        self.secret_cache = create_cache_manager(
+            f"unified_secrets_{self.context.service_name}", secret_cache_config
+        )
+
+        # Initialize enterprise cache for configuration
+        config_cache_config = CacheConfig(
+            backend=CacheBackend.MEMORY,
+            serialization=SerializationFormat.JSON,
+            default_ttl=int(self.context.cache_ttl.total_seconds()),
+            namespace="config",
+            key_prefix="unified_config",
+        )
+        self.config_cache = create_cache_manager(
+            f"unified_config_{self.context.service_name}", config_cache_config
+        )
 
         # Internal state
         self._initialized = False
@@ -843,7 +864,11 @@ class UnifiedConfigurationManager(Generic[T]):
         if self._initialized:
             return
 
-        logger.info(f"Initializing unified configuration manager for {self.context.service_name}")
+        logger.info("Initializing unified configuration manager for %s", self.context.service_name)
+
+        # Start cache managers
+        await self.secret_cache.start()
+        await self.config_cache.start()
 
         # Validate secret backends
         for backend in self.secret_backends:
@@ -851,13 +876,21 @@ class UnifiedConfigurationManager(Generic[T]):
                 health = await backend.health_check()
                 backend_name = backend.__class__.__name__
                 if health:
-                    logger.info(f"✓ Secret backend {backend_name} is healthy")
+                    logger.info("✓ Secret backend %s is healthy", backend_name)
                 else:
-                    logger.warning(f"⚠ Secret backend {backend_name} failed health check")
+                    logger.warning("⚠ Secret backend %s failed health check", backend_name)
             except Exception as e:
-                logger.error(f"Error checking backend health: {e}")
+                logger.error("Error checking backend health: %s", e)
 
         self._initialized = True
+
+    async def cleanup(self) -> None:
+        """Clean up resources and stop cache managers."""
+        if self.secret_cache:
+            await self.secret_cache.stop()
+        if self.config_cache:
+            await self.config_cache.stop()
+        logger.info("Unified configuration manager cleanup completed")
 
     async def get_configuration(self, reload: bool = False) -> T:
         """
@@ -1042,10 +1075,10 @@ class UnifiedConfigurationManager(Generic[T]):
             Secret value or None if not found
         """
         # Check cache first
-        if use_cache and key in self.secret_cache:
-            value, cached_at = self.secret_cache[key]
-            if datetime.now(timezone.utc) - cached_at < self.context.cache_ttl:
-                return value
+        if use_cache:
+            cached_value = await self.secret_cache.get(key)
+            if cached_value is not None:
+                return cached_value
 
         # Try backends in order
         backends_to_try = self.secret_backends
@@ -1066,14 +1099,14 @@ class UnifiedConfigurationManager(Generic[T]):
             try:
                 value = await backend.get_secret(key)
                 if value is not None:
-                    # Cache the value
-                    self.secret_cache[key] = (value, datetime.now(timezone.utc))
-                    logger.debug(f"Secret '{key}' retrieved from {backend.__class__.__name__}")
+                    # Cache the value with TTL
+                    await self.secret_cache.set(key, value)
+                    logger.debug("Secret '%s' retrieved from %s", key, backend.__class__.__name__)
                     return value
             except Exception as e:
-                logger.error(f"Error getting secret from {backend.__class__.__name__}: {e}")
+                logger.error("Error getting secret from %s: %s", backend.__class__.__name__, e)
 
-        logger.warning(f"Secret '{key}' not found in any backend")
+        logger.warning("Secret '%s' not found in any backend", key)
         return None
 
     async def set_secret(
@@ -1101,15 +1134,15 @@ class UnifiedConfigurationManager(Generic[T]):
                     success = await backend_instance.set_secret(key, value, metadata)
                     if success:
                         # Update cache and metadata
-                        self.secret_cache[key] = (value, datetime.now(timezone.utc))
+                        await self.secret_cache.set(key, value)
                         if metadata:
                             self.secret_metadata[key] = metadata
-                        logger.info(f"Secret '{key}' stored in {backend.value}")
+                        logger.info("Secret '%s' stored in %s", key, backend.value)
                         return True
                 except Exception as e:
-                    logger.error(f"Error setting secret in {backend.value}: {e}")
+                    logger.error("Error setting secret in %s: %s", backend.value, e)
 
-        logger.error(f"Backend {backend.value} not available for setting secret '{key}'")
+        logger.error("Backend %s not available for setting secret '%s'", backend.value, key)
         return False
 
     def _get_backend_type(self, backend: SecretBackendInterface) -> SecretBackend:
@@ -1315,7 +1348,7 @@ def create_unified_config_manager(
                     logger.info("Kubernetes secrets backend would be enabled")
 
                 elif backend_type == SecretBackend.VAULT:
-                    if VAULT_INTEGRATION_AVAILABLE and vault_config:
+                    if VAULT_INTEGRATION_AVAILABLE and vault_config and VaultConfig and VaultClient:
                         vault_client_config = VaultConfig(**vault_config)
                         vault_client = VaultClient(vault_client_config)
                         secret_backends.append(VaultSecretBackend(vault_client))
@@ -1335,14 +1368,20 @@ def create_unified_config_manager(
         # Manual backend configuration
         secret_backends.append(EnvironmentSecretBackend(prefix=f"{service_name.upper()}_"))
 
-        if enable_vault and vault_config and VAULT_INTEGRATION_AVAILABLE:
+        if (
+            enable_vault
+            and vault_config
+            and VAULT_INTEGRATION_AVAILABLE
+            and VaultConfig
+            and VaultClient
+        ):
             try:
                 vault_client_config = VaultConfig(**vault_config)
                 vault_client = VaultClient(vault_client_config)
                 secret_backends.append(VaultSecretBackend(vault_client))
                 logger.info("Vault secret backend enabled")
             except Exception as e:
-                logger.error(f"Failed to setup Vault backend: {e}")
+                logger.error("Failed to setup Vault backend: %s", e)
 
         if enable_aws_secrets:
             try:

@@ -3,6 +3,12 @@ JWT Authentication Middleware for FastAPI.
 
 This module provides middleware for automatic JWT token extraction and validation
 in FastAPI applications, enabling seamless authentication for protected routes.
+
+# NOTE: For advanced authorization scenarios including RBAC hierarchies, ABAC policies,
+# and policy engines, see mmf_new.core.authorization module. This module provides
+# decorator-based authorization (@require_role, @require_permission, @require_rbac, @require_abac)
+# that can be used as alternatives to the inline checks in this middleware.
+
 """
 
 from collections.abc import Awaitable, Callable

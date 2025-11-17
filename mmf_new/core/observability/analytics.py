@@ -5,6 +5,7 @@ This module provides advanced analytics capabilities for observability data incl
 performance insights, trend analysis, capacity planning, and intelligent recommendations.
 """
 
+import asyncio
 import builtins
 import math
 import statistics
@@ -16,6 +17,14 @@ from typing import Any
 from uuid import uuid4
 
 from scipy import stats
+
+# Import enterprise cache for analytics data caching
+from ...infrastructure.cache import (
+    CacheBackend,
+    CacheConfig,
+    SerializationFormat,
+    create_cache_manager,
+)
 
 
 class AnalyticsTimeframe(Enum):
@@ -105,14 +114,60 @@ class PerformanceAnalyzer:
         )  # 1 week at 1min resolution
         self.performance_baselines: builtins.dict[str, builtins.dict[str, float]] = {}
 
-        # Analysis caches
-        self.trend_cache: builtins.dict[str, builtins.tuple[TrendDirection, float]] = {}
-        self.seasonal_patterns: builtins.dict[str, builtins.dict[str, float]] = {}
-        self.correlation_matrix: builtins.dict[str, builtins.dict[str, float]] = {}
+        # Initialize enterprise caches for analytical data
+
+        # Trend analysis cache
+        trend_cache_config = CacheConfig(
+            backend=CacheBackend.MEMORY,
+            serialization=SerializationFormat.JSON,
+            default_ttl=300,  # 5 minutes for analytical results
+            namespace="analytics_trends",
+        )
+        self._trend_cache = create_cache_manager(f"trends_{service_name}", trend_cache_config)
+
+        # Seasonal patterns cache
+        seasonal_cache_config = CacheConfig(
+            backend=CacheBackend.MEMORY,
+            serialization=SerializationFormat.JSON,
+            default_ttl=1800,  # 30 minutes for seasonal patterns
+            namespace="analytics_seasonal",
+        )
+        self._seasonal_cache = create_cache_manager(
+            f"seasonal_{service_name}", seasonal_cache_config
+        )
+
+        # Correlation matrix cache
+        correlation_cache_config = CacheConfig(
+            backend=CacheBackend.MEMORY,
+            serialization=SerializationFormat.JSON,
+            default_ttl=600,  # 10 minutes for correlation analysis
+            namespace="analytics_correlation",
+        )
+        self._correlation_cache = create_cache_manager(
+            f"correlation_{service_name}", correlation_cache_config
+        )
 
         # Insight generation
         self.insights: deque = deque(maxlen=1000)
         self.insight_templates = self._load_insight_templates()
+
+        self._started = False
+
+    async def start(self) -> None:
+        """Start the analytics engine and initialize caches."""
+        if self._started:
+            return
+        await self._trend_cache.start()
+        await self._seasonal_cache.start()
+        await self._correlation_cache.start()
+        self._started = True
+
+    async def stop(self) -> None:
+        """Stop the analytics engine and clean up caches."""
+        await self._trend_cache.stop()
+        await self._seasonal_cache.stop()
+        await self._correlation_cache.stop()
+        self._started = False
 
     def add_metric_data_point(
         self, metric_name: str, value: float, timestamp: datetime | None = None
@@ -128,8 +183,17 @@ class PerformanceAnalyzer:
         # Update baselines
         self._update_baselines(metric_name)
 
-        # Invalidate caches
-        self._invalidate_caches(metric_name)
+        # Invalidate caches (fire and forget)
+
+        if self._started:
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    # Schedule cache invalidation without blocking
+                    loop.create_task(self._invalidate_caches(metric_name))
+            except RuntimeError:
+                # No event loop, skip cache invalidation
+                pass
 
     def analyze_performance_trends(
         self, timeframe: AnalyticsTimeframe = AnalyticsTimeframe.LAST_DAY
@@ -586,10 +650,11 @@ class PerformanceAnalyzer:
             "std_dev": statistics.stdev(values) if len(values) > 1 else 0.0,
         }
 
-    def _invalidate_caches(self, metric_name: str):
+    async def _invalidate_caches(self, metric_name: str):
         """Invalidate analysis caches for a metric."""
-        if metric_name in self.trend_cache:
-            del self.trend_cache[metric_name]
+        await self._trend_cache.delete(metric_name)
+        await self._seasonal_cache.delete(metric_name)
+        await self._correlation_cache.delete(metric_name)
 
     def _calculate_stability_score(self, values: builtins.list[float]) -> float:
         """Calculate stability score (lower variance = higher score)."""

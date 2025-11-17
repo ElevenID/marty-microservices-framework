@@ -10,6 +10,14 @@ This directory temporarily holds modules and assets that are slated for removal 
 
 ## Current Migrations
 
+### Authentication System Migration (2025-11-16) ✅ COMPLETE
+- **Directory:** `authentication_migration_20251116/`
+- **Status:** Successfully migrated to enterprise-grade domain-driven authentication system
+- **New Location:** `mmf_new/services/identity/domain/models/`
+- **Reason:** Original authentication system replaced with hexagonal architecture featuring comprehensive mTLS, advanced MFA, OIDC client integration, and enterprise security features
+- **Legacy Code:** ~68,000+ lines of authentication code safely archived
+- **Enhancements:** Added mTLS authentication, advanced MFA (TOTP/SMS/email), certificate management, JWKS handling, and enterprise configuration presets
+
 ### Configuration System Migration (2025-11-12)
 - **Directory:** `config_migration_20251112/`
 - **Status:** Replaced with new hierarchical configuration system

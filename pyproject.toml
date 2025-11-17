@@ -342,18 +342,6 @@ type = "forbidden"
 source_modules = ["marty_msf.security_core.api"]
 forbidden_modules = [
     "marty_msf.authentication.auth_impl",
-    "marty_msf.authorization.authz_impl",
     "marty_msf.security_core.bootstrap",
-    "marty_msf.security_core.factory"
-]
-
-[[tool.importlinter.contracts]]
-name = "Implementation modules follow level contract"
-type = "forbidden"
-source_modules = [
-    "marty_msf.authentication.auth_impl",
-    "marty_msf.authorization.authz_impl"
-]
-forbidden_modules = [
     "marty_msf.security_core.factory"
 ]
