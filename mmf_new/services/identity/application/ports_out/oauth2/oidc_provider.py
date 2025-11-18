@@ -6,7 +6,7 @@ functionality, extending OAuth2 with identity features.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, dict
+from typing import Any
 
 from mmf_new.services.identity.domain.models.oauth2 import (
     OAuth2AccessToken,

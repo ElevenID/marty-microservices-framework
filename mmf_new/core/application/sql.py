@@ -117,7 +117,7 @@ class SQLGenerator:
                 elif isinstance(value, str) and not value.startswith("'"):
                     # Assume it's a regular string value, not a function call
                     formatted_values.append(f"'{value}'")
-                elif isinstance(value, (dict, list)):
+                elif isinstance(value, dict | list):
                     # Format structured data as proper JSON for JSONB columns
                     formatted_values.append(f"'{SQLGenerator.format_jsonb_value(value)}'")
                 else:

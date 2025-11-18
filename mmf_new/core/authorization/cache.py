@@ -49,7 +49,7 @@ class AuthorizationCacheManager:
         roles = await self.cache.get(key)
         if roles is not None:
             logger.debug(f"Cache hit for user roles: {user_id}")
-            return set(roles) if isinstance(roles, (list, set)) else None
+            return set(roles) if isinstance(roles, list | set) else None
         return None
 
     async def set_user_roles(self, user_id: str, roles: set[str], ttl: int | None = None) -> bool:
@@ -73,7 +73,7 @@ class AuthorizationCacheManager:
         perms = await self.cache.get(key)
         if perms is not None:
             logger.debug(f"Cache hit for user permissions: {user_id}")
-            return set(perms) if isinstance(perms, (list, set)) else None
+            return set(perms) if isinstance(perms, list | set) else None
         return None
 
     async def set_user_permissions(
@@ -99,7 +99,7 @@ class AuthorizationCacheManager:
         hierarchy = await self.cache.get(key)
         if hierarchy is not None:
             logger.debug(f"Cache hit for role hierarchy: {role}")
-            return set(hierarchy) if isinstance(hierarchy, (list, set)) else None
+            return set(hierarchy) if isinstance(hierarchy, list | set) else None
         return None
 
     async def set_role_hierarchy(

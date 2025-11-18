@@ -12,8 +12,6 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
-from mmf_new.core.domain.entity import ValueObject
-
 from .authenticated_user import AuthenticatedUser
 
 
@@ -50,7 +48,7 @@ class AuthenticationErrorCode(Enum):
 
 
 @dataclass(frozen=True)
-class AuthenticationResult(ValueObject):
+class AuthenticationResult:
     """
     Domain model representing the result of an authentication attempt.
 

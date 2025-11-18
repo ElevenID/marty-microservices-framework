@@ -64,7 +64,7 @@ class ExampleServiceConfig(BaseModel):
 
     # Monitoring configuration
     prometheus_enabled: bool = Field(default=True)
-    jaeger_endpoint: Optional[str] = Field(default=None)
+    jaeger_endpoint: str | None = Field(default=None)
 
 
 class ModernExampleService:
@@ -100,12 +100,12 @@ class ModernExampleService:
         )
 
         # Configuration will be loaded in start() method
-        self.config: Optional[ExampleServiceConfig] = None
+        self.config: ExampleServiceConfig | None = None
 
         # Initialize components
-        self.db_manager: Optional[DatabaseManager] = None
-        self.grpc_server: Optional[UnifiedGrpcServer] = None
-        self.metrics_server: Optional[MonitoringManager] = None
+        self.db_manager: DatabaseManager | None = None
+        self.grpc_server: UnifiedGrpcServer | None = None
+        self.metrics_server: MonitoringManager | None = None
         self._running = False
 
         self.logger.info("Example service initialized with unified configuration")
@@ -321,7 +321,7 @@ class ModernExampleService:
             raise
 
     # Business logic methods
-    async def process_example_operation(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    async def process_example_operation(self, request: dict[str, Any]) -> dict[str, Any]:
         """
         Process an example operation.
 
@@ -357,7 +357,7 @@ class ModernExampleService:
 
             raise
 
-    async def _publish_event(self, event_type: str, data: Dict[str, Any]) -> None:
+    async def _publish_event(self, event_type: str, data: dict[str, Any]) -> None:
         """Publish an event (placeholder implementation)."""
         # Event publishing logic would go here
         self.logger.debug(f"Event published: {event_type}")

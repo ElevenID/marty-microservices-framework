@@ -118,13 +118,13 @@ class ErrorResponse(BaseModel):
     error: str
     message: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
-    trace_id: Optional[str] = None
+    trace_id: str | None = None
 
 
 class ItemRequest(BaseModel):
     """Example item request model."""
     name: str = Field(..., description="Item name")
-    description: Optional[str] = Field(None, description="Item description")
+    description: str | None = Field(None, description="Item description")
     tags: list[str] = Field(default_factory=list, description="Item tags")
 
 
@@ -132,7 +132,7 @@ class ItemResponse(BaseModel):
     """Example item response model."""
     id: str
     name: str
-    description: Optional[str]
+    description: str | None
     tags: list[str]
     created_at: datetime
     service: str

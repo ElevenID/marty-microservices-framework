@@ -13,11 +13,9 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID
 
-from mmf_new.core.domain.entity import ValueObject
-
 
 @dataclass(frozen=True)
-class AuthenticatedUser(ValueObject):
+class AuthenticatedUser:
     """
     Domain model representing an authenticated user.
 

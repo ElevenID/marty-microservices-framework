@@ -73,7 +73,7 @@ class ModernSERVICE_NAME_PASCAL:
             config_dir: Directory containing configuration files
             environment: Environment name (development, testing, staging, production)
         """
-        self.logger = logging.getLogger(f"marty.SERVICE_NAME")
+        self.logger = logging.getLogger("marty.SERVICE_NAME")
 
         # Create unified configuration manager
         self.config_manager = create_unified_config_manager(
@@ -85,7 +85,7 @@ class ModernSERVICE_NAME_PASCAL:
         )
 
         # Configuration will be loaded in start() method
-        self.config: Optional[SERVICE_NAME_PASCAL_ServiceConfig] = None
+        self.config: SERVICE_NAME_PASCAL_ServiceConfig | None = None
 
         # Initialize components
         self.db_pool = None
@@ -317,7 +317,7 @@ class ModernSERVICE_NAME_PASCAL:
                 await asyncio.sleep(60)
 
     # Service-specific business logic methods
-    async def process_SERVICE_NAME_operation(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    async def process_SERVICE_NAME_operation(self, request: dict[str, Any]) -> dict[str, Any]:
         """
         Process a {{SERVICE_NAME}} operation.
 
@@ -351,7 +351,7 @@ class ModernSERVICE_NAME_PASCAL:
 
             raise
 
-    async def _publish_event(self, topic: str, event_data: Dict[str, Any]) -> None:
+    async def _publish_event(self, topic: str, event_data: dict[str, Any]) -> None:
         """Publish an event to the configured event system."""
         self.logger.debug(f"Publishing event to {topic}: {event_data}")
         # Implement event publishing logic

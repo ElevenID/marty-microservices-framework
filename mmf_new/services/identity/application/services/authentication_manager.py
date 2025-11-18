@@ -6,7 +6,7 @@ interface for authentication operations across the system.
 """
 
 import logging
-from typing import dict, list
+from typing import Any
 
 from mmf_new.services.identity.application.ports_out import (
     AuthenticationContext,

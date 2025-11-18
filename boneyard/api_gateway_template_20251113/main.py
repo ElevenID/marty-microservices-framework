@@ -21,7 +21,6 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-
 from marty_msf.core.di_container import get_container
 from marty_msf.framework.config_factory import create_service_config
 from marty_msf.framework.discovery import (
@@ -56,7 +55,7 @@ async def lifespan(app: FastAPI):
         logger.info("Starting API Gateway service...")
 
         # Initialize metrics using DI container
-        metrics = container.get_or_create(MetricsCollector, lambda: MetricsCollector())
+        container.get_or_create(MetricsCollector, lambda: MetricsCollector())
 
         # Initialize service discovery
         discovery_config = DiscoveryManagerConfig(
