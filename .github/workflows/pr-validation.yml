@@ -5,7 +5,7 @@ on:
     branches: [ main, dev ]
     types: [ opened, synchronize, reopened, ready_for_review ]
     paths:
-      - 'mmf/**'
+      - 'mmf_new/**'
       - 'tests/**'
       - 'pyproject.toml'
       - 'requirements.txt'
@@ -74,14 +74,14 @@ jobs:
         uv sync --group dev
 
     - name: Run code quality checks
-      working-directory: ./mmf
+      working-directory: ./mmf_new
       run: |
         echo "Running linting and formatting checks on MMF..."
         uv run ruff check . || echo "Linting issues found - will continue with tests"
         uv run ruff format --check . || echo "Formatting issues found - will continue with tests"
 
     - name: Run unit tests
-      working-directory: ./mmf
+      working-directory: ./mmf_new
       run: |
         echo "Running MMF unit tests..."
         ../tests/run_mmf_tests.sh --unit --verbose
@@ -117,7 +117,7 @@ jobs:
         uv sync --group dev
 
     - name: Run contract tests
-      working-directory: ./mmf
+      working-directory: ./mmf_new
       run: |
         echo "Running MMF API contract validation tests..."
         ../tests/run_mmf_tests.sh --contract --verbose
@@ -181,7 +181,7 @@ jobs:
 
     - name: Run E2E Tests (${{ matrix.test-mode }} mode)
       id: e2e-tests
-      working-directory: ./mmf
+      working-directory: ./mmf_new
       run: |
         cd ${{ github.workspace }}
 
@@ -247,7 +247,7 @@ jobs:
         uv sync --group dev
 
     - name: Run performance baseline tests
-      working-directory: ./mmf
+      working-directory: ./mmf_new
       run: |
         echo "Running MMF performance baseline tests..."
         # Use unified test runner for performance tests
@@ -289,7 +289,7 @@ jobs:
         uv sync --group dev
 
     - name: Run security baseline tests
-      working-directory: ./mmf
+      working-directory: ./mmf_new
       run: |
         echo "Running MMF security baseline tests..."
         # Use unified test runner for security tests

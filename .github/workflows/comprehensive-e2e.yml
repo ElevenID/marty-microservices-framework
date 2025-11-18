@@ -5,7 +5,7 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
     branches: [main, dev]
     paths:
-      - 'mmf/**'
+      - 'mmf_new/**'
       - 'tests/**'
       - 'pyproject.toml'
       - 'requirements.txt'
@@ -129,7 +129,7 @@ jobs:
         uv sync --group dev
 
     - name: Run contract tests
-      working-directory: ./mmf
+      working-directory: ./mmf_new
       run: |
         echo "Running MMF contract validation tests..."
         ../tests/run_mmf_tests.sh --contract --verbose
@@ -197,7 +197,7 @@ jobs:
 
     - name: Run ${{ matrix.test-category }} tests (${{ matrix.test-mode }} mode)
       timeout-minutes: ${{ matrix.timeout }}
-      working-directory: ./mmf
+      working-directory: ./mmf_new
       run: |
         cd ${{ github.workspace }}
 
@@ -275,7 +275,7 @@ jobs:
         uv sync --group dev
 
     - name: Run performance tests
-      working-directory: ./mmf
+      working-directory: ./mmf_new
       run: |
         echo "Running MMF performance validation tests..."
         if [[ "${{ needs.check-test-scope.outputs.test-mode }}" == "comprehensive" ]]; then
@@ -321,7 +321,7 @@ jobs:
         uv sync --group dev
 
     - name: Run security tests
-      working-directory: ./mmf
+      working-directory: ./mmf_new
       run: |
         echo "Running MMF security validation tests..."
         ../tests/run_mmf_tests.sh --security --verbose
@@ -383,7 +383,7 @@ jobs:
         uv sync --group dev
 
     - name: Run chaos engineering tests
-      working-directory: ./mmf
+      working-directory: ./mmf_new
       run: |
         echo "Running MMF chaos engineering tests..."
         ../tests/run_mmf_tests.sh --chaos --verbose

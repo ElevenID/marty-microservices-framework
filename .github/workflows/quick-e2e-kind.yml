@@ -77,7 +77,7 @@ jobs:
         uv sync --group dev
 
     - name: Run E2E tests
-      working-directory: ./mmf
+      working-directory: ./mmf_new
       run: |
         cd ${{ github.workspace }}
 

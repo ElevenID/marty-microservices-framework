@@ -4,14 +4,14 @@ on:
   push:
     branches: [ main, dev ]
     paths:
-      - 'mmf/**'
+      - 'mmf_new/**'
       - 'tests/**'
       - 'pyproject.toml'
       - 'requirements.txt'
   pull_request:
     branches: [ main, dev ]
     paths:
-      - 'mmf/**'
+      - 'mmf_new/**'
       - 'tests/**'
       - 'pyproject.toml'
       - 'requirements.txt'
@@ -57,7 +57,7 @@ jobs:
         kubectl version --client
 
     - name: Run E2E tests
-      working-directory: ./mmf
+      working-directory: ./mmf_new
       run: |
         cd ${{ github.workspace }}
         echo "Running MMF E2E tests..."
