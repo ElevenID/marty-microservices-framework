@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 # Determine script location and workspace root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-MMF_DIR="$WORKSPACE_ROOT/mmf"
+MMF_DIR="$WORKSPACE_ROOT/mmf_new"
 TESTS_DIR="$WORKSPACE_ROOT/tests"
 
 # Test execution flags
@@ -73,9 +73,9 @@ OPTIONS:
     -h, --help          Show this help message
 
 FOCUS AREAS:
-    MMF Services        Tests in mmf/services/*/tests/
-    MMF Infrastructure  Tests in mmf/infrastructure/tests/
-    MMF Platform Core   Tests in mmf/platform_core/tests/
+    MMF Services        Tests in mmf_new/services/*/tests/
+    MMF Infrastructure  Tests in mmf_new/infrastructure/tests/
+    MMF Platform Core   Tests in mmf_new/platform_core/tests/
     Integration         KIND-based e2e tests for MMF components
 
 EXAMPLES:
