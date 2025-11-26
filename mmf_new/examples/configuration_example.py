@@ -8,7 +8,7 @@ for loading and using configuration in services.
 
 from pathlib import Path
 
-from mmf_new.core.infrastructure.config import (
+from mmf_new.framework.infrastructure.config import (
     MMFConfiguration,
     load_platform_configuration,
     load_service_configuration,

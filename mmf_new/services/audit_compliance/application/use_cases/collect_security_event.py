@@ -10,7 +10,7 @@ from ...domain.models import SecurityAuditEvent
 from ..ports_out import AuditEventRepositoryPort, SIEMAdapterPort, ThreatAnalyzerPort
 
 
-@dataclass
+@dataclass(kw_only=True)
 class CollectSecurityEventRequest(CommandRequest):
     """Request to collect and process a security event."""
 

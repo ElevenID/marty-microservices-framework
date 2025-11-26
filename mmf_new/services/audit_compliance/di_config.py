@@ -10,9 +10,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
-from mmf_new.core.infrastructure.cache_manager import CacheManager
-from mmf_new.core.infrastructure.database_manager import DatabaseManager
-from mmf_new.core.infrastructure.framework_metrics import FrameworkMetrics
+from mmf_new.framework.infrastructure.cache import CacheBackend, CacheConfig, CacheFactory, CacheManager
+from mmf_new.framework.infrastructure.database_manager import DatabaseManager
+from mmf_new.framework.infrastructure.framework_metrics import FrameworkMetrics
+from mmf_new.core.di import AsyncBaseDIContainer
 
 # Application use cases
 from .application.use_cases import (
@@ -84,7 +85,7 @@ class AuditComplianceConfig:
             self.compliance_frameworks = ["GDPR", "HIPAA", "SOX", "PCI_DSS", "ISO27001", "NIST"]
 
 
-class AuditComplianceDIContainer:
+class AuditComplianceDIContainer(AsyncBaseDIContainer):
     """
     Dependency injection container for audit compliance service.
 
@@ -93,272 +94,241 @@ class AuditComplianceDIContainer:
     """
 
     def __init__(self, config: AuditComplianceConfig):
+        super().__init__()
         self.config = config
-        self._instances: dict[str, Any] = {}
+        
+        # Infrastructure
+        self._database_manager: DatabaseManager | None = None
+        self._cache_manager: CacheManager | None = None
+        self._metrics: FrameworkMetrics | None = None
+        
+        # Adapters
+        self._audit_event_repository: IAuditEventRepository | None = None
+        self._audit_event_cache: AuditEventCache | None = None
+        self._siem_adapter: ISIEMAdapter | None = None
+        self._compliance_metrics: AuditComplianceMetricsAdapter | None = None
+        self._compliance_scanner: IComplianceScanner | None = None
+        self._threat_analyzer: IThreatAnalyzer | None = None
+        self._security_report_generator: ISecurityReportGenerator | None = None
+        
+        # Use Cases
+        self._log_audit_event_use_case: LogAuditEventUseCase | None = None
+        self._collect_security_event_use_case: CollectSecurityEventUseCase | None = None
+        self._scan_compliance_use_case: ScanComplianceUseCase | None = None
+        self._analyze_threat_pattern_use_case: AnalyzeThreatPatternUseCase | None = None
+        self._generate_security_report_use_case: GenerateSecurityReportUseCase | None = None
+
+    async def initialize(self) -> None:
         logger.info("Initializing audit compliance DI container")
-
-    # Core infrastructure services
-
-    def get_database_manager(self) -> DatabaseManager:
-        """Get database manager instance."""
-        if "database_manager" not in self._instances:
-            self._instances["database_manager"] = DatabaseManager(
-                database_url=self.config.database_url,
-                pool_size=self.config.database_pool_size,
-                max_overflow=self.config.database_max_overflow,
-            )
-            logger.info("Database manager initialized")
-        return self._instances["database_manager"]
-
-    def get_cache_manager(self) -> CacheManager:
-        """Get cache manager instance."""
-        if "cache_manager" not in self._instances:
-            self._instances["cache_manager"] = CacheManager(
-                redis_url=self.config.redis_url, default_ttl=self.config.cache_ttl_seconds
-            )
-            logger.info("Cache manager initialized")
-        return self._instances["cache_manager"]
-
-    def get_metrics(self) -> FrameworkMetrics:
-        """Get framework metrics instance."""
-        if "metrics" not in self._instances:
-            self._instances["metrics"] = FrameworkMetrics()
-            logger.info("Framework metrics initialized")
-        return self._instances["metrics"]
-
-    # Infrastructure adapters (implementing domain contracts)
-
-    def get_audit_event_repository(self) -> IAuditEventRepository:
-        """Get audit event repository implementation."""
-        if "audit_event_repository" not in self._instances:
-            self._instances["audit_event_repository"] = AuditEventRepository(
-                database_manager=self.get_database_manager(), metrics=self.get_metrics()
-            )
-            logger.info("Audit event repository initialized")
-        return self._instances["audit_event_repository"]
-
-    def get_audit_event_cache(self) -> AuditEventCache:
-        """Get audit event cache implementation."""
-        if "audit_event_cache" not in self._instances:
-            cache_config = {
-                "max_events": self.config.cache_max_events,
-                "ttl_seconds": self.config.cache_ttl_seconds,
-            }
-            self._instances["audit_event_cache"] = AuditEventCache(
-                cache_manager=self.get_cache_manager(),
-                metrics=self.get_metrics(),
-                config=cache_config,
-            )
-            logger.info("Audit event cache initialized")
-        return self._instances["audit_event_cache"]
-
-    def get_siem_adapter(self) -> ISIEMAdapter:
-        """Get SIEM adapter implementation."""
-        if "siem_adapter" not in self._instances:
-            siem_config = {
-                "elasticsearch_url": self.config.elasticsearch_url,
-                "index_name": self.config.elasticsearch_index,
-                "timeout": self.config.elasticsearch_timeout,
-            }
-            self._instances["siem_adapter"] = ElasticsearchSIEMAdapter(
-                metrics=self.get_metrics(), config=siem_config
-            )
-            logger.info("SIEM adapter initialized")
-        return self._instances["siem_adapter"]
-
-    def get_compliance_metrics(self) -> AuditComplianceMetricsAdapter:
-        """Get audit compliance metrics adapter."""
-        if "compliance_metrics" not in self._instances:
-            self._instances["compliance_metrics"] = AuditComplianceMetricsAdapter(
-                base_metrics=self.get_metrics()
-            )
-            logger.info("Compliance metrics adapter initialized")
-        return self._instances["compliance_metrics"]
-
-    def get_compliance_scanner(self) -> IComplianceScanner:
-        """Get compliance scanner implementation."""
-        if "compliance_scanner" not in self._instances:
-            scanner_config = {"supported_frameworks": self.config.compliance_frameworks}
-            self._instances["compliance_scanner"] = ComplianceScannerAdapter(
-                database_manager=self.get_database_manager(),
-                metrics=self.get_compliance_metrics(),
-                config=scanner_config,
-            )
-            logger.info("Compliance scanner initialized")
-        return self._instances["compliance_scanner"]
-
-    def get_threat_analyzer(self) -> IThreatAnalyzer:
-        """Get threat analyzer implementation."""
-        if "threat_analyzer" not in self._instances:
-            analyzer_config = {
-                "confidence_threshold": self.config.threat_confidence_threshold,
-                "max_events_to_analyze": self.config.max_events_to_analyze,
-                "analysis_window_hours": self.config.threat_analysis_window_hours,
-            }
-            self._instances["threat_analyzer"] = ThreatAnalyzerAdapter(
-                database_manager=self.get_database_manager(),
-                metrics=self.get_compliance_metrics(),
-                config=analyzer_config,
-            )
-            logger.info("Threat analyzer initialized")
-        return self._instances["threat_analyzer"]
-
-    def get_security_report_generator(self) -> ISecurityReportGenerator:
-        """Get security report generator implementation."""
-        if "security_report_generator" not in self._instances:
-            generator_config = {
-                "output_directory": self.config.reports_output_directory,
-                "include_charts": self.config.reports_include_charts,
-                "include_recommendations": self.config.reports_include_recommendations,
-            }
-            self._instances["security_report_generator"] = SecurityReportGeneratorAdapter(
-                database_manager=self.get_database_manager(),
-                metrics=self.get_compliance_metrics(),
-                config=generator_config,
-            )
-            logger.info("Security report generator initialized")
-        return self._instances["security_report_generator"]
-
-    # Application use cases (orchestrators)
-
-    def get_log_audit_event_use_case(self) -> LogAuditEventUseCase:
-        """Get log audit event use case."""
-        if "log_audit_event_use_case" not in self._instances:
-            self._instances["log_audit_event_use_case"] = LogAuditEventUseCase(
-                audit_repository=self.get_audit_event_repository(),
-                audit_cache=self.get_audit_event_cache(),
-                siem_adapter=self.get_siem_adapter(),
-                metrics=self.get_compliance_metrics(),
-            )
-            logger.info("Log audit event use case initialized")
-        return self._instances["log_audit_event_use_case"]
-
-    def get_scan_compliance_use_case(self) -> ScanComplianceUseCase:
-        """Get scan compliance use case."""
-        if "scan_compliance_use_case" not in self._instances:
-            self._instances["scan_compliance_use_case"] = ScanComplianceUseCase(
-                compliance_scanner=self.get_compliance_scanner(),
-                audit_repository=self.get_audit_event_repository(),
-                metrics=self.get_compliance_metrics(),
-            )
-            logger.info("Scan compliance use case initialized")
-        return self._instances["scan_compliance_use_case"]
-
-    def get_analyze_threat_pattern_use_case(self) -> AnalyzeThreatPatternUseCase:
-        """Get analyze threat pattern use case."""
-        if "analyze_threat_pattern_use_case" not in self._instances:
-            self._instances["analyze_threat_pattern_use_case"] = AnalyzeThreatPatternUseCase(
-                threat_analyzer=self.get_threat_analyzer(),
-                audit_repository=self.get_audit_event_repository(),
-                metrics=self.get_compliance_metrics(),
-            )
-            logger.info("Analyze threat pattern use case initialized")
-        return self._instances["analyze_threat_pattern_use_case"]
-
-    def get_generate_security_report_use_case(self) -> GenerateSecurityReportUseCase:
-        """Get generate security report use case."""
-        if "generate_security_report_use_case" not in self._instances:
-            self._instances["generate_security_report_use_case"] = GenerateSecurityReportUseCase(
-                report_generator=self.get_security_report_generator(),
-                audit_repository=self.get_audit_event_repository(),
-                compliance_scanner=self.get_compliance_scanner(),
-                threat_analyzer=self.get_threat_analyzer(),
-                metrics=self.get_compliance_metrics(),
-            )
-            logger.info("Generate security report use case initialized")
-        return self._instances["generate_security_report_use_case"]
-
-    def get_collect_security_event_use_case(self) -> CollectSecurityEventUseCase:
-        """Get collect security event use case."""
-        if "collect_security_event_use_case" not in self._instances:
-            self._instances["collect_security_event_use_case"] = CollectSecurityEventUseCase(
-                siem_adapter=self.get_siem_adapter(),
-                audit_repository=self.get_audit_event_repository(),
-                metrics=self.get_compliance_metrics(),
-            )
-            logger.info("Collect security event use case initialized")
-        return self._instances["collect_security_event_use_case"]
-
-    # Service lifecycle management
-
-    async def initialize(self):
-        """Initialize all services asynchronously."""
-        logger.info("Starting audit compliance service initialization")
-
-        try:
-            # Initialize core infrastructure
-            await self.get_database_manager().initialize()
-            await self.get_cache_manager().initialize()
-
-            # Initialize metrics
-            self.get_metrics().initialize()
-
-            # Verify all adapters are properly configured
-            self._verify_adapters()
-
-            logger.info("Audit compliance service initialization completed successfully")
-
-        except Exception as e:
-            logger.error(f"Failed to initialize audit compliance service: {e}")
-            raise
-
-    async def shutdown(self):
-        """Shutdown all services gracefully."""
-        logger.info("Starting audit compliance service shutdown")
-
-        try:
-            # Shutdown in reverse order
-            if "database_manager" in self._instances:
-                await self._instances["database_manager"].shutdown()
-
-            if "cache_manager" in self._instances:
-                await self._instances["cache_manager"].shutdown()
-
-            # Clear instances
-            self._instances.clear()
-
-            logger.info("Audit compliance service shutdown completed")
-
-        except Exception as e:
-            logger.error(f"Error during audit compliance service shutdown: {e}")
-            raise
-
-    def _verify_adapters(self):
-        """Verify all adapters are properly instantiated."""
-        critical_services = [
-            "audit_event_repository",
-            "compliance_scanner",
-            "threat_analyzer",
-            "security_report_generator",
-        ]
-
-        for service_name in critical_services:
-            if service_name not in self._instances:
-                logger.warning(f"Critical service not initialized: {service_name}")
-
-    def get_health_status(self) -> dict[str, Any]:
-        """Get health status of all components."""
-        status = {
-            "overall_status": "healthy",
-            "initialized_services": len(self._instances),
-            "services": {},
+        
+        # Initialize Infrastructure
+        self._database_manager = DatabaseManager(
+            database_url=self.config.database_url,
+            pool_size=self.config.database_pool_size,
+            max_overflow=self.config.database_max_overflow,
+        )
+        
+        cache_config = CacheConfig(
+            backend=CacheBackend.REDIS if self.config.redis_url else CacheBackend.MEMORY,
+            url=self.config.redis_url,
+            default_ttl=self.config.cache_ttl_seconds
+        )
+        self._cache_manager = CacheFactory.create_manager(cache_config)
+        
+        self._metrics = FrameworkMetrics()
+        
+        # Initialize Adapters
+        self._audit_event_repository = AuditEventRepository(
+            database_manager=self._database_manager, metrics=self._metrics
+        )
+        
+        audit_cache_config = {
+            "max_events": self.config.cache_max_events,
+            "ttl_seconds": self.config.cache_ttl_seconds,
         }
+        self._audit_event_cache = AuditEventCache(
+            cache_manager=self._cache_manager,
+            metrics=self._metrics,
+            config=audit_cache_config,
+        )
+        
+        siem_config = {
+            "elasticsearch_url": self.config.elasticsearch_url,
+            "index_name": self.config.elasticsearch_index,
+            "timeout": self.config.elasticsearch_timeout,
+        }
+        self._siem_adapter = ElasticsearchSIEMAdapter(
+            metrics=self._metrics, config=siem_config
+        )
+        
+        self._compliance_metrics = AuditComplianceMetricsAdapter(
+            base_metrics=self._metrics
+        )
+        
+        scanner_config = {"supported_frameworks": self.config.compliance_frameworks}
+        self._compliance_scanner = ComplianceScannerAdapter(
+            database_manager=self._database_manager,
+            metrics=self._compliance_metrics,
+            config=scanner_config,
+        )
+        
+        analyzer_config = {
+            "confidence_threshold": self.config.threat_confidence_threshold,
+            "max_events_to_analyze": self.config.max_events_to_analyze,
+            "analysis_window_hours": self.config.threat_analysis_window_hours,
+        }
+        self._threat_analyzer = ThreatAnalyzerAdapter(
+            database_manager=self._database_manager,
+            metrics=self._compliance_metrics,
+            config=analyzer_config,
+        )
+        
+        report_config = {
+            "output_directory": self.config.reports_output_directory,
+            "include_charts": self.config.reports_include_charts,
+            "include_recommendations": self.config.reports_include_recommendations,
+        }
+        self._security_report_generator = SecurityReportGeneratorAdapter(
+            database_manager=self._database_manager,
+            metrics=self._compliance_metrics,
+            config=report_config,
+        )
+        
+        # Initialize Use Cases
+        self._log_audit_event_use_case = LogAuditEventUseCase(
+            audit_repository=self._audit_event_repository,
+            audit_cache=self._audit_event_cache,
+            siem_adapter=self._siem_adapter,
+        )
+        
+        self._collect_security_event_use_case = CollectSecurityEventUseCase(
+            audit_repository=self._audit_event_repository,
+            siem_adapter=self._siem_adapter,
+            threat_analyzer=self._threat_analyzer,
+        )
+        
+        self._scan_compliance_use_case = ScanComplianceUseCase(
+            compliance_scanner=self._compliance_scanner,
+            audit_repository=self._audit_event_repository,
+        )
+        
+        self._analyze_threat_pattern_use_case = AnalyzeThreatPatternUseCase(
+            threat_analyzer=self._threat_analyzer,
+            audit_repository=self._audit_event_repository,
+        )
+        
+        self._generate_security_report_use_case = GenerateSecurityReportUseCase(
+            report_generator=self._security_report_generator,
+            audit_repository=self._audit_event_repository,
+            compliance_scanner=self._compliance_scanner,
+        )
+        
+        # Async initialization
+        if self.config.redis_url:
+            await self._cache_manager.start()
 
-        # Check each service
-        for service_name, service_instance in self._instances.items():
-            try:
-                # Basic health check - service exists and is callable
-                service_status = "healthy" if service_instance else "unhealthy"
-                status["services"][service_name] = service_status
+        await self._database_manager.initialize()
+        self._metrics.initialize()
+        
+        self._mark_initialized()
 
-                if service_status == "unhealthy":
-                    status["overall_status"] = "degraded"
+    async def cleanup(self) -> None:
+        """Cleanup resources."""
+        if self._cache_manager:
+            await self._cache_manager.shutdown()
+        if self._database_manager:
+            await self._database_manager.shutdown()
+        self._mark_cleanup()
 
-            except Exception as e:
-                status["services"][service_name] = f"error: {str(e)}"
-                status["overall_status"] = "unhealthy"
+    @property
+    def database_manager(self) -> DatabaseManager:
+        self._ensure_initialized()
+        assert self._database_manager is not None
+        return self._database_manager
 
-        return status
+    @property
+    def cache_manager(self) -> CacheManager:
+        self._ensure_initialized()
+        assert self._cache_manager is not None
+        return self._cache_manager
+
+    @property
+    def metrics(self) -> FrameworkMetrics:
+        self._ensure_initialized()
+        assert self._metrics is not None
+        return self._metrics
+
+    @property
+    def audit_event_repository(self) -> IAuditEventRepository:
+        self._ensure_initialized()
+        assert self._audit_event_repository is not None
+        return self._audit_event_repository
+
+    @property
+    def audit_event_cache(self) -> AuditEventCache:
+        self._ensure_initialized()
+        assert self._audit_event_cache is not None
+        return self._audit_event_cache
+
+    @property
+    def siem_adapter(self) -> ISIEMAdapter:
+        self._ensure_initialized()
+        assert self._siem_adapter is not None
+        return self._siem_adapter
+
+    @property
+    def compliance_metrics(self) -> AuditComplianceMetricsAdapter:
+        self._ensure_initialized()
+        assert self._compliance_metrics is not None
+        return self._compliance_metrics
+
+    @property
+    def compliance_scanner(self) -> IComplianceScanner:
+        self._ensure_initialized()
+        assert self._compliance_scanner is not None
+        return self._compliance_scanner
+
+    @property
+    def threat_analyzer(self) -> IThreatAnalyzer:
+        self._ensure_initialized()
+        assert self._threat_analyzer is not None
+        return self._threat_analyzer
+
+    @property
+    def security_report_generator(self) -> ISecurityReportGenerator:
+        self._ensure_initialized()
+        assert self._security_report_generator is not None
+        return self._security_report_generator
+
+    @property
+    def log_audit_event_use_case(self) -> LogAuditEventUseCase:
+        self._ensure_initialized()
+        assert self._log_audit_event_use_case is not None
+        return self._log_audit_event_use_case
+
+    @property
+    def collect_security_event_use_case(self) -> CollectSecurityEventUseCase:
+        self._ensure_initialized()
+        assert self._collect_security_event_use_case is not None
+        return self._collect_security_event_use_case
+
+    @property
+    def scan_compliance_use_case(self) -> ScanComplianceUseCase:
+        self._ensure_initialized()
+        assert self._scan_compliance_use_case is not None
+        return self._scan_compliance_use_case
+
+    @property
+    def analyze_threat_pattern_use_case(self) -> AnalyzeThreatPatternUseCase:
+        self._ensure_initialized()
+        assert self._analyze_threat_pattern_use_case is not None
+        return self._analyze_threat_pattern_use_case
+
+    @property
+    def generate_security_report_use_case(self) -> GenerateSecurityReportUseCase:
+        self._ensure_initialized()
+        assert self._generate_security_report_use_case is not None
+        return self._generate_security_report_use_case
 
 
 # Global container instance (singleton pattern)
@@ -417,7 +387,7 @@ async def shutdown_audit_compliance_service():
     """Shutdown the audit compliance service."""
     global _container
     if _container:
-        await _container.shutdown()
+        await _container.cleanup()
         _container = None
 
 

@@ -10,11 +10,11 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 
 from mmf_new.core.domain.audit_types import ComplianceFramework
-from mmf_new.core.infrastructure.database_manager import DatabaseManager
-from mmf_new.core.infrastructure.framework_metrics import FrameworkMetrics
+from mmf_new.framework.infrastructure.database_manager import DatabaseManager
+from mmf_new.framework.infrastructure.framework_metrics import FrameworkMetrics
 
 from ..domain.contracts import IComplianceScanner
-from ..domain.entities import ComplianceScanResult
+from ..domain.models import ComplianceScanResult, Finding
 
 logger = logging.getLogger(__name__)
 
@@ -79,24 +79,27 @@ class ComplianceScannerAdapter(IComplianceScanner):
             # Validate framework support
             if framework not in self.supported_frameworks:
                 result = ComplianceScanResult(
-                    scan_id=f"scan_{int(start_time.timestamp())}",
                     framework=framework,
-                    passed=False,
+                    scan_name=f"Scan {framework.value}",
+                    target_resource="system",
+                    target_type="system",
+                    overall_status="non_compliant",
                     score=0.0,
                     findings=[
-                        {
-                            "severity": "error",
-                            "requirement": "framework_support",
-                            "message": f"Framework {framework.value} not supported",
-                            "recommendation": f"Use one of: {[f.value for f in self.supported_frameworks]}",
-                        }
+                        Finding(
+                            rule_id="framework_support",
+                            rule_name="Framework Support",
+                            severity="critical",
+                            status="fail",
+                            description=f"Framework {framework.value} not supported",
+                            remediation=f"Use one of: {[f.value for f in self.supported_frameworks]}",
+                        )
                     ],
                     recommendations=[
                         f"Framework {framework.value} is not currently supported",
                         f"Supported frameworks: {', '.join(f.value for f in self.supported_frameworks)}",
                     ],
-                    scan_timestamp=start_time,
-                    context=context,
+                    metadata=context or {},
                 )
 
                 # Record failed scan
@@ -127,7 +130,7 @@ class ComplianceScannerAdapter(IComplianceScanner):
             )
 
             # Record scan status
-            status = "passed" if result.passed else "failed"
+            status = "passed" if result.overall_status == "compliant" else "failed"
             self.metrics.increment_counter(
                 "compliance_scan_results_total",
                 labels={"framework": framework.value, "status": status},
@@ -135,7 +138,7 @@ class ComplianceScannerAdapter(IComplianceScanner):
 
             logger.info(
                 f"Compliance scan completed for {framework.value}: "
-                f"score={result.score:.2f}, passed={result.passed}"
+                f"score={result.score:.2f}, status={result.overall_status}"
             )
 
             return result
@@ -150,21 +153,24 @@ class ComplianceScannerAdapter(IComplianceScanner):
 
             # Return error result
             return ComplianceScanResult(
-                scan_id=f"scan_error_{int(start_time.timestamp())}",
                 framework=framework,
-                passed=False,
+                scan_name=f"Scan {framework.value}",
+                target_resource="system",
+                target_type="system",
+                overall_status="non_compliant",
                 score=0.0,
                 findings=[
-                    {
-                        "severity": "error",
-                        "requirement": "scan_execution",
-                        "message": f"Compliance scan failed: {str(e)}",
-                        "recommendation": "Review scan configuration and system status",
-                    }
+                    Finding(
+                        rule_id="scan_execution",
+                        rule_name="Scan Execution",
+                        severity="critical",
+                        status="fail",
+                        description=f"Compliance scan failed: {str(e)}",
+                        remediation="Review scan configuration and system status",
+                    )
                 ],
                 recommendations=["Fix scan execution errors", "Review system logs"],
-                scan_timestamp=start_time,
-                context=context,
+                metadata=context or {},
             )
 
     async def get_supported_frameworks(self) -> list[ComplianceFramework]:
@@ -275,19 +281,29 @@ class ComplianceScannerAdapter(IComplianceScanner):
         score = max(0.0, score)
 
         return ComplianceScanResult(
-            scan_id=f"gdpr_{int(start_time.timestamp())}",
             framework=ComplianceFramework.GDPR,
-            passed=score >= 0.8,
+            scan_name=f"GDPR Scan {int(start_time.timestamp())}",
+            target_resource="system",
+            target_type="system",
+            overall_status="compliant" if score >= 0.8 else "non_compliant",
             score=score,
-            findings=findings,
+            findings=[
+                Finding(
+                    rule_id=f.get("requirement", "unknown"),
+                    rule_name=f.get("requirement", "unknown"),
+                    severity=f.get("severity", "medium"),
+                    status="fail",
+                    description=f.get("message", ""),
+                    remediation=f.get("recommendation", ""),
+                ) for f in findings
+            ],
             recommendations=[
                 "Implement comprehensive consent management",
                 "Establish data retention and deletion policies",
                 "Enable data portability features",
                 "Apply privacy by design principles",
             ],
-            scan_timestamp=start_time,
-            context=context,
+            metadata=context or {},
         )
 
     async def _scan_hipaa_compliance(
@@ -336,19 +352,29 @@ class ComplianceScannerAdapter(IComplianceScanner):
         score = max(0.0, score)
 
         return ComplianceScanResult(
-            scan_id=f"hipaa_{int(start_time.timestamp())}",
             framework=ComplianceFramework.HIPAA,
-            passed=score >= 0.8,
+            scan_name=f"HIPAA Scan {int(start_time.timestamp())}",
+            target_resource="system",
+            target_type="system",
+            overall_status="compliant" if score >= 0.8 else "non_compliant",
             score=score,
-            findings=findings,
+            findings=[
+                Finding(
+                    rule_id=f.get("requirement", "unknown"),
+                    rule_name=f.get("requirement", "unknown"),
+                    severity=f.get("severity", "medium"),
+                    status="fail",
+                    description=f.get("message", ""),
+                    remediation=f.get("recommendation", ""),
+                ) for f in findings
+            ],
             recommendations=[
                 "Enable encryption for all PHI data",
                 "Implement secure transmission protocols",
                 "Establish comprehensive access controls",
                 "Regular security assessments",
             ],
-            scan_timestamp=start_time,
-            context=context,
+            metadata=context or {},
         )
 
     async def _scan_sox_compliance(
@@ -397,19 +423,29 @@ class ComplianceScannerAdapter(IComplianceScanner):
         score = max(0.0, score)
 
         return ComplianceScanResult(
-            scan_id=f"sox_{int(start_time.timestamp())}",
             framework=ComplianceFramework.SOX,
-            passed=score >= 0.8,
+            scan_name=f"SOX Scan {int(start_time.timestamp())}",
+            target_resource="system",
+            target_type="system",
+            overall_status="compliant" if score >= 0.8 else "non_compliant",
             score=score,
-            findings=findings,
+            findings=[
+                Finding(
+                    rule_id=f.get("requirement", "unknown"),
+                    rule_name=f.get("requirement", "unknown"),
+                    severity=f.get("severity", "medium"),
+                    status="fail",
+                    description=f.get("message", ""),
+                    remediation=f.get("recommendation", ""),
+                ) for f in findings
+            ],
             recommendations=[
                 "Implement comprehensive audit trails",
                 "Enforce segregation of duties",
                 "Establish change management controls",
                 "Regular internal assessments",
             ],
-            scan_timestamp=start_time,
-            context=context,
+            metadata=context or {},
         )
 
     async def _scan_pci_compliance(
@@ -470,19 +506,29 @@ class ComplianceScannerAdapter(IComplianceScanner):
         score = max(0.0, score)
 
         return ComplianceScanResult(
-            scan_id=f"pci_{int(start_time.timestamp())}",
             framework=ComplianceFramework.PCI_DSS,
-            passed=score >= 0.8,
+            scan_name=f"PCI Scan {int(start_time.timestamp())}",
+            target_resource="system",
+            target_type="system",
+            overall_status="compliant" if score >= 0.8 else "non_compliant",
             score=score,
-            findings=findings,
+            findings=[
+                Finding(
+                    rule_id=f.get("requirement", "unknown"),
+                    rule_name=f.get("requirement", "unknown"),
+                    severity=f.get("severity", "medium"),
+                    status="fail",
+                    description=f.get("message", ""),
+                    remediation=f.get("recommendation", ""),
+                ) for f in findings
+            ],
             recommendations=[
                 "Maintain secure network architecture",
                 "Protect cardholder data with encryption",
                 "Implement strong access controls",
                 "Monitor and test networks regularly",
             ],
-            scan_timestamp=start_time,
-            context=context,
+            metadata=context or {},
         )
 
     async def _scan_iso27001_compliance(
@@ -543,19 +589,29 @@ class ComplianceScannerAdapter(IComplianceScanner):
         score = max(0.0, score)
 
         return ComplianceScanResult(
-            scan_id=f"iso27001_{int(start_time.timestamp())}",
             framework=ComplianceFramework.ISO27001,
-            passed=score >= 0.8,
+            scan_name=f"ISO27001 Scan {int(start_time.timestamp())}",
+            target_resource="system",
+            target_type="system",
+            overall_status="compliant" if score >= 0.8 else "non_compliant",
             score=score,
-            findings=findings,
+            findings=[
+                Finding(
+                    rule_id=f.get("requirement", "unknown"),
+                    rule_name=f.get("requirement", "unknown"),
+                    severity=f.get("severity", "medium"),
+                    status="fail",
+                    description=f.get("message", ""),
+                    remediation=f.get("recommendation", ""),
+                ) for f in findings
+            ],
             recommendations=[
                 "Establish information security policies",
                 "Implement risk assessment procedures",
                 "Deploy comprehensive access management",
                 "Define incident response procedures",
             ],
-            scan_timestamp=start_time,
-            context=context,
+            metadata=context or {},
         )
 
     async def _scan_nist_compliance(
@@ -628,18 +684,28 @@ class ComplianceScannerAdapter(IComplianceScanner):
         score = max(0.0, score)
 
         return ComplianceScanResult(
-            scan_id=f"nist_{int(start_time.timestamp())}",
             framework=ComplianceFramework.NIST,
-            passed=score >= 0.8,
+            scan_name=f"NIST Scan {int(start_time.timestamp())}",
+            target_resource="system",
+            target_type="system",
+            overall_status="compliant" if score >= 0.8 else "non_compliant",
             score=score,
-            findings=findings,
+            findings=[
+                Finding(
+                    rule_id=f.get("requirement", "unknown"),
+                    rule_name=f.get("requirement", "unknown"),
+                    severity=f.get("severity", "medium"),
+                    status="fail",
+                    description=f.get("message", ""),
+                    remediation=f.get("recommendation", ""),
+                ) for f in findings
+            ],
             recommendations=[
                 "Maintain comprehensive asset inventory",
                 "Implement robust access controls",
                 "Enable security monitoring and detection",
                 "Develop incident response procedures",
-                "Establish backup and recovery capabilities",
+                "Establish backup and recovery procedures",
             ],
-            scan_timestamp=start_time,
-            context=context,
+            metadata=context or {},
         )

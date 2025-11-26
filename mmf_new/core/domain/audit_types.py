@@ -232,3 +232,19 @@ class AuditOutcome(Enum):
     ERROR = "error"
     PARTIAL = "partial"
     UNKNOWN = "unknown"
+
+class ThreatCategory(Enum):
+    """Categories of security threats."""
+
+    AUTHENTICATION_ATTACK = "authentication_attack"
+    AUTHORIZATION_BYPASS = "authorization_bypass"
+    DATA_EXFILTRATION = "data_exfiltration"
+    INJECTION_ATTACK = "injection_attack"
+    DDoS_ATTACK = "ddos_attack"
+    MALWARE = "malware"
+    INSIDER_THREAT = "insider_threat"
+    APT = "advanced_persistent_threat"
+    BRUTE_FORCE = "brute_force"
+    ANOMALOUS_BEHAVIOR = "anomalous_behavior"
+    PRIVILEGE_ESCALATION = "privilege_escalation"
+    LATERAL_MOVEMENT = "lateral_movement"

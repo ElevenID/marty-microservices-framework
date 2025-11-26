@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package hybrid_order_service;
+
+// Order item definition
+message OrderItem {
+    string product_id = 1;
+    int32 quantity = 2;
+    double price = 3;
+}
+
+// Order definition
+message Order {
+    string order_id = 1;
+    string customer_id = 2;
+    repeated OrderItem items = 3;
+    string status = 4;
+    double total_amount = 5;
+    int64 created_at = 6;
+}
+
+// Create order request
+message CreateOrderRequest {
+    string customer_id = 1;
+    repeated OrderItem items = 2;
+}
+
+// Create order response
+message CreateOrderResponse {
+    Order order = 1;
+    bool success = 2;
+    string error_message = 3;
+}
+
+// Get order request
+message GetOrderRequest {
+    string order_id = 1;
+}
+
+// Get order response
+message GetOrderResponse {
+    Order order = 1;
+    bool success = 2;
+    string error_message = 3;
+}
+
+// Batch get orders request
+message BatchGetOrdersRequest {
+    repeated string order_ids = 1;
+}
+
+// Batch get orders response
+message BatchGetOrdersResponse {
+    repeated Order orders = 1;
+    bool success = 2;
+    string error_message = 3;
+}
+
+// Health check request
+message HealthCheckRequest {}
+
+// Health check response
+message HealthCheckResponse {
+    string status = 1;
+    map<string, string> dependencies = 2;
+}
+
+// Hybrid order service definition
+service HybridOrderService {
+    rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
+    rpc GetOrder(GetOrderRequest) returns (GetOrderResponse);
+    rpc BatchGetOrders(BatchGetOrdersRequest) returns (BatchGetOrdersResponse);
+    rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}

@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Any, Optional
 
-from mmf_new.core.observability.framework_metrics import FrameworkMetrics
+from mmf_new.framework.observability.framework_metrics import FrameworkMetrics
 
 from ...domain.contracts import IMetricsAdapter
 

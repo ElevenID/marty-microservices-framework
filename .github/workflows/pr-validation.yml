@@ -80,6 +80,11 @@ jobs:
         uv run ruff check . || echo "Linting issues found - will continue with tests"
         uv run ruff format --check . || echo "Formatting issues found - will continue with tests"
 
+    - name: Run architectural tests
+      run: |
+        echo "Running architectural tests..."
+        uv run pytest tests/test_architecture.py -v
+
     - name: Run unit tests
       working-directory: ./mmf_new
       run: |

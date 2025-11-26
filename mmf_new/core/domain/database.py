@@ -8,8 +8,6 @@ from contextlib import AbstractAsyncContextManager
 from enum import Enum
 from typing import Any
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 
 class DatabaseType(Enum):
     """Supported database types."""
@@ -54,7 +52,7 @@ class TransactionManager(ABC):
     """Abstract transaction manager interface."""
 
     @abstractmethod
-    async def transaction(self, **kwargs) -> AbstractAsyncContextManager[AsyncSession]:
+    async def transaction(self, **kwargs) -> AbstractAsyncContextManager[Any]:
         """Create a managed transaction context."""
         raise NotImplementedError
 
@@ -78,12 +76,12 @@ class DatabaseManager(ABC):
         ...
 
     @abstractmethod
-    def get_session(self) -> AbstractAsyncContextManager[AsyncSession]:
+    def get_session(self) -> AbstractAsyncContextManager[Any]:
         """Get a database session."""
         ...
 
     @abstractmethod
-    def get_transaction(self) -> AbstractAsyncContextManager[AsyncSession]:
+    def get_transaction(self) -> AbstractAsyncContextManager[Any]:
         """Get a database session with transaction management."""
         ...
 

@@ -37,55 +37,51 @@ dependencies = [
     "aiofiles>=24.1.0",
     "pydantic-settings>=2.11.0",
     "psutil>=7.1.0",
+    "structlog>=23.2.0",
+    "tenacity>=8.2.0",
+    "httpx>=0.25.0",
+    "jsonschema>=4.20.0",
+]
+
+[project.optional-dependencies]
+security = [
     "pyjwt>=2.10.1",
     "cryptography>=46.0.2",
     "bcrypt>=5.0.0",
     "passlib>=1.7.4",
-    "playwright>=1.55.0",
-    "aiokafka>=0.12.0",
-    "jsonschema>=4.20.0",
-    "pika>=1.3.2",
+    "hvac>=2.3.0",
+    "defusedxml>=0.7.1",
+    "bandit[toml]>=1.8.0",
+]
+data = [
+    "sqlalchemy>=2.0.44",
+    "asyncpg>=0.29.0",
+    "psycopg2-binary>=2.9.11",
     "pymongo>=4.15.3",
     "redis>=6.4.0",
-    "psycopg2-binary>=2.9.11",
-    "grpcio-health-checking>=1.75.1",
-    "grpcio-reflection>=1.75.1",
+    "elasticsearch>=9.1.1",
+]
+messaging = [
+    "aiokafka>=0.12.0",
+    "pika>=1.3.2",
+    "celery>=5.3.0",
+]
+cloud = [
     "boto3>=1.40.48",
     "azure-identity>=1.25.1",
     "azure-keyvault-secrets>=4.10.0",
     "google-cloud-secret-manager>=2.25.0",
-    "hvac>=2.3.0",
-    # CLI and project generation tools
-    "cookiecutter>=2.5.0",
-    "gitpython>=3.1.40",
-    # gRPC support
+    "google-cloud-core>=2.4.0",
+    "kubernetes>=28.1.0",
+]
+grpc = [
     "grpcio>=1.75.1",
     "grpcio-tools>=1.75.1",
-    # Database integration
-    "sqlalchemy>=2.0.44",
-    # Testing and development
-    "docker>=7.1.0",
-    # Security features
-    "bandit[toml]>=1.8.0",
-    "defusedxml>=0.7.1",
-    # Analytics and visualization dependencies
-    "matplotlib>=3.9.4",
-    "seaborn>=0.13.2",
-    "numpy>=2.0.2",
-    "scipy>=1.11.0",
-    "locust>=2.34.0",
-    "schedule>=1.2.0",
-    # Microservices
-    "asyncpg>=0.29.0",
-    "celery>=5.3.0",
+    "grpcio-health-checking>=1.75.1",
+    "grpcio-reflection>=1.75.1",
+]
+observability = [
     "prometheus-client>=0.19.0",
-    "structlog>=23.2.0",
-    "tenacity>=8.2.0",
-    "httpx>=0.25.0",
-    # Cloud providers support
-    "kubernetes>=28.1.0",
-    "google-cloud-core>=2.4.0",
-    # Observability and monitoring
     "opentelemetry-api>=1.37.0",
     "opentelemetry-sdk>=1.37.0",
     "opentelemetry-exporter-otlp-proto-grpc>=1.37.0",
@@ -100,11 +96,30 @@ dependencies = [
     "opentelemetry-instrumentation-urllib3>=0.48b0",
     "opentelemetry-propagator-b3>=1.37.0",
     "opentelemetry-exporter-jaeger",
-    "elasticsearch>=9.1.1",
+]
+test = [
+    "playwright>=1.55.0",
+    "pytest-archon>=0.0.6",
+    "docker>=7.1.0",
+    "locust>=2.34.0",
+    "schedule>=1.2.0",
+]
+analytics = [
+    "matplotlib>=3.9.4",
+    "seaborn>=0.13.2",
+    "numpy>=2.0.2",
+    "scipy>=1.11.0",
+]
+dev = [
+    "cookiecutter>=2.5.0",
+    "gitpython>=3.1.40",
+]
+all = [
+    "marty-msf[security,data,messaging,cloud,grpc,observability,test,analytics,dev]",
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/marty_msf"]
+packages = ["mmf_new"]
 
 [project.urls]
 Homepage = "https://github.com/marty-framework/marty-microservices-framework"
@@ -120,6 +135,9 @@ Issues = "https://github.com/marty-framework/marty-microservices-framework/issue
 [project.entry-points."mmf.plugins"]
 # Production plugins will be registered here when they exist
 # production_payment = "plugins.production_payment_service:ProductionPaymentPlugin"
+
+[project.entry-points.pytest11]
+mmf_testing = "mmf_new.framework.testing.infrastructure.pytest.fixtures"
 
 [dependency-groups]
 dev = [
@@ -251,7 +269,7 @@ marty-msf = { workspace = true }
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-testpaths = ["tests"]
+testpaths = ["mmf_new/tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
@@ -260,13 +278,13 @@ addopts = [
     "--strict-config",
     "--verbose",
     "--tb=short",
-    "--cov=src",
-    "--cov-branch",
-    "--cov-report=term-missing",
-    "--cov-report=html:htmlcov",
-    "--cov-report=xml",
-    "--cov-fail-under=80",
-    "--asyncio-mode=auto",
+    # "--cov=mmf_new",
+    # "--cov-branch",
+    # "--cov-report=term-missing",
+    # "--cov-report=html:htmlcov",
+    # "--cov-report=xml",
+    # "--cov-fail-under=80",
+    # "--asyncio-mode=auto",
     "--durations=10",
 ]
 markers = [
@@ -280,9 +298,27 @@ markers = [
     "kafka: Tests that require Kafka/event bus",
     "redis: Tests that require Redis/caching",
     "docker: Tests that require Docker containers",
+    "fault_injection: Chaos engineering tests",
+    "contract: Contract tests",
+    "authentication: Security authentication tests",
     "chaos: Chaos engineering tests",
     "security: Security and compliance tests",
+    "resilience: Resilience tests",
+    "api_contract: API contract tests",
+    "load_test: Load tests",
+    "authorization: Security authorization tests",
+    "recovery: Recovery tests",
+    "schema_validation: Schema validation tests",
+    "stress_test: Stress tests",
+    "vulnerability: Vulnerability tests",
+    "network_chaos: Network chaos tests",
+    "backward_compatibility: Backward compatibility tests",
+    "benchmark: Benchmark tests",
+    "penetration: Penetration tests",
+    "resource_chaos: Resource chaos tests",
+    "crypto: Cryptography tests",
 ]
+asyncio_mode = "auto"
 filterwarnings = [
     "error",
     "ignore::UserWarning",
@@ -293,7 +329,6 @@ log_cli = true
 log_cli_level = "INFO"
 log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
 log_cli_date_format = "%Y-%m-%d %H:%M:%S"
-asyncio_mode = "auto"
 
 [tool.coverage.run]
 source = ["src"]

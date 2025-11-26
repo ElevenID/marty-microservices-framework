@@ -11,7 +11,7 @@ from pathlib import Path
 
 import yaml
 
-from mmf_new.core.infrastructure.config import load_service_configuration
+from mmf_new.framework.infrastructure.config import load_service_configuration
 
 
 def load_old_config_from_boneyard(environment: str = "development") -> dict:
@@ -25,7 +25,7 @@ def load_old_config_from_boneyard(environment: str = "development") -> dict:
         Dictionary with old configuration
 
     Note:
-        This is only for migration purposes. Use mmf_new.core.infrastructure.config
+        This is only for migration purposes. Use mmf_new.framework.infrastructure.config
         for all new development.
     """
     boneyard_path = Path("boneyard/config_migration_20251112")
@@ -87,7 +87,7 @@ def main():
     print("Old Configuration Access Example")
     print("=" * 50)
     print("⚠️  WARNING: This is for migration purposes only!")
-    print("    Use mmf_new.core.infrastructure.config for new development")
+    print("    Use mmf_new.framework.infrastructure.config for new development")
     print()
 
     # Show how to access old config during migration
@@ -106,7 +106,7 @@ def main():
 
     print("\n" + "=" * 50)
     print("Migration complete! Use new configuration system:")
-    print("from mmf_new.core.infrastructure.config import load_service_configuration")
+    print("from mmf_new.framework.infrastructure.config import load_service_configuration")
 
 
 if __name__ == "__main__":

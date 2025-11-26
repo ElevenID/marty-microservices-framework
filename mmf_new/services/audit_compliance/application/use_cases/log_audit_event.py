@@ -10,7 +10,7 @@ from ...domain.models import SecurityAuditEvent
 from ..ports_out import AuditEventRepositoryPort, AuditorPort, SIEMAdapterPort
 
 
-@dataclass
+@dataclass(kw_only=True)
 class LogAuditEventRequest(CommandRequest):
     """Request to log a security audit event."""
 

@@ -13,11 +13,11 @@ from pathlib import Path
 from typing import Any, Optional
 
 from mmf_new.core.domain.audit_types import ComplianceFramework, SecurityEventSeverity
-from mmf_new.core.infrastructure.database_manager import DatabaseManager
-from mmf_new.core.infrastructure.framework_metrics import FrameworkMetrics
+from mmf_new.framework.infrastructure.database_manager import DatabaseManager
+from mmf_new.framework.infrastructure.framework_metrics import FrameworkMetrics
 
 from ..domain.contracts import ISecurityReportGenerator
-from ..domain.entities import ComplianceScanResult, SecurityAuditEvent, ThreatPattern
+from ..domain.models import ComplianceScanResult, SecurityAuditEvent, ThreatPattern
 
 logger = logging.getLogger(__name__)
 

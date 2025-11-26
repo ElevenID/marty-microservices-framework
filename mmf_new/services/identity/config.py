@@ -11,11 +11,11 @@ import os
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional, dict, list
+from typing import Any, Optional
 
 import yaml
 
-from mmf_new.infrastructure.config_manager import BaseSettings, Environment
+from mmf_new.framework.infrastructure.config_manager import BaseSettings, Environment
 
 
 class AuthenticationProviderType(Enum):

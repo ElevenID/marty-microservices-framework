@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ service.name }} API Documentation</title>
+    {% if theme == 'redoc' %}
+    <script src="https://cdn.jsdelivr.net/npm/redoc@latest/bundles/redoc.standalone.js"></script>
+    {% elif theme == 'swagger-ui' %}
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@latest/swagger-ui.css" />
+    <script src="https://unpkg.com/swagger-ui-dist@latest/swagger-ui-bundle.js"></script>
+    {% endif %}
+    {% if custom_css %}
+    <link rel="stylesheet" href="{{ custom_css }}">
+    {% endif %}
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .deprecation-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 12px;
+            margin: 16px 0;
+            color: #856404;
+        }
+        .migration-guide {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 4px;
+            padding: 12px;
+            margin: 8px 0;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    {% if theme == 'redoc' %}
+    <div id="redoc-container"></div>
+    <script>
+        const spec = {{ openapi_spec | safe }};
+
+        // Add deprecation warnings to the spec
+        if (spec.paths) {
+            Object.keys(spec.paths).forEach(path => {
+                Object.keys(spec.paths[path]).forEach(method => {
+                    const operation = spec.paths[path][method];
+                    if (operation.deprecated) {
+                        if (!operation.description) operation.description = '';
+                        operation.description += '\n\n⚠️ **DEPRECATED**';
+                        if (operation['x-deprecation-date']) {
+                            operation.description += ` as of ${operation['x-deprecation-date']}`;
+                        }
+                        if (operation['x-migration-guide']) {
+                            operation.description += `\n\n**Migration Guide:** ${operation['x-migration-guide']}`;
+                        }
+                    }
+                });
+            });
+        }
+
+        Redoc.init(spec, {
+            scrollYOffset: 60,
+            theme: {
+                colors: {
+                    primary: {
+                        main: '#1976d2'
+                    }
+                }
+            }
+        }, document.getElementById('redoc-container'));
+    </script>
+    {% elif theme == 'swagger-ui' %}
+    <div id="swagger-ui"></div>
+    <script>
+        const spec = {{ openapi_spec | safe }};
+
+        SwaggerUIBundle({
+            url: '',
+            spec: spec,
+            dom_id: '#swagger-ui',
+            deepLinking: true,
+            presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIBundle.presets.standalone
+            ],
+            plugins: [
+                SwaggerUIBundle.plugins.DownloadUrl
+            ],
+            layout: "StandaloneLayout"
+        });
+    </script>
+    {% else %}
+    <div style="padding: 20px;">
+        <h1>{{ service.name }} API Documentation</h1>
+        <p>{{ service.description }}</p>
+        <p><strong>Version:</strong> {{ service.version }}</p>
+        <p><strong>Generated:</strong> {{ timestamp }}</p>
+
+        <h2>Endpoints</h2>
+        {% for endpoint in service.endpoints %}
+        <div style="border: 1px solid #ddd; margin: 10px 0; padding: 15px; border-radius: 5px;">
+            <h3>{{ endpoint.method.upper() }} {{ endpoint.path }}</h3>
+            <p>{{ endpoint.description }}</p>
+            {% if endpoint.deprecated %}
+            <div class="deprecation-notice">
+                <strong>⚠️ DEPRECATED</strong>
+                {% if endpoint.deprecation_date %}
+                as of {{ endpoint.deprecation_date }}
+                {% endif %}
+            </div>
+            {% if endpoint.migration_guide %}
+            <div class="migration-guide">
+                <strong>Migration Guide:</strong> {{ endpoint.migration_guide }}
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if custom_js %}
+    <script src="{{ custom_js }}"></script>
+    {% endif %}
+</body>
+</html>

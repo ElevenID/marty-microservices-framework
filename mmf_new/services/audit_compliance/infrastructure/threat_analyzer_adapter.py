@@ -12,11 +12,11 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
 from mmf_new.core.domain.audit_types import SecurityEventSeverity, ThreatCategory
-from mmf_new.core.infrastructure.database_manager import DatabaseManager
-from mmf_new.core.infrastructure.framework_metrics import FrameworkMetrics
+from mmf_new.framework.infrastructure.database_manager import DatabaseManager
+from mmf_new.framework.infrastructure.framework_metrics import FrameworkMetrics
 
 from ..domain.contracts import IThreatAnalyzer
-from ..domain.entities import SecurityAuditEvent, ThreatPattern
+from ..domain.models import SecurityAuditEvent, ThreatPattern
 
 logger = logging.getLogger(__name__)
 

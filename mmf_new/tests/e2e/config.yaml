@@ -1,0 +1,70 @@
+# Example configuration for Kind + Playwright E2E tests
+
+# Kind cluster configuration
+CLUSTER_CONFIG:
+  name: "marty-e2e"
+  nodes:
+    control_plane: 1
+    workers: 1
+  ports:
+    dashboard: 30081
+    api: 30080
+    metrics: 30082
+
+# Service deployment configuration
+SERVICES:
+  dashboard:
+    image: "nginx:alpine"
+    port: 80
+    replicas: 1
+    type: "NodePort"
+    nodePort: 30081
+
+  test_api:
+    image: "nginx:alpine"
+    port: 8080
+    replicas: 2
+    type: "ClusterIP"
+
+# Playwright test configuration
+PLAYWRIGHT:
+  headless: true
+  browser: "chromium"
+  viewports:
+    desktop:
+      width: 1200
+      height: 800
+    tablet:
+      width: 768
+      height: 1024
+    mobile:
+      width: 375
+      height: 667
+
+# Test scenarios
+SCENARIOS:
+  complete_e2e:
+    enabled: true
+    timeout: 300  # 5 minutes
+    services: ["dashboard", "test_api"]
+    tests: ["accessibility", "responsive", "functionality"]
+
+  dashboard_only:
+    enabled: true
+    timeout: 120  # 2 minutes
+    services: ["dashboard"]
+    tests: ["accessibility", "functionality"]
+
+  visual_regression:
+    enabled: true
+    timeout: 180  # 3 minutes
+    services: ["dashboard"]
+    tests: ["responsive", "screenshots"]
+    baseline_dir: "tests/e2e/baselines"
+
+# CI/CD settings
+CI:
+  cleanup_on_failure: true
+  artifact_retention_days: 7
+  screenshot_on_failure: true
+  max_parallel_tests: 2

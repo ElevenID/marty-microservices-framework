@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ service.name }} gRPC Documentation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            border-bottom: 2px solid #1976d2;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .method {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9f9f9;
+        }
+        .method-name {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        .method-signature {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+        }
+        .deprecated {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+            border-left: 4px solid #ff9800;
+        }
+        .deprecation-notice {
+            background: #ffebee;
+            border: 1px solid #ffcdd2;
+            border-radius: 4px;
+            padding: 12px;
+            margin: 10px 0;
+            color: #c62828;
+        }
+        .streaming-badge {
+            display: inline-block;
+            background: #4caf50;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        .unary-badge {
+            display: inline-block;
+            background: #2196f3;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ service.name }} gRPC API</h1>
+        <p>{{ service.description }}</p>
+        <p><strong>Version:</strong> {{ service.version }}</p>
+        <p><strong>Generated:</strong> {{ timestamp }}</p>
+    </div>
+
+    <h2>gRPC Methods</h2>
+    {% for method in service.grpc_methods %}
+    <div class="method {% if method.deprecated %}deprecated{% endif %}">
+        <div class="method-name">
+            {{ method.name }}
+            {% if method.streaming == 'unary' %}
+            <span class="unary-badge">Unary</span>
+            {% else %}
+            <span class="streaming-badge">{{ method.streaming.replace('_', ' ').title() }}</span>
+            {% endif %}
+        </div>
+
+        {% if method.deprecated %}
+        <div class="deprecation-notice">
+            <strong>⚠️ DEPRECATED</strong>
+            {% if method.deprecation_date %}
+            as of {{ method.deprecation_date }}
+            {% endif %}
+            {% if method.migration_guide %}
+            <br><strong>Migration Guide:</strong> {{ method.migration_guide }}
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <p>{{ method.description }}</p>
+
+        <div class="method-signature">
+            <strong>Full Name:</strong> {{ method.full_name }}<br>
+            <strong>Input:</strong> {{ method.input_type }}<br>
+            <strong>Output:</strong> {{ method.output_type }}<br>
+            <strong>Streaming:</strong> {{ method.streaming }}
+        </div>
+    </div>
+    {% endfor %}
+
+    <h2>Connection Information</h2>
+    <div style="background: #f4f4f4; padding: 15px; border-radius: 5px;">
+        <p><strong>Service:</strong> {{ service.name }}</p>
+        <p><strong>Package:</strong> {{ service.grpc_methods[0].full_name.split('.')[0:-2] | join('.') if service.grpc_methods }}</p>
+    </div>
+
+    <h2>Client Examples</h2>
+    <p>For detailed client implementation examples in various languages, see the <a href="{{ service.name }}-grpc-clients.md">client examples documentation</a>.</p>
+</body>
+</html>

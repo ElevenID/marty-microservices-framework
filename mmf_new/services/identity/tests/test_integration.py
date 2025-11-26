@@ -1,6 +1,6 @@
 """Integration tests for the identity service."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from mmf_new.services.identity.application.usecases import AuthenticatePrincipalUseCase
 from mmf_new.services.identity.domain.models import (
@@ -8,7 +8,7 @@ from mmf_new.services.identity.domain.models import (
     Credentials,
     UserId,
 )
-from mmf_new.services.identity.infrastructure.adapters import (
+from mmf_new.services.identity.tests.doubles import (
     InMemoryEventBus,
     InMemoryUserRepository,
 )
@@ -41,7 +41,7 @@ class TestIdentityServiceIntegration:
         assert result.error_message is None
 
         # Verify authenticated_user has reasonable expiration
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         expected_expiry = now + timedelta(hours=24)
         assert result.authenticated_user.expires_at is not None
         time_diff = abs((result.authenticated_user.expires_at - expected_expiry).total_seconds())

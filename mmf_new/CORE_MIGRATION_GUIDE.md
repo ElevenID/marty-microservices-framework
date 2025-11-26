@@ -93,8 +93,8 @@ class CreateUserUseCase(UseCase[CreateUserRequest, CreateUserResponse]):
 #### Database Configuration
 
 ```python
-from mmf_new.core.infrastructure.database import DatabaseConfig
-from mmf_new.core.infrastructure.sqlalchemy_manager import SQLAlchemyDatabaseManager
+from mmf_new.framework.infrastructure.database import DatabaseConfig
+from mmf_new.framework.infrastructure.sqlalchemy_manager import SQLAlchemyDatabaseManager
 
 # Configure database
 config = DatabaseConfig(
@@ -113,7 +113,7 @@ await db_manager.initialize()
 #### Repository Implementation
 
 ```python
-from mmf_new.core.infrastructure.sqlalchemy_manager import SQLAlchemyDatabaseManager
+from mmf_new.framework.infrastructure.sqlalchemy_manager import SQLAlchemyDatabaseManager
 from sqlalchemy import select
 
 class SQLAlchemyUserRepository(UserRepository):
@@ -253,8 +253,8 @@ In your service's integration layer:
 
 ```python
 # configuration.py
-from mmf_new.core.infrastructure.database import DatabaseConfig
-from mmf_new.core.infrastructure.sqlalchemy_manager import SQLAlchemyDatabaseManager
+from mmf_new.framework.infrastructure.database import DatabaseConfig
+from mmf_new.framework.infrastructure.sqlalchemy_manager import SQLAlchemyDatabaseManager
 
 def create_database_manager() -> SQLAlchemyDatabaseManager:
     config = DatabaseConfig(

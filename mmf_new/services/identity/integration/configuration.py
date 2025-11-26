@@ -14,12 +14,12 @@ from typing import Any
 import yaml
 
 from mmf_new.core.application.database import DatabaseConfig
-from mmf_new.core.infrastructure.config import MMFConfiguration
+from mmf_new.framework.infrastructure.config import MMFConfiguration
 from mmf_new.services.identity.application.use_cases.authenticate_with_jwt import (
     AuthenticateWithJWTUseCase,
 )
 from mmf_new.services.identity.infrastructure.adapters import JWTConfig
-from mmf_new.services.identity.infrastructure.adapters.user_repository_impl import (
+from mmf_new.services.identity.infrastructure.adapters.out.persistence.user_repository import (
     AuthenticatedUserRepository,
 )
 

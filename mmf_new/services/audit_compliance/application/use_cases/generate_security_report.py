@@ -15,7 +15,7 @@ from ..ports_out import (
 )
 
 
-@dataclass
+@dataclass(kw_only=True)
 class GenerateSecurityReportRequest(CommandRequest):
     """Request to generate a security report."""
 
@@ -35,8 +35,8 @@ class GenerateSecurityReportResponse:
     """Response from security report generation."""
 
     report_data: dict[str, Any]
-    report_file_path: str | None = None
     summary: dict[str, Any]
+    report_file_path: str | None = None
     success: bool = True
     error_message: str | None = None
     warnings: list[str] | None = None

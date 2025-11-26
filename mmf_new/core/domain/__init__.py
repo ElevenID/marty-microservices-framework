@@ -20,7 +20,7 @@ from .audit_types import (
     SecurityThreatLevel,
 )
 from .entity import AggregateRoot, DomainEvent, Entity, ValueObject
-from .repository import (
+from .ports.repository import (
     DomainRepository,
     EntityConflictError,
     EntityNotFoundError,

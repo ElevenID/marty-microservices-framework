@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ service.name }} Unified API Documentation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            border-bottom: 2px solid #1976d2;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .api-section {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9f9f9;
+        }
+        .endpoint, .method {
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+        }
+        .endpoint-header, .method-header {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        .http-method {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .get { background: #4caf50; color: white; }
+        .post { background: #2196f3; color: white; }
+        .put { background: #ff9800; color: white; }
+        .delete { background: #f44336; color: white; }
+        .patch { background: #9c27b0; color: white; }
+
+        .grpc-badge {
+            display: inline-block;
+            background: #607d8b;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        .streaming-badge {
+            display: inline-block;
+            background: #4caf50;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        .deprecated {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+            border-left: 4px solid #ff9800;
+        }
+        .deprecation-notice {
+            background: #ffebee;
+            border: 1px solid #ffcdd2;
+            border-radius: 4px;
+            padding: 12px;
+            margin: 10px 0;
+            color: #c62828;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            border-bottom: 2px solid transparent;
+        }
+        .tab.active {
+            border-bottom-color: #1976d2;
+            color: #1976d2;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .gateway-info {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ service.name }} Unified API Documentation</h1>
+        <p>{{ service.description }}</p>
+        <p><strong>Version:</strong> {{ service.version }}</p>
+        <p><strong>Generated:</strong> {{ timestamp }}</p>
+
+        {% if has_rest and has_grpc %}
+        <div class="gateway-info">
+            <h3>🔗 Unified Access</h3>
+            <p>This service provides both REST and gRPC APIs. The REST endpoints can be used for web applications and general HTTP clients, while gRPC provides high-performance RPC for service-to-service communication.</p>
+            <p><strong>gRPC-Gateway:</strong> REST endpoints automatically proxy to gRPC methods when available.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if has_rest and has_grpc %}
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('rest')">REST API</button>
+        <button class="tab" onclick="showTab('grpc')">gRPC API</button>
+        <button class="tab" onclick="showTab('unified')">Unified View</button>
+    </div>
+    {% endif %}
+
+    {% if has_rest %}
+    <div id="rest-content" class="tab-content {% if not has_grpc %}active{% endif %}">
+        <div class="api-section">
+            <h2>🌐 REST API Endpoints</h2>
+            {% for endpoint in service.endpoints %}
+            <div class="endpoint {% if endpoint.deprecated %}deprecated{% endif %}">
+                <div class="endpoint-header">
+                    <span class="http-method {{ endpoint.method.lower() }}">{{ endpoint.method.upper() }}</span>
+                    {{ endpoint.path }}
+                </div>
+
+                {% if endpoint.deprecated %}
+                <div class="deprecation-notice">
+                    <strong>⚠️ DEPRECATED</strong>
+                    {% if endpoint.deprecation_date %}
+                    as of {{ endpoint.deprecation_date }}
+                    {% endif %}
+                    {% if endpoint.migration_guide %}
+                    <br><strong>Migration Guide:</strong> {{ endpoint.migration_guide }}
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <p>{{ endpoint.description }}</p>
+
+                {% if endpoint.tags %}
+                <p><strong>Tags:</strong> {% for tag in endpoint.tags %}<span style="background: #e0e0e0; padding: 2px 6px; border-radius: 3px; margin-right: 5px;">{{ tag }}</span>{% endfor %}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if has_grpc %}
+    <div id="grpc-content" class="tab-content {% if not has_rest %}active{% endif %}">
+        <div class="api-section">
+            <h2>⚡ gRPC API Methods</h2>
+            {% for method in service.grpc_methods %}
+            <div class="method {% if method.deprecated %}deprecated{% endif %}">
+                <div class="method-header">
+                    {{ method.name }}
+                    <span class="grpc-badge">gRPC</span>
+                    {% if method.streaming != 'unary' %}
+                    <span class="streaming-badge">{{ method.streaming.replace('_', ' ').title() }}</span>
+                    {% endif %}
+                </div>
+
+                {% if method.deprecated %}
+                <div class="deprecation-notice">
+                    <strong>⚠️ DEPRECATED</strong>
+                    {% if method.deprecation_date %}
+                    as of {{ method.deprecation_date }}
+                    {% endif %}
+                    {% if method.migration_guide %}
+                    <br><strong>Migration Guide:</strong> {{ method.migration_guide }}
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <p>{{ method.description }}</p>
+
+                <div style="background: #f4f4f4; padding: 10px; border-radius: 3px; font-family: monospace; margin: 10px 0;">
+                    <strong>Full Name:</strong> {{ method.full_name }}<br>
+                    <strong>Input:</strong> {{ method.input_type }}<br>
+                    <strong>Output:</strong> {{ method.output_type }}<br>
+                    <strong>Streaming:</strong> {{ method.streaming }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if has_rest and has_grpc %}
+    <div id="unified-content" class="tab-content">
+        <div class="api-section">
+            <h2>🔗 Unified API Overview</h2>
+            <p>This service provides both REST and gRPC interfaces. Here's how they work together:</p>
+
+            <h3>Protocol Comparison</h3>
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                <thead>
+                    <tr style="background: #f5f5f5;">
+                        <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Feature</th>
+                        <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">REST</th>
+                        <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">gRPC</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 12px;"><strong>Transport</strong></td>
+                        <td style="border: 1px solid #ddd; padding: 12px;">HTTP/1.1, HTTP/2</td>
+                        <td style="border: 1px solid #ddd; padding: 12px;">HTTP/2</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 12px;"><strong>Serialization</strong></td>
+                        <td style="border: 1px solid #ddd; padding: 12px;">JSON</td>
+                        <td style="border: 1px solid #ddd; padding: 12px;">Protocol Buffers</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 12px;"><strong>Browser Support</strong></td>
+                        <td style="border: 1px solid #ddd; padding: 12px;">Native</td>
+                        <td style="border: 1px solid #ddd; padding: 12px;">Via gRPC-Web</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 12px;"><strong>Performance</strong></td>
+                        <td style="border: 1px solid #ddd; padding: 12px;">Good</td>
+                        <td style="border: 1px solid #ddd; padding: 12px;">Excellent</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 12px;"><strong>Streaming</strong></td>
+                        <td style="border: 1px solid #ddd; padding: 12px;">Limited (SSE, WebSockets)</td>
+                        <td style="border: 1px solid #ddd; padding: 12px;">Built-in</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>API Gateway Mapping</h3>
+            <p>REST endpoints are automatically mapped to gRPC methods through our API gateway:</p>
+
+            {% for method in service.grpc_methods %}
+            <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 15px; margin: 10px 0;">
+                <div style="font-family: monospace; margin-bottom: 10px;">
+                    <strong>gRPC:</strong> {{ method.full_name }}<br>
+                    <strong>REST:</strong> POST /api/v1/{{ method.name.lower() }}
+                </div>
+                <p style="margin: 0; color: #6c757d;">{{ method.description }}</p>
+            </div>
+            {% endfor %}
+
+            <h3>When to Use Each Protocol</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                <div style="border: 1px solid #4caf50; border-radius: 5px; padding: 15px;">
+                    <h4 style="color: #4caf50; margin-top: 0;">Use REST when:</h4>
+                    <ul>
+                        <li>Building web applications</li>
+                        <li>Working with browser clients</li>
+                        <li>Need simple HTTP tooling</li>
+                        <li>Debugging with curl/Postman</li>
+                        <li>Working with third-party integrations</li>
+                    </ul>
+                </div>
+                <div style="border: 1px solid #2196f3; border-radius: 5px; padding: 15px;">
+                    <h4 style="color: #2196f3; margin-top: 0;">Use gRPC when:</h4>
+                    <ul>
+                        <li>Service-to-service communication</li>
+                        <li>High-performance requirements</li>
+                        <li>Streaming data</li>
+                        <li>Strong typing needed</li>
+                        <li>Language-agnostic clients</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="api-section">
+        <h2>📚 Additional Resources</h2>
+        <ul>
+            <li><a href="{{ service.name }}-openapi.json">OpenAPI Specification (JSON)</a></li>
+            {% if has_grpc %}
+            <li><a href="{{ service.name }}-grpc-clients.md">gRPC Client Examples</a></li>
+            {% endif %}
+            {% if has_rest and has_grpc %}
+            <li><a href="{{ service.name }}-gateway.yaml">gRPC Gateway Configuration</a></li>
+            {% endif %}
+            <li><a href="{{ service.name }}-postman.json">Postman Collection</a></li>
+        </ul>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Show selected tab content
+            const targetContent = document.getElementById(tabName + '-content');
+            if (targetContent) {
+                targetContent.classList.add('active');
+            }
+
+            // Activate clicked tab
+            event.target.classList.add('active');
+        }
+
+        // Set initial tab
+        {% if has_rest and not has_grpc %}
+        showTab('rest');
+        {% elif has_grpc and not has_rest %}
+        showTab('grpc');
+        {% else %}
+        // Default to rest if both available
+        {% endif %}
+    </script>
+</body>
+</html>

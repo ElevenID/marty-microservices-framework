@@ -10,7 +10,7 @@ from ...domain.models import ComplianceScanResult
 from ..ports_out import AuditEventRepositoryPort, ComplianceScannerPort
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ScanComplianceRequest(CommandRequest):
     """Request to scan for compliance."""
 

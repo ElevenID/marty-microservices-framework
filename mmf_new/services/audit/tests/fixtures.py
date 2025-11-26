@@ -10,12 +10,12 @@ import os
 import tempfile
 from collections.abc import AsyncGenerator
 from pathlib import Path
-from typing import Optional, dict
+from typing import Optional
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import AsyncSession, AsyncSessionMaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
 # Import audit service components
@@ -24,23 +24,23 @@ from mmf_new.services.audit.application.commands import LogRequestCommand
 from mmf_new.services.audit.di_config import AuditDIContainer
 from mmf_new.services.audit.domain.entities import RequestAuditEvent
 from mmf_new.services.audit.domain.value_objects import (
-    RequestInfo,
-    ResponseInfo,
-    SystemInfo,
-    UserInfo,
+    RequestContext,
+    ResponseMetadata,
+    ServiceContext,
+    ActorInfo,
 )
-from mmf_new.services.audit.infrastructure.adapters.audit_encryption_adapter import (
+from mmf_new.services.audit.infrastructure.adapters.encryption_adapter import (
     AuditEncryptionAdapter,
 )
-from mmf_new.services.audit.infrastructure.adapters.database_audit_destination import (
+from mmf_new.services.audit.infrastructure.adapters.database_destination import (
     DatabaseAuditDestination,
 )
-from mmf_new.services.audit.infrastructure.adapters.file_audit_destination import (
+from mmf_new.services.audit.infrastructure.adapters.file_destination import (
     FileAuditDestination,
 )
 from mmf_new.services.audit.infrastructure.models import AuditLogRecord
-from mmf_new.services.audit.infrastructure.repository import AuditRepository
-from mmf_new.services.audit.service_factory import AuditServiceFactory
+from mmf_new.services.audit.infrastructure.repositories.audit_repository import AuditRepository
+from mmf_new.services.audit.service_factory import AuditService
 
 
 class TestDatabaseConfig:
@@ -77,7 +77,7 @@ async def test_database_engine():
 @pytest_asyncio.fixture
 async def test_database_session(test_database_engine) -> AsyncGenerator[AsyncSession, None]:
     """Create test database session."""
-    async_session = AsyncSessionMaker(
+    async_session = async_sessionmaker(
         test_database_engine, class_=AsyncSession, expire_on_commit=False
     )
 
@@ -182,13 +182,22 @@ async def test_audit_di_container(
         session_factory=lambda: test_database_session, encryption_adapter=test_encryption_adapter
     )
 
-    # Create container
-    container = AuditDIContainer(
-        destinations=destinations,
-        repository=repository,
-        audit_compliance_service=mock_audit_compliance_service,
-        encryption_adapter=test_encryption_adapter,
+    # Create config
+    config = AuditConfig(
+        database_url="sqlite+aiosqlite:///:memory:",
+        encryption_enabled=True,
+        compliance_logger=mock_audit_compliance_service
     )
+
+    # Create container
+    container = AuditDIContainer(config)
+    
+    # Manually inject dependencies
+    container._destinations = destinations
+    container._repository = repository
+    container._encryption_adapter = test_encryption_adapter
+    container._session_factory = lambda: test_database_session
+    container._initialized = True
 
     yield container
 
@@ -196,60 +205,56 @@ async def test_audit_di_container(
     await database_destination.flush()
 
 
-@pytest_asyncio.fixture
-async def test_audit_service_factory(
-    test_audit_di_container,
-) -> AsyncGenerator[AuditServiceFactory, None]:
-    """Create test audit service factory."""
-    factory = AuditServiceFactory(test_audit_di_container)
-    yield factory
+@pytest.fixture
+async def test_audit_service(test_audit_di_container):
+    """Create audit service instance."""
+    service = AuditService(test_audit_di_container)
+    await service.initialize(test_audit_di_container._session_factory)
+    return service
 
 
 # Sample test data fixtures
 @pytest.fixture
-def sample_user_info() -> UserInfo:
+def sample_user_info() -> ActorInfo:
     """Create sample user info."""
-    return UserInfo(
+    return ActorInfo(
         user_id="test-user-123",
-        user_role="admin",
+        roles=("admin",),
         session_id="session-456",
-        ip_address="192.168.1.100",
+    )
+
+
+@pytest.fixture
+def sample_request_info() -> RequestContext:
+    """Create sample request info."""
+    return RequestContext(
+        method="POST",
+        endpoint="/api/v1/users",
+        query_params={"include": "profile"},
+        headers={"Content-Type": "application/json"},
+        source_ip="192.168.1.100",
         user_agent="TestAgent/1.0",
     )
 
 
 @pytest.fixture
-def sample_request_info() -> RequestInfo:
-    """Create sample request info."""
-    return RequestInfo(
-        method="POST",
-        path="/api/v1/users",
-        query_params={"include": "profile"},
-        headers={"Content-Type": "application/json"},
-        body_size=256,
-    )
-
-
-@pytest.fixture
-def sample_response_info() -> ResponseInfo:
+def sample_response_info() -> ResponseMetadata:
     """Create sample response info."""
-    return ResponseInfo(
+    return ResponseMetadata(
         status_code=201,
         headers={"Location": "/api/v1/users/123"},
-        body_size=128,
-        execution_time_ms=150,
+        response_size=128,
     )
 
 
 @pytest.fixture
-def sample_system_info() -> SystemInfo:
+def sample_system_info() -> ServiceContext:
     """Create sample system info."""
-    return SystemInfo(
+    return ServiceContext(
         service_name="user-service",
-        service_version="1.2.3",
+        version="1.2.3",
         environment="test",
-        hostname="test-host",
-        correlation_id="corr-789",
+        instance_id="test-host",
     )
 
 
@@ -278,20 +283,24 @@ def sample_log_request_command(
     return LogRequestCommand(
         event_type=AuditEventType.API_REQUEST,
         severity=AuditSeverity.MEDIUM,
+        outcome=AuditOutcome.SUCCESS,
+        message="Test API request",
         service_name="user-service",
         endpoint="/api/v1/users",
         method="POST",
         user_id="test-user-123",
-        user_role="admin",
-        user_session_id="session-456",
-        client_ip="192.168.1.100",
+        session_id="session-456",
+        source_ip="192.168.1.100",
         user_agent="TestAgent/1.0",
-        request_data={"name": "John Doe", "email": "john@example.com"},
-        response_data={"id": 123, "name": "John Doe"},
         status_code=201,
-        execution_time_seconds=0.15,
+        duration_ms=150.0,
         correlation_id="corr-789",
-        additional_context={"test": "data"},
+        details={
+            "user_role": "admin",
+            "request_data": {"name": "John Doe", "email": "john@example.com"},
+            "response_data": {"id": 123, "name": "John Doe"},
+            "test": "data"
+        },
     )
 
 
@@ -301,24 +310,28 @@ def high_severity_events() -> list[LogRequestCommand]:
     """Create list of high severity events for compliance forwarding testing."""
     return [
         LogRequestCommand(
-            event_type=AuditEventType.SECURITY_VIOLATION,
+            event_type=AuditEventType.AUTH_LOGIN_FAILURE,
             severity=AuditSeverity.HIGH,
+            outcome=AuditOutcome.FAILURE,
+            message="Authentication failure",
             service_name="auth-service",
             endpoint="/auth/login",
             method="POST",
             user_id="attacker-user",
             status_code=401,
-            additional_context={"failed_attempts": 5},
+            details={"failed_attempts": 5},
         ),
         LogRequestCommand(
-            event_type=AuditEventType.DATA_BREACH,
+            event_type=AuditEventType.DATA_EXPORT,
             severity=AuditSeverity.CRITICAL,
+            outcome=AuditOutcome.FAILURE,
+            message="Unauthorized data access",
             service_name="user-service",
             endpoint="/api/v1/users/sensitive",
             method="GET",
             user_id="unauthorized-user",
             status_code=403,
-            additional_context={"attempted_access": "sensitive_data"},
+            details={"attempted_access": "sensitive_data"},
         ),
     ]
 
@@ -332,13 +345,15 @@ def batch_test_events() -> list[LogRequestCommand]:
             LogRequestCommand(
                 event_type=AuditEventType.API_REQUEST,
                 severity=AuditSeverity.LOW,
+                outcome=AuditOutcome.SUCCESS,
+                message=f"Batch test event {i}",
                 service_name=f"service-{i % 3}",
                 endpoint=f"/api/v1/resource/{i}",
                 method="GET",
                 user_id=f"user-{i % 5}",
                 status_code=200,
-                execution_time_seconds=0.1 + (i * 0.01),
-                additional_context={"batch_test": True, "index": i},
+                duration_ms=100.0 + (i * 10.0),
+                details={"batch_test": True, "index": i},
             )
         )
     return events

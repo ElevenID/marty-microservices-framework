@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 from typing import Any
 
-from mmf_new.core.infrastructure.database import DatabaseManager
+from mmf_new.framework.infrastructure.database_manager import DatabaseManager
 
 from ...domain.contracts import ISIEMAdapter
 

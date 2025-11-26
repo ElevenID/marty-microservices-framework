@@ -5,7 +5,7 @@ This package provides the foundational components for building microservices
 using hexagonal (ports and adapters) architecture.
 """
 
-from ..infrastructure import (
+from ..framework.infrastructure.config import (
     ConfigurationLoader,
     MMFConfiguration,
     SecretResolver,
@@ -27,7 +27,7 @@ from .application.base import (
 )
 from .application.handlers import CommandHandler, QueryHandler
 from .domain.entity import AggregateRoot, DomainEvent, Entity, ValueObject
-from .domain.repository import (
+from .domain.ports.repository import (
     DomainRepository,
     EntityConflictError,
     EntityNotFoundError,
@@ -35,9 +35,9 @@ from .domain.repository import (
     RepositoryError,
     RepositoryValidationError,
 )
-from .infrastructure.messaging import CommandBus, QueryBus
-from .infrastructure.persistence import InMemoryReadModelStore, ReadModelStore
-from .infrastructure.repository import SQLAlchemyDomainRepository, SQLAlchemyRepository
+from ..framework.infrastructure.messaging import CommandBus, QueryBus
+from ..framework.infrastructure.persistence import InMemoryReadModelStore, ReadModelStore
+from ..framework.infrastructure.repository import SQLAlchemyDomainRepository, SQLAlchemyRepository
 
 __version__ = "2.0.0"
 

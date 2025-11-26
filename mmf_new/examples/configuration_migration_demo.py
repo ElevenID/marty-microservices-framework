@@ -11,7 +11,7 @@ import traceback
 from pathlib import Path
 
 from mmf_new.core.application.database import DatabaseConfig
-from mmf_new.core.infrastructure.config import MMFConfiguration
+from mmf_new.framework.infrastructure.config import MMFConfiguration
 from mmf_new.services.identity.infrastructure.adapters.config_integration import (
     get_jwt_config_from_yaml,
 )

@@ -3,18 +3,18 @@
 from datetime import datetime, timedelta
 from typing import Any, Optional
 
-from mmf_new.core.infrastructure.database import DatabaseManager
-from mmf_new.core.infrastructure.repository import Repository
+from mmf_new.framework.infrastructure.database_manager import DatabaseManager
+from mmf_new.framework.infrastructure.repository import SQLAlchemyRepository
 
 from ...domain.contracts import IAuditEventRepository
 from ...domain.models import SecurityAuditEvent
 
 
-class AuditEventRepository(Repository[SecurityAuditEvent], IAuditEventRepository):
+class AuditEventRepository(SQLAlchemyRepository[SecurityAuditEvent], IAuditEventRepository):
     """SQLAlchemy implementation of audit event repository."""
 
     def __init__(self, db_manager: DatabaseManager):
-        super().__init__(SecurityAuditEvent, db_manager)
+        super().__init__(db_manager.get_session, SecurityAuditEvent)
         self.db_manager = db_manager
 
     async def find_by_principal(

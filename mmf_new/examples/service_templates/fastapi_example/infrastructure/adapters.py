@@ -1,0 +1,50 @@
+from typing import Optional, Dict
+from mmf_new.examples.service_templates.fastapi_example.domain.models import Order
+from mmf_new.examples.service_templates.fastapi_example.domain.ports import OrderRepository, InventoryServicePort
+from mmf_new.framework.integration.adapters.rest_adapter import RESTAPIAdapter
+from mmf_new.framework.integration.domain.models import IntegrationRequest
+
+class InMemoryOrderRepository(OrderRepository):
+    def __init__(self):
+        self._orders: Dict[str, Order] = {}
+
+    async def save(self, order: Order) -> Order:
+        self._orders[order.order_id] = order
+        return order
+
+    async def get_by_id(self, order_id: str) -> Optional[Order]:
+        return self._orders.get(order_id)
+
+class ExternalInventoryAdapter(InventoryServicePort):
+    def __init__(self, adapter: RESTAPIAdapter):
+        self.adapter = adapter
+
+    async def check_availability(self, product_id: str, quantity: int) -> bool:
+        """
+        Call external inventory system to check availability.
+        GET /inventory/{product_id}?quantity={quantity}
+        """
+        # We need to pass path and params. 
+        # The REST adapter logic is a bit simple, it uses data for both.
+        # If GET, data is params.
+        # But we also need to append path.
+        # The adapter checks: if isinstance(request.data, dict) and "path" in request.data: url = ...
+        
+        request = IntegrationRequest(
+            system_id=self.adapter.config.system_id,
+            operation="GET",
+            data={
+                "path": f"/inventory/{product_id}",
+                "quantity": str(quantity)
+            }
+        )
+        
+        response = await self.adapter.execute_request(request)
+        
+        if not response.success:
+            return False
+            
+        data = response.data
+        if isinstance(data, dict):
+            return bool(data.get("available", False))
+        return False
