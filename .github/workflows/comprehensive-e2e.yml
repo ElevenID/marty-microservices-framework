@@ -132,7 +132,7 @@ jobs:
       working-directory: ./mmf_new
       run: |
         echo "Running MMF contract validation tests..."
-        ../tests/run_mmf_tests.sh --contract --verbose
+        uv run pytest tests/contract -v
 
     - name: Upload contract test results
       if: always()
@@ -199,28 +199,8 @@ jobs:
       timeout-minutes: ${{ matrix.timeout }}
       working-directory: ./mmf_new
       run: |
-        cd ${{ github.workspace }}
-
         echo "Running MMF ${{ matrix.test-category }} tests in ${{ matrix.test-mode }} mode..."
-
-        case "${{ matrix.test-mode }}" in
-          "quick")
-            ./tests/run_mmf_tests.sh --${{ matrix.test-category }} --quick --verbose
-            ;;
-          "smoke")
-            ./tests/run_mmf_tests.sh --${{ matrix.test-category }} --smoke --verbose
-            ;;
-          "comprehensive")
-            ./tests/run_mmf_tests.sh --${{ matrix.test-category }} --verbose
-            ;;
-          "chaos")
-            ./tests/run_mmf_tests.sh --${{ matrix.test-category }} --chaos --verbose
-            ;;
-          *)
-            echo "Unknown test mode: ${{ matrix.test-mode }}"
-            exit 1
-            ;;
-        esac
+        uv run pytest tests/${{ matrix.test-category }} -v
 
     - name: Upload test artifacts
       if: always()
@@ -278,11 +258,7 @@ jobs:
       working-directory: ./mmf_new
       run: |
         echo "Running MMF performance validation tests..."
-        if [[ "${{ needs.check-test-scope.outputs.test-mode }}" == "comprehensive" ]]; then
-          ../tests/run_mmf_tests.sh --performance --verbose
-        else
-          ../tests/run_mmf_tests.sh --performance --quick --verbose
-        fi
+        uv run pytest tests/performance -v
 
     - name: Upload performance results
       if: always()
@@ -324,7 +300,7 @@ jobs:
       working-directory: ./mmf_new
       run: |
         echo "Running MMF security validation tests..."
-        ../tests/run_mmf_tests.sh --security --verbose
+        uv run pytest tests/security -v
 
     - name: Security scan
       run: |
@@ -386,7 +362,7 @@ jobs:
       working-directory: ./mmf_new
       run: |
         echo "Running MMF chaos engineering tests..."
-        ../tests/run_mmf_tests.sh --chaos --verbose
+        uv run pytest tests/chaos -v
 
     - name: Upload chaos test results
       if: always()
