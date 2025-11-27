@@ -20,7 +20,7 @@ from mmf_new.services.identity.infrastructure.adapters.config_integration import
 def demo_configuration_migration():
     """Demonstrate the new MMF configuration system."""
     print("🔧 MMF Configuration Migration Demo")
-    print("="*50)
+    print("=" * 50)
 
     # Set up test environment
     os.environ["JWT_SECRET"] = "demo_jwt_secret_12345"  # pragma: allowlist secret
@@ -41,9 +41,7 @@ def demo_configuration_migration():
 
         # Load MMF configuration for identity service
         mmf_config = MMFConfiguration.load(
-            config_dir=config_path,
-            environment="development",
-            service_name="identity-service"
+            config_dir=config_path, environment="development", service_name="identity-service"
         )
 
         print("✅ MMF Configuration loaded successfully")

@@ -62,8 +62,7 @@ def compare_old_vs_new_config():
 
         # Load new config
         new_config = load_service_configuration(
-            service_name="identity-service",
-            environment="development"
+            service_name="identity-service", environment="development"
         )
         print("✅ New config loaded successfully")
         print(f"New config service: {new_config.get_service_name()}")
