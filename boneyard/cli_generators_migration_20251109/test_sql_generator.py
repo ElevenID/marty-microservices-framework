@@ -6,7 +6,6 @@ import tempfile
 from pathlib import Path
 
 import pytest
-
 from mmf_new.core.application.sql import SQLGenerator
 
 

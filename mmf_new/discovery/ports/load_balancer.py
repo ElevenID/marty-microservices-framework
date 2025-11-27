@@ -116,7 +116,9 @@ class ILoadBalancer(ABC):
         """Select an instance using the load balancing strategy."""
 
     @abstractmethod
-    def record_request(self, instance: ServiceInstance, success: bool, response_time: float) -> None:
+    def record_request(
+        self, instance: ServiceInstance, success: bool, response_time: float
+    ) -> None:
         """Record request result for metrics."""
 
     @abstractmethod

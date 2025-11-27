@@ -22,6 +22,7 @@ EXCLUSION_PATTERNS = [
     r"scripts/detect_globals\.py",
     r".*migration.*\.py",
     r".*legacy.*\.py",
+    r"boneyard/.*",
     r"src/marty_msf/core/di_container\.py",  # DI container itself needs globals
 ]
 

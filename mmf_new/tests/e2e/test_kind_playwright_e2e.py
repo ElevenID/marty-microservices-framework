@@ -15,6 +15,7 @@ import pytest
 from mmf_new.tests.e2e.kind_playwright_infrastructure import (
     KindClusterManager,
     PlaywrightTester,
+    kind_playwright_test_environment,
 )
 
 
@@ -123,12 +124,12 @@ class TestKindPlaywrightE2E:
 
                 # Assert key requirements
                 assert test_results["cluster_created"], "Kind cluster creation failed"
-                assert len(test_results["services_deployed"]) >= 1, (
-                    "No services deployed successfully"
-                )
-                assert test_results["dashboard_tests"].get("accessible", False), (
-                    "Dashboard not accessible"
-                )
+                assert (
+                    len(test_results["services_deployed"]) >= 1
+                ), "No services deployed successfully"
+                assert test_results["dashboard_tests"].get(
+                    "accessible", False
+                ), "Dashboard not accessible"
                 assert test_results["screenshots_taken"] > 0, "No screenshots taken"
 
                 print("\n🎉 Kind + Playwright E2E Test PASSED!")

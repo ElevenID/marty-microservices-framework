@@ -1,11 +1,12 @@
 """
 Traffic Manager Port.
 """
+
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 
-from mmf_new.framework.mesh.domain.models import TrafficRule
 from mmf_new.discovery.domain.models import ServiceInstance
+from mmf_new.framework.mesh.domain.models import TrafficRule
 
 
 class TrafficManagerPort(ABC):
@@ -25,5 +26,5 @@ class TrafficManagerPort(ABC):
         service_name: str,
         request_context: dict[str, Any],
         available_instances: list[ServiceInstance],
-    ) -> Optional[ServiceInstance]:
+    ) -> ServiceInstance | None:
         """Route a request to a service instance."""

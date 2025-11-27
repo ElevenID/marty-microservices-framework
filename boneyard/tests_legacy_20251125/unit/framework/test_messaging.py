@@ -8,7 +8,6 @@ import asyncio
 from unittest.mock import patch
 
 import pytest
-
 from marty_msf.framework.messaging import Message, MessageBus, MessageHandler
 
 

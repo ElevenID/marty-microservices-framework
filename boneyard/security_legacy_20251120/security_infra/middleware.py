@@ -10,8 +10,20 @@ from typing import Any
 import grpc
 from fastapi import Depends, HTTPException, Request, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from mmf_new.core.security.adapters.security_framework import initialize_security_system
+from mmf_new.infrastructure.dependency_injection import get_service, has_service
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
+
+from mmf_new.core.security.domain.config import SecurityConfig
+from mmf_new.core.security.domain.exceptions import (
+    AuthenticationError,
+    AuthorizationError,
+)
+from mmf_new.core.security.domain.models.context import AuthorizationContext
+from mmf_new.core.security.domain.models.user import AuthenticatedUser, User
+from mmf_new.core.security.ports.authentication import IAuthenticator
+from mmf_new.core.security.ports.authorization import IAuthorizer
 
 from ..authentication.auth import (
     APIKeyAuthenticator,
@@ -19,18 +31,6 @@ from ..authentication.auth import (
     JWTAuthenticator,
     MTLSAuthenticator,
 )
-
-from mmf_new.infrastructure.dependency_injection import get_service, has_service
-from mmf_new.core.security.ports.authentication import IAuthenticator
-from mmf_new.core.security.ports.authorization import IAuthorizer
-from mmf_new.core.security.domain.models.user import User, AuthenticatedUser
-from mmf_new.core.security.domain.models.context import AuthorizationContext
-from mmf_new.core.security.domain.config import SecurityConfig
-from mmf_new.core.security.domain.exceptions import (
-    AuthenticationError,
-    AuthorizationError,
-)
-from mmf_new.core.security.adapters.security_framework import initialize_security_system
 from ..threat_management.rate_limiting import get_rate_limiter
 
 logger = logging.getLogger(__name__)

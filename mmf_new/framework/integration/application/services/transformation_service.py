@@ -2,16 +2,17 @@
 Data Transformation Service
 """
 
-import json
 import csv
 import io
-from typing import Any
+import json
 from collections.abc import Callable
+from typing import Any
 from xml.etree import ElementTree as ET
 
-from mmf_new.framework.integration.ports.transformation import TransformationPort
 from mmf_new.framework.integration.domain.exceptions import TransformationError
 from mmf_new.framework.integration.domain.models import DataFormat
+from mmf_new.framework.integration.ports.transformation import TransformationPort
+
 
 class DataTransformationService(TransformationPort):
     """Service for transforming data between formats."""
@@ -28,7 +29,7 @@ class DataTransformationService(TransformationPort):
         try:
             if transformation_id in self._custom_transformers:
                 return self._custom_transformers[transformation_id](data)
-            
+
             # Built-in transformations
             if transformation_id == "json_to_xml":
                 return self._json_to_xml(data)
@@ -38,9 +39,9 @@ class DataTransformationService(TransformationPort):
                 return self._json_to_csv(data)
             elif transformation_id == "csv_to_json":
                 return self._csv_to_json(data)
-            
+
             raise TransformationError(f"Unknown transformation: {transformation_id}")
-            
+
         except Exception as e:
             raise TransformationError(f"Transformation failed: {e}")
 
@@ -83,7 +84,7 @@ class DataTransformationService(TransformationPort):
                     result[child.tag] = [result[child.tag], child_data]
             else:
                 result[child.tag] = child_data
-        
+
         if not result and element.text:
             return element.text
         return result or ""
@@ -92,7 +93,7 @@ class DataTransformationService(TransformationPort):
         """Convert list of dicts to CSV string."""
         if not data:
             return ""
-        
+
         output = io.StringIO()
         keys = data[0].keys()
         writer = csv.DictWriter(output, fieldnames=keys)

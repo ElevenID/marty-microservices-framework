@@ -13,9 +13,8 @@ from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
 from typing import Any, Generic, TypeVar
 
-from typing_extensions import Protocol
-
 from marty_msf.core.di_container import DIContainer, ServiceFactory
+from typing_extensions import Protocol
 
 T = TypeVar("T")
 ServiceType = TypeVar("ServiceType")

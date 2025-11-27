@@ -1,7 +1,6 @@
 import asyncio
 
 import pytest
-
 from marty_msf.framework.discovery.cache import ServiceCache
 from marty_msf.framework.discovery.config import (
     CacheStrategy,

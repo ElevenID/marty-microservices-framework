@@ -20,13 +20,12 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 import redis
 import yaml
-from testcontainers.postgres import PostgresContainer
-from testcontainers.redis import RedisContainer
-
 from marty_msf.framework.config import FrameworkConfig
 from marty_msf.framework.events import Event, EventBus
 from marty_msf.framework.messaging import Message, MessageBus
 from mmf_new.core.infrastructure.database import DatabaseManager as DatabaseConnection
+from testcontainers.postgres import PostgresContainer
+from testcontainers.redis import RedisContainer
 
 
 class TestServiceManager:

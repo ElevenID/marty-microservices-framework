@@ -8,7 +8,6 @@ with real data structures to minimize mocking and maximize code coverage.
 import random
 
 import pytest
-
 from marty_msf.framework.discovery.core import HealthStatus, ServiceInstance
 from marty_msf.framework.discovery.load_balancing import (
     AdaptiveBalancer,

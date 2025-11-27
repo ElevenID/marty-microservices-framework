@@ -8,9 +8,8 @@ import re
 from datetime import datetime, timedelta
 from typing import Any
 
-from sqlalchemy import MetaData, Table, func, inspect, select, text
-
 from mmf_new.core.infrastructure.database import BaseModel
+from sqlalchemy import MetaData, Table, func, inspect, select, text
 
 from .manager import DatabaseManager
 

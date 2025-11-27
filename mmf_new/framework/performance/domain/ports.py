@@ -14,6 +14,7 @@ from mmf_new.framework.performance.domain.entities import (
 
 T = TypeVar("T")
 
+
 class ProfilerPort(ABC):
     """Interface for performance profilers."""
 
@@ -29,12 +30,14 @@ class ProfilerPort(ABC):
     ) -> tuple[Any, PerformanceProfile]:
         """Profile a synchronous function execution."""
 
+
 class MetricsProviderPort(ABC):
     """Interface for system metrics providers."""
 
     @abstractmethod
     def get_current_metrics(self) -> ResourceMetrics:
         """Get current system resource metrics."""
+
 
 class OptimizationStrategyPort(ABC):
     """Interface for optimization strategies."""
@@ -44,4 +47,3 @@ class OptimizationStrategyPort(ABC):
         self, profile: PerformanceProfile | None = None, metrics: ResourceMetrics | None = None
     ) -> list[OptimizationRecommendation]:
         """Analyze performance data and generate recommendations."""
-

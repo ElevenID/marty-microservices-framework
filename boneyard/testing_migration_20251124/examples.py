@@ -6,7 +6,6 @@ for different types of tests (unit, integration, performance).
 """
 
 import pytest
-
 from marty_msf.framework.events import BaseEvent
 from marty_msf.framework.testing.patterns import (
     AsyncTestCase,

@@ -11,8 +11,13 @@ from typing import Any
 
 import yaml
 
-from mmf_new.framework.documentation.adapters.unified import UnifiedAPIDocumentationGenerator
-from mmf_new.framework.documentation.domain.models import APIService, DocumentationConfig
+from mmf_new.framework.documentation.adapters.unified import (
+    UnifiedAPIDocumentationGenerator,
+)
+from mmf_new.framework.documentation.domain.models import (
+    APIService,
+    DocumentationConfig,
+)
 
 logger = logging.getLogger(__name__)
 

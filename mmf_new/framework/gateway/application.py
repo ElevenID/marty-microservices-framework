@@ -3,15 +3,28 @@ Gateway Application Service
 """
 
 import logging
-
 from typing import Any
+
+from .domain.exceptions import (
+    AuthenticationError,
+    AuthorizationError,
+    RateLimitExceededError,
+    RouteNotFoundError,
+    UpstreamError,
+)
+from .domain.models import (
+    AuthenticationType,
+    GatewayRequest,
+    GatewayResponse,
+    RouteConfig,
+    UpstreamGroup,
+)
+from .domain.services import LoadBalancer, RouteMatcher
 from .ports.input import RequestHandlerPort
-from .ports.output import UpstreamClientPort, ServiceRegistryPort, RateLimitStoragePort
-from .domain.models import GatewayRequest, GatewayResponse, RouteConfig, UpstreamGroup, AuthenticationType
-from .domain.services import RouteMatcher, LoadBalancer
-from .domain.exceptions import RouteNotFoundError, UpstreamError, RateLimitExceededError, AuthenticationError, AuthorizationError
+from .ports.output import RateLimitStoragePort, ServiceRegistryPort, UpstreamClientPort
 
 logger = logging.getLogger(__name__)
+
 
 class GatewayService(RequestHandlerPort):
     """Implementation of the Gateway Request Handler."""
@@ -23,7 +36,7 @@ class GatewayService(RequestHandlerPort):
         load_balancer: LoadBalancer,
         upstream_client: UpstreamClientPort,
         service_registry: ServiceRegistryPort,
-        rate_limit_storage: RateLimitStoragePort | None = None
+        rate_limit_storage: RateLimitStoragePort | None = None,
     ):
         self.routes = routes
         self.matcher = matcher
@@ -98,7 +111,9 @@ class GatewayService(RequestHandlerPort):
         if route.auth_required and not request.context.get("user"):
             raise AuthenticationError("Authentication required")
 
-    async def _authenticate_request(self, auth_type: AuthenticationType, request: GatewayRequest) -> dict[str, Any] | None:
+    async def _authenticate_request(
+        self, auth_type: AuthenticationType, request: GatewayRequest
+    ) -> dict[str, Any] | None:
         """Authenticate request based on authentication type."""
         if auth_type == AuthenticationType.API_KEY:
             auth_header = request.get_header("Authorization") or ""

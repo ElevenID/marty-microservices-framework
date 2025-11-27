@@ -6,10 +6,7 @@ from typing import Any
 from uuid import uuid4
 
 from mmf_new.core.domain.audit_types import AuditEventType, AuditOutcome, AuditSeverity
-from mmf_new.services.audit.domain.contracts import (
-    IAuditDestination,
-    IAuditRepository,
-)
+from mmf_new.services.audit.domain.contracts import IAuditDestination, IAuditRepository
 from mmf_new.services.audit.domain.entities import ApiCallEvent, RequestAuditEvent
 from mmf_new.services.audit.domain.value_objects import (
     ActorInfo,

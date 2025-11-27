@@ -10,8 +10,6 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from pydantic import BaseModel, Field
-
 from marty_msf.framework.config.manager import Environment
 from marty_msf.framework.config.unified import (
     ConfigurationStrategy,
@@ -20,6 +18,7 @@ from marty_msf.framework.config.unified import (
     SecretBackend,
     create_unified_config_manager,
 )
+from pydantic import BaseModel, Field
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)

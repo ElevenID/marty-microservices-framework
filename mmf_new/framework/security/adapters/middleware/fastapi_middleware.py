@@ -5,7 +5,7 @@ Adapter for integrating security coordinator with FastAPI/Starlette.
 """
 
 import logging
-from collections.abc import Callable, Awaitable
+from collections.abc import Awaitable, Callable
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -62,10 +62,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         # Check for errors
         if "error" in processed_context:
             status_code = processed_context.get("status_code", 403)
-            return Response(
-                content=processed_context["error"],
-                status_code=status_code
-            )
+            return Response(content=processed_context["error"], status_code=status_code)
 
         # Inject user/session into request state
         if "user" in processed_context:

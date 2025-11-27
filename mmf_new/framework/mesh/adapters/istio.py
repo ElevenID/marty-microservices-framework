@@ -1,6 +1,7 @@
 """
 Istio Adapter.
 """
+
 import asyncio
 import logging
 import subprocess
@@ -41,10 +42,12 @@ class IstioAdapter(MeshLifecyclePort):
         except Exception as e:
             logger.error(f"Error checking Istio installation: {e}")
             self.is_installed = False
-            
+
         return self.is_installed
 
-    async def deploy(self, namespace: str = "istio-system", config: dict[str, Any] | None = None) -> bool:
+    async def deploy(
+        self, namespace: str = "istio-system", config: dict[str, Any] | None = None
+    ) -> bool:
         """
         Deploy Istio to the cluster.
 
@@ -74,7 +77,7 @@ class IstioAdapter(MeshLifecyclePort):
                 "values.global.meshConfig.defaultConfig.proxyMetadata.ISTIO_META_DNS_CAPTURE=true",
                 "-y",
             ]
-            
+
             # Add custom config if provided
             if config:
                 for key, value in config.items():
@@ -89,7 +92,9 @@ class IstioAdapter(MeshLifecyclePort):
             if process.returncode == 0:
                 logger.info("Istio installed successfully")
                 # Enable automatic sidecar injection for default namespace or specified namespace
-                target_namespace = config.get("target_namespace", "default") if config else "default"
+                target_namespace = (
+                    config.get("target_namespace", "default") if config else "default"
+                )
                 await self._enable_sidecar_injection(target_namespace)
                 return True
             else:
@@ -130,18 +135,19 @@ class IstioAdapter(MeshLifecyclePort):
             "installed": self.is_installed,
             "type": "istio",
             "components": {},
-            "security_events": []
+            "security_events": [],
         }
-        
+
         if not self.is_installed:
             return status
 
         try:
             # Get proxy status
             process = await asyncio.create_subprocess_exec(
-                "istioctl", "proxy-status",
+                "istioctl",
+                "proxy-status",
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
             stdout, _ = await process.communicate()
             if process.returncode == 0:
@@ -170,17 +176,22 @@ class IstioAdapter(MeshLifecyclePort):
             if process.returncode == 0:
                 log_lines = stdout.decode().split("\n")
                 for line in log_lines:
-                    if any(indicator in line.lower() for indicator in ["denied", "unauthorized", "forbidden"]):
-                        events.append({
-                            "timestamp": "now",
-                            "type": "security_violation",
-                            "source": "istio",
-                            "message": line.strip(),
-                            "namespace": namespace,
-                        })
+                    if any(
+                        indicator in line.lower()
+                        for indicator in ["denied", "unauthorized", "forbidden"]
+                    ):
+                        events.append(
+                            {
+                                "timestamp": "now",
+                                "type": "security_violation",
+                                "source": "istio",
+                                "message": line.strip(),
+                                "namespace": namespace,
+                            }
+                        )
         except Exception as e:
             logger.warning(f"Failed to get security events: {e}")
-            
+
         return events
 
     async def verify_prerequisites(self) -> bool:
@@ -193,9 +204,11 @@ class IstioAdapter(MeshLifecyclePort):
         # Check for kubectl
         try:
             process = await asyncio.create_subprocess_exec(
-                "kubectl", "version", "--client",
+                "kubectl",
+                "version",
+                "--client",
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
             await process.communicate()
             if process.returncode != 0:
@@ -207,7 +220,9 @@ class IstioAdapter(MeshLifecyclePort):
 
         return True
 
-    async def generate_deployment_script(self, service_name: str, config: dict[str, Any] | None = None) -> str:
+    async def generate_deployment_script(
+        self, service_name: str, config: dict[str, Any] | None = None
+    ) -> str:
         """
         Generate Istio deployment script.
 

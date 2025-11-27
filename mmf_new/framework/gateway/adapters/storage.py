@@ -4,6 +4,7 @@ Storage Adapter for Gateway
 
 from ..ports.output import RateLimitStoragePort
 
+
 class InMemoryRateLimitAdapter(RateLimitStoragePort):
     """In-memory implementation of RateLimitStoragePort."""
 

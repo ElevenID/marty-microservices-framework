@@ -6,7 +6,12 @@ from datetime import datetime
 from typing import Any
 from uuid import uuid4
 
-from mmf_new.framework.ml.domain.entities import MLModel, ModelStatus, ModelType, ModelFramework
+from mmf_new.framework.ml.domain.entities import (
+    MLModel,
+    ModelFramework,
+    ModelStatus,
+    ModelType,
+)
 from mmf_new.framework.ml.domain.ports import FeatureStorePort
 
 
@@ -59,7 +64,7 @@ class ModelTrainingService:
 
         # 3. Trigger training (this would likely involve an infrastructure adapter for a job queue)
         # For now, we just return the entity representing the started job
-        
+
         return model
 
     async def complete_training(
@@ -86,5 +91,5 @@ class ModelTrainingService:
         model.recall = metrics.get("recall")
         model.f1_score = metrics.get("f1_score")
         model.training_duration = metrics.get("duration")
-        
+
         return model

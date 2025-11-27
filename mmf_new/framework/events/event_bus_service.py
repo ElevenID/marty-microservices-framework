@@ -9,7 +9,10 @@ from __future__ import annotations
 from typing import Any
 
 from mmf_new.core.platform.base_services import BaseService
-from mmf_new.framework.infrastructure.dependency_injection import LambdaFactory, register_service
+from mmf_new.framework.infrastructure.dependency_injection import (
+    LambdaFactory,
+    register_service,
+)
 
 from .enhanced_event_bus import EnhancedEventBus, KafkaConfig
 

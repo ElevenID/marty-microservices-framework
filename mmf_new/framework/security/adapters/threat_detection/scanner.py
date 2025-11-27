@@ -10,9 +10,9 @@ import uuid
 from collections import defaultdict, deque
 from typing import Any
 
+from mmf_new.core.domain.audit_types import SecurityThreatLevel
 from mmf_new.core.security.domain.models.vulnerability import SecurityVulnerability
 from mmf_new.core.security.ports.threat_detection import IVulnerabilityScanner
-from mmf_new.core.domain.audit_types import SecurityThreatLevel
 
 
 class VulnerabilityScanner(IVulnerabilityScanner):

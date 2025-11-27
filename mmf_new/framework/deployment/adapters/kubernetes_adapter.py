@@ -2,12 +2,16 @@
 Kubernetes deployment adapter.
 """
 
+import asyncio
 import json
 import logging
 from datetime import datetime
 from typing import Any
 
-from mmf_new.framework.deployment.domain.enums import DeploymentStatus, InfrastructureProvider
+from mmf_new.framework.deployment.domain.enums import (
+    DeploymentStatus,
+    InfrastructureProvider,
+)
 from mmf_new.framework.deployment.domain.models import Deployment
 from mmf_new.framework.deployment.ports.deployment_port import DeploymentPort
 
@@ -171,7 +175,6 @@ class KubernetesAdapter(DeploymentPort):
 
     async def _run_kubectl_command(self, cmd: list[str]) -> Any:
         """Run kubectl command."""
-        import asyncio
 
         process = await asyncio.create_subprocess_exec(
             *cmd,

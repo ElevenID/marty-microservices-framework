@@ -266,7 +266,6 @@ class DatabaseConfig:
             timezone=timezone,
         )
 
-
     @staticmethod
     def _get_default_port(db_type: DatabaseType) -> int:
         """Get default port for database type."""

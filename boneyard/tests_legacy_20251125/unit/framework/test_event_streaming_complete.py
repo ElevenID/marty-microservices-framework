@@ -9,7 +9,6 @@ import asyncio
 from typing import Any
 
 import pytest
-
 from marty_msf.framework.event_streaming.core import (
     Event,
     EventHandler,

@@ -13,13 +13,13 @@ from .enums import (
     DeploymentStatus,
     DeploymentStrategy,
     EnvironmentType,
+    GitOpsProvider,
     IaCProvider,
     InfrastructureProvider,
-    ResourceType,
-    GitOpsProvider,
     PipelineProvider,
     PipelineStage,
     PipelineStatus,
+    ResourceType,
 )
 
 

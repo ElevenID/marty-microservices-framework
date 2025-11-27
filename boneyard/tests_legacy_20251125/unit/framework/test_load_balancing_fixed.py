@@ -5,7 +5,6 @@ Comprehensive load balancing strategy tests with proper API usage.
 import asyncio
 
 import pytest
-
 from marty_msf.framework.discovery.core import HealthStatus, ServiceInstance
 from marty_msf.framework.discovery.load_balancing import (
     AdaptiveBalancer,

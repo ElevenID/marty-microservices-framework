@@ -47,11 +47,11 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
 
+from mmf_new.core.security.domain.exceptions import AuthorizationError
 from mmf_new.framework.infrastructure.dependency_injection import (
     get_container,
     register_instance,
 )
-from mmf_new.core.security.domain.exceptions import AuthorizationError
 
 from .api import AttributeType, ConditionOperator, PolicyEffect
 

@@ -36,7 +36,10 @@ from prometheus_client import (
     generate_latest,
 )
 
-from mmf_new.framework.infrastructure.dependency_injection import get_service_optional, register_instance
+from mmf_new.framework.infrastructure.dependency_injection import (
+    get_service_optional,
+    register_instance,
+)
 
 logger = logging.getLogger(__name__)
 

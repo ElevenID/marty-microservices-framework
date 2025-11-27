@@ -10,26 +10,27 @@ from collections import deque
 from datetime import datetime, timezone
 from typing import Any
 
+import joblib
+import numpy as np
+from sklearn.cluster import DBSCAN
+from sklearn.ensemble import IsolationForest, RandomForestClassifier
+from sklearn.preprocessing import StandardScaler
+
+from mmf_new.core.domain.audit_types import SecurityThreatLevel
 from mmf_new.core.security.domain.config import ThreatDetectionConfig
 from mmf_new.core.security.domain.models.threat import (
+    AnomalyDetectionResult,
     SecurityEvent,
+    ServiceBehaviorProfile,
     ThreatDetectionResult,
     UserBehaviorProfile,
-    ServiceBehaviorProfile,
-    AnomalyDetectionResult,
 )
 from mmf_new.core.security.ports.threat_detection import IThreatDetector
-from mmf_new.core.domain.audit_types import SecurityThreatLevel
 
 logger = logging.getLogger(__name__)
 
 # Optional ML dependencies
 try:
-    import numpy as np
-    from sklearn.ensemble import IsolationForest, RandomForestClassifier
-    from sklearn.cluster import DBSCAN
-    from sklearn.preprocessing import StandardScaler
-    import joblib
     ML_AVAILABLE = True
 except ImportError:
     ML_AVAILABLE = False
@@ -89,7 +90,7 @@ class MLThreatDetector(IThreatDetector):
             is_threat=False,
             threat_score=0.0,
             threat_level=SecurityThreatLevel.LOW,
-            analyzed_at=datetime.now(timezone.utc)
+            analyzed_at=datetime.now(timezone.utc),
         )
 
     async def analyze_user_behavior(
@@ -148,7 +149,7 @@ class MLThreatDetector(IThreatDetector):
                 is_anomaly=is_anomaly,
                 anomaly_score=float(score),
                 confidence=0.8,
-                analyzed_at=datetime.now(timezone.utc)
+                analyzed_at=datetime.now(timezone.utc),
             )
         except Exception as e:
             logger.error("Error detecting anomalies: %s", e)

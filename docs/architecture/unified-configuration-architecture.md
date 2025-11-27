@@ -158,7 +158,7 @@ database:
 
 ### Self-Hosted Backends
 
-#### HashiCorp Vault
+#### HashCorp Vault
 
 - **Authentication**: Multiple methods (AppRole, Kubernetes, AWS IAM, etc.)
 - **Features**: Dynamic secrets, encryption-as-a-service, audit logging
@@ -288,7 +288,7 @@ config_manager = create_unified_config_manager(
 
 ### Additional Backends
 
-- **Consul**: HashiCorp Consul KV store integration
+- **Consul**: HashCorp Consul KV store integration
 - **etcd**: etcd key-value store support
 - **Database**: Database-backed configuration storage
 

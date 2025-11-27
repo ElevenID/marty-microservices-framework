@@ -6,7 +6,6 @@ to maximize real behavior validation and coverage.
 """
 
 import pytest
-
 from marty_msf.framework.event_streaming.core import (
     DomainEvent,
     Event,

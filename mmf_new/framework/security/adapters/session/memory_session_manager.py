@@ -5,17 +5,17 @@ Implementation of ISessionManager using in-memory storage.
 """
 
 import logging
+import uuid
 from datetime import datetime, timedelta
 from typing import Any
-import uuid
 
 from mmf_new.core.security.domain.config import SessionConfig
 from mmf_new.core.security.domain.models.session import (
-    SessionData,
-    SessionState,
-    SessionEventType,
     SessionCleanupEvent,
+    SessionData,
+    SessionEventType,
     SessionMetrics,
+    SessionState,
 )
 from mmf_new.core.security.ports.session import ISessionManager
 
@@ -152,13 +152,11 @@ class MemorySessionManager(ISessionManager):
                 session_id=session_id,
                 user_id=session.user_id,
                 event_type=reason,
-                timestamp=datetime.utcnow()
+                timestamp=datetime.utcnow(),
             )
             logger.info("Session %s terminated: %s. Event: %s", session_id, reason.value, event)
 
         return True
-
-
 
     async def cleanup_expired_sessions(self) -> int:
         """Cleanup expired sessions."""
@@ -207,14 +205,16 @@ class MemorySessionManager(ISessionManager):
 
     async def process_cleanup_event(self, event: SessionCleanupEvent) -> bool:
         """Process a session cleanup event."""
-        logger.info("Processing cleanup event for session %s: %s", event.session_id, event.event_type)
+        logger.info(
+            "Processing cleanup event for session %s: %s", event.session_id, event.event_type
+        )
         return True
 
     async def get_metrics(self) -> SessionMetrics:
         """Get session management metrics."""
         return SessionMetrics(
             active_sessions=len(self._sessions),
-            total_sessions_created=len(self._sessions) # Approximation
+            total_sessions_created=len(self._sessions),  # Approximation
         )
 
     async def health_check(self) -> bool:

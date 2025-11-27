@@ -12,6 +12,7 @@ from mmf_new.framework.messaging import (
 )
 from mmf_new.framework.messaging.bootstrap import JSONMessageSerializer
 
+
 class TestMessage:
     """Test Message core functionality."""
 
@@ -30,12 +31,12 @@ class TestMessage:
         """Test message creation with custom headers."""
         body = {"test": "data"}
         headers = MessageHeaders(data={"custom": "value"})
-        
+
         message = Message(
-            body=body, 
+            body=body,
             headers=headers,
             correlation_id="test-correlation",
-            priority=MessagePriority.HIGH
+            priority=MessagePriority.HIGH,
         )
 
         assert message.body == body
@@ -69,7 +70,7 @@ class TestMessage:
         # Mark failed (increments retry)
         message.retry_count += 1
         message.status = MessageStatus.FAILED
-        
+
         assert message.retry_count == 1
         assert message.status == MessageStatus.FAILED
         assert message.can_retry() is True
@@ -78,10 +79,10 @@ class TestMessage:
         """Test message serialization using serializer."""
         body = {"user_id": 123, "action": "created"}
         message = Message(body=body)
-        
+
         serializer = JSONMessageSerializer()
         serialized = serializer.serialize(message.body)
-        
+
         assert serialized is not None
         deserialized = serializer.deserialize(serialized)
         assert deserialized == body
@@ -100,7 +101,7 @@ class TestMessageHeaders:
         headers = MessageHeaders()
         headers.set("key", "value")
         assert headers.get("key") == "value"
-        
+
         headers.remove("key")
         assert headers.get("key") is None
 
@@ -169,8 +170,7 @@ class TestMessageStatuses:
         message.status = MessageStatus.RETRY
         assert message.status == MessageStatus.RETRY
         assert message.can_retry() is True
-        
+
         # Second failure
         message.retry_count += 1
         assert message.can_retry() is False
-

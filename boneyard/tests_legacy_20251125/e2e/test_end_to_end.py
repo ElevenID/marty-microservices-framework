@@ -14,7 +14,6 @@ from pathlib import Path
 import httpx
 import pytest
 import yaml
-
 from marty_msf.framework.events import Event
 
 

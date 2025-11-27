@@ -20,7 +20,6 @@ from typing import Any, list
 import uvicorn
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-
 from marty_msf.framework.config_factory import create_service_config
 from marty_msf.framework.discovery import (
     DiscoveryManagerConfig,

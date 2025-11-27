@@ -3,14 +3,17 @@ Resilience Domain Ports.
 """
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, TypeVar
+from typing import Any, TypeVar
 
 T = TypeVar("T")
+
 
 @dataclass
 class ResilienceMetrics:
     """Resilience operation metrics."""
+
     total_calls: int = 0
     successful_calls: int = 0
     failed_calls: int = 0
@@ -22,9 +25,11 @@ class ResilienceMetrics:
     last_failure_time: float | None = None
     last_success_time: float | None = None
 
+
 @dataclass
 class ResilienceResult:
     """Result of a resilience operation."""
+
     success: bool
     result: Any = None
     error: Exception | None = None
@@ -35,10 +40,10 @@ class ResilienceResult:
     bulkhead_rejected: bool = False
     metadata: dict[str, Any] = field(default_factory=dict)
 
+
 class ResilienceManagerPort(ABC):
     """Abstract interface for resilience managers."""
 
     @abstractmethod
     async def execute(self, func: Callable[..., T], *args: Any, **kwargs: Any) -> T:
         """Execute a function with resilience patterns applied."""
-

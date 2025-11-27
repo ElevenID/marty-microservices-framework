@@ -8,9 +8,9 @@ from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable
 
+from ..domain.enums import IdentityProviderType
 from ..domain.models.result import AuthenticationResult
 from ..domain.models.user import SecurityPrincipal
-from ..domain.enums import IdentityProviderType
 
 
 @runtime_checkable

@@ -3,7 +3,6 @@ Simple test to verify load balancing imports work.
 """
 
 import pytest
-
 from marty_msf.framework.discovery.load_balancing import (
     LoadBalancingStrategy,
     ServiceInstance,

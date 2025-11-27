@@ -7,7 +7,10 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
 
-from mmf_new.framework.documentation.domain.models import APIService, DocumentationConfig
+from mmf_new.framework.documentation.domain.models import (
+    APIService,
+    DocumentationConfig,
+)
 
 
 class APIDocumentationGenerator(ABC):

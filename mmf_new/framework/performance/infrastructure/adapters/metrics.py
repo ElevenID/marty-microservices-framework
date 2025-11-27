@@ -19,7 +19,7 @@ class SystemMetricsAdapter(MetricsProviderPort):
         memory = psutil.virtual_memory()
         disk_io = psutil.disk_io_counters()
         net_io = psutil.net_io_counters()
-        
+
         # Handle cases where io counters might be None (e.g. some environments)
         disk_read = disk_io.read_bytes if disk_io else 0
         disk_write = disk_io.write_bytes if disk_io else 0

@@ -14,7 +14,7 @@ from typing import Any
 @dataclass
 class PKDConfig:
     """Public Key Directory configuration."""
-    
+
     service_url: str = ""
     enabled: bool = True
     update_interval_hours: int = 24
@@ -31,7 +31,7 @@ class PKDConfig:
 @dataclass
 class TrustAnchorConfig:
     """Trust Anchor configuration."""
-    
+
     certificate_store_path: str = "/app/data/trust"
     update_interval_hours: int = 24
     validation_timeout_seconds: int = 30

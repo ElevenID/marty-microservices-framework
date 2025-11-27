@@ -1,7 +1,6 @@
 """Direct load balancing strategy tests - bypassing import issues."""
 
 import pytest
-
 from marty_msf.framework.discovery.core import ServiceInstance
 from marty_msf.framework.discovery.load_balancing import (
     LoadBalancingStrategy,

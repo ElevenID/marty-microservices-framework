@@ -3,7 +3,12 @@ Integration Connector Ports
 """
 
 from abc import ABC, abstractmethod
-from mmf_new.framework.integration.domain.models import IntegrationRequest, IntegrationResponse
+
+from mmf_new.framework.integration.domain.models import (
+    IntegrationRequest,
+    IntegrationResponse,
+)
+
 
 class ExternalSystemPort(ABC):
     """Port for communicating with external systems."""

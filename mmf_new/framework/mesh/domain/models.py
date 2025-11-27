@@ -1,9 +1,11 @@
 """
 Mesh Domain Models.
 """
+
 import builtins
 from dataclasses import dataclass, field
 from typing import Any
+
 
 @dataclass
 class RouteMatch:
@@ -25,6 +27,7 @@ class RouteDestination:
     weight: int = 100
     headers_to_add: builtins.dict[str, str] = field(default_factory=dict)
     headers_to_remove: builtins.list[str] = field(default_factory=list)
+
 
 @dataclass
 class TrafficRule:

@@ -69,7 +69,9 @@ class AuthenticatedUserRepository(Repository[AuthenticatedUser]):
         # Implementation placeholder
         return []
 
-    async def update(self, entity_id: UUID | str | int, updates: dict[str, Any]) -> AuthenticatedUser | None:
+    async def update(
+        self, entity_id: UUID | str | int, updates: dict[str, Any]
+    ) -> AuthenticatedUser | None:
         """Update an authenticated user entity.
 
         Args:

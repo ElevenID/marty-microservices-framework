@@ -23,23 +23,23 @@ import psutil
 import pytest
 import pytest_asyncio
 import redis.asyncio as redis
-from mmf_new.framework.observability.adapters.monitoring import ServiceMonitor
 from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
 
 from mmf_new.framework.events.enhanced_event_bus import (
-    EventBus,
     BaseEvent,
-    EventHandler,
     DeliveryGuarantee,
+    EventBus,
+    EventHandler,
 )
+from mmf_new.framework.observability.adapters.monitoring import ServiceMonitor
+from mmf_new.framework.observability.monitoring import InMemoryCollector
 from mmf_new.framework.testing import PerformanceTestCase, TestEventCollector
 from mmf_new.framework.testing.domain.performance import (
     LoadConfiguration,
     LoadPattern,
     RequestSpec,
 )
-from mmf_new.framework.observability.monitoring import InMemoryCollector
 
 
 @dataclass
@@ -384,7 +384,7 @@ class TimeoutMonitor:
                 def __init__(self, value, duration):
                     self.value = value
                     self.duration = duration
-            
+
             return MonitoredResult(result, duration)
 
         except asyncio.TimeoutError:
@@ -535,17 +535,18 @@ async def real_event_bus(test_service_name: str):
 @dataclass
 class SimulationConfig:
     """Configuration for simulation plugin."""
+
     complexity_multiplier: float = 1.0
     error_rate: float = 0.0
     timeout_injection_rate: float = 0.0
-    
+
     def update(self, config_dict=None, **kwargs):
         """Update configuration."""
         if config_dict:
             for key, value in config_dict.items():
                 if hasattr(self, key):
                     setattr(self, key, value)
-        
+
         for key, value in kwargs.items():
             if hasattr(self, key):
                 setattr(self, key, value)
@@ -588,6 +589,7 @@ def pipeline_plugin():
 
 class MonitoringPlugin:
     """Plugin for monitoring operations."""
+
     pass
 
 
@@ -600,16 +602,17 @@ def monitoring_plugin():
 @dataclass
 class CircuitBreakerConfig:
     """Configuration for circuit breaker plugin."""
+
     failure_threshold: int = 5
     recovery_timeout: float = 30.0
-    
+
     def update(self, config_dict=None, **kwargs):
         """Update configuration."""
         if config_dict:
             for key, value in config_dict.items():
                 if hasattr(self, key):
                     setattr(self, key, value)
-        
+
         for key, value in kwargs.items():
             if hasattr(self, key):
                 setattr(self, key, value)
@@ -617,18 +620,18 @@ class CircuitBreakerConfig:
 
 class CircuitBreakerPlugin:
     """Plugin for circuit breaker operations."""
-    
+
     def __init__(self):
         self.config = CircuitBreakerConfig()
         self.failures = 0
         self.state = "closed"
-        
+
     async def handle_failure(self, service_name: str):
         """Handle a service failure."""
         self.failures += 1
         if self.failures >= self.config.failure_threshold:
             self.state = "open"
-            
+
     def is_open(self) -> bool:
         """Check if circuit breaker is open."""
         return self.state == "open"
@@ -661,12 +664,12 @@ class InMemoryEventBus(EventBus):
     ) -> None:
         if not self._running:
             return
-        
+
         # Simple in-memory dispatch
         event_type = event.event_type
         handlers = self._handlers.get(event_type, [])
         handlers.extend(self._handlers.get("*", []))
-        
+
         for handler in handlers:
             try:
                 await handler.handle(event)
@@ -681,9 +684,7 @@ class InMemoryEventBus(EventBus):
         for event in events:
             await self.publish(event, delivery_guarantee)
 
-    async def subscribe(
-        self, handler: EventHandler, event_filter: Any = None
-    ) -> str:
+    async def subscribe(self, handler: EventHandler, event_filter: Any = None) -> str:
         event_types = event_filter.event_types if event_filter else ["*"]
         for et in event_types:
             self._handlers[et].append(handler)

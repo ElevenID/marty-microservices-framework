@@ -1,11 +1,6 @@
 """Domain layer for the audit compliance service."""
 
-from .contracts import (
-    IAuditEventRepository,
-    IAuditor,
-    IComplianceScanner,
-    ISIEMAdapter,
-)
+from .contracts import IAuditEventRepository, IAuditor, IComplianceScanner, ISIEMAdapter
 from .models import (
     ComplianceScanResult,
     Finding,

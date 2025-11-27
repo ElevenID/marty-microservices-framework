@@ -10,9 +10,6 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
-
 # Import the enhanced components
 from marty_msf.framework.events.enhanced_event_bus import (
     EnhancedEventBus,
@@ -47,6 +44,8 @@ from marty_msf.framework.workflow.enhanced_workflow_engine import (
     create_workflow,
     workflow_engine_context,
 )
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

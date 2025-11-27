@@ -1,6 +1,7 @@
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
+
 class ServiceTestMixin:
     """Mixin class providing common test patterns for services."""
 

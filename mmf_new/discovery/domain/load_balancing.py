@@ -16,6 +16,7 @@ from .models import ServiceInstance
 
 logger = logging.getLogger(__name__)
 
+
 class TrafficPolicy(Enum):
     """Traffic management policies."""
 
@@ -162,16 +163,17 @@ class LoadBalancer:
 
         # First try same zone
         same_zone_instances = [
-            inst for inst in instances
-            if inst.metadata.region == client_region and inst.metadata.availability_zone == client_zone
+            inst
+            for inst in instances
+            if inst.metadata.region == client_region
+            and inst.metadata.availability_zone == client_zone
         ]
         if same_zone_instances:
             return self._round_robin_select("same_zone", same_zone_instances)
 
         # Then try same region
         same_region_instances = [
-            inst for inst in instances
-            if inst.metadata.region == client_region
+            inst for inst in instances if inst.metadata.region == client_region
         ]
         if same_region_instances:
             return self._round_robin_select("same_region", same_region_instances)

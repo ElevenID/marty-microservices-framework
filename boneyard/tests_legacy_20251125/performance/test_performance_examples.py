@@ -9,7 +9,6 @@ import time
 from typing import Any
 
 import pytest
-
 from marty_msf.framework.events import Event
 from marty_msf.framework.integration.event_driven import EventBus as MessageBroker
 

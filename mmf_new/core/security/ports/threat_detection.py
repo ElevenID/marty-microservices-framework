@@ -11,11 +11,11 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from ..domain.models.threat import (
+    AnomalyDetectionResult,
     SecurityEvent,
+    ServiceBehaviorProfile,
     ThreatDetectionResult,
     UserBehaviorProfile,
-    ServiceBehaviorProfile,
-    AnomalyDetectionResult,
 )
 from ..domain.models.vulnerability import SecurityVulnerability
 

@@ -8,7 +8,6 @@ import asyncio
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-
 from marty_msf.framework.deployment.strategies import (
     Deployment,
     DeploymentConfig,

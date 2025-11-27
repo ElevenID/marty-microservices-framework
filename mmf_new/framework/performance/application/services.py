@@ -17,8 +17,12 @@ from mmf_new.framework.performance.domain.ports import (
     OptimizationStrategyPort,
     ProfilerPort,
 )
-from mmf_new.framework.performance.infrastructure.adapters.metrics import SystemMetricsAdapter
-from mmf_new.framework.performance.infrastructure.adapters.profiling import CProfileAdapter
+from mmf_new.framework.performance.infrastructure.adapters.metrics import (
+    SystemMetricsAdapter,
+)
+from mmf_new.framework.performance.infrastructure.adapters.profiling import (
+    CProfileAdapter,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -49,16 +53,21 @@ class OptimizationAnalyzer(OptimizationStrategyPort):
             stats = profile.function_stats.get(top_hotspot, {})
 
             if stats.get("cumulative_time", 0) > 1.0:  # If takes more than 1s
-                recommendations.append(OptimizationRecommendation(
-                    optimization_type=OptimizationType.CPU_OPTIMIZATION,
-                    title=f"Optimize CPU Hotspot: {top_hotspot}",
-                    description=f"Function {top_hotspot} is consuming significant CPU time ({stats.get('cumulative_time'):.2f}s).",
-                    priority=8,
-                    estimated_impact=0.2,
-                    implementation_effort="medium",
-                    code_location=top_hotspot,
-                    specific_actions=["Review algorithm complexity", "Cache results if pure function"]
-                ))
+                recommendations.append(
+                    OptimizationRecommendation(
+                        optimization_type=OptimizationType.CPU_OPTIMIZATION,
+                        title=f"Optimize CPU Hotspot: {top_hotspot}",
+                        description=f"Function {top_hotspot} is consuming significant CPU time ({stats.get('cumulative_time'):.2f}s).",
+                        priority=8,
+                        estimated_impact=0.2,
+                        implementation_effort="medium",
+                        code_location=top_hotspot,
+                        specific_actions=[
+                            "Review algorithm complexity",
+                            "Cache results if pure function",
+                        ],
+                    )
+                )
 
         return recommendations
 
@@ -67,27 +76,31 @@ class OptimizationAnalyzer(OptimizationStrategyPort):
 
         # High CPU usage
         if metrics.cpu_percent > 80:
-            recommendations.append(OptimizationRecommendation(
-                optimization_type=OptimizationType.CPU_OPTIMIZATION,
-                title="High CPU Usage Detected",
-                description=f"System CPU usage is at {metrics.cpu_percent}%.",
-                priority=9,
-                estimated_impact=0.3,
-                implementation_effort="high",
-                specific_actions=["Scale out instances", "Optimize compute-heavy tasks"]
-            ))
+            recommendations.append(
+                OptimizationRecommendation(
+                    optimization_type=OptimizationType.CPU_OPTIMIZATION,
+                    title="High CPU Usage Detected",
+                    description=f"System CPU usage is at {metrics.cpu_percent}%.",
+                    priority=9,
+                    estimated_impact=0.3,
+                    implementation_effort="high",
+                    specific_actions=["Scale out instances", "Optimize compute-heavy tasks"],
+                )
+            )
 
         # High Memory usage
         if metrics.memory_percent > 85:
-            recommendations.append(OptimizationRecommendation(
-                optimization_type=OptimizationType.MEMORY_OPTIMIZATION,
-                title="High Memory Usage Detected",
-                description=f"System memory usage is at {metrics.memory_percent}%.",
-                priority=9,
-                estimated_impact=0.3,
-                implementation_effort="medium",
-                specific_actions=["Check for memory leaks", "Increase container memory limit"]
-            ))
+            recommendations.append(
+                OptimizationRecommendation(
+                    optimization_type=OptimizationType.MEMORY_OPTIMIZATION,
+                    title="High Memory Usage Detected",
+                    description=f"System memory usage is at {metrics.memory_percent}%.",
+                    priority=9,
+                    estimated_impact=0.3,
+                    implementation_effort="medium",
+                    specific_actions=["Check for memory leaks", "Increase container memory limit"],
+                )
+            )
 
         return recommendations
 

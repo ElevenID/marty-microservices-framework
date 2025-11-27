@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock
 
 import pytest
-
 from marty_msf.framework.messaging import core as core_module
 from marty_msf.framework.messaging import dlq as dlq_module
 

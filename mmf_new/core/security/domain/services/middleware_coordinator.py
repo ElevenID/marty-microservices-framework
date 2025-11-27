@@ -8,10 +8,14 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from mmf_new.core.security.domain.config import RateLimitConfig, SessionConfig, JWTConfig
+from mmf_new.core.security.domain.config import (
+    JWTConfig,
+    RateLimitConfig,
+    SessionConfig,
+)
 from mmf_new.core.security.domain.models.rate_limit import (
-    RateLimitResult,
     RateLimitQuota,
+    RateLimitResult,
     RateLimitRule,
     RateLimitScope,
     RateLimitStrategy,
@@ -120,7 +124,7 @@ class SecurityMiddlewareCoordinator(IMiddlewareCoordinator):
                 rule_name="disabled",
                 current_count=0,
                 limit=0,
-                reset_time=datetime.utcnow()
+                reset_time=datetime.utcnow(),
             )
 
         # Determine key (IP, User ID, etc.)
@@ -144,14 +148,11 @@ class SecurityMiddlewareCoordinator(IMiddlewareCoordinator):
             scope=RateLimitScope.PER_IP if not user_id else RateLimitScope.PER_USER,
             strategy=RateLimitStrategy.TOKEN_BUCKET,
             limit=limit,
-            window_seconds=60
+            window_seconds=60,
         )
 
         quota = RateLimitQuota(
-            user_id=user_id,
-            ip_address=ip_address,
-            endpoint=endpoint,
-            rules=[rule]
+            user_id=user_id, ip_address=ip_address, endpoint=endpoint, rules=[rule]
         )
 
         return await self.rate_limiter.check_rate_limit(quota)

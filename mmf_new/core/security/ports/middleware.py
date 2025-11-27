@@ -7,8 +7,8 @@ Interface for security middleware coordination.
 from abc import ABC, abstractmethod
 from typing import Any
 
-from ..domain.models.session import SessionData
 from ..domain.models.rate_limit import RateLimitResult
+from ..domain.models.session import SessionData
 
 
 class IMiddlewareCoordinator(ABC):

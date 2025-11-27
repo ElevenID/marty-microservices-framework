@@ -11,12 +11,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
-
 from marty_msf.framework.logging import UnifiedServiceLogger
 from marty_msf.framework.monitoring.core import MetricsCollector
 from marty_msf.observability.kafka import EventBus, KafkaConfig
-from scripts import validate_observability
 from scripts.validate_observability import validate_kafka_configs
+
+from scripts import validate_observability
 
 
 class TestObservabilityValidation:

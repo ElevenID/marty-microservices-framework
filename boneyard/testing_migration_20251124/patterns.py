@@ -16,12 +16,11 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
-
 from marty_msf.framework.events import BaseEvent, EventHandler
 from marty_msf.observability.monitoring import MetricsCollector
 from mmf_new.core.infrastructure.database import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import StaticPool
 
 logger = logging.getLogger(__name__)
 

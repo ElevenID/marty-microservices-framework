@@ -11,16 +11,15 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any
 
-from mmf_new.framework.infrastructure.cache import CacheManager
-
 from mmf_new.core.security.domain.models.rate_limit import (
+    RateLimitMetrics,
     RateLimitQuota,
     RateLimitResult,
     RateLimitWindow,
-    RateLimitMetrics,
 )
 from mmf_new.core.security.domain.services.rate_limiting import RateLimitEngine
 from mmf_new.core.security.ports.rate_limiting import IRateLimiter
+from mmf_new.framework.infrastructure.cache import CacheManager
 
 logger = logging.getLogger(__name__)
 
@@ -201,18 +200,20 @@ class RedisRateLimiter(IRateLimiter):
 
     def _serialize_window_data(self, window_data: RateLimitWindow) -> str:
         """Serialize window data for cache storage."""
-        return json.dumps({
-            "key": window_data.key,
-            "current_count": window_data.current_count,
-            "reset_time": window_data.reset_time.isoformat(),
-            "burst_count": window_data.burst_count,
-            "created_at": window_data.created_at.isoformat(),
-        })
+        return json.dumps(
+            {
+                "key": window_data.key,
+                "current_count": window_data.current_count,
+                "reset_time": window_data.reset_time.isoformat(),
+                "burst_count": window_data.burst_count,
+                "created_at": window_data.created_at.isoformat(),
+            }
+        )
 
     def _deserialize_window_data(self, data: str | bytes) -> RateLimitWindow:
         """Deserialize window data from cache."""
         if isinstance(data, bytes):
-            data = data.decode('utf-8')
+            data = data.decode("utf-8")
 
         parsed = json.loads(data)
         return RateLimitWindow(

@@ -55,8 +55,9 @@ from prometheus_client import (
     generate_latest,
 )
 
-from mmf_new.framework.infrastructure.dependency_injection import get_container
 from mmf_new.core.services import ObservabilityService
+from mmf_new.framework.infrastructure.dependency_injection import get_container
+
 from .factories import (
     register_observability_services,
     set_standard_observability_classes,

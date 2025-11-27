@@ -14,24 +14,29 @@ from .use_cases.scan_compliance import ScanComplianceRequest
 
 class AnalyzeThreatPatternCommand:
     """Command for analyzing threat patterns."""
+
     Request = AnalyzeThreatPatternRequest
 
 
 class CollectSecurityEventCommand:
     """Command for collecting security events."""
+
     Request = CollectSecurityEventRequest
 
 
 class GenerateSecurityReportCommand:
     """Command for generating security reports."""
+
     Request = GenerateSecurityReportRequest
 
 
 class LogAuditEventCommand:
     """Command for logging audit events."""
+
     Request = LogAuditEventRequest
 
 
 class ScanComplianceCommand:
     """Command for scanning compliance."""
+
     Request = ScanComplianceRequest

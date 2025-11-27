@@ -14,9 +14,7 @@ from concurrent import futures
 from dataclasses import dataclass
 from typing import Any, Protocol
 
-import grpc
 from aiohttp import web, web_runner
-from grpc import aio
 from grpc_health.v1 import health_pb2, health_pb2_grpc
 from grpc_health.v1.health import HealthServicer
 from grpc_reflection.v1alpha import reflection
@@ -33,6 +31,9 @@ from marty_msf.observability.standard import (
     create_standard_observability,
     set_global_observability,
 )
+
+import grpc
+from grpc import aio
 
 logger = logging.getLogger(__name__)
 

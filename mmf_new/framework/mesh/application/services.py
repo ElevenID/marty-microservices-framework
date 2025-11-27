@@ -6,15 +6,15 @@ import logging
 import random
 from typing import Any
 
-from mmf_new.framework.mesh.domain.models import TrafficRule
-from mmf_new.framework.mesh.ports.lifecycle import MeshLifecyclePort
-from mmf_new.framework.mesh.ports.traffic_manager import TrafficManagerPort
 from mmf_new.discovery.domain.load_balancing import (
     LoadBalancer,
     LoadBalancingConfig,
     TrafficPolicy,
 )
 from mmf_new.discovery.domain.models import ServiceInstance
+from mmf_new.framework.mesh.domain.models import TrafficRule
+from mmf_new.framework.mesh.ports.lifecycle import MeshLifecyclePort
+from mmf_new.framework.mesh.ports.traffic_manager import TrafficManagerPort
 
 logger = logging.getLogger(__name__)
 
@@ -170,9 +170,7 @@ class TrafficManager(TrafficManagerPort):
     def get_traffic_statistics(self) -> dict[str, Any]:
         """Get traffic management statistics."""
         return {
-            "routing_rules": {
-                service: len(rules) for service, rules in self.routing_rules.items()
-            },
+            "routing_rules": {service: len(rules) for service, rules in self.routing_rules.items()},
             "traffic_split_rules": self.traffic_splitter.split_rules,
         }
 
@@ -184,7 +182,9 @@ class MeshManager:
         """Initialize mesh manager."""
         self.lifecycle = lifecycle_port
 
-    async def deploy(self, namespace: str = "default", config: dict[str, Any] | None = None) -> bool:
+    async def deploy(
+        self, namespace: str = "default", config: dict[str, Any] | None = None
+    ) -> bool:
         """Deploy service mesh."""
         if not await self.lifecycle.verify_prerequisites():
             logger.error("Prerequisites not met")
@@ -200,6 +200,8 @@ class MeshManager:
         """Get service mesh status."""
         return await self.lifecycle.get_status()
 
-    async def generate_deployment_script(self, service_name: str, config: dict[str, Any] | None = None) -> str:
+    async def generate_deployment_script(
+        self, service_name: str, config: dict[str, Any] | None = None
+    ) -> str:
         """Generate deployment script."""
         return await self.lifecycle.generate_deployment_script(service_name, config)

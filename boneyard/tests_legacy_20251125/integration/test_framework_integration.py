@@ -9,7 +9,6 @@ import json
 import time
 
 import pytest
-
 from marty_msf.framework.events import Event
 from marty_msf.framework.messaging import Message
 

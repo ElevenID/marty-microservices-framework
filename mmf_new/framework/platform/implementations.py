@@ -7,9 +7,15 @@ protocols that can be registered with the dependency injection container.
 
 from __future__ import annotations
 
+import base64
+import json
 import logging
+import os
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 from mmf_new.core.platform.base_services import BaseService, ServiceWithDependencies
 from mmf_new.core.platform.contracts import (
@@ -18,13 +24,22 @@ from mmf_new.core.platform.contracts import (
     IObservabilityService,
     ISecurityService,
 )
-from .utilities import Registry
-from mmf_new.framework.infrastructure.dependency_injection import DIContainer
 from mmf_new.core.security.domain.config import ThreatDetectionConfig
-from mmf_new.framework.security.adapters.threat_detection.event_processor import EventProcessorThreatDetector
-from mmf_new.framework.security.adapters.threat_detection.pattern_detector import PatternBasedThreatDetector
-from mmf_new.framework.security.adapters.threat_detection.scanner import VulnerabilityScanner
-from mmf_new.framework.security.adapters.threat_detection.ml_analyzer import MLThreatDetector
+from mmf_new.framework.infrastructure.dependency_injection import DIContainer
+from mmf_new.framework.security.adapters.threat_detection.event_processor import (
+    EventProcessorThreatDetector,
+)
+from mmf_new.framework.security.adapters.threat_detection.ml_analyzer import (
+    MLThreatDetector,
+)
+from mmf_new.framework.security.adapters.threat_detection.pattern_detector import (
+    PatternBasedThreatDetector,
+)
+from mmf_new.framework.security.adapters.threat_detection.scanner import (
+    VulnerabilityScanner,
+)
+
+from .utilities import Registry
 
 logger = logging.getLogger(__name__)
 
@@ -64,11 +79,10 @@ class ConfigurationService(BaseService, IConfigurationService):
 
     def load_from_env(self, prefix: str = "") -> None:
         """Load configuration from environment variables."""
-        import os
 
         for key, value in os.environ.items():
             if prefix and key.startswith(prefix):
-                config_key = key[len(prefix):].lower()
+                config_key = key[len(prefix) :].lower()
                 self._config_data[config_key] = value
             elif not prefix:
                 self._config_data[key.lower()] = value
@@ -78,15 +92,13 @@ class ConfigurationService(BaseService, IConfigurationService):
 
     def load_from_file(self, config_path: str | Path) -> None:
         """Load configuration from file."""
-        import json
-        import yaml
 
         path = Path(config_path)
         if not path.exists():
             raise FileNotFoundError(f"Configuration file not found: {config_path}")
 
-        with path.open(encoding='utf-8') as f:
-            if path.suffix.lower() in ['.yaml', '.yml']:
+        with path.open(encoding="utf-8") as f:
+            if path.suffix.lower() in [".yaml", ".yml"]:
                 data = yaml.safe_load(f)
             else:
                 data = json.load(f)
@@ -98,10 +110,10 @@ class ConfigurationService(BaseService, IConfigurationService):
     async def _on_initialize(self) -> None:
         """Initialize the configuration service."""
         # Load from config if specified
-        if 'config_file' in self._config:
-            self.load_from_file(self._config['config_file'])
-        elif self._config.get('load_from_env', False):
-            self.load_from_env(self._config.get('env_prefix', ''))
+        if "config_file" in self._config:
+            self.load_from_file(self._config["config_file"])
+        elif self._config.get("load_from_env", False):
+            self.load_from_env(self._config.get("env_prefix", ""))
 
         logger.info("ConfigurationService initialized")
 
@@ -115,7 +127,7 @@ class ObservabilityService(BaseService, IObservabilityService):
 
     def __init__(self, container: DIContainer, config: dict[str, Any] | None = None):
         super().__init__(container, config)
-        self._service_name = config.get('service_name', 'unknown') if config else 'unknown'
+        self._service_name = config.get("service_name", "unknown") if config else "unknown"
 
     def log(self, level: str, message: str, **kwargs: Any) -> None:
         """Log a message."""
@@ -131,7 +143,6 @@ class ObservabilityService(BaseService, IObservabilityService):
     def trace(self, operation: str) -> Any:
         """Start a trace for an operation."""
         # Default implementation - returns a context manager that logs
-        from contextlib import contextmanager
 
         @contextmanager
         def trace_context():
@@ -145,7 +156,7 @@ class ObservabilityService(BaseService, IObservabilityService):
 
     def is_enabled(self) -> bool:
         """Check if observability is enabled."""
-        return self._config.get('enabled', True)
+        return self._config.get("enabled", True)
 
     async def _on_initialize(self) -> None:
         """Initialize the observability service."""
@@ -173,8 +184,8 @@ class SecurityService(BaseService, ISecurityService):
     def authenticate(self, credentials: dict[str, Any]) -> bool:
         """Authenticate with credentials."""
         # Default implementation - always returns True (unsafe, override in production)
-        username = credentials.get('username')
-        password = credentials.get('password')
+        username = credentials.get("username")
+        password = credentials.get("password")
 
         if not username or not password:
             return False
@@ -192,14 +203,14 @@ class SecurityService(BaseService, ISecurityService):
     def encrypt(self, data: str) -> str:
         """Encrypt data."""
         # Default implementation - base64 encoding (not secure, override in production)
-        import base64
+
         logger.warning("Using default security service - using base64 encoding (not secure)!")
         return base64.b64encode(data.encode()).decode()
 
     def decrypt(self, data: str) -> str:
         """Decrypt data."""
         # Default implementation - base64 decoding
-        import base64
+
         return base64.b64decode(data.encode()).decode()
 
     def is_secure(self) -> bool:
@@ -252,8 +263,8 @@ class MessagingService(ServiceWithDependencies, IMessagingService):
         if topic in self._subscriptions:
             for handler in self._subscriptions[topic]:
                 try:
-                    if hasattr(handler, '__call__'):
-                        if hasattr(handler, '__await__'):
+                    if callable(handler):
+                        if hasattr(handler, "__await__"):
                             await handler(message)
                         else:
                             handler(message)

@@ -3,10 +3,9 @@
 import os
 import sys
 
-import pytest
-
 import marty_msf.framework.discovery.core as core_module
 import marty_msf.framework.discovery.load_balancing as lb_module
+import pytest
 
 # Add the source directory to the path to bypass package imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "src"))

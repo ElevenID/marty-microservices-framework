@@ -3,6 +3,7 @@
 This is a **hybrid service template** that provides both **REST API** and **gRPC** interfaces for the same business logic, demonstrating:
 
 ## Architecture
+
 - **Hexagonal Architecture** (Ports & Adapters)
 - **Domain-Driven Design** principles
 - **Dual Protocol Support** (REST + gRPC)
@@ -10,6 +11,7 @@ This is a **hybrid service template** that provides both **REST API** and **gRPC
 - **Integration with external services** via MMF connectors
 
 ## Features
+
 - **REST API** with FastAPI (JSON over HTTP)
 - **gRPC API** with Protocol Buffers (binary over HTTP/2)
 - **Shared domain models** and business logic
@@ -21,11 +23,13 @@ This is a **hybrid service template** that provides both **REST API** and **gRPC
 ## Setup
 
 ### 1. Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ### 2. Generate gRPC Code (Production)
+
 ```bash
 python -m grpc_tools.protoc \
     --proto_path=proto \
@@ -37,12 +41,14 @@ python -m grpc_tools.protoc \
 ### 3. Run the Service
 
 #### Option A: FastAPI Only (Development)
+
 ```bash
 python main.py
 # Runs on http://localhost:8000
 ```
 
 #### Option B: gRPC Only
+
 ```bash
 # Edit main.py to uncomment: asyncio.run(run_grpc_server())
 python main.py
@@ -50,6 +56,7 @@ python main.py
 ```
 
 #### Option C: Both Servers (Production)
+
 ```bash
 # Edit main.py to uncomment: asyncio.run(run_hybrid_servers())
 python main.py
@@ -59,6 +66,7 @@ python main.py
 ## API Usage
 
 ### REST API Endpoints
+
 ```bash
 # Create order
 curl -X POST "http://localhost:8000/orders" \
@@ -81,6 +89,7 @@ curl "http://localhost:8000/health"
 ```
 
 ### gRPC API Usage
+
 ```bash
 # Install grpcurl: brew install grpcurl
 
@@ -107,6 +116,7 @@ grpcurl -plaintext localhost:50051 hybrid_order_service.HybridOrderService/Healt
 ## Architecture Benefits
 
 ### REST API Benefits
+
 - **Human-readable** JSON format
 - **Web browser compatible**
 - **Easy debugging** with curl/Postman
@@ -114,6 +124,7 @@ grpcurl -plaintext localhost:50051 hybrid_order_service.HybridOrderService/Healt
 - **Cacheable** with HTTP caching
 
 ### gRPC Benefits
+
 - **High performance** binary serialization
 - **Type safety** with Protocol Buffers
 - **Streaming support** for real-time data
@@ -121,6 +132,7 @@ grpcurl -plaintext localhost:50051 hybrid_order_service.HybridOrderService/Healt
 - **Built-in load balancing**
 
 ### Hybrid Benefits
+
 - **Protocol flexibility** - choose the right tool
 - **Migration path** - transition between protocols
 - **Client preferences** - serve different client types
@@ -128,14 +140,16 @@ grpcurl -plaintext localhost:50051 hybrid_order_service.HybridOrderService/Healt
 
 ## When to Use Each Protocol
 
-### Use REST when:
+### Use REST when
+
 - Building web frontends
 - Integrating with third-party services
 - Need human-readable debugging
 - Caching is important
 - Simple request/response patterns
 
-### Use gRPC when:
+### Use gRPC when
+
 - High-performance internal communication
 - Real-time streaming requirements
 - Strong typing is critical
@@ -145,6 +159,7 @@ grpcurl -plaintext localhost:50051 hybrid_order_service.HybridOrderService/Healt
 ## Production Considerations
 
 1. **Generate Real Protobuf Code:**
+
    ```bash
    python -m grpc_tools.protoc --proto_path=proto --python_out=proto --grpc_python_out=proto proto/hybrid_order_service.proto
    ```
@@ -168,6 +183,7 @@ grpcurl -plaintext localhost:50051 hybrid_order_service.HybridOrderService/Healt
 ## Customization
 
 To adapt this template:
+
 1. Replace `InMemoryOrderRepository` with your database adapter
 2. Configure external service connections
 3. Add authentication for both protocols
@@ -176,6 +192,7 @@ To adapt this template:
 6. Configure production-grade servers (gunicorn, etc.)
 
 ## File Structure
+
 ```
 hybrid_example/
 ├── domain/           # Business logic (shared)

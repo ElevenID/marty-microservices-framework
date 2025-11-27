@@ -156,7 +156,9 @@ class AtomicCounter(BaseService):
     counter variables used for ID generation.
     """
 
-    def __init__(self, container: DIContainer, initial_value: int = 0, config: dict[str, Any] | None = None):
+    def __init__(
+        self, container: DIContainer, initial_value: int = 0, config: dict[str, Any] | None = None
+    ):
         super().__init__(container, config)
         self._value = initial_value
         self._lock = RLock()

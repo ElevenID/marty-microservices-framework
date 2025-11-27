@@ -14,7 +14,6 @@ from typing import Any
 
 import networkx as nx
 import yaml
-
 from marty_msf.framework.cache.manager import CacheManager
 from marty_msf.framework.config import BaseServiceConfig
 from marty_msf.framework.messaging import EventStreamManager, MessageQueue

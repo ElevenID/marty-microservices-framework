@@ -7,20 +7,21 @@ Implementation of IServiceMeshManager for Istio service mesh.
 import json
 import logging
 import subprocess
-import yaml
 from datetime import datetime
 from typing import Any
 
+import yaml
+
 from ...domain.config import ServiceMeshConfig
 from ...domain.models.service_mesh import (
+    MeshType,
+    MTLSMode,
+    NetworkSegment,
+    PolicySyncResult,
+    PolicyType,
+    ServiceMeshMetrics,
     ServiceMeshPolicy,
     ServiceMeshStatus,
-    ServiceMeshMetrics,
-    PolicySyncResult,
-    NetworkSegment,
-    PolicyType,
-    MTLSMode,
-    MeshType,
 )
 from ...ports.service_mesh import IServiceMeshManager
 
@@ -53,7 +54,7 @@ class IstioMeshManager(IServiceMeshManager):
                 stdin=subprocess.PIPE if input_data else None,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                text=True
+                text=True,
             )
 
             stdout, stderr = process.communicate(input=input_data)
@@ -96,7 +97,9 @@ class IstioMeshManager(IServiceMeshManager):
             policies_applied=success_count,
             policies_failed=len(failed_policies),
             errors=failed_policies,
-            metadata={"message": f"Applied {success_count} policies, {len(failed_policies)} failed"}
+            metadata={
+                "message": f"Applied {success_count} policies, {len(failed_policies)} failed"
+            },
         )
 
     async def remove_policy(self, policy_name: str, namespace: str) -> bool:
@@ -130,7 +133,7 @@ class IstioMeshManager(IServiceMeshManager):
             "PeerAuthentication",
             "RequestAuthentication",
             "EnvoyFilter",
-            "NetworkPolicy"
+            "NetworkPolicy",
         ]
 
         for kind in kinds:
@@ -150,7 +153,7 @@ class IstioMeshManager(IServiceMeshManager):
                     "PeerAuthentication": PolicyType.PEER_AUTHENTICATION,
                     "RequestAuthentication": PolicyType.REQUEST_AUTHENTICATION,
                     "EnvoyFilter": PolicyType.RATE_LIMIT,
-                    "NetworkPolicy": PolicyType.NETWORK_POLICY
+                    "NetworkPolicy": PolicyType.NETWORK_POLICY,
                 }
 
                 return ServiceMeshPolicy(
@@ -161,7 +164,7 @@ class IstioMeshManager(IServiceMeshManager):
                     metadata=data["metadata"].get("labels", {}),
                     # Rules extraction is complex and depends on kind
                     rules=[],
-                    enabled=True
+                    enabled=True,
                 )
             except Exception:
                 continue
@@ -179,25 +182,25 @@ class IstioMeshManager(IServiceMeshManager):
             "PeerAuthentication",
             "RequestAuthentication",
             "EnvoyFilter",
-            "NetworkPolicy"
+            "NetworkPolicy",
         ]
 
         for kind in kinds:
             try:
-                output = await self._run_kubectl(
-                    ["get", kind] + ns_args + ["-o", "json"]
-                )
+                output = await self._run_kubectl(["get", kind] + ns_args + ["-o", "json"])
                 data = json.loads(output)
 
                 for item in data.get("items", []):
                     # Convert to ServiceMeshPolicy (simplified)
-                    policies.append(ServiceMeshPolicy(
-                        name=item["metadata"]["name"],
-                        policy_type=PolicyType.AUTHORIZATION,  # Placeholder
-                        namespace=item["metadata"]["namespace"],
-                        description="Imported from cluster",
-                        enabled=True
-                    ))
+                    policies.append(
+                        ServiceMeshPolicy(
+                            name=item["metadata"]["name"],
+                            policy_type=PolicyType.AUTHORIZATION,  # Placeholder
+                            namespace=item["metadata"]["namespace"],
+                            description="Imported from cluster",
+                            enabled=True,
+                        )
+                    )
             except Exception:
                 continue
 
@@ -220,7 +223,7 @@ class IstioMeshManager(IServiceMeshManager):
                 namespace=namespace,
                 description=f"Namespace-wide mTLS {mode}",
                 metadata={"mtls_mode": mode},
-                rules=[]
+                rules=[],
             )
             return await self.apply_policy(policy)
         else:
@@ -234,7 +237,7 @@ class IstioMeshManager(IServiceMeshManager):
                     description=f"mTLS {mode} for {service}",
                     selector={"app": service},
                     metadata={"mtls_mode": mode},
-                    rules=[]
+                    rules=[],
                 )
                 if not await self.apply_policy(policy):
                     success = False
@@ -286,7 +289,7 @@ class IstioMeshManager(IServiceMeshManager):
                 components={"istiod": "healthy" if is_healthy else "unhealthy"},
                 policies_applied=0,  # Could count policies
                 last_sync=datetime.utcnow(),
-                health_status="healthy" if is_healthy else "unhealthy"
+                health_status="healthy" if is_healthy else "unhealthy",
             )
         except Exception as e:
             logger.error("Failed to get mesh status: %s", e)
@@ -297,7 +300,7 @@ class IstioMeshManager(IServiceMeshManager):
                 components={},
                 policies_applied=0,
                 last_sync=datetime.utcnow(),
-                health_status="unknown"
+                health_status="unknown",
             )
 
     async def get_metrics(self) -> ServiceMeshMetrics:
@@ -306,12 +309,7 @@ class IstioMeshManager(IServiceMeshManager):
 
     async def supports_feature(self, feature: str) -> bool:
         """Check if service mesh supports a specific feature."""
-        supported = {
-            "mtls": True,
-            "authorization": True,
-            "rate_limit": True,
-            "observability": True
-        }
+        supported = {"mtls": True, "authorization": True, "rate_limit": True, "observability": True}
         return supported.get(feature, False)
 
     async def health_check(self) -> bool:

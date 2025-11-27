@@ -11,10 +11,7 @@ from typing import TypeVar
 from pydantic_settings import BaseSettings
 
 from .config_manager import Environment
-from .unified_config import (
-    UnifiedConfigurationManager,
-    create_unified_config_manager,
-)
+from .unified_config import UnifiedConfigurationManager, create_unified_config_manager
 
 T = TypeVar("T", bound=BaseSettings)
 

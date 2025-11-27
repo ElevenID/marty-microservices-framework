@@ -1,6 +1,6 @@
-# Open Telemetry ALS
+# Open Telemetry ALSO
 
-This sample demonstrates Istio's Open Telemetry ALS support.
+This sample demonstrates Istio's Open Telemetry ALSO support.
 
 ## Start otel-collector service
 
@@ -55,7 +55,7 @@ spec:
 EOF
 ```
 
-## Check ALS output
+## Check ALSO output
 
 Following [doc](../../httpbin/README.md), start the `fortio` and `httpbin` services.
 
@@ -65,7 +65,7 @@ Run the following script to request `httpbin` from `fortio`.
 kubectl exec -it $(kubectl get po | grep fortio | awk '{print $1}') -- fortio curl httpbin:8000/ip
 ```
 
-Run the following script to checkout ALS output.
+Run the following script to checkout ALSO output.
 
 ```bash
 kubectl logs $(kubectl get po -n observability | grep otel | awk '{print $1}') -n observability

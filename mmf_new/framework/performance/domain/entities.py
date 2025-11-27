@@ -7,8 +7,10 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
+
 class OptimizationType(Enum):
     """Types of performance optimizations."""
+
     CPU_OPTIMIZATION = "cpu_optimization"
     MEMORY_OPTIMIZATION = "memory_optimization"
     IO_OPTIMIZATION = "io_optimization"
@@ -16,16 +18,20 @@ class OptimizationType(Enum):
     DATABASE_OPTIMIZATION = "database_optimization"
     NETWORK_OPTIMIZATION = "network_optimization"
 
+
 class ProfilerType(Enum):
     """Types of profilers."""
+
     CPU_PROFILER = "cpu_profiler"
     MEMORY_PROFILER = "memory_profiler"
     LINE_PROFILER = "line_profiler"
     ASYNC_PROFILER = "async_profiler"
 
+
 @dataclass
 class PerformanceProfile:
     """Performance profiling results."""
+
     profiler_type: ProfilerType
     duration: float
     function_stats: dict[str, dict[str, float]]
@@ -34,9 +40,11 @@ class PerformanceProfile:
     recommendations: list[str]
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
+
 @dataclass
 class OptimizationRecommendation:
     """Performance optimization recommendation."""
+
     optimization_type: OptimizationType
     title: str
     description: str
@@ -47,9 +55,11 @@ class OptimizationRecommendation:
     specific_actions: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
 
+
 @dataclass
 class ResourceMetrics:
     """System resource metrics."""
+
     timestamp: datetime
     cpu_percent: float
     memory_percent: float

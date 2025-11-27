@@ -14,9 +14,6 @@ from typing import Any
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import HTTPBearer
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
 from marty_msf.framework.audit import (
     AuditConfig,
     AuditContext,
@@ -27,6 +24,8 @@ from marty_msf.framework.audit import (
     audit_context,
     setup_fastapi_audit_middleware,
 )
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 # FastAPI example
 try:

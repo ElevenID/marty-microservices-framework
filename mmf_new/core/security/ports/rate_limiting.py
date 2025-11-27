@@ -7,7 +7,7 @@ Interface for rate limiting functionality.
 from abc import ABC, abstractmethod
 from typing import Any
 
-from ..domain.models.rate_limit import RateLimitQuota, RateLimitResult, RateLimitMetrics
+from ..domain.models.rate_limit import RateLimitMetrics, RateLimitQuota, RateLimitResult
 
 
 class IRateLimiter(ABC):

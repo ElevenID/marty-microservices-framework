@@ -4,8 +4,10 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
+
 class ContractType(Enum):
     """Types of contracts supported."""
+
     HTTP_API = "http_api"
     MESSAGE_QUEUE = "message_queue"
     GRPC = "grpc"
@@ -13,15 +15,19 @@ class ContractType(Enum):
     WEBSOCKET = "websocket"
     DATABASE = "database"
 
+
 class VerificationLevel(Enum):
     """Contract verification levels."""
+
     STRICT = "strict"
     PERMISSIVE = "permissive"
     SCHEMA_ONLY = "schema_only"
 
+
 @dataclass
 class ContractRequest:
     """HTTP request specification for contract."""
+
     method: str
     path: str
     headers: dict[str, str] = field(default_factory=dict)
@@ -29,26 +35,32 @@ class ContractRequest:
     body: Any | None = None
     content_type: str = "application/json"
 
+
 @dataclass
 class ContractResponse:
     """HTTP response specification for contract."""
+
     status_code: int
     headers: dict[str, str] = field(default_factory=dict)
     body: Any | None = None
     schema: dict[str, Any] | None = None
     content_type: str = "application/json"
 
+
 @dataclass
 class ContractInteraction:
     """Single interaction in a contract."""
+
     description: str
     request: ContractRequest
     response: ContractResponse
     metadata: dict[str, Any] = field(default_factory=dict)
 
+
 @dataclass
 class Contract:
     """Service contract definition."""
+
     consumer: str
     provider: str
     version: str

@@ -19,14 +19,13 @@ import sys
 from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional
 
-from pydantic import BaseModel, Field
-
 from marty_msf.framework.config import (
     ConfigurationStrategy,
     Environment,
     UnifiedConfigurationManager,
     create_unified_config_manager,
 )
+from pydantic import BaseModel, Field
 
 
 # Define service configuration model

@@ -17,7 +17,11 @@ import asyncio
 import logging
 from typing import Any
 
-from mmf_new.framework.infrastructure.cache import CacheBackend, CacheConfig, CacheManager
+from mmf_new.framework.infrastructure.cache import (
+    CacheBackend,
+    CacheConfig,
+    CacheManager,
+)
 
 logger = logging.getLogger(__name__)
 

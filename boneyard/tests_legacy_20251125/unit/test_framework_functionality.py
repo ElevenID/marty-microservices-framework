@@ -10,12 +10,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
-
 from marty_msf.framework.config import BaseServiceConfig
 from marty_msf.framework.logging import UnifiedServiceLogger
 from marty_msf.framework.monitoring.core import MetricsCollector
-from scripts import test_framework
 from scripts.test_framework import run_command
+
+from scripts import test_framework
 
 
 class TestFrameworkFunctionality:

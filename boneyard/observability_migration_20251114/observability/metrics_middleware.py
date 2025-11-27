@@ -14,13 +14,13 @@ from typing import Any
 
 import grpc
 from grpc import aio as grpc_aio
+
+# Framework imports
+from marty_msf.framework.grpc import UnifiedGrpcServer
 from prometheus_client import Counter, Histogram
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
-
-# Framework imports
-from marty_msf.framework.grpc import UnifiedGrpcServer
 
 logger = logging.getLogger(__name__)
 

@@ -3,19 +3,21 @@ Filesystem Adapter
 """
 
 import logging
-import time
-import aiofiles
 import os
+import time
 from pathlib import Path
 from typing import Any
 
-from mmf_new.framework.integration.ports.connector import ExternalSystemPort
+import aiofiles
+
+from mmf_new.framework.integration.domain.exceptions import ConnectionFailedError
 from mmf_new.framework.integration.domain.models import (
     ConnectionConfig,
     IntegrationRequest,
     IntegrationResponse,
 )
-from mmf_new.framework.integration.domain.exceptions import ConnectionFailedError
+from mmf_new.framework.integration.ports.connector import ExternalSystemPort
+
 
 class FileSystemAdapter(ExternalSystemPort):
     """Filesystem connector implementation using aiofiles."""
@@ -48,18 +50,22 @@ class FileSystemAdapter(ExternalSystemPort):
     async def execute_request(self, request: IntegrationRequest) -> IntegrationResponse:
         """Execute file system request."""
         start_time = time.time()
-        
+
         try:
             operation = request.operation.lower()
-            file_path = request.data.get("file_path", "test.txt") if isinstance(request.data, dict) else "test.txt"
+            file_path = (
+                request.data.get("file_path", "test.txt")
+                if isinstance(request.data, dict)
+                else "test.txt"
+            )
             full_path = self.base_path / file_path
-            
+
             # Prevent directory traversal
             if not str(full_path.resolve()).startswith(str(self.base_path.resolve())):
                 raise ValueError("Invalid file path: Access denied")
 
             result_data = None
-            
+
             if operation == "read":
                 if full_path.exists():
                     async with aiofiles.open(full_path) as f:
@@ -67,21 +73,29 @@ class FileSystemAdapter(ExternalSystemPort):
                     result_data = {"content": content, "size": len(content), "path": str(file_path)}
                 else:
                     raise FileNotFoundError(f"File not found: {file_path}")
-                    
+
             elif operation == "write":
-                content = request.data.get("content", "") if isinstance(request.data, dict) else str(request.data)
+                content = (
+                    request.data.get("content", "")
+                    if isinstance(request.data, dict)
+                    else str(request.data)
+                )
                 full_path.parent.mkdir(parents=True, exist_ok=True)
-                async with aiofiles.open(full_path, mode='w') as f:
+                async with aiofiles.open(full_path, mode="w") as f:
                     await f.write(content)
                 result_data = {"bytes_written": len(content), "path": str(file_path)}
-                
+
             elif operation == "append":
-                content = request.data.get("content", "") if isinstance(request.data, dict) else str(request.data)
+                content = (
+                    request.data.get("content", "")
+                    if isinstance(request.data, dict)
+                    else str(request.data)
+                )
                 full_path.parent.mkdir(parents=True, exist_ok=True)
-                async with aiofiles.open(full_path, mode='a') as f:
+                async with aiofiles.open(full_path, mode="a") as f:
                     await f.write(content)
                 result_data = {"bytes_appended": len(content), "path": str(file_path)}
-                
+
             elif operation == "delete":
                 if full_path.exists():
                     if full_path.is_file():
@@ -91,18 +105,15 @@ class FileSystemAdapter(ExternalSystemPort):
                         raise ValueError(f"Path is not a file: {file_path}")
                 else:
                     raise FileNotFoundError(f"File not found: {file_path}")
-            
+
             else:
                 raise ValueError(f"Unsupported operation: {operation}")
 
             latency = (time.time() - start_time) * 1000
             return IntegrationResponse(
-                request_id=request.request_id,
-                success=True,
-                data=result_data,
-                latency_ms=latency
+                request_id=request.request_id, success=True, data=result_data, latency_ms=latency
             )
-            
+
         except Exception as e:
             latency = (time.time() - start_time) * 1000
             return IntegrationResponse(
@@ -110,7 +121,7 @@ class FileSystemAdapter(ExternalSystemPort):
                 success=False,
                 data=None,
                 error_message=str(e),
-                latency_ms=latency
+                latency_ms=latency,
             )
 
     async def health_check(self) -> bool:

@@ -7,6 +7,7 @@ from typing import Any
 from mmf_new.core.application.base import Command, CommandRequest
 from mmf_new.core.domain import AuditLevel, ComplianceFramework, SecurityEventType
 
+from ...domain.models import SecurityAuditEvent
 from ..ports_out import (
     AuditEventRepositoryPort,
     ComplianceScannerPort,
@@ -144,8 +145,6 @@ class GenerateSecurityReportUseCase(
 
             # Log report generation
             try:
-                from ...domain.models import SecurityAuditEvent
-
                 audit_event = SecurityAuditEvent(
                     event_type=SecurityEventType.DATA_ACCESS,
                     principal_id=request.user_id,

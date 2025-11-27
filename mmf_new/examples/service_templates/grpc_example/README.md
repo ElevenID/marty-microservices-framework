@@ -3,12 +3,14 @@
 This is a full-featured gRPC service template that demonstrates:
 
 ## Architecture
+
 - **Hexagonal Architecture** (Ports & Adapters)
 - **Domain-Driven Design** principles
 - **Async gRPC** implementation
 - **Integration with external services** via MMF connectors
 
 ## Features
+
 - gRPC API with Protocol Buffers
 - External service integration (inventory service)
 - In-memory repository (easily replaceable)
@@ -19,11 +21,13 @@ This is a full-featured gRPC service template that demonstrates:
 ## Setup
 
 ### 1. Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ### 2. Generate gRPC Code (Production)
+
 ```bash
 # Generate Python gRPC code from proto files
 python -m grpc_tools.protoc \
@@ -34,6 +38,7 @@ python -m grpc_tools.protoc \
 ```
 
 ### 3. Run the Service
+
 ```bash
 python server.py
 ```
@@ -41,6 +46,7 @@ python server.py
 ## Proto Definition
 
 The service is defined in `proto/order_service.proto` with:
+
 - **CreateOrder** - Create new orders
 - **GetOrder** - Retrieve orders by ID
 - **HealthCheck** - Service health status
@@ -48,6 +54,7 @@ The service is defined in `proto/order_service.proto` with:
 ## Testing with grpcurl
 
 ### Install grpcurl
+
 ```bash
 # macOS
 brew install grpcurl
@@ -56,6 +63,7 @@ brew install grpcurl
 ```
 
 ### Test the Service
+
 ```bash
 # Health check
 grpcurl -plaintext localhost:50051 order_service.OrderService/HealthCheck
@@ -65,7 +73,7 @@ grpcurl -plaintext -d '{
   "customer_id": "customer-123",
   "items": [
     {
-      "product_id": "product-456", 
+      "product_id": "product-456",
       "quantity": 2,
       "price": 29.99
     }
@@ -81,6 +89,7 @@ grpcurl -plaintext -d '{
 ## Integration Points
 
 The service integrates with:
+
 1. **Inventory Service** - Checks product availability via REST
 2. **Order Repository** - Stores order data
 
@@ -89,6 +98,7 @@ The service integrates with:
 This template uses mock protobuf classes for demonstration. In production:
 
 1. **Generate Real Protobuf Code:**
+
    ```bash
    python -m grpc_tools.protoc --proto_path=proto --python_out=proto --grpc_python_out=proto proto/order_service.proto
    ```
@@ -99,6 +109,7 @@ This template uses mock protobuf classes for demonstration. In production:
    - Use real protobuf message types
 
 3. **Add Server Reflection:**
+
    ```python
    from grpc_reflection.v1alpha import reflection
    reflection.enable_server_reflection(SERVICE_NAMES, server)
@@ -107,6 +118,7 @@ This template uses mock protobuf classes for demonstration. In production:
 ## Customization
 
 To adapt this template:
+
 1. Replace `InMemoryOrderRepository` with your database adapter
 2. Configure inventory service connection
 3. Add authentication/authorization interceptors

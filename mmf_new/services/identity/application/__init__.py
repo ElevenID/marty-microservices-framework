@@ -18,10 +18,7 @@ from .ports_out import (
 )
 
 # Import services
-from .services import (
-    AuthenticationManager,
-    authentication_manager,
-)
+from .services import AuthenticationManager, authentication_manager
 
 # Import use cases
 from .use_cases import (

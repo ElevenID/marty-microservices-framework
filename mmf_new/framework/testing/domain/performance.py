@@ -3,10 +3,13 @@ import statistics
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, NamedTuple
+
 import numpy as np
+
 
 class PerformanceTestType(Enum):
     """Types of performance tests."""
+
     LOAD_TEST = "load_test"
     STRESS_TEST = "stress_test"
     SPIKE_TEST = "spike_test"
@@ -14,8 +17,10 @@ class PerformanceTestType(Enum):
     VOLUME_TEST = "volume_test"
     BASELINE_TEST = "baseline_test"
 
+
 class LoadPattern(Enum):
     """Load generation patterns."""
+
     CONSTANT = "constant"
     RAMP_UP = "ramp_up"
     RAMP_DOWN = "ramp_down"
@@ -23,9 +28,11 @@ class LoadPattern(Enum):
     SPIKE = "spike"
     WAVE = "wave"
 
+
 @dataclass
 class RequestSpec:
     """Specification for a request."""
+
     method: str
     url: str
     headers: dict[str, str] = field(default_factory=dict)
@@ -34,9 +41,11 @@ class RequestSpec:
     timeout: float = 30.0
     expected_status_codes: list[int] = field(default_factory=lambda: [200])
 
+
 @dataclass
 class LoadConfiguration:
     """Load generation configuration."""
+
     pattern: LoadPattern
     initial_users: int = 1
     max_users: int = 100
@@ -48,8 +57,10 @@ class LoadConfiguration:
     think_time: float = 1.0  # seconds between requests
     think_time_variation: float = 0.2  # variation factor
 
+
 class ResponseMetric(NamedTuple):
     """Individual response metrics."""
+
     timestamp: float
     response_time: float
     status_code: int
@@ -57,9 +68,11 @@ class ResponseMetric(NamedTuple):
     request_size: int
     response_size: int
 
+
 @dataclass
 class PerformanceMetrics:
     """Aggregated performance metrics."""
+
     total_requests: int = 0
     successful_requests: int = 0
     failed_requests: int = 0
@@ -111,6 +124,7 @@ class PerformanceMetrics:
             "error_breakdown": self.error_breakdown,
             "status_code_breakdown": self.status_code_breakdown,
         }
+
 
 class PerformanceTestCase:
     """Test case for performance testing."""

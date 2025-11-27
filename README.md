@@ -6,12 +6,12 @@ Marty Microservices Framework (MMF) is a "batteries-included" platform designed 
 
 ## 🚀 Key Features
 
-*   **Hexagonal Architecture**: Clean separation of Domain, Application, and Infrastructure layers.
-*   **Core Infrastructure**: API Gateway, Service Discovery (Consul), and Configuration Management.
-*   **Data & Messaging**: Database integration (SQLAlchemy), Caching (Redis), and Event Streaming (Kafka).
-*   **Observability**: Built-in support for Prometheus, Grafana, and Jaeger (OpenTelemetry).
-*   **Security**: Comprehensive identity management (JWT, OAuth2/OIDC) and policy enforcement.
-*   **Developer Experience**: CLI tools, project scaffolding, and comprehensive testing utilities.
+* **Hexagonal Architecture**: Clean separation of Domain, Application, and Infrastructure layers.
+* **Core Infrastructure**: API Gateway, Service Discovery (Consul), and Configuration Management.
+* **Data & Messaging**: Database integration (SQLAlchemy), Caching (Redis), and Event Streaming (Kafka).
+* **Observability**: Built-in support for Prometheus, Grafana, and Jaeger (OpenTelemetry).
+* **Security**: Comprehensive identity management (JWT, OAuth2/OIDC) and policy enforcement.
+* **Developer Experience**: CLI tools, project scaffolding, and comprehensive testing utilities.
 
 ## 📁 Project Structure
 
@@ -33,8 +33,8 @@ mmf_new/                        # Core Framework & Services
 
 ### Prerequisites
 
-*   Python 3.10+
-*   Docker & Docker Compose
+* Python 3.10+
+* Docker & Docker Compose
 
 ### Installation
 
@@ -53,9 +53,9 @@ pytest
 MMF enforces a strict dependency rule:
 **Domain** <- **Application** <- **Infrastructure**
 
-*   **Domain**: Pure business logic, no external dependencies.
-*   **Application**: Use cases orchestrating domain objects.
-*   **Infrastructure**: Adapters for external systems (Databases, APIs, Web).
+* **Domain**: Pure business logic, no external dependencies.
+* **Application**: Use cases orchestrating domain objects.
+* **Infrastructure**: Adapters for external systems (Databases, APIs, Web).
 
 ## 📚 Documentation
 

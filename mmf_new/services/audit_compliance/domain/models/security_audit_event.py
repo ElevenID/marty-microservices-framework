@@ -1,15 +1,12 @@
 """Security audit event domain entity."""
 
+import json
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID, uuid4
 
-from mmf_new.core.domain import (
-    AuditLevel,
-    Entity,
-    SecurityEventType,
-)
+from mmf_new.core.domain import AuditLevel, Entity, SecurityEventType
 
 
 @dataclass
@@ -61,7 +58,6 @@ class SecurityAuditEvent(Entity):
 
     def to_json(self) -> str:
         """Convert event to JSON string."""
-        import json
 
         return json.dumps(self.to_dict(), default=str)
 

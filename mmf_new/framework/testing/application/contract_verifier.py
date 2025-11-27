@@ -18,14 +18,15 @@ from mmf_new.framework.testing.domain.contract import (
     VerificationLevel,
 )
 from mmf_new.framework.testing.domain.entities import (
-    TestResult,
-    TestStatus,
-    TestSeverity,
     TestMetrics,
+    TestResult,
+    TestSeverity,
+    TestStatus,
     TestType,
 )
 
 logger = logging.getLogger(__name__)
+
 
 class ContractBuilder:
     """Builder for creating contracts."""
@@ -55,6 +56,7 @@ class ContractBuilder:
     def build(self) -> Contract:
         """Build the contract."""
         return self.contract
+
 
 class InteractionBuilder:
     """Builder for creating contract interactions."""
@@ -112,6 +114,7 @@ class InteractionBuilder:
         self.contract_builder.contract.interactions.append(self.interaction)
         return self.contract_builder.build()
 
+
 class ContractValidator:
     """Validates contracts and responses."""
 
@@ -157,9 +160,7 @@ class ContractValidator:
 
         return len(errors) == 0, errors
 
-    def validate_contract_syntax(
-        self, contract: Contract
-    ) -> tuple[bool, list[str]]:
+    def validate_contract_syntax(self, contract: Contract) -> tuple[bool, list[str]]:
         """Validate contract syntax and structure."""
         errors = []
 
@@ -186,6 +187,7 @@ class ContractValidator:
                 errors.append(f"Interaction {i} response status code must be valid HTTP status")
 
         return len(errors) == 0, errors
+
 
 class ContractRepository:
     """Manages contract storage and retrieval."""
@@ -267,9 +269,7 @@ class ContractRepository:
 
         return contract
 
-    def list_contracts(
-        self, consumer: str = None, provider: str = None
-    ) -> list[dict[str, str]]:
+    def list_contracts(self, consumer: str = None, provider: str = None) -> list[dict[str, str]]:
         """List available contracts."""
         contracts = []
 
@@ -293,6 +293,7 @@ class ContractRepository:
                     )
 
         return contracts
+
 
 class ContractVerifier:
     """Verifies contracts against a provider."""
@@ -394,9 +395,7 @@ class ContractVerifier:
             if self.session:
                 await self.session.close()
 
-    async def _execute_interaction(
-        self, interaction: ContractInteraction
-    ) -> dict[str, Any]:
+    async def _execute_interaction(self, interaction: ContractInteraction) -> dict[str, Any]:
         """Execute a single contract interaction."""
         url = urljoin(self.provider_url, interaction.request.path)
 

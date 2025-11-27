@@ -8,7 +8,6 @@ from datetime import datetime, timezone
 from enum import Enum
 
 import pytest
-
 from marty_msf.framework.events.types import Event, EventMetadata, EventPriority
 
 

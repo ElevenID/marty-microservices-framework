@@ -167,10 +167,12 @@ class NetworkSegment:
 
             if self.allowed_sources:
                 for source in self.allowed_sources:
-                    auth_rules.append({
-                        "from": [{"source": {"principals": [source]}}],
-                        "to": [{"operation": {"methods": ["*"]}}],
-                    })
+                    auth_rules.append(
+                        {
+                            "from": [{"source": {"principals": [source]}}],
+                            "to": [{"operation": {"methods": ["*"]}}],
+                        }
+                    )
 
             policy = ServiceMeshPolicy(
                 name=f"{service}-{self.name}-authz",

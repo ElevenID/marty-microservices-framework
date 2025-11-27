@@ -6,7 +6,6 @@ Tests routing strategy patterns, matching types, and routing configurations.
 from enum import Enum
 
 import pytest
-
 from marty_msf.framework.messaging.routing import (
     MatchType,
     RoutingConfig,

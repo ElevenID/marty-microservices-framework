@@ -9,6 +9,7 @@
 **What**: Comprehensive architecture standards document defining the golden standard for Hexagonal Architecture across the framework.
 
 **Key Features**:
+
 - **Mandatory directory structure** for services and framework modules
 - **Strict dependency rules** (Domain → Application → Infrastructure)
 - **Explicit DI container pattern** requirements
@@ -22,6 +23,7 @@
 **What**: Base dependency injection container classes that all services MUST inherit from.
 
 **Key Features**:
+
 - `BaseDIContainer` - For synchronous services
 - `AsyncBaseDIContainer` - For async services with I/O-bound initialization
 - Enforced lifecycle management (`initialize()`, `cleanup()`)
@@ -29,6 +31,7 @@
 - Helper methods (`_mark_initialized()`, `_ensure_initialized()`)
 
 **Benefits**:
+
 - Reduces boilerplate across services
 - Enforces consistent initialization patterns
 - Prevents use of uninitialized containers (runtime safety)
@@ -40,17 +43,20 @@
 **What**: Migrated Identity service from implicit config-based wiring to explicit DI container pattern.
 
 **Before**:
+
 - `config.py` mixed configuration data with unclear instantiation logic
 - No centralized dependency wiring
 - Unclear lifecycle management
 
 **After**:
+
 - `IdentityDIContainer` inherits from `BaseDIContainer`
 - Explicit `initialize()` method wires all dependencies
 - Clear property accessors with initialization checks
 - Proper `cleanup()` for resource management
 
 **Dependencies Wired**:
+
 - Infrastructure: `JWTTokenProvider` (JWT adapter)
 - Application: `AuthenticateWithJWTUseCase`, `ValidateTokenUseCase`
 - Configuration accessors: `jwt_config`, `basic_auth_config`, `api_key_config`
@@ -64,6 +70,7 @@
 **Target**: `mmf_new/framework/observability`
 
 **Changes**:
+
 - Created `domain/protocols.py` with `IMetricsCollector`, `ITracer`
 - Moved implementations to `adapters/` (`monitoring.py`, `tracing.py`)
 - Updated `__init__.py` to export from new locations
@@ -74,6 +81,7 @@
 **Target**: `mmf_new/framework/authorization`
 
 **Changes**:
+
 - Created `domain/models.py` with `Permission`, `Role`, `IAuthorizationEngine`
 - Moved engines to `adapters/` (`rbac_engine.py`, `abac_engine.py`)
 - Moved decorators to `adapters/enforcement.py`
@@ -84,13 +92,13 @@
 **Target**: `tests/test_architecture.py`
 
 **Changes**:
+
 - Added `pytest-archon` to `pyproject.toml`
 - Created `tests/test_architecture.py` with rules:
   - Domain cannot import Infrastructure
   - Domain cannot import Application
   - Application cannot import Infrastructure
   - Framework Domain cannot import Adapters
-
 
 ---
 
@@ -114,18 +122,18 @@ class MyServiceDIContainer(BaseDIContainer):
         self.config = config
         self._repository: MyRepository | None = None
         self._use_case: MyUseCase | None = None
-    
+
     def initialize(self) -> None:
         # Wire dependencies
         self._repository = MyRepositoryImpl(self.config.database_url)
         self._use_case = MyUseCase(repository=self._repository)
         self._mark_initialized()
-    
+
     def cleanup(self) -> None:
         if self._repository:
             self._repository.close()
         self._mark_cleanup()
-    
+
     @property
     def use_case(self) -> MyUseCase:
         self._ensure_initialized()
@@ -137,7 +145,7 @@ def main():
     config = MyServiceConfig(database_url="postgresql://...")
     container = MyServiceDIContainer(config)
     container.initialize()
-    
+
     try:
         # Use container
         result = container.use_case.execute(...)
@@ -169,14 +177,16 @@ def main():
 ## 🚀 Next Steps
 
 **Priority 1** (High Impact):
+
 - Create service scaffolding CLI tool to generate new services following the standard
 - Add architecture compliance checks to pre-commit hooks
 
 **Priority 2** (Medium Impact):
+
 - Documentation updates to reflect the new architecture
 - Developer training/onboarding materials
 
 ---
 
-**Last Updated**: November 25, 2025  
+**Last Updated**: November 25, 2025
 **Status**: Phase 1 Complete (Core infrastructure & Framework Refactoring & Service Migration)

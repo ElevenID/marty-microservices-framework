@@ -3,7 +3,6 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
-
 from marty_msf.framework.event_streaming.saga import Saga, SagaOrchestrator, SagaStatus
 
 

@@ -3,30 +3,34 @@
 import logging
 
 from mmf_new.core.di import BaseDIContainer
+from mmf_new.services.identity.application.ports_out import BasicAuthenticationProvider
+from mmf_new.services.identity.application.ports_out.token_provider import TokenProvider
+from mmf_new.services.identity.application.use_cases.authenticate_with_basic import (
+    AuthenticateWithBasicUseCase,
+)
+from mmf_new.services.identity.application.use_cases.authenticate_with_jwt import (
+    AuthenticateWithJWTUseCase,
+)
+from mmf_new.services.identity.application.use_cases.validate_token import (
+    ValidateTokenUseCase,
+)
 from mmf_new.services.identity.config import (
     APIKeyConfig,
     AuthenticationConfig,
     BasicAuthConfig,
     JWTConfig,
 )
-from mmf_new.services.identity.application.use_cases.authenticate_with_jwt import (
-    AuthenticateWithJWTUseCase,
-)
-from mmf_new.services.identity.application.use_cases.authenticate_with_basic import (
-    AuthenticateWithBasicUseCase,
-)
-from mmf_new.services.identity.application.use_cases.validate_token import (
-    ValidateTokenUseCase,
-)
-from mmf_new.services.identity.application.ports_out.token_provider import TokenProvider
-from mmf_new.services.identity.application.ports_out import BasicAuthenticationProvider
-from mmf_new.services.identity.infrastructure.adapters.out.auth.jwt_adapter import (
-    JWTTokenProvider,
-    JWTConfig as JWTAdapterConfig,
-)
 from mmf_new.services.identity.infrastructure.adapters.out.auth.basic_auth_adapter import (
     BasicAuthAdapter,
+)
+from mmf_new.services.identity.infrastructure.adapters.out.auth.basic_auth_adapter import (
     BasicAuthConfig as BasicAuthAdapterConfig,
+)
+from mmf_new.services.identity.infrastructure.adapters.out.auth.jwt_adapter import (
+    JWTConfig as JWTAdapterConfig,
+)
+from mmf_new.services.identity.infrastructure.adapters.out.auth.jwt_adapter import (
+    JWTTokenProvider,
 )
 
 logger = logging.getLogger(__name__)
@@ -155,9 +159,7 @@ class IdentityDIContainer(BaseDIContainer):
         )
 
         # Token validation use case
-        self._validate_token_use_case = ValidateTokenUseCase(
-            token_provider=self._token_provider
-        )
+        self._validate_token_use_case = ValidateTokenUseCase(token_provider=self._token_provider)
 
         logger.info("Initialized identity use cases")
 

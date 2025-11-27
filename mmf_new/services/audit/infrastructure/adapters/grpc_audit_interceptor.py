@@ -12,6 +12,7 @@ from collections.abc import Callable
 from typing import Any, Optional, Union
 
 import grpc
+from google.protobuf.json_format import MessageToDict
 from grpc import aio
 from grpc.aio import ServerInterceptor
 
@@ -370,8 +371,6 @@ class GrpcAuditInterceptor(ServerInterceptor):
     def _message_to_dict(self, message: Any) -> dict[str, Any]:
         """Convert protobuf message to dictionary."""
         try:
-            from google.protobuf.json_format import MessageToDict
-
             return MessageToDict(message)
         except ImportError:
             # Fallback if protobuf not available

@@ -171,7 +171,7 @@ class BaseEvent:
         if metadata is None:
             # Extract event_id from kwargs if present, otherwise generate new one
             event_id = kwargs.pop("event_id", str(uuid.uuid4()))
-            
+
             self.metadata = EventMetadata(
                 event_id=event_id,
                 event_type=self.event_type,

@@ -18,6 +18,7 @@ from typing import Any, Generic, TypeVar, cast, overload
 from typing_extensions import Protocol
 
 from mmf_new.core.platform.contracts import IServiceLifecycle
+
 from .cache import CacheBackend, CacheConfig, SerializationFormat, create_cache_manager
 
 T = TypeVar("T")
@@ -532,9 +533,7 @@ def register_service(
     is_singleton: bool = True,
 ) -> RegistrationInfo[T]:
     """Register a service with the enhanced container."""
-    return get_container().register_service(
-        service_type, factory, instance, config, is_singleton
-    )
+    return get_container().register_service(service_type, factory, instance, config, is_singleton)
 
 
 def get_service_typed(service_type: type[T]) -> T:

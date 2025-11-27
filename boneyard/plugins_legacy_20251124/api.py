@@ -11,17 +11,16 @@ Following the Level Contract principle:
 - No circular dependencies are possible by design
 """
 
-import time
 from __future__ import annotations
 
 import logging
+import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any, Protocol, runtime_checkable
-
 
 # --- Core Enums ---
 
@@ -83,7 +82,7 @@ class PluginContext:
     registry: Any = None
     event_bus: Any = None
     metrics: Any = None
-    
+
     def __post_init__(self):
         """Post-initialization setup."""
         if self.logger is None:
@@ -110,7 +109,7 @@ class ServiceDefinition:
     timeout: int = 30  # seconds
     tags: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
-    
+
     def __post_init__(self):
         """Validate service definition."""
         if not self.name:
@@ -137,27 +136,27 @@ class RouteDefinition:
 @runtime_checkable
 class PluginInterface(Protocol):
     """Protocol for all plugins."""
-    
+
     def get_metadata(self) -> PluginMetadata:
         """Get plugin metadata."""
         ...
-    
+
     def get_service_definitions(self) -> list[ServiceDefinition]:
         """Get list of services provided by this plugin."""
         ...
-    
+
     async def initialize(self, context: PluginContext) -> None:
         """Initialize the plugin."""
         ...
-    
+
     async def start(self) -> None:
         """Start the plugin."""
         ...
-    
+
     async def stop(self) -> None:
         """Stop the plugin."""
         ...
-    
+
     async def cleanup(self) -> None:
         """Clean up plugin resources."""
         ...
@@ -165,35 +164,35 @@ class PluginInterface(Protocol):
 
 class IPluginManager(ABC):
     """Interface for plugin management."""
-    
+
     @abstractmethod
     async def discover_plugins(self, paths: list[str]) -> list[str]:
         """Discover available plugins in the given paths."""
-    
+
     @abstractmethod
     async def load_plugin(self, plugin_name: str) -> bool:
         """Load a specific plugin."""
-    
+
     @abstractmethod
     async def unload_plugin(self, plugin_name: str) -> bool:
         """Unload a specific plugin."""
-    
+
     @abstractmethod
     async def start_plugin(self, plugin_name: str) -> bool:
         """Start a specific plugin."""
-    
+
     @abstractmethod
     async def stop_plugin(self, plugin_name: str) -> bool:
         """Stop a specific plugin."""
-    
+
     @abstractmethod
     def get_plugin_status(self, plugin_name: str) -> PluginStatus:
         """Get the status of a specific plugin."""
-    
+
     @abstractmethod
     def list_plugins(self) -> dict[str, PluginStatus]:
         """List all plugins and their statuses."""
-    
+
     @abstractmethod
     def get_plugin_metadata(self, plugin_name: str) -> PluginMetadata | None:
         """Get metadata for a specific plugin."""
@@ -201,23 +200,23 @@ class IPluginManager(ABC):
 
 class IServiceManager(ABC):
     """Interface for service management within plugins."""
-    
+
     @abstractmethod
     async def register_service(self, plugin_name: str, service_definition: ServiceDefinition) -> bool:
         """Register a service with the plugin system."""
-    
+
     @abstractmethod
     async def unregister_service(self, plugin_name: str, service_name: str) -> bool:
         """Unregister a service from the plugin system."""
-    
+
     @abstractmethod
     async def get_service(self, plugin_name: str, service_name: str) -> ServiceDefinition | None:
         """Get a registered service definition."""
-    
+
     @abstractmethod
     async def list_services(self, plugin_name: str | None = None) -> dict[str, list[ServiceDefinition]]:
         """List all registered services, optionally filtered by plugin."""
-    
+
     @abstractmethod
     async def get_service_status(self, plugin_name: str, service_name: str) -> ServiceStatus:
         """Get the status of a specific service."""
@@ -225,15 +224,15 @@ class IServiceManager(ABC):
 
 class IPluginDiscovery(ABC):
     """Interface for plugin discovery mechanisms."""
-    
+
     @abstractmethod
     async def discover(self, discovery_paths: list[str]) -> list[str]:
         """Discover plugins in the specified paths."""
-    
+
     @abstractmethod
     def validate_plugin(self, plugin_path: str) -> bool:
         """Validate that a discovered item is a valid plugin."""
-    
+
     @abstractmethod
     def get_plugin_info(self, plugin_path: str) -> PluginMetadata | None:
         """Extract plugin metadata from a plugin path."""
@@ -241,15 +240,15 @@ class IPluginDiscovery(ABC):
 
 class IPluginLoader(ABC):
     """Interface for plugin loading mechanisms."""
-    
+
     @abstractmethod
     async def load(self, plugin_name: str, plugin_path: str) -> PluginInterface:
         """Load a plugin from the specified path."""
-    
+
     @abstractmethod
     async def unload(self, plugin_name: str) -> bool:
         """Unload a previously loaded plugin."""
-    
+
     @abstractmethod
     def is_loaded(self, plugin_name: str) -> bool:
         """Check if a plugin is currently loaded."""
@@ -257,27 +256,27 @@ class IPluginLoader(ABC):
 
 class IPluginRegistry(ABC):
     """Interface for plugin registry operations."""
-    
+
     @abstractmethod
     def register(self, plugin_name: str, plugin: PluginInterface, metadata: PluginMetadata) -> bool:
         """Register a plugin instance."""
-    
+
     @abstractmethod
     def unregister(self, plugin_name: str) -> bool:
         """Unregister a plugin."""
-    
+
     @abstractmethod
     def get_plugin(self, plugin_name: str) -> PluginInterface | None:
         """Get a registered plugin instance."""
-    
+
     @abstractmethod
     def get_metadata(self, plugin_name: str) -> PluginMetadata | None:
         """Get plugin metadata."""
-    
+
     @abstractmethod
     def get_all_plugins(self) -> dict[str, PluginInterface]:
         """Get all registered plugins."""
-    
+
     @abstractmethod
     def get_all_metadata(self) -> dict[str, PluginMetadata]:
         """Get metadata for all registered plugins."""
@@ -287,7 +286,7 @@ class IPluginRegistry(ABC):
 
 class PluginError(Exception):
     """Plugin-related errors."""
-    
+
     def __init__(self, message: str, plugin_name: str | None = None):
         super().__init__(message)
         self.plugin_name = plugin_name
@@ -339,45 +338,45 @@ class PluginService(ABC):
 
 class BasePlugin(ABC):
     """Abstract base class for all plugins."""
-    
+
     def __init__(self):
         self._status = PluginStatus.UNLOADED
         self._context: PluginContext | None = None
         self._logger = logging.getLogger(f"plugin.{self.get_metadata().name}")
-    
+
     @property
     def status(self) -> PluginStatus:
         """Get current plugin status."""
         return self._status
-    
+
     @property
     def context(self) -> PluginContext:
         """Get plugin context (only available after initialization)."""
         if not self._context:
             raise PluginError(
-                "Plugin context not available before initialization", 
+                "Plugin context not available before initialization",
                 self.get_metadata().name
             )
         return self._context
-    
+
     @property
     def logger(self) -> logging.Logger:
         """Plugin-specific logger."""
         return self._logger
-    
+
     @abstractmethod
     def get_metadata(self) -> PluginMetadata:
         """Get plugin metadata."""
-    
+
     @abstractmethod
     def get_service_definitions(self) -> list[ServiceDefinition]:
         """Get list of services provided by this plugin."""
-    
+
     async def initialize(self, context: PluginContext) -> None:
         """Initialize the plugin with context."""
         self._context = context
         self._status = PluginStatus.INITIALIZING
-        
+
         try:
             await self._do_initialize()
             self._status = PluginStatus.LOADED
@@ -386,47 +385,47 @@ class BasePlugin(ABC):
             self._status = PluginStatus.ERROR
             self.logger.error(f"Plugin {self.get_metadata().name} initialization failed: {e}")
             raise PluginError(f"Failed to initialize plugin: {e}", self.get_metadata().name)
-    
+
     async def start(self) -> None:
         """Start the plugin."""
         if self._status != PluginStatus.LOADED:
             raise RuntimeError(f"Plugin must be loaded before starting. Current status: {self._status}")
-        
+
         await self._do_start()
         self._status = PluginStatus.ACTIVE
-    
+
     async def stop(self) -> None:
         """Stop the plugin."""
         if self._status == PluginStatus.ACTIVE:
             self._status = PluginStatus.STOPPING
             await self._do_stop()
             self._status = PluginStatus.STOPPED
-    
+
     async def cleanup(self) -> None:
         """Clean up plugin resources."""
         await self._do_cleanup()
         self._status = PluginStatus.UNLOADED
         self._context = None
-    
+
     @abstractmethod
     async def _do_initialize(self) -> None:
         """Plugin-specific initialization logic."""
-    
+
     @abstractmethod
     async def _do_start(self) -> None:
         """Plugin-specific startup logic."""
-    
+
     @abstractmethod
     async def _do_stop(self) -> None:
         """Plugin-specific shutdown logic."""
-    
+
     @abstractmethod
     async def _do_cleanup(self) -> None:
         """Plugin-specific cleanup logic."""
-    
+
     def get_configuration_schema(self) -> dict[str, Any]:
         """Return configuration schema for this plugin.
-        
+
         Override this method to define the configuration structure
         that this plugin expects.
         """
@@ -443,15 +442,15 @@ MMFPlugin = BasePlugin
 
 class IPluginEventSubscriptionManager(ABC):
     """Interface for plugin event subscription management."""
-    
+
     @abstractmethod
     async def subscribe(self, plugin_name: str, event_type: str, handler: Callable[[Any], Any]) -> bool:
         """Subscribe plugin to an event type."""
-    
+
     @abstractmethod
     async def unsubscribe(self, plugin_name: str, event_type: str) -> bool:
         """Unsubscribe plugin from an event type."""
-    
+
     @abstractmethod
     async def publish_event(self, event_type: str, event_data: Any) -> None:
         """Publish event to subscribed plugins."""

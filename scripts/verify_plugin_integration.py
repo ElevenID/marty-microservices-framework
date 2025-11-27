@@ -10,7 +10,6 @@ from importlib.metadata import entry_points
 from pathlib import Path
 
 import yaml
-
 from marty_msf.framework.plugins.core import PluginContext, PluginManager
 from marty_msf.framework.plugins.services import ServiceDefinition
 

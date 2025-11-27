@@ -1,5 +1,7 @@
 import builtins
+
 from mmf_new.framework.events import BaseEvent, EventHandler
+
 
 class TestEventCollector(EventHandler):
     """Test event handler that collects events for assertion."""

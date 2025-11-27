@@ -15,12 +15,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
+from config import RegistryType, create_development_config, create_kubernetes_config
 from fastapi.testclient import TestClient
 
 # Import the service discovery components
 from main import HealthCheckResult, ServiceDiscoveryService, ServiceInstance, app
-
-from config import RegistryType, create_development_config, create_kubernetes_config
 
 
 class TestServiceDiscoveryCore:

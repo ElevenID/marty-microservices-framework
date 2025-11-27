@@ -5,6 +5,7 @@ Integration Transformation Ports
 from abc import ABC, abstractmethod
 from typing import Any
 
+
 class TransformationPort(ABC):
     """Port for data transformation."""
 

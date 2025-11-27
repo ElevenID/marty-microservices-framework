@@ -6,13 +6,13 @@ Implementation of round-robin load balancing strategy.
 
 import hashlib
 
+from mmf_new.discovery.adapters.base_load_balancer import BaseLoadBalancer
 from mmf_new.discovery.domain.models import ServiceInstance
 from mmf_new.discovery.ports.load_balancer import (
     LoadBalancingConfig,
     LoadBalancingContext,
     StickySessionType,
 )
-from mmf_new.discovery.adapters.base_load_balancer import BaseLoadBalancer
 
 
 class RoundRobinBalancer(BaseLoadBalancer):

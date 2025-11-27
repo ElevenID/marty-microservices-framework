@@ -14,8 +14,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Generic, TypeVar
 
-from mmf_new.framework.patterns.event_sourcing import DomainEvent, EventStore
 from mmf_new.framework.events.types import EventMetadata
+from mmf_new.framework.patterns.event_sourcing import DomainEvent, EventStore
 
 logger = logging.getLogger(__name__)
 

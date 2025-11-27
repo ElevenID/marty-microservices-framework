@@ -45,7 +45,7 @@ class InfrastructureProvider(Enum):
     DOCKER_SWARM = "docker_swarm"
     AWS_ECS = "aws_ecs"
     AWS_EKS = "aws_eks"
-    AZURE_AKS = "azure_aks"
+    AZURE_ASK = "azure_ask"
     GCP_GKE = "gcp_gke"
 
 

@@ -315,4 +315,3 @@ def load_platform_configuration(
         environment=environment,
         service_name=None,
     )
-

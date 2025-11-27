@@ -5,11 +5,7 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID
 
-from mmf_new.core.domain import (
-    Entity,
-    SecurityEventType,
-    SecurityThreatLevel,
-)
+from mmf_new.core.domain import Entity, SecurityEventType, SecurityThreatLevel
 
 
 @dataclass

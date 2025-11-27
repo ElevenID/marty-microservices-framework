@@ -10,8 +10,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from mmf_new.core.security.domain.models.rate_limit import RateLimitQuota, RateLimitResult
-from mmf_new.core.security.domain.services.rate_limiting import RateLimitCoordinationService
+from mmf_new.core.security.domain.models.rate_limit import (
+    RateLimitQuota,
+    RateLimitResult,
+)
+from mmf_new.core.security.domain.services.rate_limiting import (
+    RateLimitCoordinationService,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -52,9 +57,7 @@ class IstioRateLimiter:
             # Calculate Istio limits based on app limits
             istio_limits = {}
             for endpoint, app_limit in app_limits.items():
-                istio_limits[endpoint] = self.coordination_service.calculate_istio_limit(
-                    app_limit
-                )
+                istio_limits[endpoint] = self.coordination_service.calculate_istio_limit(app_limit)
 
             # Create EnvoyFilter for rate limiting
             envoy_filter = self._create_rate_limit_envoy_filter(
@@ -65,7 +68,9 @@ class IstioRateLimiter:
             if self.k8s_client:
                 return await self.k8s_client.apply_resource(envoy_filter)
             else:
-                logger.warning("No Kubernetes client available, skipping Istio rate limit application")
+                logger.warning(
+                    "No Kubernetes client available, skipping Istio rate limit application"
+                )
                 return False
 
         except Exception as e:
@@ -90,9 +95,7 @@ class IstioRateLimiter:
         self, app_result: RateLimitResult, user_authenticated: bool
     ) -> bool:
         """Check if Istio limits should be applied based on app result."""
-        return self.coordination_service.should_apply_istio_limit(
-            app_result, user_authenticated
-        )
+        return self.coordination_service.should_apply_istio_limit(app_result, user_authenticated)
 
     def _create_rate_limit_envoy_filter(
         self,
@@ -162,7 +165,7 @@ class IstioRateLimiter:
                                         "name": "envoy.filters.network.http_connection_manager"
                                     }
                                 }
-                            }
+                            },
                         },
                         "patch": {
                             "operation": "INSERT_BEFORE",

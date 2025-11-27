@@ -38,20 +38,19 @@ from typing import Any
 import asyncpg
 import click
 import jinja2
+import marty_msf
 import toml
 import uvicorn
 import yaml
 from cookiecutter.main import cookiecutter
+from marty_msf.cli.commands import migrate, plugin, service, service_mesh
+from mmf_new.core.application.sql import SQLGenerator
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.prompt import Confirm, Prompt
 from rich.table import Table
 from rich.text import Text
-
-import marty_msf
-from marty_msf.cli.commands import migrate, plugin, service, service_mesh
-from mmf_new.core.application.sql import SQLGenerator
 
 from .api_commands import add_api_commands
 

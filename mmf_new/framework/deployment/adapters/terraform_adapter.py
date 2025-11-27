@@ -67,9 +67,7 @@ class TerraformAdapter(InfrastructurePort):
 
         return {"terraform": {"required_providers": {}}, "provider": providers}
 
-    def generate_backend_config(
-        self, backend_config: dict[str, Any]
-    ) -> dict[str, Any]:
+    def generate_backend_config(self, backend_config: dict[str, Any]) -> dict[str, Any]:
         """Generate Terraform backend configuration."""
         if not backend_config:
             return {}

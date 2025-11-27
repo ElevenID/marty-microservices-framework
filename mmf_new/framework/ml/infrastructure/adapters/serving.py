@@ -19,7 +19,12 @@ from ....observability.monitoring import (
     MetricType,
     PrometheusCollector,
 )
-from ...domain.entities import ModelFramework, ModelMetrics, ModelPrediction, ModelStatus
+from ...domain.entities import (
+    ModelFramework,
+    ModelMetrics,
+    ModelPrediction,
+    ModelStatus,
+)
 from ...domain.ports import FeatureStorePort, ModelRegistryPort, ModelServingPort
 
 
@@ -215,9 +220,7 @@ class ModelServer(ModelServingPort):
             logging.exception("Prediction error for model %s: %s", model_id, e)
             return None
 
-    async def _prepare_features(
-        self, model_id: str, input_data: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _prepare_features(self, model_id: str, input_data: dict[str, Any]) -> dict[str, Any]:
         """Prepare features for prediction."""
         # Get feature names from model metadata
         model = self.model_registry.get_model_by_id(model_id)
@@ -244,9 +247,7 @@ class ModelServer(ModelServingPort):
 
         return features
 
-    async def _make_prediction(
-        self, model_obj: Any, features: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _make_prediction(self, model_obj: Any, features: dict[str, Any]) -> dict[str, Any]:
         """Make prediction using loaded model."""
         # Simulate prediction based on model type
         framework = model_obj.get("type", "generic")
@@ -261,9 +262,7 @@ class ModelServer(ModelServingPort):
         if framework == "tensorflow":
             # Simulate TensorFlow prediction
             prediction_array = np.random.random(10)  # Multi-class prediction
-            probabilities = {
-                f"class_{i}": float(pred) for i, pred in enumerate(prediction_array)
-            }
+            probabilities = {f"class_{i}": float(pred) for i, pred in enumerate(prediction_array)}
 
             return {
                 "prediction": int(np.argmax(prediction_array)),

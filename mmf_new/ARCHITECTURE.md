@@ -67,16 +67,16 @@ Infrastructure → Application → Domain
 
 ### ❌ FORBIDDEN Imports
 
--   **Domain Layer** CANNOT import:
-    -   `application.*`
-    -   `infrastructure.*`
-    -   Any external libraries (FastAPI, SQLAlchemy, etc.) except standard library and typing
--   **Application Layer** CANNOT import:
-    -   `infrastructure.*` (must depend on `domain.contracts` instead)
--   **Infrastructure Layer** CAN import:
-    -   `domain.*`
-    -   `application.*`
-    -   External libraries
+- **Domain Layer** CANNOT import:
+  - `application.*`
+  - `infrastructure.*`
+  - Any external libraries (FastAPI, SQLAlchemy, etc.) except standard library and typing
+- **Application Layer** CANNOT import:
+  - `infrastructure.*` (must depend on `domain.contracts` instead)
+- **Infrastructure Layer** CAN import:
+  - `domain.*`
+  - `application.*`
+  - External libraries
 
 ### Violation Enforcement
 
@@ -95,28 +95,28 @@ from mmf_new.core.di import BaseDIContainer
 
 class MyServiceDIContainer(BaseDIContainer):
     """Dependency injection container for MyService."""
-    
+
     def __init__(self, config: MyServiceConfig):
         super().__init__()
         self.config = config
         self._repository: Optional[MyRepository] = None
         self._use_case: Optional[MyUseCase] = None
-    
+
     def initialize(self) -> None:
         """Wire all dependencies. Called once at startup."""
         # Initialize infrastructure
         self._repository = MyRepositoryImpl(self.config.database_url)
-        
+
         # Initialize application
         self._use_case = MyUseCase(repository=self._repository)
-    
+
     @property
     def use_case(self) -> MyUseCase:
         """Lazy access to use case."""
         if self._use_case is None:
             raise RuntimeError("Container not initialized")
         return self._use_case
-    
+
     def cleanup(self) -> None:
         """Cleanup resources. Called at shutdown."""
         if self._repository:
@@ -138,10 +138,10 @@ class MyServiceDIContainer(BaseDIContainer):
 
 Tests MUST mirror the source structure:
 
--   `test_domain.py` - Pure domain logic (no mocks needed)
--   `test_use_cases.py` - Application logic (mock repositories)
--   `test_integration.py` - Full stack integration tests
--   `fixtures.py` - Shared test fixtures and factories
+- `test_domain.py` - Pure domain logic (no mocks needed)
+- `test_use_cases.py` - Application logic (mock repositories)
+- `test_integration.py` - Full stack integration tests
+- `fixtures.py` - Shared test fixtures and factories
 
 ### Architectural Tests
 
@@ -176,10 +176,10 @@ def test_application_has_no_infrastructure_imports():
 
 When refactoring existing code to match this standard:
 
-1.  **No Backwards Compatibility**: Delete old files, move code to new locations. No deprecation warnings, no stub files.
-2.  **Fix Imports**: Update all imports immediately. Let the build fail, then fix it.
-3.  **Update Tests**: Ensure all tests pass after restructuring.
-4.  **Document in MIGRATION_SUMMARY.md**: Each service/module should have a migration summary explaining the changes.
+1. **No Backwards Compatibility**: Delete old files, move code to new locations. No deprecation warnings, no stub files.
+2. **Fix Imports**: Update all imports immediately. Let the build fail, then fix it.
+3. **Update Tests**: Ensure all tests pass after restructuring.
+4. **Document in MIGRATION_SUMMARY.md**: Each service/module should have a migration summary explaining the changes.
 
 ## Non-Compliance
 
@@ -189,8 +189,8 @@ Any code that does not follow this architecture will be **rejected** in code rev
 
 Reference implementations:
 
--   **Service**: `mmf_new/services/audit/` - Complete hexagonal architecture with DI container
--   **Framework Module**: `mmf_new/framework/gateway/` - Proper layering in framework code
+- **Service**: `mmf_new/services/audit/` - Complete hexagonal architecture with DI container
+- **Framework Module**: `mmf_new/framework/gateway/` - Proper layering in framework code
 
 ---
 

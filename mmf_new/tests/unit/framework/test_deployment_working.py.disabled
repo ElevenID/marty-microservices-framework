@@ -316,18 +316,18 @@ class TestInfrastructureProviders:
         assert target.region == "us-west-2"
         assert target.metadata["account_id"] == "123456789012"
 
-    def test_azure_aks_provider_target(self):
-        """Test Azure AKS provider configuration."""
+    def test_azure_ask_provider_target(self):
+        """Test Azure ASK provider configuration."""
         target = DeploymentTarget(
-            name="aks-cluster",
+            name="ask-cluster",
             environment=EnvironmentType.PRODUCTION,
-            provider=InfrastructureProvider.AZURE_AKS,
+            provider=InfrastructureProvider.AZURE_ASK,
             region="eastus",
-            cluster="production-aks",
+            cluster="production-ask",
             metadata={"subscription_id": "sub-123", "resource_group": "production-rg"},
         )
 
-        assert target.provider == InfrastructureProvider.AZURE_AKS
+        assert target.provider == InfrastructureProvider.AZURE_ASK
         assert target.region == "eastus"
         assert target.metadata["subscription_id"] == "sub-123"
 

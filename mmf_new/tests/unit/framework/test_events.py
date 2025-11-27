@@ -7,12 +7,18 @@ Tests the EventBus class and event handling without external dependencies.
 import asyncio
 import uuid
 from datetime import timedelta
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from mmf_new.framework.events import Event, EventBus, EventHandler
-from mmf_new.framework.events.enhanced_event_bus import BaseEvent, EventMetadata, DeliveryGuarantee, EventFilter
+from mmf_new.framework.events.enhanced_event_bus import (
+    BaseEvent,
+    DeliveryGuarantee,
+    EventFilter,
+    EventMetadata,
+)
+
 
 # Concrete EventHandler for testing
 class ConcreteEventHandler(EventHandler):
@@ -36,13 +42,14 @@ class ConcreteEventHandler(EventHandler):
     def can_handle(self, event: BaseEvent) -> bool:
         return event.event_type == self._event_type
 
+
 # InMemory EventBus for testing
 class InMemoryEventBus(EventBus):
     def __init__(self, service_name="test-service"):
         self.service_name = service_name
         self._running = True
-        self._subscriptions = {} # Map subscription_id to (handler, filter)
-        self._handlers_by_type = {} # Map event_type to list of handlers
+        self._subscriptions = {}  # Map subscription_id to (handler, filter)
+        self._handlers_by_type = {}  # Map event_type to list of handlers
 
     async def publish(
         self,
@@ -66,12 +73,12 @@ class InMemoryEventBus(EventBus):
     ) -> str:
         subscription_id = str(uuid.uuid4())
         self._subscriptions[subscription_id] = (handler, event_filter)
-        
+
         for event_type in handler.event_types:
             if event_type not in self._handlers_by_type:
                 self._handlers_by_type[event_type] = []
             self._handlers_by_type[event_type].append(handler)
-            
+
         return subscription_id
 
     async def unsubscribe(self, subscription_id: str) -> bool:
@@ -107,7 +114,7 @@ class TestEvent:
         event = Event(
             event_type="user.registered",
             data={"user_id": 123, "email": "test@example.com"},
-            event_id="event-123"
+            event_id="event-123",
         )
 
         assert event.event_id == "event-123"
@@ -148,7 +155,7 @@ class TestEvent:
             "event_type": "order.placed",
             "data": {"order_id": 456},
             "timestamp": "2024-01-01T12:00:00Z",
-            "metadata": {"version": 2}
+            "metadata": {"version": 2},
         }
 
         event = Event.from_dict(event_dict)
@@ -166,6 +173,7 @@ class TestEventHandler:
 
     async def test_event_handler_creation(self):
         """Test event handler creation."""
+
         async def handler_func(event: Event) -> None:
             pass
 
@@ -238,13 +246,13 @@ class TestEventBus:
         )
 
         sub_id = await bus.subscribe(handler)
-        
+
         # Verify subscription
         assert sub_id in bus._subscriptions
         assert handler in bus._handlers_by_type["user.registered"]
 
         await bus.unsubscribe(sub_id)
-        
+
         # Verify unsubscription
         assert sub_id not in bus._subscriptions
         assert handler not in bus._handlers_by_type["user.registered"]
@@ -277,4 +285,3 @@ class TestEventBus:
 
         assert len(handler1_events) == 1
         assert len(handler2_events) == 1
-

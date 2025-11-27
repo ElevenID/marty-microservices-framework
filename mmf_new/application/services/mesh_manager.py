@@ -7,14 +7,15 @@ Service for managing service mesh lifecycle and security policies.
 import logging
 from typing import Any
 
-from mmf_new.framework.mesh.ports.lifecycle import MeshLifecyclePort
-from mmf_new.core.security.ports.service_mesh import IServiceMeshManager
 from mmf_new.core.security.domain.models.service_mesh import (
-    ServiceMeshPolicy,
     PolicySyncResult,
+    ServiceMeshPolicy,
 )
+from mmf_new.core.security.ports.service_mesh import IServiceMeshManager
+from mmf_new.framework.mesh.ports.lifecycle import MeshLifecyclePort
 
 logger = logging.getLogger(__name__)
+
 
 class MeshManager:
     """
@@ -24,15 +25,13 @@ class MeshManager:
     for the service mesh.
     """
 
-    def __init__(
-        self,
-        lifecycle_port: MeshLifecyclePort,
-        security_port: IServiceMeshManager
-    ):
+    def __init__(self, lifecycle_port: MeshLifecyclePort, security_port: IServiceMeshManager):
         self.lifecycle = lifecycle_port
         self.security = security_port
 
-    async def deploy_mesh(self, namespace: str = "istio-system", config: dict[str, Any] | None = None) -> bool:
+    async def deploy_mesh(
+        self, namespace: str = "istio-system", config: dict[str, Any] | None = None
+    ) -> bool:
         """
         Deploy the service mesh.
 

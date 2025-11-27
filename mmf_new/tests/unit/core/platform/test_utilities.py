@@ -5,14 +5,15 @@ Tests the Registry, AtomicCounter, and TypedSingleton utility classes
 that provide core infrastructure services for the platform layer.
 """
 
-import pytest
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import Mock
 
-from mmf_new.framework.platform.utilities import Registry, AtomicCounter, TypedSingleton
+import pytest
+
 from mmf_new.framework.infrastructure.dependency_injection import DIContainer
+from mmf_new.framework.platform.utilities import AtomicCounter, Registry, TypedSingleton
 
 
 class TestRegistry:
@@ -143,6 +144,7 @@ class TestAtomicCounter:
 
     def test_thread_safety(self, counter):
         """Test that the counter is thread-safe."""
+
         def increment_many():
             for _ in range(100):
                 counter.increment()
@@ -161,6 +163,7 @@ class TestAtomicCounter:
 
     def test_concurrent_operations(self, counter):
         """Test concurrent increment and set operations."""
+
         def increment_task():
             for _ in range(50):
                 counter.increment()

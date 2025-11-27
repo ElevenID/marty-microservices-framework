@@ -15,7 +15,6 @@ from typing import Any
 
 import psutil
 import pytest
-
 from marty_msf.framework.integration.event_driven import (
     EventMessage,
     EventSubscription,

@@ -45,7 +45,7 @@ The security framework has been **consolidated** into a unified architecture:
 
 ## Quick Start
 
-### 1. HashiCorp Vault Setup
+### 1. HashCorp Vault Setup
 
 ```bash
 # Start Vault in dev mode

@@ -20,6 +20,7 @@ from typing import list
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from config import APIVersioningSettings
 from fastapi.testclient import TestClient
 from main import (
     APIContract,
@@ -33,8 +34,6 @@ from main import (
     VersioningStrategy,
     create_versioned_app,
 )
-
-from config import APIVersioningSettings
 
 
 # Test fixtures

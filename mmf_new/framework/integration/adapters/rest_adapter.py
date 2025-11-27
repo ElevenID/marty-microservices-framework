@@ -4,19 +4,21 @@ REST API Adapter
 
 import logging
 import time
-import aiohttp
 from typing import Any, Optional
 
-from mmf_new.framework.integration.ports.connector import ExternalSystemPort
+import aiohttp
+
+from mmf_new.framework.integration.domain.exceptions import (
+    ConnectionFailedError,
+    RequestTimeoutError,
+)
 from mmf_new.framework.integration.domain.models import (
     ConnectionConfig,
     IntegrationRequest,
     IntegrationResponse,
 )
-from mmf_new.framework.integration.domain.exceptions import (
-    ConnectionFailedError,
-    RequestTimeoutError,
-)
+from mmf_new.framework.integration.ports.connector import ExternalSystemPort
+
 
 class RESTAPIAdapter(ExternalSystemPort):
     """REST API connector implementation using aiohttp."""
@@ -59,7 +61,7 @@ class RESTAPIAdapter(ExternalSystemPort):
         start_time = time.time()
         method = request.operation.upper()
         url = f"{self.config.endpoint_url}"
-        
+
         # Handle path parameters if present in data
         if isinstance(request.data, dict) and "path" in request.data:
             url = f"{url}/{request.data['path'].lstrip('/')}"
@@ -71,19 +73,23 @@ class RESTAPIAdapter(ExternalSystemPort):
                 json=request.data if method in ["POST", "PUT", "PATCH"] else None,
                 params=request.data if method == "GET" else None,
                 headers=request.headers,
-                timeout=request.timeout or self.config.timeout
+                timeout=request.timeout or self.config.timeout,
             ) as response:
-                content = await response.json() if response.content_type == "application/json" else await response.text()
-                
+                content = (
+                    await response.json()
+                    if response.content_type == "application/json"
+                    else await response.text()
+                )
+
                 latency = (time.time() - start_time) * 1000
-                
+
                 return IntegrationResponse(
                     request_id=request.request_id,
                     success=response.status < 400,
                     data=content,
                     status_code=response.status,
                     headers=dict(response.headers),
-                    latency_ms=latency
+                    latency_ms=latency,
                 )
         except aiohttp.ClientError as e:
             latency = (time.time() - start_time) * 1000
@@ -92,7 +98,7 @@ class RESTAPIAdapter(ExternalSystemPort):
                 success=False,
                 data=None,
                 error_message=str(e),
-                latency_ms=latency
+                latency_ms=latency,
             )
         except Exception as e:
             latency = (time.time() - start_time) * 1000
@@ -102,20 +108,23 @@ class RESTAPIAdapter(ExternalSystemPort):
                 success=False,
                 data=None,
                 error_message=str(e),
-                latency_ms=latency
+                latency_ms=latency,
             )
 
     async def health_check(self) -> bool:
         """Check health of external system."""
         if not self.session:
             return False
-            
+
         try:
             # Use configured health check endpoint or default to root
             url = self.config.endpoint_url
-            if hasattr(self.config, 'protocol_settings') and 'health_check_path' in self.config.protocol_settings:
+            if (
+                hasattr(self.config, "protocol_settings")
+                and "health_check_path" in self.config.protocol_settings
+            ):
                 url = f"{url}/{self.config.protocol_settings['health_check_path'].lstrip('/')}"
-                
+
             async with self.session.get(url, timeout=5) as response:
                 return response.status < 400
         except Exception:

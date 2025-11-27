@@ -4,9 +4,13 @@ import json
 import logging
 from datetime import datetime
 
-try:
-    from colorama import Fore, Style, init
+from colorama import Fore, Style, init
 
+from mmf_new.core.domain.audit_types import AuditSeverity
+from mmf_new.services.audit.domain.contracts import IAuditDestination
+from mmf_new.services.audit.domain.entities import RequestAuditEvent
+
+try:
     COLORAMA_AVAILABLE = True
     init(autoreset=True)
 except ImportError:
@@ -25,10 +29,6 @@ except ImportError:
     class Style:  # noqa: N801
         RESET_ALL = ""
 
-
-from mmf_new.core.domain.audit_types import AuditSeverity
-from mmf_new.services.audit.domain.contracts import IAuditDestination
-from mmf_new.services.audit.domain.entities import RequestAuditEvent
 
 logger = logging.getLogger(__name__)
 

@@ -7,6 +7,7 @@ with OpenTelemetry integration.
 
 from __future__ import annotations
 
+import importlib
 import logging
 import os
 from typing import Any, Optional
@@ -18,20 +19,26 @@ from opentelemetry.instrumentation.grpc import (
     GrpcAioInstrumentorClient,
     GrpcAioInstrumentorServer,
 )
-import importlib
-try:
-    KafkaInstrumentor = importlib.import_module("opentelemetry.instrumentation.kafka").KafkaInstrumentor
-except ImportError:
-    KafkaInstrumentor = None
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
 
-from mmf_new.framework.infrastructure.dependency_injection import get_service
 from mmf_new.core.services import ObservabilityService
-from mmf_new.framework.observability.factories import register_observability_services, set_tracing_service_class
+from mmf_new.framework.infrastructure.dependency_injection import get_service
+from mmf_new.framework.observability.factories import (
+    register_observability_services,
+    set_tracing_service_class,
+)
+
+try:
+    KafkaInstrumentor = importlib.import_module(
+        "opentelemetry.instrumentation.kafka"
+    ).KafkaInstrumentor
+except ImportError:
+    KafkaInstrumentor = None
+
 
 logger = logging.getLogger(__name__)
 

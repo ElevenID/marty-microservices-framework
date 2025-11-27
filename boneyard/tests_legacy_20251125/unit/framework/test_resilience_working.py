@@ -12,7 +12,6 @@ Tests all major resilience patterns using real implementations:
 import asyncio
 
 import pytest
-
 from marty_msf.framework.resilience import (  # Basic Components; Pattern Management; Convenience Functions
     CircuitBreaker,
     CircuitBreakerConfig,

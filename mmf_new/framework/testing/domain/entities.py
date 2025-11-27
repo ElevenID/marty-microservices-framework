@@ -2,11 +2,14 @@ import builtins
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
-from .enums import TestType, TestStatus, TestSeverity
+
+from .enums import TestSeverity, TestStatus, TestType
+
 
 @dataclass
 class TestMetrics:
     """Test execution metrics."""
+
     execution_time: float
     memory_usage: float | None = None
     cpu_usage: float | None = None
@@ -16,9 +19,11 @@ class TestMetrics:
     cache_misses: int = 0
     custom_metrics: dict[str, Any] = field(default_factory=dict)
 
+
 @dataclass
 class TestResult:
     """Test execution result."""
+
     test_id: str
     name: str
     test_type: TestType
@@ -51,9 +56,11 @@ class TestResult:
             "severity": self.severity.value,
         }
 
+
 @dataclass
 class TestConfiguration:
     """Test execution configuration."""
+
     parallel_execution: bool = True
     max_workers: int = 4
     timeout: int = 300  # seconds

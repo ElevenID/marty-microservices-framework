@@ -10,7 +10,7 @@ meshConfig:
   accessLogFile: /dev/stdout
   extensionProviders:
     - name: otel
-      envoyOtelAls:
+      envoyOtelAlso:
         service: opentelemetry-collector.observability.svc.cluster.local
         port: 4317
     - name: skywalking

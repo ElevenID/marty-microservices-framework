@@ -14,15 +14,6 @@ from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
 from typing import Any
 
-from opentelemetry import trace
-from opentelemetry.exporter.jaeger.thrift import JaegerExporter
-from opentelemetry.instrumentation.grpc import GrpcInstrumentorServer
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
-from prometheus_client import Counter, Gauge, Histogram, Info, generate_latest
-
 # MMF framework imports
 from marty_msf.framework.config import BaseServiceConfig
 from marty_msf.observability.monitoring import (
@@ -31,6 +22,14 @@ from marty_msf.observability.monitoring import (
     HealthStatus,
     MetricsCollector,
 )
+from opentelemetry import trace
+from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+from opentelemetry.instrumentation.grpc import GrpcInstrumentorServer
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+from prometheus_client import Counter, Gauge, Histogram, Info, generate_latest
 
 # OpenTelemetry imports for tracing
 try:

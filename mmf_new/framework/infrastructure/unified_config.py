@@ -8,12 +8,12 @@ across different hosting environments:
 - Self-hosted (bare metal, VMs, Docker)
 - AWS (ECS, EKS, Lambda, EC2)
 - Google Cloud (GKE, Cloud Run, Compute Engine)
-- Microsoft Azure (AKS, Container Instances, VMs)
+- Microsoft Azure (ASK, Container Instances, VMs)
 - Kubernetes (any distribution)
 - Local development
 
 **Secret Backends Supported:**
-- HashiCorp Vault (self-hosted or cloud)
+- HashCorp Vault (self-hosted or cloud)
 - AWS Secrets Manager
 - Google Cloud Secret Manager
 - Azure Key Vault
@@ -50,13 +50,23 @@ from google.cloud import secretmanager  # type: ignore
 from pydantic import BaseModel, ValidationError
 from pydantic_settings import BaseSettings
 
+from mmf_new.framework.security.adapters.secrets.environment_adapter import (
+    EnvironmentSecretAdapter,
+)
+from mmf_new.framework.security.adapters.secrets.file_adapter import FileSecretAdapter
+from mmf_new.framework.security.adapters.secrets.kubernetes_adapter import (
+    KubernetesSecretAdapter,
+)
+from mmf_new.framework.security.adapters.secrets.memory_adapter import (
+    MemorySecretAdapter,
+)
+from mmf_new.framework.security.adapters.secrets.vault_adapter import (
+    VaultConfig,
+    VaultSecretAdapter,
+)
+
 from .cache import CacheBackend, CacheConfig, SerializationFormat, create_cache_manager
 from .config_manager import Environment
-from mmf_new.framework.security.adapters.secrets.vault_adapter import VaultSecretAdapter, VaultConfig
-from mmf_new.framework.security.adapters.secrets.environment_adapter import EnvironmentSecretAdapter
-from mmf_new.framework.security.adapters.secrets.file_adapter import FileSecretAdapter
-from mmf_new.framework.security.adapters.secrets.kubernetes_adapter import KubernetesSecretAdapter
-from mmf_new.framework.security.adapters.secrets.memory_adapter import MemorySecretAdapter
 
 # Import existing security module components with fallbacks
 try:
@@ -182,7 +192,7 @@ class ConfigurationBackendInterface(ABC):
 
 
 class VaultSecretBackend(SecretBackendInterface):
-    """HashiCorp Vault backend for secrets."""
+    """HashCorp Vault backend for secrets."""
 
     def __init__(self, adapter: VaultSecretAdapter):
         self.adapter = adapter
@@ -1344,11 +1354,7 @@ def create_unified_config_manager(
         env_adapter = EnvironmentSecretAdapter(prefix=f"{service_name.upper()}_")
         secret_backends.append(EnvironmentSecretBackend(env_adapter))
 
-        if (
-            enable_vault
-            and vault_config
-            and VAULT_INTEGRATION_AVAILABLE
-        ):
+        if enable_vault and vault_config and VAULT_INTEGRATION_AVAILABLE:
             try:
                 vault_client_config = VaultConfig(**vault_config)
                 adapter = VaultSecretAdapter(vault_client_config)

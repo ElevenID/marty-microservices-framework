@@ -9,7 +9,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from mmf_new.framework.documentation.domain.models import APIService, DocumentationConfig
+from mmf_new.framework.documentation.domain.models import (
+    APIService,
+    DocumentationConfig,
+)
 from mmf_new.framework.documentation.ports.generator import APIDocumentationGenerator
 
 logger = logging.getLogger(__name__)

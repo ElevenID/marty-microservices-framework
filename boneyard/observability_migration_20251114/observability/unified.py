@@ -23,6 +23,13 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import Any
 
+# Framework imports
+from marty_msf.observability.logging import (
+    CorrelationFilter,
+    TraceContextFilter,
+    UnifiedJSONFormatter,
+)
+
 # Core OpenTelemetry imports
 from opentelemetry import metrics, trace
 
@@ -57,13 +64,6 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 from prometheus_client import Counter, Gauge, Histogram, start_http_server
-
-# Framework imports
-from marty_msf.observability.logging import (
-    CorrelationFilter,
-    TraceContextFilter,
-    UnifiedJSONFormatter,
-)
 
 logger = logging.getLogger(__name__)
 

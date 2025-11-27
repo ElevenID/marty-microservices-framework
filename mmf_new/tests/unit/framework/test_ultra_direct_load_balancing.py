@@ -142,9 +142,9 @@ async def test_ultra_direct_round_robin():
 
         # Check for cycling behavior (at least 2 different hosts selected)
         unique_selections = set(selections)
-        assert len(unique_selections) >= 2, (
-            f"Should select from multiple hosts, got: {unique_selections}"
-        )
+        assert (
+            len(unique_selections) >= 2
+        ), f"Should select from multiple hosts, got: {unique_selections}"
 
         print("SUCCESS: Round-robin load balancing worked!")
 

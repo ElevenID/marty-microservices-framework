@@ -10,13 +10,13 @@ from collections import defaultdict, deque
 from datetime import datetime, timezone
 from typing import Any
 
+from mmf_new.core.domain.audit_types import SecurityThreatLevel
 from mmf_new.core.security.domain.models.threat import (
     SecurityEvent,
     ThreatDetectionResult,
     ThreatType,
 )
 from mmf_new.core.security.ports.threat_detection import IThreatDetector
-from mmf_new.core.domain.audit_types import SecurityThreatLevel
 
 
 class PatternBasedThreatDetector(IThreatDetector):
@@ -79,15 +79,11 @@ class PatternBasedThreatDetector(IThreatDetector):
 
             # Check event details
             if re.search(pattern, event_data, re.IGNORECASE):
-                return self._create_threat_result(
-                    event, threat_name, pattern_info, "event_details"
-                )
+                return self._create_threat_result(event, threat_name, pattern_info, "event_details")
 
             # Check user agent if applicable
             if "user_agent" in threat_name and re.search(pattern, user_agent, re.IGNORECASE):
-                return self._create_threat_result(
-                    event, threat_name, pattern_info, "user_agent"
-                )
+                return self._create_threat_result(event, threat_name, pattern_info, "user_agent")
 
         # No threat detected
         return ThreatDetectionResult(
@@ -142,7 +138,9 @@ class PatternBasedThreatDetector(IThreatDetector):
             analyzed_at=datetime.now(timezone.utc),
         )
 
-    async def analyze_behavior(self, events: builtins.list[SecurityEvent]) -> builtins.list[ThreatDetectionResult]:
+    async def analyze_behavior(
+        self, events: builtins.list[SecurityEvent]
+    ) -> builtins.list[ThreatDetectionResult]:
         """Analyze behavior patterns across multiple events."""
         threats = []
 
@@ -169,10 +167,7 @@ class PatternBasedThreatDetector(IThreatDetector):
                 threats.append(threat)
 
             # Check for multiple failed logins
-            failed_logins = [
-                e for e in ip_events
-                if e.event_type == "authentication_failure"
-            ]
+            failed_logins = [e for e in ip_events if e.event_type == "authentication_failure"]
 
             if len(failed_logins) > 5:
                 threat = ThreatDetectionResult(

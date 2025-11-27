@@ -17,15 +17,11 @@ class InMemoryModelRegistry(ModelRegistryPort):
 
     def __init__(self):
         """Initialize model registry."""
-        self.models: dict[str, dict[str, MLModel]] = defaultdict(
-            dict
-        )  # name -> version -> model
+        self.models: dict[str, dict[str, MLModel]] = defaultdict(dict)  # name -> version -> model
         self.model_index: dict[str, MLModel] = {}  # model_id -> model
 
         # Model aliases (latest, production, etc.)
-        self.aliases: dict[str, dict[str, str]] = defaultdict(
-            dict
-        )  # name -> alias -> version
+        self.aliases: dict[str, dict[str, str]] = defaultdict(dict)  # name -> alias -> version
 
         # Model lineage
         self.lineage: dict[str, list[str]] = defaultdict(

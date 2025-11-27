@@ -16,8 +16,8 @@ from enum import Enum
 
 from mmf_new.core.security.domain.models.context import AuthorizationContext
 from mmf_new.core.security.domain.models.result import AuthorizationResult
-from mmf_new.core.security.ports.authorization import IAuthorizer
 from mmf_new.core.security.domain.models.user import User
+from mmf_new.core.security.ports.authorization import IAuthorizer
 
 __all__ = [
     # Re-exported from security_core

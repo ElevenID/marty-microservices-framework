@@ -18,6 +18,7 @@ from mmf_new.framework.resilience.domain.exceptions import BulkheadError
 T = TypeVar("T")
 logger = logging.getLogger(__name__)
 
+
 class BulkheadPool(ABC):
     """Abstract base class for bulkhead implementations."""
 
@@ -118,6 +119,7 @@ class BulkheadPool(ABC):
             self._max_concurrent_reached = 0
             self._total_wait_time = 0.0
 
+
 class SemaphoreBulkhead(BulkheadPool):
     """Semaphore-based bulkhead for controlling concurrent access."""
 
@@ -205,7 +207,7 @@ class SemaphoreBulkhead(BulkheadPool):
     def get_current_load(self) -> int:
         """Get current number of active operations."""
         # Accessing internal _value is not ideal but standard for Semaphore inspection
-        return self.config.max_concurrent - self._semaphore._value # type: ignore
+        return self.config.max_concurrent - self._semaphore._value  # type: ignore
 
     def get_capacity(self) -> int:
         """Get maximum capacity."""
@@ -213,7 +215,8 @@ class SemaphoreBulkhead(BulkheadPool):
 
     def is_available(self) -> bool:
         """Check if resources are available."""
-        return self._semaphore._value > 0 # type: ignore
+        return self._semaphore._value > 0  # type: ignore
+
 
 class ThreadPoolBulkhead(BulkheadPool):
     """Thread pool-based bulkhead for CPU-bound operations."""
@@ -331,6 +334,7 @@ class ThreadPoolBulkhead(BulkheadPool):
         """Shutdown thread pool."""
         self._executor.shutdown(wait=wait)
 
+
 class BulkheadManager:
     """Manages multiple bulkhead pools."""
 
@@ -386,12 +390,15 @@ class BulkheadManager:
                     bulkhead.shutdown()
             self._bulkheads.clear()
 
+
 # Global bulkhead manager
 _bulkhead_manager = BulkheadManager()
+
 
 def get_bulkhead_manager() -> BulkheadManager:
     """Get the global bulkhead manager."""
     return _bulkhead_manager
+
 
 def bulkhead_isolate(
     name: str,
@@ -417,14 +424,17 @@ def bulkhead_isolate(
 
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         if asyncio.iscoroutinefunction(func):
+
             @wraps(func)
             async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
-                return await bulkhead.execute_async(func, *args, **kwargs) # type: ignore
+                return await bulkhead.execute_async(func, *args, **kwargs)  # type: ignore
+
             return async_wrapper
 
         @wraps(func)
         def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
-            return bulkhead.execute_sync(func, *args, **kwargs) # type: ignore
+            return bulkhead.execute_sync(func, *args, **kwargs)  # type: ignore
+
         return sync_wrapper
 
     return decorator

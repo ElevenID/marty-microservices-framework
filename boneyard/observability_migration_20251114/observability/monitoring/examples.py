@@ -14,9 +14,6 @@ import aioredis
 
 # FastAPI example
 from fastapi import FastAPI, HTTPException
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
 from marty_msf.framework.monitoring import (
     AlertLevel,
     AlertRule,
@@ -39,6 +36,8 @@ from marty_msf.framework.monitoring.core import (
     HealthCheckResult,
     HealthStatus,
 )
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 # Database example
 try:

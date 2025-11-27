@@ -17,9 +17,7 @@ class ObservabilityService(ABC):
         self._initialized = False
 
     @abstractmethod
-    def initialize(
-        self, service_name: str, config: dict[str, Any] | None = None
-    ) -> None:
+    def initialize(self, service_name: str, config: dict[str, Any] | None = None) -> None:
         """Initialize the observability service."""
         pass
 

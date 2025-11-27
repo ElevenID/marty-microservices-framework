@@ -10,11 +10,10 @@ from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI
-from observability import init_observability
-
 from marty_msf.framework.config_factory import create_service_config
 from marty_msf.framework.logging import UnifiedServiceLogger
 from marty_msf.framework.monitoring import setup_fastapi_monitoring
+from observability import init_observability
 
 # Initialize logger
 logger = logging.getLogger(__name__)

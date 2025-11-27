@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Optional
+
 from mmf_new.examples.service_templates.hybrid_example.domain.models import Order
+
 
 class OrderRepository(ABC):
     @abstractmethod
@@ -8,12 +10,13 @@ class OrderRepository(ABC):
         """Save an order."""
 
     @abstractmethod
-    async def get_by_id(self, order_id: str) -> Optional[Order]:
+    async def get_by_id(self, order_id: str) -> Order | None:
         """Get an order by ID."""
 
     @abstractmethod
     async def get_by_ids(self, order_ids: list[str]) -> list[Order]:
         """Get multiple orders by IDs."""
+
 
 class InventoryServicePort(ABC):
     @abstractmethod

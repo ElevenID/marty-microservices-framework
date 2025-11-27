@@ -8,11 +8,11 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from ..domain.models.service_mesh import (
+    NetworkSegment,
+    PolicySyncResult,
+    ServiceMeshMetrics,
     ServiceMeshPolicy,
     ServiceMeshStatus,
-    ServiceMeshMetrics,
-    PolicySyncResult,
-    NetworkSegment,
 )
 
 

@@ -4,13 +4,15 @@ import json
 import logging
 from typing import Any
 
+import redis
+
+from ..security.ports.common import ICacheManager
+
 try:
-    import redis
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
 
-from ..security.ports.common import ICacheManager
 
 logger = logging.getLogger(__name__)
 
@@ -30,9 +32,7 @@ class CacheManager(ICacheManager):
                 self.redis_client.ping()
                 logger.info("Connected to Redis cache")
             except Exception as e:
-                logger.warning(
-                    f"Failed to connect to Redis: {e}. Falling back to in-memory cache."
-                )
+                logger.warning(f"Failed to connect to Redis: {e}. Falling back to in-memory cache.")
                 self.redis_client = None
         elif redis_url and not REDIS_AVAILABLE:
             logger.warning(

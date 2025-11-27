@@ -205,7 +205,7 @@ ignore = [
     "C901",  # complex-structure - requires architectural changes
 
     # Import-related (can be auto-fixed in many cases)
-    "I001",  # unsorted-imports - can be auto-fixed
+    # "I001",  # unsorted-imports - can be auto-fixed
     "E402",  # module-import-not-at-top-of-file
 
     # Exception handling improvements needed
@@ -231,7 +231,7 @@ select = [
     "E",    # pycodestyle errors
     "W",    # pycodestyle warnings
     "F",    # pyflakes
-    "I",    # isort
+    # "I",    # isort - disabled to avoid conflict with isort hook
     "B",    # flake8-bugbear
     "UP",   # pyupgrade
     "C",    # flake8-comprehensions

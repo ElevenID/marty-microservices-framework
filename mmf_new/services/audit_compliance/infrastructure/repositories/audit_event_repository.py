@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 from typing import Any, Optional
 
+from mmf_new.core.domain import AuditLevel
 from mmf_new.framework.infrastructure.database_manager import DatabaseManager
 from mmf_new.framework.infrastructure.repository import SQLAlchemyRepository
 
@@ -156,7 +157,6 @@ class AuditEventRepository(SQLAlchemyRepository[SecurityAuditEvent], IAuditEvent
         self, hours: int = 24, limit: int = 50
     ) -> list[SecurityAuditEvent]:
         """Get recent critical security events."""
-        from mmf_new.core.domain import AuditLevel
 
         cutoff_time = datetime.utcnow() - timedelta(hours=hours)
 

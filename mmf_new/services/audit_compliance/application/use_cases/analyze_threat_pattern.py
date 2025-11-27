@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from mmf_new.core.application.base import Command, CommandRequest
-from mmf_new.core.domain import SecurityThreatLevel
+from mmf_new.core.domain import AuditLevel, SecurityEventType, SecurityThreatLevel
 
 from ...domain.models import SecurityAuditEvent, ThreatPattern
 from ..ports_out import AuditEventRepositoryPort, SIEMAdapterPort, ThreatAnalyzerPort
@@ -137,7 +137,6 @@ class AnalyzeThreatPatternUseCase(
             if self.repository and request.save_analysis:
                 try:
                     # Create audit event for the analysis
-                    from mmf_new.core.domain import AuditLevel, SecurityEventType
 
                     audit_event = SecurityAuditEvent(
                         event_type=SecurityEventType.SECURITY_ANALYSIS,

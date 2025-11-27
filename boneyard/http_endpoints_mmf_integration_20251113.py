@@ -11,9 +11,8 @@ from typing import Any
 
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
-
 from marty_msf.core.di_container import get_service
+from pydantic import BaseModel
 
 from .configuration import IntegrationConfig
 

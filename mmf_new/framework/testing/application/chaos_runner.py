@@ -19,14 +19,15 @@ from mmf_new.framework.testing.domain.chaos import (
     ChaosType,
 )
 from mmf_new.framework.testing.domain.entities import (
-    TestResult,
-    TestStatus,
-    TestSeverity,
     TestMetrics,
+    TestResult,
+    TestSeverity,
+    TestStatus,
     TestType,
 )
 
 logger = logging.getLogger(__name__)
+
 
 class ChaosAction(ABC):
     """Abstract base class for chaos actions."""
@@ -37,9 +38,7 @@ class ChaosAction(ABC):
         self.cleanup_callbacks: list[Callable] = []
 
     @abstractmethod
-    async def inject(
-        self, targets: list[ChaosTarget], parameters: ChaosParameters
-    ) -> bool:
+    async def inject(self, targets: list[ChaosTarget], parameters: ChaosParameters) -> bool:
         """Inject chaos into targets."""
 
     @abstractmethod
@@ -70,6 +69,7 @@ class ChaosAction(ABC):
         if process.returncode != 0:
             raise Exception(f"Command failed: {command}, Error: {stderr.decode()}")
 
+
 class NetworkDelayAction(ChaosAction):
     """Injects network delay."""
 
@@ -77,9 +77,7 @@ class NetworkDelayAction(ChaosAction):
         super().__init__(ChaosType.NETWORK_DELAY)
         self.original_rules: list[str] = []
 
-    async def inject(
-        self, targets: list[ChaosTarget], parameters: ChaosParameters
-    ) -> bool:
+    async def inject(self, targets: list[ChaosTarget], parameters: ChaosParameters) -> bool:
         """Inject network delay using tc (traffic control)."""
         try:
             delay_ms = int(parameters.custom_params.get("delay_ms", 100))
@@ -126,6 +124,7 @@ class NetworkDelayAction(ChaosAction):
             logger.error(f"Failed to recover from network delay: {e}")
             return False
 
+
 class ServiceKillAction(ChaosAction):
     """Kills service processes."""
 
@@ -133,9 +132,7 @@ class ServiceKillAction(ChaosAction):
         super().__init__(ChaosType.SERVICE_KILL)
         self.killed_processes: list[int] = []
 
-    async def inject(
-        self, targets: list[ChaosTarget], parameters: ChaosParameters
-    ) -> bool:
+    async def inject(self, targets: list[ChaosTarget], parameters: ChaosParameters) -> bool:
         """Kill target service processes."""
         try:
             kill_signal = parameters.custom_params.get("signal", "SIGTERM")
@@ -186,6 +183,7 @@ class ServiceKillAction(ChaosAction):
 
         return processes
 
+
 class ResourceExhaustionAction(ChaosAction):
     """Exhausts system resources."""
 
@@ -195,9 +193,7 @@ class ResourceExhaustionAction(ChaosAction):
         self.stress_threads: list[threading.Thread] = []
         self.stop_stress = False
 
-    async def inject(
-        self, targets: list[ChaosTarget], parameters: ChaosParameters
-    ) -> bool:
+    async def inject(self, targets: list[ChaosTarget], parameters: ChaosParameters) -> bool:
         """Inject resource exhaustion."""
         try:
             resource_type = parameters.custom_params.get("resource_type", "cpu")
@@ -337,6 +333,7 @@ class ResourceExhaustionAction(ChaosAction):
 
         logger.info("Started I/O stress")
 
+
 class ChaosActionFactory:
     """Factory for creating chaos actions."""
 
@@ -354,6 +351,7 @@ class ChaosActionFactory:
             raise ValueError(f"Unsupported chaos type: {chaos_type}")
 
         return action_class()
+
 
 class SteadyStateProbe:
     """Probe for checking system steady state."""
@@ -399,6 +397,7 @@ class SteadyStateProbe:
                 return False
 
         return True
+
 
 class ChaosRunner:
     """Executes chaos experiments."""

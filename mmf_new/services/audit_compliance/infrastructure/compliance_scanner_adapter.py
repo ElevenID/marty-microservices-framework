@@ -295,7 +295,8 @@ class ComplianceScannerAdapter(IComplianceScanner):
                     status="fail",
                     description=f.get("message", ""),
                     remediation=f.get("recommendation", ""),
-                ) for f in findings
+                )
+                for f in findings
             ],
             recommendations=[
                 "Implement comprehensive consent management",
@@ -366,7 +367,8 @@ class ComplianceScannerAdapter(IComplianceScanner):
                     status="fail",
                     description=f.get("message", ""),
                     remediation=f.get("recommendation", ""),
-                ) for f in findings
+                )
+                for f in findings
             ],
             recommendations=[
                 "Enable encryption for all PHI data",
@@ -437,7 +439,8 @@ class ComplianceScannerAdapter(IComplianceScanner):
                     status="fail",
                     description=f.get("message", ""),
                     remediation=f.get("recommendation", ""),
-                ) for f in findings
+                )
+                for f in findings
             ],
             recommendations=[
                 "Implement comprehensive audit trails",
@@ -520,7 +523,8 @@ class ComplianceScannerAdapter(IComplianceScanner):
                     status="fail",
                     description=f.get("message", ""),
                     remediation=f.get("recommendation", ""),
-                ) for f in findings
+                )
+                for f in findings
             ],
             recommendations=[
                 "Maintain secure network architecture",
@@ -603,7 +607,8 @@ class ComplianceScannerAdapter(IComplianceScanner):
                     status="fail",
                     description=f.get("message", ""),
                     remediation=f.get("recommendation", ""),
-                ) for f in findings
+                )
+                for f in findings
             ],
             recommendations=[
                 "Establish information security policies",
@@ -698,7 +703,8 @@ class ComplianceScannerAdapter(IComplianceScanner):
                     status="fail",
                     description=f.get("message", ""),
                     remediation=f.get("recommendation", ""),
-                ) for f in findings
+                )
+                for f in findings
             ],
             recommendations=[
                 "Maintain comprehensive asset inventory",

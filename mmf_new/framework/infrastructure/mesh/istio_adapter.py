@@ -8,18 +8,20 @@ import asyncio
 import logging
 import subprocess
 import tempfile
-import yaml
 from pathlib import Path
 from typing import Any
 
-from mmf_new.framework.mesh.ports.lifecycle import MeshLifecyclePort
-from mmf_new.core.security.ports.service_mesh import IServiceMeshManager
+import yaml
+
 from mmf_new.core.security.domain.models.service_mesh import (
-    ServiceMeshPolicy,
     PolicySyncResult,
+    ServiceMeshPolicy,
 )
+from mmf_new.core.security.ports.service_mesh import IServiceMeshManager
+from mmf_new.framework.mesh.ports.lifecycle import MeshLifecyclePort
 
 logger = logging.getLogger(__name__)
+
 
 class IstioAdapter(MeshLifecyclePort, IServiceMeshManager):
     """Istio implementation of service mesh ports."""
@@ -36,9 +38,11 @@ class IstioAdapter(MeshLifecyclePort, IServiceMeshManager):
         """Check if Istio CLI is installed."""
         try:
             result = await asyncio.create_subprocess_exec(
-                self.istioctl_cmd, "version", "--remote=false",
+                self.istioctl_cmd,
+                "version",
+                "--remote=false",
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
             await result.communicate()
             return result.returncode == 0
@@ -49,17 +53,23 @@ class IstioAdapter(MeshLifecyclePort, IServiceMeshManager):
             logger.error("Error checking Istio installation: %s", e)
             return False
 
-    async def deploy(self, namespace: str = "istio-system", config: dict[str, Any] | None = None) -> bool:
+    async def deploy(
+        self, namespace: str = "istio-system", config: dict[str, Any] | None = None
+    ) -> bool:
         """Deploy Istio service mesh."""
         try:
             # Install Istio
             cmd = [
                 self.istioctl_cmd,
                 "install",
-                "--set", "values.global.meshConfig.defaultConfig.proxyStatsMatcher.inclusionRegexps=.*outlier_detection.*",
-                "--set", "values.pilot.env.EXTERNAL_ISTIOD=false",
-                "--set", "values.global.meshConfig.defaultConfig.discoveryRefreshDelay=10s",
-                "--set", "values.global.meshConfig.defaultConfig.proxyMetadata.ISTIO_META_DNS_CAPTURE=true",
+                "--set",
+                "values.global.meshConfig.defaultConfig.proxyStatsMatcher.inclusionRegexps=.*outlier_detection.*",
+                "--set",
+                "values.pilot.env.EXTERNAL_ISTIOD=false",
+                "--set",
+                "values.global.meshConfig.defaultConfig.discoveryRefreshDelay=10s",
+                "--set",
+                "values.global.meshConfig.defaultConfig.proxyMetadata.ISTIO_META_DNS_CAPTURE=true",
                 "-y",
             ]
 
@@ -85,20 +95,18 @@ class IstioAdapter(MeshLifecyclePort, IServiceMeshManager):
     async def get_status(self) -> dict[str, Any]:
         """Get Istio status."""
         installed = await self.check_installation()
-        return {
-            "type": "istio",
-            "installed": installed,
-            "namespace": self.namespace
-        }
+        return {"type": "istio", "installed": installed, "namespace": self.namespace}
 
     async def verify_prerequisites(self) -> bool:
         """Verify prerequisites for Istio."""
         # Basic check: is kubectl available?
         try:
             result = await asyncio.create_subprocess_exec(
-                self.kubectl_cmd, "version", "--client",
+                self.kubectl_cmd,
+                "version",
+                "--client",
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
             await result.communicate()
             return result.returncode == 0
@@ -130,25 +138,38 @@ class IstioAdapter(MeshLifecyclePort, IServiceMeshManager):
             success=failed_count == 0,
             policies_applied=success_count,
             policies_failed=failed_count,
-            errors=errors
+            errors=errors,
         )
 
     async def remove_policy(self, policy_name: str, namespace: str) -> bool:
         """Remove a policy."""
         # Try to delete AuthorizationPolicy by default, or try multiple types
         # Since we don't know the type, we'll try the most common ones
-        kinds = ["authorizationpolicy", "requestauthentication", "peerauthentication", "envoyfilter"]
+        kinds = [
+            "authorizationpolicy",
+            "requestauthentication",
+            "peerauthentication",
+            "envoyfilter",
+        ]
 
         success = False
         for kind in kinds:
             try:
-                cmd = [self.kubectl_cmd, "delete", kind, policy_name, "-n", namespace, "--ignore-not-found"]
+                cmd = [
+                    self.kubectl_cmd,
+                    "delete",
+                    kind,
+                    policy_name,
+                    "-n",
+                    namespace,
+                    "--ignore-not-found",
+                ]
                 process = await asyncio.create_subprocess_exec(
                     *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
                 )
                 await process.communicate()
                 if process.returncode == 0:
-                    success = True # Considered success if command ran, even if not found (due to ignore-not-found)
+                    success = True  # Considered success if command ran, even if not found (due to ignore-not-found)
             except Exception as e:
                 logger.warning("Failed to delete %s %s: %s", kind, policy_name, e)
 
@@ -160,8 +181,12 @@ class IstioAdapter(MeshLifecyclePort, IServiceMeshManager):
         """Enable automatic sidecar injection."""
         try:
             cmd = [
-                self.kubectl_cmd, "label", "namespace", namespace,
-                "istio-injection=enabled", "--overwrite"
+                self.kubectl_cmd,
+                "label",
+                "namespace",
+                namespace,
+                "istio-injection=enabled",
+                "--overwrite",
             ]
             process = await asyncio.create_subprocess_exec(
                 *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
@@ -180,9 +205,12 @@ class IstioAdapter(MeshLifecyclePort, IServiceMeshManager):
 
             try:
                 result = await asyncio.create_subprocess_exec(
-                    self.kubectl_cmd, "apply", "-f", temp_file,
+                    self.kubectl_cmd,
+                    "apply",
+                    "-f",
+                    temp_file,
                     stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE
+                    stderr=asyncio.subprocess.PIPE,
                 )
                 _, stderr = await result.communicate()
 

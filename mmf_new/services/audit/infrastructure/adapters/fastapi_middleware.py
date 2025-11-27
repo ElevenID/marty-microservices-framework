@@ -280,7 +280,7 @@ class FastAPIAuditMiddleware(BaseHTTPMiddleware):
                     return text
                 return f"[BINARY - {len(body)} bytes]"
         except Exception:
-            return f"[UNPARSEABLE - {len(body)} bytes]"
+            return f"[UNPARSABLE - {len(body)} bytes]"
 
     def _determine_severity(
         self, status_code: int, duration_ms: float, error_message: str | None

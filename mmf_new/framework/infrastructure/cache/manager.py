@@ -30,12 +30,12 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Generic, TypeVar
 
-from mmf_new.core.domain.ports.cache import CachePort
-
 # Required Redis imports (fail if missing)
 import redis.asyncio as redis
 from redis.asyncio import Redis
 from redis.exceptions import RedisError
+
+from mmf_new.core.domain.ports.cache import CachePort
 
 REDIS_AVAILABLE = True
 

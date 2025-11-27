@@ -16,6 +16,7 @@ from typing import Any
 import psutil
 import pytest
 
+
 @dataclass
 class EventMessage:
     message_id: str
@@ -23,12 +24,14 @@ class EventMessage:
     source: str
     data: Any
 
+
 @dataclass
 class EventSubscription:
     subscription_id: str
     consumer_group: str
     event_types: list[str]
     handler: Callable
+
 
 class InMemoryEventBus:
     def __init__(self):

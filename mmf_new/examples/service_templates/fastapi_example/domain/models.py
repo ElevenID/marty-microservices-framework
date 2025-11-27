@@ -1,7 +1,7 @@
-from dataclasses import dataclass, field
-from typing import List
-from datetime import datetime
 import uuid
+from dataclasses import dataclass, field
+from datetime import datetime
+
 
 @dataclass
 class OrderItem:
@@ -9,10 +9,11 @@ class OrderItem:
     quantity: int
     price: float
 
+
 @dataclass
 class Order:
     customer_id: str
-    items: List[OrderItem]
+    items: list[OrderItem]
     order_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     status: str = "PENDING"
     created_at: datetime = field(default_factory=datetime.now)

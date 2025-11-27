@@ -6,7 +6,13 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from mmf_new.framework.deployment.domain.enums import PipelineProvider, PipelineStage, PipelineStatus
+import yaml
+
+from mmf_new.framework.deployment.domain.enums import (
+    PipelineProvider,
+    PipelineStage,
+    PipelineStatus,
+)
 from mmf_new.framework.deployment.domain.models import (
     DeploymentConfig,
     DeploymentPipeline,
@@ -114,7 +120,5 @@ class GithubActionsAdapter(PipelinePort):
             }
 
         # TODO: Add other stages
-
-        import yaml
 
         return yaml.dump(workflow, sort_keys=False)

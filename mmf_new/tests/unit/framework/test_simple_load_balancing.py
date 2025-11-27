@@ -4,8 +4,8 @@ Simple test to verify load balancing imports work.
 
 import pytest
 
-from mmf_new.discovery.ports.load_balancer import LoadBalancingStrategy
 from mmf_new.discovery.domain.models import ServiceInstance
+from mmf_new.discovery.ports.load_balancer import LoadBalancingStrategy
 
 
 def test_import_load_balancing():

@@ -1,6 +1,7 @@
 """
 Linkerd Adapter.
 """
+
 import asyncio
 import json
 import logging
@@ -42,10 +43,12 @@ class LinkerdAdapter(MeshLifecyclePort):
         except Exception as e:
             logger.error(f"Error checking Linkerd installation: {e}")
             self.is_installed = False
-            
+
         return self.is_installed
 
-    async def deploy(self, namespace: str = "linkerd", config: dict[str, Any] | None = None) -> bool:
+    async def deploy(
+        self, namespace: str = "linkerd", config: dict[str, Any] | None = None
+    ) -> bool:
         """
         Deploy Linkerd to the cluster.
 
@@ -112,18 +115,16 @@ class LinkerdAdapter(MeshLifecyclePort):
             "installed": self.is_installed,
             "type": "linkerd",
             "components": {},
-            "security_events": []
+            "security_events": [],
         }
-        
+
         if not self.is_installed:
             return status
 
         try:
             # Get check status
             process = await asyncio.create_subprocess_exec(
-                "linkerd", "check",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                "linkerd", "check", stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
             stdout, _ = await process.communicate()
             status["check_status"] = "ok" if process.returncode == 0 else "failed"
@@ -152,16 +153,18 @@ class LinkerdAdapter(MeshLifecyclePort):
                 stats_data = json.loads(stdout.decode())
                 for stat in stats_data.get("rows", []):
                     if stat.get("meshed", "") == "-":
-                        events.append({
-                            "timestamp": "now",
-                            "type": "mesh_injection_missing",
-                            "source": "linkerd",
-                            "message": f"Service {stat.get('name')} is not meshed",
-                            "namespace": namespace,
-                        })
+                        events.append(
+                            {
+                                "timestamp": "now",
+                                "type": "mesh_injection_missing",
+                                "source": "linkerd",
+                                "message": f"Service {stat.get('name')} is not meshed",
+                                "namespace": namespace,
+                            }
+                        )
         except Exception as e:
             logger.warning(f"Failed to get security events: {e}")
-            
+
         return events
 
     async def verify_prerequisites(self) -> bool:
@@ -174,9 +177,11 @@ class LinkerdAdapter(MeshLifecyclePort):
         # Check for kubectl
         try:
             process = await asyncio.create_subprocess_exec(
-                "kubectl", "version", "--client",
+                "kubectl",
+                "version",
+                "--client",
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
             await process.communicate()
             if process.returncode != 0:
@@ -188,7 +193,9 @@ class LinkerdAdapter(MeshLifecyclePort):
 
         return True
 
-    async def generate_deployment_script(self, service_name: str, config: dict[str, Any] | None = None) -> str:
+    async def generate_deployment_script(
+        self, service_name: str, config: dict[str, Any] | None = None
+    ) -> str:
         """
         Generate Linkerd deployment script.
 

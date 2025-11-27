@@ -1,6 +1,7 @@
 """Collect security event use case."""
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from mmf_new.core.application.base import Command, CommandRequest
@@ -126,7 +127,6 @@ class CollectSecurityEventUseCase(
 
     async def _enrich_event_data(self, request: CollectSecurityEventRequest) -> dict[str, Any]:
         """Enrich the raw event data with additional context."""
-        from datetime import datetime
 
         enriched = {
             "collection_timestamp": datetime.utcnow().isoformat(),

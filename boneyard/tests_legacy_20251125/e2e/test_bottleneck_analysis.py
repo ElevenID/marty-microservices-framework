@@ -14,7 +14,6 @@ import time
 from pathlib import Path
 
 import pytest
-
 from tests.e2e.conftest import PerformanceAnalyzer
 
 

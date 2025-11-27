@@ -1,12 +1,14 @@
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-import uuid
+
 
 @dataclass
 class OrderItem:
     product_id: str
     quantity: int
     price: float
+
 
 @dataclass
 class Order:

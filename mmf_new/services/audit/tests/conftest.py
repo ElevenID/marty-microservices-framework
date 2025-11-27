@@ -21,25 +21,27 @@ from sqlalchemy.pool import StaticPool
 # Import audit service components
 from mmf_new.core.domain.audit_types import AuditEventType, AuditOutcome, AuditSeverity
 from mmf_new.services.audit.application.commands import LogRequestCommand
-from mmf_new.services.audit.di_config import AuditDIContainer
+from mmf_new.services.audit.di_config import AuditConfig, AuditDIContainer
 from mmf_new.services.audit.domain.entities import RequestAuditEvent
 from mmf_new.services.audit.domain.value_objects import (
+    ActorInfo,
     RequestContext,
     ResponseMetadata,
     ServiceContext,
-    ActorInfo,
-)
-from mmf_new.services.audit.infrastructure.adapters.encryption_adapter import (
-    AuditEncryptionAdapter,
 )
 from mmf_new.services.audit.infrastructure.adapters.database_destination import (
     DatabaseAuditDestination,
+)
+from mmf_new.services.audit.infrastructure.adapters.encryption_adapter import (
+    AuditEncryptionAdapter,
 )
 from mmf_new.services.audit.infrastructure.adapters.file_destination import (
     FileAuditDestination,
 )
 from mmf_new.services.audit.infrastructure.models import AuditLogRecord
-from mmf_new.services.audit.infrastructure.repositories.audit_repository import AuditRepository
+from mmf_new.services.audit.infrastructure.repositories.audit_repository import (
+    AuditRepository,
+)
 from mmf_new.services.audit.service_factory import AuditService
 
 
@@ -186,12 +188,12 @@ async def test_audit_di_container(
     config = AuditConfig(
         database_url="sqlite+aiosqlite:///:memory:",
         encryption_enabled=True,
-        compliance_logger=mock_audit_compliance_service
+        compliance_logger=mock_audit_compliance_service,
     )
 
     # Create container
     container = AuditDIContainer(config)
-    
+
     # Manually inject dependencies
     container._destinations = destinations
     container._repository = repository
@@ -299,7 +301,7 @@ def sample_log_request_command(
             "user_role": "admin",
             "request_data": {"name": "John Doe", "email": "john@example.com"},
             "response_data": {"id": 123, "name": "John Doe"},
-            "test": "data"
+            "test": "data",
         },
     )
 

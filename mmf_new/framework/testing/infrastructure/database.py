@@ -9,6 +9,7 @@ from mmf_new.framework.infrastructure.database_manager import Base as BaseModel
 
 logger = logging.getLogger(__name__)
 
+
 class TestDatabaseManager:
     """Test database manager with in-memory SQLite."""
 

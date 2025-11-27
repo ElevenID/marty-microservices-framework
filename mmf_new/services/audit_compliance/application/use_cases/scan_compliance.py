@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from typing import Any
 
 from mmf_new.core.application.base import Command, CommandRequest
-from mmf_new.core.domain import ComplianceFramework
+from mmf_new.core.domain import AuditLevel, ComplianceFramework, SecurityEventType
 
-from ...domain.models import ComplianceScanResult
+from ...domain.models import ComplianceScanResult, SecurityAuditEvent
 from ..ports_out import AuditEventRepositoryPort, ComplianceScannerPort
 
 
@@ -84,9 +84,6 @@ class ScanComplianceUseCase(Command[ScanComplianceRequest, ScanComplianceRespons
             if self.repository and request.save_results:
                 try:
                     # Create an audit event for the compliance scan
-                    from mmf_new.core.domain import AuditLevel, SecurityEventType
-
-                    from ...domain.models import SecurityAuditEvent
 
                     audit_event = SecurityAuditEvent(
                         event_type=SecurityEventType.COMPLIANCE_VIOLATION

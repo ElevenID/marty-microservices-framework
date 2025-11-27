@@ -3,12 +3,14 @@
 This is a full-featured FastAPI service template that demonstrates:
 
 ## Architecture
+
 - **Hexagonal Architecture** (Ports & Adapters)
 - **Domain-Driven Design** principles
 - **Async/Await** throughout
 - **Integration with external services** via MMF connectors
 
 ## Features
+
 - RESTful API with FastAPI
 - External service integration (inventory service)
 - In-memory repository (easily replaceable)
@@ -32,6 +34,7 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 ## API Endpoints
 
 ### Create Order
+
 ```bash
 POST /orders
 Content-Type: application/json
@@ -49,11 +52,13 @@ Content-Type: application/json
 ```
 
 ### Get Order
+
 ```bash
 GET /orders/{order_id}
 ```
 
 ### Health Check
+
 ```bash
 GET /health
 ```
@@ -61,12 +66,14 @@ GET /health
 ## Integration Points
 
 The service integrates with:
+
 1. **Inventory Service** - Checks product availability
 2. **Order Repository** - Stores order data
 
 ## Customization
 
 To adapt this template:
+
 1. Replace `InMemoryOrderRepository` with your database adapter
 2. Configure `INVENTORY_CONFIG` for your inventory service
 3. Add authentication/authorization middleware

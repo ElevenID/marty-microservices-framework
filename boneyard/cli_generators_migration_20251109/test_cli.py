@@ -9,7 +9,6 @@ from unittest.mock import patch
 
 import pytest
 from click.testing import CliRunner
-
 from marty_msf.cli import MartyProjectManager, MartyTemplateManager, ProjectConfig, cli
 
 

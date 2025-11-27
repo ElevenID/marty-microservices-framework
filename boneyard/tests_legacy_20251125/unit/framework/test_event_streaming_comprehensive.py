@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
-
 from marty_msf.framework.event_streaming import (
     AggregateRoot,
     Command,

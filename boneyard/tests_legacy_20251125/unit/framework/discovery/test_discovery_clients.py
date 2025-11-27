@@ -1,7 +1,6 @@
 from unittest.mock import AsyncMock
 
 import pytest
-
 from marty_msf.framework.discovery.clients.hybrid import HybridDiscovery
 from marty_msf.framework.discovery.clients.server_side import ServerSideDiscovery
 from marty_msf.framework.discovery.config import (

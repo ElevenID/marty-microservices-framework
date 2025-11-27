@@ -21,11 +21,6 @@ from grpc_health.v1 import health_pb2, health_pb2_grpc
 from grpc_health.v1.health import HealthServicer
 from grpc_reflection.v1alpha import reflection
 
-from mmf_new.framework.observability.standard import (
-    create_standard_observability,
-    set_global_observability,
-)
-
 # MMF imports
 from mmf_new.framework.infrastructure.config_manager import Environment
 from mmf_new.framework.infrastructure.unified_config import (
@@ -33,6 +28,10 @@ from mmf_new.framework.infrastructure.unified_config import (
     ConfigurationStrategy,
     UnifiedConfigurationManager,
     create_unified_config_manager,
+)
+from mmf_new.framework.observability.standard import (
+    create_standard_observability,
+    set_global_observability,
 )
 
 logger = logging.getLogger(__name__)

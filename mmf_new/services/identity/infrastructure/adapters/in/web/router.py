@@ -26,14 +26,14 @@ from mmf_new.services.identity.domain.models import (
     AuthenticationStatus,
 )
 from mmf_new.services.identity.infrastructure.adapters import (
+    BasicAuthAdapter,
+    BasicAuthConfig,
     JWTConfig,
     JWTTokenProvider,
-    BasicAuthConfig,
-    BasicAuthAdapter,
 )
 from mmf_new.services.identity.infrastructure.adapters.out.config.config_integration import (
-    get_jwt_config_from_yaml,
     get_basic_auth_config_from_yaml,
+    get_jwt_config_from_yaml,
 )
 
 

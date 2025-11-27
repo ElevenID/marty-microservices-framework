@@ -2,10 +2,7 @@
 
 # Existing JWT authentication use cases
 # Multi-method authentication use cases
-from .authenticate_user import (
-    AuthenticateUserRequest,
-    AuthenticateUserUseCase,
-)
+from .authenticate_user import AuthenticateUserRequest, AuthenticateUserUseCase
 
 # API Key authentication use cases
 from .authenticate_with_api_key import (

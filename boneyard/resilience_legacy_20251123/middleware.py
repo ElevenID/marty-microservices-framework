@@ -16,9 +16,8 @@ from functools import wraps
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request, Response
-from starlette.middleware.base import BaseHTTPMiddleware
-
 from marty_msf.core.enhanced_di import get_service
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from .api import IResilienceManager, ResilienceStrategy
 from .bulkhead import BulkheadConfig, BulkheadError, SemaphoreBulkhead

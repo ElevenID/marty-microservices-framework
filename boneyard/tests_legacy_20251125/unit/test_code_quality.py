@@ -9,9 +9,9 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+from scripts.check_code_quality import check_cyclomatic_complexity
 
 from scripts import check_code_quality
-from scripts.check_code_quality import check_cyclomatic_complexity
 
 
 class TestCodeQuality:

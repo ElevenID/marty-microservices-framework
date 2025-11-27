@@ -10,6 +10,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from mmf_new.framework.infrastructure.dependency_injection import (
+    DIContainer,
+    get_container,
+    register_instance,
+)
+
 from .implementations import (
     ConfigurationService,
     MessagingService,
@@ -18,18 +24,12 @@ from .implementations import (
     ServiceRegistry,
 )
 from .utilities import AtomicCounter
-from mmf_new.framework.infrastructure.dependency_injection import (
-    DIContainer,
-    get_container,
-    register_instance,
-)
 
 logger = logging.getLogger(__name__)
 
 
 def create_service_registry(
-    container: DIContainer | None = None,
-    config: dict[str, Any] | None = None
+    container: DIContainer | None = None, config: dict[str, Any] | None = None
 ) -> ServiceRegistry:
     """Create and register a service registry."""
     if container is None:
@@ -42,8 +42,7 @@ def create_service_registry(
 
 
 def create_configuration_service(
-    container: DIContainer | None = None,
-    config: dict[str, Any] | None = None
+    container: DIContainer | None = None, config: dict[str, Any] | None = None
 ) -> ConfigurationService:
     """Create and register a configuration service."""
     if container is None:
@@ -56,8 +55,7 @@ def create_configuration_service(
 
 
 def create_observability_service(
-    container: DIContainer | None = None,
-    config: dict[str, Any] | None = None
+    container: DIContainer | None = None, config: dict[str, Any] | None = None
 ) -> ObservabilityService:
     """Create and register an observability service."""
     if container is None:
@@ -70,8 +68,7 @@ def create_observability_service(
 
 
 def create_security_service(
-    container: DIContainer | None = None,
-    config: dict[str, Any] | None = None
+    container: DIContainer | None = None, config: dict[str, Any] | None = None
 ) -> SecurityService:
     """Create and register a security service."""
     if container is None:
@@ -84,8 +81,7 @@ def create_security_service(
 
 
 def create_messaging_service(
-    container: DIContainer | None = None,
-    config: dict[str, Any] | None = None
+    container: DIContainer | None = None, config: dict[str, Any] | None = None
 ) -> MessagingService:
     """Create and register a messaging service."""
     if container is None:
@@ -100,7 +96,7 @@ def create_messaging_service(
 def create_atomic_counter(
     container: DIContainer | None = None,
     initial_value: int = 0,
-    config: dict[str, Any] | None = None
+    config: dict[str, Any] | None = None,
 ) -> AtomicCounter:
     """Create and register an atomic counter."""
     if container is None:
@@ -113,8 +109,7 @@ def create_atomic_counter(
 
 
 async def initialize_platform_services(
-    config: dict[str, Any] | None = None,
-    container: DIContainer | None = None
+    config: dict[str, Any] | None = None, container: DIContainer | None = None
 ) -> dict[str, Any]:
     """
     Initialize all platform services in the correct order.
@@ -148,41 +143,41 @@ async def initialize_platform_services(
 
     try:
         # Step 1: Configuration service (first, as others may need config)
-        config_service_config = config.get('configuration', {})
+        config_service_config = config.get("configuration", {})
         config_service = create_configuration_service(container, config_service_config)
         await config_service.initialize()
-        services['configuration'] = config_service
+        services["configuration"] = config_service
 
         # Step 2: Observability service (for logging/metrics throughout initialization)
-        observability_config = config.get('observability', {})
+        observability_config = config.get("observability", {})
         observability_service = create_observability_service(container, observability_config)
         await observability_service.initialize()
-        services['observability'] = observability_service
+        services["observability"] = observability_service
 
         # Step 3: Security service (needed for secure operations)
-        security_config = config.get('security', {})
+        security_config = config.get("security", {})
         security_service = create_security_service(container, security_config)
         await security_service.initialize()
-        services['security'] = security_service
+        services["security"] = security_service
 
         # Step 4: Service registry (for service discovery)
-        registry_config = config.get('registry', {})
+        registry_config = config.get("registry", {})
         registry = create_service_registry(container, registry_config)
         await registry.initialize()
-        services['registry'] = registry
+        services["registry"] = registry
 
         # Step 5: Messaging service (may depend on other services)
-        messaging_config = config.get('messaging', {})
+        messaging_config = config.get("messaging", {})
         messaging_service = create_messaging_service(container, messaging_config)
         await messaging_service.initialize()
-        services['messaging'] = messaging_service
+        services["messaging"] = messaging_service
 
         # Step 6: Utilities
-        counter_config = config.get('counter', {})
-        initial_value = counter_config.get('initial_value', 0)
+        counter_config = config.get("counter", {})
+        initial_value = counter_config.get("initial_value", 0)
         counter = create_atomic_counter(container, initial_value, counter_config)
         await counter.initialize()
-        services['counter'] = counter
+        services["counter"] = counter
 
         logger.info("Platform services initialization completed successfully")
         return services
@@ -193,7 +188,7 @@ async def initialize_platform_services(
         # Attempt to shutdown any services that were initialized
         for service_name, service in services.items():
             try:
-                if hasattr(service, 'shutdown'):
+                if hasattr(service, "shutdown"):
                     await service.shutdown()
                     logger.info("Shutdown service: %s", service_name)
             except (RuntimeError, AttributeError, OSError) as shutdown_error:
@@ -216,12 +211,12 @@ async def shutdown_platform_services(services: dict[str, Any] | None = None) -> 
         container = get_container()
         try:
             services = {
-                'counter': container.get(AtomicCounter, None),
-                'messaging': container.get(MessagingService, None),
-                'registry': container.get(ServiceRegistry, None),
-                'security': container.get(SecurityService, None),
-                'observability': container.get(ObservabilityService, None),
-                'configuration': container.get(ConfigurationService, None),
+                "counter": container.get(AtomicCounter, None),
+                "messaging": container.get(MessagingService, None),
+                "registry": container.get(ServiceRegistry, None),
+                "security": container.get(SecurityService, None),
+                "observability": container.get(ObservabilityService, None),
+                "configuration": container.get(ConfigurationService, None),
             }
             # Remove None values
             services = {k: v for k, v in services.items() if v is not None}
@@ -230,13 +225,20 @@ async def shutdown_platform_services(services: dict[str, Any] | None = None) -> 
             return
 
     # Shutdown in reverse order
-    shutdown_order = ['counter', 'messaging', 'registry', 'security', 'observability', 'configuration']
+    shutdown_order = [
+        "counter",
+        "messaging",
+        "registry",
+        "security",
+        "observability",
+        "configuration",
+    ]
 
     for service_name in shutdown_order:
         if service_name in services:
             service = services[service_name]
             try:
-                if hasattr(service, 'shutdown'):
+                if hasattr(service, "shutdown"):
                     await service.shutdown()
                     logger.info("Shutdown service: %s", service_name)
             except (RuntimeError, AttributeError, OSError) as e:

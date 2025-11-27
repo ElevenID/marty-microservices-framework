@@ -2,7 +2,8 @@
 Metrics adapter contract.
 """
 
-from typing import Protocol, Any
+from typing import Any, Protocol
+
 
 class IMetricsAdapter(Protocol):
     """Interface for metrics adapter."""

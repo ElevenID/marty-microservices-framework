@@ -7,12 +7,11 @@ This module converts the legacy check_dependencies.py script into proper automat
 import importlib
 import subprocess
 import sys
-import tomllib
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-
+import tomllib
 from scripts.check_dependencies import check_command, check_import
 
 

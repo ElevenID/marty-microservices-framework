@@ -2,16 +2,22 @@
 Unit tests for Threat Detection module.
 """
 
-import pytest
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
-from mmf_new.core.security.domain.models.threat import SecurityEvent, ThreatType
-from mmf_new.core.security.domain.config import ThreatDetectionConfig
-from mmf_new.core.security.adapters.threat_detection.pattern_detector import PatternBasedThreatDetector
+import pytest
+from mmf_new.core.security.adapters.threat_detection.event_processor import (
+    EventProcessorThreatDetector,
+)
+from mmf_new.core.security.adapters.threat_detection.pattern_detector import (
+    PatternBasedThreatDetector,
+)
 from mmf_new.core.security.adapters.threat_detection.scanner import VulnerabilityScanner
-from mmf_new.core.security.adapters.threat_detection.event_processor import EventProcessorThreatDetector
+
 from mmf_new.core.domain.audit_types import SecurityThreatLevel
+from mmf_new.core.security.domain.config import ThreatDetectionConfig
+from mmf_new.core.security.domain.models.threat import SecurityEvent, ThreatType
+
 
 @pytest.fixture
 def pattern_detector():

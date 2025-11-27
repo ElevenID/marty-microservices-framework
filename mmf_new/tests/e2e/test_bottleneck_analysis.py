@@ -111,9 +111,9 @@ class TestBottleneckAnalysis:
 
         # Assertions to verify test functionality
         assert len(results) == len(load_levels), "Should have results for all load levels"
-        assert any(load_results["bottlenecks"] for load_results in results.values()), (
-            "Should detect some bottlenecks under high load"
-        )
+        assert any(
+            load_results["bottlenecks"] for load_results in results.values()
+        ), "Should detect some bottlenecks under high load"
 
         # Print summary
         self._print_test_summary(report)

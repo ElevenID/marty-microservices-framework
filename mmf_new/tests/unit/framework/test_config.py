@@ -11,7 +11,11 @@ from unittest.mock import mock_open, patch
 import pytest
 from pydantic import ValidationError
 
-from mmf_new.framework.infrastructure.config_manager import BaseServiceConfig, FrameworkConfig, Environment
+from mmf_new.framework.infrastructure.config_manager import (
+    BaseServiceConfig,
+    Environment,
+    FrameworkConfig,
+)
 
 
 @pytest.mark.unit
@@ -23,7 +27,7 @@ class TestFrameworkConfig:
         config = BaseServiceConfig(
             service_name="default-service",
             database_url="sqlite:///:memory:",
-            secret_key="default-secret"
+            secret_key="default-secret",
         )
 
         assert hasattr(config, "service_name")
@@ -38,7 +42,7 @@ class TestFrameworkConfig:
             logging_level="DEBUG",
             port=9000,
             database_url="sqlite:///:memory:",
-            secret_key="test-secret"
+            secret_key="test-secret",
         )
 
         assert config.service_name == "test-service"
@@ -56,7 +60,7 @@ class TestFrameworkConfig:
             "logging_level": "WARNING",
             "port": 8443,
             "database_url": "sqlite:///:memory:",
-            "secret_key": "dict-secret"
+            "secret_key": "dict-secret",
         }
 
         config = FrameworkConfig.model_validate(config_dict)
@@ -72,10 +76,10 @@ class TestFrameworkConfig:
         # Note: Pydantic requires all required fields. Partial updates are not supported directly on creation unless defaults exist.
         # But we can test that defaults are used for optional fields.
         config_dict = {
-            "service_name": "partial-service", 
+            "service_name": "partial-service",
             "debug": True,
             "database_url": "sqlite:///:memory:",
-            "secret_key": "partial-secret"
+            "secret_key": "partial-secret",
         }
 
         config = FrameworkConfig.model_validate(config_dict)
@@ -98,7 +102,7 @@ class TestFrameworkConfig:
             "LOGGING_LEVEL": "ERROR",
             "PORT": "8081",
             "DATABASE_URL": "sqlite:///:memory:",
-            "SECRET_KEY": "env-secret"
+            "SECRET_KEY": "env-secret",
         },
     )
     def test_config_from_environment(self):
@@ -112,13 +116,16 @@ class TestFrameworkConfig:
         assert config.logging_level == "ERROR"
         assert config.port == 8081
 
-    @patch.dict(os.environ, {
-        "SERVICE_NAME": "env-service", 
-        "DEBUG": "false", 
-        "PORT": "invalid",
-        "DATABASE_URL": "sqlite:///:memory:",
-        "SECRET_KEY": "env-secret"
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "SERVICE_NAME": "env-service",
+            "DEBUG": "false",
+            "PORT": "invalid",
+            "DATABASE_URL": "sqlite:///:memory:",
+            "SECRET_KEY": "env-secret",
+        },
+    )
     def test_config_from_environment_with_invalid_values(self):
         """Test configuration handling of invalid environment values."""
         # Pydantic raises ValidationError for invalid types
@@ -127,12 +134,12 @@ class TestFrameworkConfig:
 
     def test_config_validation_valid(self):
         """Test configuration validation with valid values."""
-        config = FrameworkConfig(
-            service_name="valid-service", 
-            environment=Environment.PRODUCTION, 
+        FrameworkConfig(
+            service_name="valid-service",
+            environment=Environment.PRODUCTION,
             port=8080,
             database_url="sqlite:///:memory:",
-            secret_key="valid-secret"
+            secret_key="valid-secret",
         )
         # Validation happens at initialization
 
@@ -159,7 +166,7 @@ class TestFrameworkConfig:
             logging_level="DEBUG",
             port=9000,
             database_url="sqlite:///:memory:",
-            secret_key="serialize-secret"
+            secret_key="serialize-secret",
         )
 
         config_dict = config.model_dump()
@@ -173,14 +180,14 @@ class TestFrameworkConfig:
     def test_config_update(self):
         """Test configuration update with new values."""
         config = FrameworkConfig(
-            service_name="original",
-            database_url="sqlite:///:memory:",
-            secret_key="original-secret"
+            service_name="original", database_url="sqlite:///:memory:", secret_key="original-secret"
         )
 
         # Pydantic models are immutable by default if frozen=True, but BaseSettings usually isn't.
         # However, best practice is to create new instance.
-        updated_config = config.model_copy(update={"service_name": "updated", "debug": True, "port": 9000})
+        updated_config = config.model_copy(
+            update={"service_name": "updated", "debug": True, "port": 9000}
+        )
 
         assert updated_config.service_name == "updated"
         assert updated_config.debug is True
@@ -189,22 +196,16 @@ class TestFrameworkConfig:
     def test_config_equality(self):
         """Test configuration equality comparison."""
         config1 = FrameworkConfig(
-            service_name="test", 
-            debug=True,
-            database_url="sqlite:///:memory:",
-            secret_key="secret"
+            service_name="test", debug=True, database_url="sqlite:///:memory:", secret_key="secret"
         )
         config2 = FrameworkConfig(
-            service_name="test", 
-            debug=True,
-            database_url="sqlite:///:memory:",
-            secret_key="secret"
+            service_name="test", debug=True, database_url="sqlite:///:memory:", secret_key="secret"
         )
         config3 = FrameworkConfig(
-            service_name="different", 
+            service_name="different",
             debug=True,
             database_url="sqlite:///:memory:",
-            secret_key="secret"
+            secret_key="secret",
         )
 
         assert config1 == config2
@@ -213,9 +214,7 @@ class TestFrameworkConfig:
     def test_config_repr(self):
         """Test configuration string representation."""
         config = FrameworkConfig(
-            service_name="test-service",
-            database_url="sqlite:///:memory:",
-            secret_key="secret"
+            service_name="test-service", database_url="sqlite:///:memory:", secret_key="secret"
         )
         repr_str = repr(config)
 
@@ -244,11 +243,14 @@ class TestFrameworkConfig:
     )
     def test_boolean_environment_parsing(self, env_value, expected):
         """Test boolean parsing from environment variables."""
-        with patch.dict(os.environ, {
-            "DEBUG": env_value,
-            "SERVICE_NAME": "bool-test",
-            "DATABASE_URL": "sqlite:///:memory:",
-            "SECRET_KEY": "secret"
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                "DEBUG": env_value,
+                "SERVICE_NAME": "bool-test",
+                "DATABASE_URL": "sqlite:///:memory:",
+                "SECRET_KEY": "secret",
+            },
+        ):
             config = FrameworkConfig()
             assert config.debug == expected

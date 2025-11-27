@@ -45,8 +45,8 @@ from mmf_new.services.identity.integration import (
     require_authenticated_user,
     require_permission,
     require_role,
+    router,
 )
-from mmf_new.services.identity.integration import router
 from mmf_new.services.identity.integration import router as jwt_router
 
 

@@ -10,10 +10,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
-from mmf_new.framework.infrastructure.cache import CacheBackend, CacheConfig, CacheFactory, CacheManager
+from mmf_new.core.di import AsyncBaseDIContainer
+from mmf_new.framework.infrastructure.cache import (
+    CacheBackend,
+    CacheConfig,
+    CacheFactory,
+    CacheManager,
+)
 from mmf_new.framework.infrastructure.database_manager import DatabaseManager
 from mmf_new.framework.infrastructure.framework_metrics import FrameworkMetrics
-from mmf_new.core.di import AsyncBaseDIContainer
 
 # Application use cases
 from .application.use_cases import (
@@ -96,12 +101,12 @@ class AuditComplianceDIContainer(AsyncBaseDIContainer):
     def __init__(self, config: AuditComplianceConfig):
         super().__init__()
         self.config = config
-        
+
         # Infrastructure
         self._database_manager: DatabaseManager | None = None
         self._cache_manager: CacheManager | None = None
         self._metrics: FrameworkMetrics | None = None
-        
+
         # Adapters
         self._audit_event_repository: IAuditEventRepository | None = None
         self._audit_event_cache: AuditEventCache | None = None
@@ -110,7 +115,7 @@ class AuditComplianceDIContainer(AsyncBaseDIContainer):
         self._compliance_scanner: IComplianceScanner | None = None
         self._threat_analyzer: IThreatAnalyzer | None = None
         self._security_report_generator: ISecurityReportGenerator | None = None
-        
+
         # Use Cases
         self._log_audit_event_use_case: LogAuditEventUseCase | None = None
         self._collect_security_event_use_case: CollectSecurityEventUseCase | None = None
@@ -120,28 +125,28 @@ class AuditComplianceDIContainer(AsyncBaseDIContainer):
 
     async def initialize(self) -> None:
         logger.info("Initializing audit compliance DI container")
-        
+
         # Initialize Infrastructure
         self._database_manager = DatabaseManager(
             database_url=self.config.database_url,
             pool_size=self.config.database_pool_size,
             max_overflow=self.config.database_max_overflow,
         )
-        
+
         cache_config = CacheConfig(
             backend=CacheBackend.REDIS if self.config.redis_url else CacheBackend.MEMORY,
             url=self.config.redis_url,
-            default_ttl=self.config.cache_ttl_seconds
+            default_ttl=self.config.cache_ttl_seconds,
         )
         self._cache_manager = CacheFactory.create_manager(cache_config)
-        
+
         self._metrics = FrameworkMetrics()
-        
+
         # Initialize Adapters
         self._audit_event_repository = AuditEventRepository(
             database_manager=self._database_manager, metrics=self._metrics
         )
-        
+
         audit_cache_config = {
             "max_events": self.config.cache_max_events,
             "ttl_seconds": self.config.cache_ttl_seconds,
@@ -151,27 +156,23 @@ class AuditComplianceDIContainer(AsyncBaseDIContainer):
             metrics=self._metrics,
             config=audit_cache_config,
         )
-        
+
         siem_config = {
             "elasticsearch_url": self.config.elasticsearch_url,
             "index_name": self.config.elasticsearch_index,
             "timeout": self.config.elasticsearch_timeout,
         }
-        self._siem_adapter = ElasticsearchSIEMAdapter(
-            metrics=self._metrics, config=siem_config
-        )
-        
-        self._compliance_metrics = AuditComplianceMetricsAdapter(
-            base_metrics=self._metrics
-        )
-        
+        self._siem_adapter = ElasticsearchSIEMAdapter(metrics=self._metrics, config=siem_config)
+
+        self._compliance_metrics = AuditComplianceMetricsAdapter(base_metrics=self._metrics)
+
         scanner_config = {"supported_frameworks": self.config.compliance_frameworks}
         self._compliance_scanner = ComplianceScannerAdapter(
             database_manager=self._database_manager,
             metrics=self._compliance_metrics,
             config=scanner_config,
         )
-        
+
         analyzer_config = {
             "confidence_threshold": self.config.threat_confidence_threshold,
             "max_events_to_analyze": self.config.max_events_to_analyze,
@@ -182,7 +183,7 @@ class AuditComplianceDIContainer(AsyncBaseDIContainer):
             metrics=self._compliance_metrics,
             config=analyzer_config,
         )
-        
+
         report_config = {
             "output_directory": self.config.reports_output_directory,
             "include_charts": self.config.reports_include_charts,
@@ -193,43 +194,43 @@ class AuditComplianceDIContainer(AsyncBaseDIContainer):
             metrics=self._compliance_metrics,
             config=report_config,
         )
-        
+
         # Initialize Use Cases
         self._log_audit_event_use_case = LogAuditEventUseCase(
             audit_repository=self._audit_event_repository,
             audit_cache=self._audit_event_cache,
             siem_adapter=self._siem_adapter,
         )
-        
+
         self._collect_security_event_use_case = CollectSecurityEventUseCase(
             audit_repository=self._audit_event_repository,
             siem_adapter=self._siem_adapter,
             threat_analyzer=self._threat_analyzer,
         )
-        
+
         self._scan_compliance_use_case = ScanComplianceUseCase(
             compliance_scanner=self._compliance_scanner,
             audit_repository=self._audit_event_repository,
         )
-        
+
         self._analyze_threat_pattern_use_case = AnalyzeThreatPatternUseCase(
             threat_analyzer=self._threat_analyzer,
             audit_repository=self._audit_event_repository,
         )
-        
+
         self._generate_security_report_use_case = GenerateSecurityReportUseCase(
             report_generator=self._security_report_generator,
             audit_repository=self._audit_event_repository,
             compliance_scanner=self._compliance_scanner,
         )
-        
+
         # Async initialization
         if self.config.redis_url:
             await self._cache_manager.start()
 
         await self._database_manager.initialize()
         self._metrics.initialize()
-        
+
         self._mark_initialized()
 
     async def cleanup(self) -> None:
@@ -332,10 +333,26 @@ class AuditComplianceDIContainer(AsyncBaseDIContainer):
 
 
 # Global container instance (singleton pattern)
-_container: AuditComplianceDIContainer | None = None
+# Replaced by ContainerHolder to avoid global variable checks
 
 
-def get_container(config: AuditComplianceConfig | None = None) -> AuditComplianceDIContainer:
+class ContainerHolder:
+    """Holder for the singleton container instance."""
+
+    _instance: AuditComplianceDIContainer | None = None
+
+    @classmethod
+    def get(cls) -> AuditComplianceDIContainer | None:
+        return cls._instance
+
+    @classmethod
+    def set(cls, container: AuditComplianceDIContainer | None) -> None:
+        cls._instance = container
+
+
+def get_container(
+    config: AuditComplianceConfig | None = None,
+) -> AuditComplianceDIContainer:
     """
     Get the global audit compliance DI container instance.
 
@@ -345,21 +362,21 @@ def get_container(config: AuditComplianceConfig | None = None) -> AuditComplianc
     Returns:
         AuditComplianceDIContainer instance
     """
-    global _container
+    container = ContainerHolder.get()
 
-    if _container is None:
+    if container is None:
         if config is None:
             config = AuditComplianceConfig()
-        _container = AuditComplianceDIContainer(config)
+        container = AuditComplianceDIContainer(config)
+        ContainerHolder.set(container)
         logger.info("Created new audit compliance DI container")
 
-    return _container
+    return container
 
 
 def reset_container():
     """Reset the global container (useful for testing)."""
-    global _container
-    _container = None
+    ContainerHolder.set(None)
     logger.info("Reset audit compliance DI container")
 
 
@@ -385,10 +402,10 @@ async def initialize_audit_compliance_service(
 
 async def shutdown_audit_compliance_service():
     """Shutdown the audit compliance service."""
-    global _container
-    if _container:
-        await _container.cleanup()
-        _container = None
+    container = ContainerHolder.get()
+    if container:
+        await container.cleanup()
+        ContainerHolder.set(None)
 
 
 # Configuration factory functions

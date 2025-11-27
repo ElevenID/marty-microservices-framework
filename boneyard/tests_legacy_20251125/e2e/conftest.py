@@ -22,10 +22,6 @@ import psutil
 import pytest
 import pytest_asyncio
 import redis.asyncio as redis
-from observability import ServiceMonitor
-from testcontainers.postgres import PostgresContainer
-from testcontainers.redis import RedisContainer
-
 from marty_msf.framework.events.enhanced_event_bus import (
     EnhancedEventBus as InMemoryEventBus,
 )
@@ -36,6 +32,9 @@ from marty_msf.framework.testing.performance_testing import (
     RequestSpec,
 )
 from marty_msf.observability.monitoring import MetricsCollector
+from observability import ServiceMonitor
+from testcontainers.postgres import PostgresContainer
+from testcontainers.redis import RedisContainer
 
 
 @dataclass

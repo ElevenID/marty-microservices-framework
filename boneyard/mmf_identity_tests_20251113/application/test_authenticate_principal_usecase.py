@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pytest
-
 from mmf.services.identity.application.ports_in.authenticate_principal import (
     AuthenticatePrincipalCommand,
 )

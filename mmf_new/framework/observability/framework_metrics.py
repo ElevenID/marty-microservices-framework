@@ -11,7 +11,12 @@ import logging
 
 from prometheus_client import Counter, Gauge, Histogram, Info
 
-from mmf_new.framework.infrastructure.dependency_injection import configure_service, get_service, get_service_optional
+from mmf_new.framework.infrastructure.dependency_injection import (
+    configure_service,
+    get_service,
+    get_service_optional,
+)
+
 from .factories import register_observability_services, set_framework_metrics_class
 
 logger = logging.getLogger(__name__)

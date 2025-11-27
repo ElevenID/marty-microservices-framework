@@ -44,15 +44,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from jsonschema import ValidationError as JsonSchemaValidationError
 from jsonschema import validate
-from opentelemetry import trace
-from prometheus_client import CONTENT_TYPE_LATEST, Counter, generate_latest
-from pydantic import BaseModel, Field
-
 from marty_msf.framework.config import (
     ConfigurationStrategy,
     Environment,
     create_unified_config_manager,
 )
+from opentelemetry import trace
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, generate_latest
+from pydantic import BaseModel, Field
 
 from .config import APIVersioningSettings, get_settings
 

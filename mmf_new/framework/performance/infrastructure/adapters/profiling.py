@@ -26,7 +26,7 @@ class CProfileAdapter(ProfilerPort):
         profiler = cProfile.Profile()
         profiler.enable()
         start_time = time.time()
-        
+
         try:
             result = await func(*args, **kwargs)
         finally:
@@ -43,7 +43,7 @@ class CProfileAdapter(ProfilerPort):
         profiler = cProfile.Profile()
         profiler.enable()
         start_time = time.time()
-        
+
         try:
             result = func(*args, **kwargs)
         finally:
@@ -62,7 +62,7 @@ class CProfileAdapter(ProfilerPort):
         # Extract stats
         function_stats: dict[str, dict[str, float]] = {}
         hotspots: list[str] = []
-        
+
         # pstats.stats is a dict: (filename, line, funcname) -> (cc, nc, tt, ct, callers)
         # cc: primitive calls, nc: number of calls, tt: total time, ct: cumulative time
         for func_tuple, (_cc, nc, tt, ct, _callers) in ps.stats.items():  # type: ignore
@@ -73,7 +73,7 @@ class CProfileAdapter(ProfilerPort):
                 "cumulative_time": ct,
                 "per_call": ct / nc if nc > 0 else 0,
             }
-            
+
             # Identify hotspots (simple heuristic: > 10% of total duration)
             if duration > 0 and ct / duration > 0.1:
                 hotspots.append(func_name)

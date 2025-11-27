@@ -11,13 +11,21 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any, TypeVar
 
+from mmf_new.framework.resilience.domain.config import (
+    CircuitBreakerConfig,
+    RetryConfig,
+    RetryStrategy,
+)
+from mmf_new.framework.resilience.domain.exceptions import (
+    CircuitBreakerError,
+    RetryError,
+)
 
-from mmf_new.framework.resilience.domain.config import CircuitBreakerConfig, RetryConfig, RetryStrategy
-from mmf_new.framework.resilience.domain.exceptions import CircuitBreakerError, RetryError
 from .circuit_breaker import get_circuit_breaker
 
 T = TypeVar("T")
 logger = logging.getLogger(__name__)
+
 
 class BackoffStrategy(ABC):
     """Abstract base class for backoff strategies."""
@@ -25,6 +33,7 @@ class BackoffStrategy(ABC):
     @abstractmethod
     def calculate_delay(self, attempt: int, base_delay: float, max_delay: float) -> float:
         """Calculate delay for given attempt number."""
+
 
 class ExponentialBackoff(BackoffStrategy):
     """Exponential backoff with optional jitter."""
@@ -46,6 +55,7 @@ class ExponentialBackoff(BackoffStrategy):
 
         return delay
 
+
 class LinearBackoff(BackoffStrategy):
     """Linear backoff with optional jitter."""
 
@@ -66,6 +76,7 @@ class LinearBackoff(BackoffStrategy):
 
         return delay
 
+
 class ConstantBackoff(BackoffStrategy):
     """Constant delay with optional jitter."""
 
@@ -83,6 +94,7 @@ class ConstantBackoff(BackoffStrategy):
             delay = max(0, delay + jitter_value)
 
         return delay
+
 
 class RetryManager:
     """Manages retry logic with configurable strategies."""
@@ -207,6 +219,7 @@ class RetryManager:
             last_exception or Exception("Unknown error"),
         )
 
+
 async def retry_async(
     func: Callable[..., Any], *args: Any, config: RetryConfig | None = None, **kwargs: Any
 ) -> Any:
@@ -215,29 +228,39 @@ async def retry_async(
     manager = RetryManager(retry_config)
     return await manager.execute_async(func, *args, **kwargs)
 
-def retry_sync(func: Callable[..., Any], *args: Any, config: RetryConfig | None = None, **kwargs: Any) -> Any:
+
+def retry_sync(
+    func: Callable[..., Any], *args: Any, config: RetryConfig | None = None, **kwargs: Any
+) -> Any:
     """Execute sync function with retry logic."""
     retry_config = config or RetryConfig()
     manager = RetryManager(retry_config)
     return manager.execute_sync(func, *args, **kwargs)
 
-def retry_decorator(config: RetryConfig | None = None) -> Callable[[Callable[..., T]], Callable[..., T]]:
+
+def retry_decorator(
+    config: RetryConfig | None = None,
+) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """Decorator to add retry logic to functions."""
     retry_config = config or RetryConfig()
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         if asyncio.iscoroutinefunction(func):
+
             @wraps(func)
             async def async_wrapper(*args: Any, **kwargs: Any) -> T:
                 return await retry_async(func, *args, config=retry_config, **kwargs)
+
             return async_wrapper
 
         @wraps(func)
         def sync_wrapper(*args: Any, **kwargs: Any) -> T:
             return retry_sync(func, *args, config=retry_config, **kwargs)
+
         return sync_wrapper
 
     return decorator
+
 
 async def retry_with_circuit_breaker(
     func: Callable[..., T],

@@ -4,6 +4,7 @@ Gateway Domain Exceptions
 
 from typing import Any
 
+
 class GatewayError(Exception):
     """Base exception for gateway errors."""
 

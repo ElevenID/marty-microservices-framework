@@ -19,10 +19,10 @@ import grpc
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from grpc._server import _Context as GrpcContext
-from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
 # Framework imports
 from marty_msf.framework.grpc import UnifiedGrpcServer
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
 from .core import HealthStatus, get_monitoring_manager
 

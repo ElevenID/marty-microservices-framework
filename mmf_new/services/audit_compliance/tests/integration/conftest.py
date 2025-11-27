@@ -12,6 +12,8 @@ from datetime import datetime, timedelta
 from typing import Any, dict
 
 import pytest
+import redis
+from sqlalchemy.exc import OperationalError
 
 from mmf_new.core.domain.audit_types import (
     AuditLevel,
@@ -339,14 +341,12 @@ class ErrorSimulator:
     @staticmethod
     def simulate_database_error():
         """Simulate database connection error."""
-        from sqlalchemy.exc import OperationalError
 
         raise OperationalError("Database connection failed", None, None)
 
     @staticmethod
     def simulate_cache_error():
         """Simulate Redis cache error."""
-        import redis
 
         raise redis.ConnectionError("Redis connection failed")
 

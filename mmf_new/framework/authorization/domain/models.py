@@ -12,6 +12,7 @@ from typing import Any, Protocol
 
 class PermissionAction(Enum):
     """Standard permission actions."""
+
     READ = "read"
     WRITE = "write"
     DELETE = "delete"
@@ -22,6 +23,7 @@ class PermissionAction(Enum):
 
 class ResourceType(Enum):
     """Standard resource types."""
+
     SERVICE = "service"
     USER = "user"
     ROLE = "role"
@@ -40,6 +42,7 @@ class Permission:
     Format: resource_type:resource_id:action
     Example: user:123:read
     """
+
     resource_type: str
     resource_id: str
     action: str
@@ -51,7 +54,9 @@ class Permission:
 class IAuthorizationEngine(Protocol):
     """Interface for authorization engines (RBAC, ABAC)."""
 
-    def check_permission(self, principal_id: str, permission: Permission, context: dict[str, Any] | None = None) -> bool:
+    def check_permission(
+        self, principal_id: str, permission: Permission, context: dict[str, Any] | None = None
+    ) -> bool:
         """Check if principal has permission."""
         ...
 

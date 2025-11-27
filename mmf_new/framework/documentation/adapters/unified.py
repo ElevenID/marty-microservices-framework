@@ -10,7 +10,10 @@ import yaml
 
 from mmf_new.framework.documentation.adapters.grpc import GRPCDocumentationGenerator
 from mmf_new.framework.documentation.adapters.openapi import OpenAPIGenerator
-from mmf_new.framework.documentation.domain.models import APIService, DocumentationConfig
+from mmf_new.framework.documentation.domain.models import (
+    APIService,
+    DocumentationConfig,
+)
 from mmf_new.framework.documentation.ports.generator import APIDocumentationGenerator
 
 

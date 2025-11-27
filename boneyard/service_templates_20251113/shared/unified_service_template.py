@@ -25,8 +25,6 @@ from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
-from pydantic import BaseModel, Field
-
 from marty_msf.framework.config import (
     ConfigurationStrategy,
     Environment,
@@ -37,6 +35,7 @@ from marty_msf.framework.database import DatabaseManager, create_database_manage
 from marty_msf.framework.database.config import ConnectionPoolConfig, DatabaseConfig
 from marty_msf.framework.grpc.unified_grpc_server import UnifiedGrpcServer
 from marty_msf.observability.monitoring import MonitoringManager, initialize_monitoring
+from pydantic import BaseModel, Field
 
 
 # Define service configuration model

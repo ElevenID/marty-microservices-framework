@@ -5,16 +5,18 @@ Database Adapter
 import logging
 import time
 from typing import Any
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy import text
 
-from mmf_new.framework.integration.ports.connector import ExternalSystemPort
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+from mmf_new.framework.integration.domain.exceptions import ConnectionFailedError
 from mmf_new.framework.integration.domain.models import (
     ConnectionConfig,
     IntegrationRequest,
     IntegrationResponse,
 )
-from mmf_new.framework.integration.domain.exceptions import ConnectionFailedError
+from mmf_new.framework.integration.ports.connector import ExternalSystemPort
+
 
 class DatabaseAdapter(ExternalSystemPort):
     """Database connector implementation using SQLAlchemy AsyncIO."""
@@ -34,7 +36,9 @@ class DatabaseAdapter(ExternalSystemPort):
 
             # Ensure async driver is used (e.g., postgresql+asyncpg)
             if "postgresql://" in connection_string:
-                connection_string = connection_string.replace("postgresql://", "postgresql+asyncpg://")
+                connection_string = connection_string.replace(
+                    "postgresql://", "postgresql+asyncpg://"
+                )
 
             self.engine = create_async_engine(
                 connection_string,
@@ -76,11 +80,13 @@ class DatabaseAdapter(ExternalSystemPort):
             await self.connect()
 
         start_time = time.time()
-        
+
         try:
-            query = request.data.get("query") if isinstance(request.data, dict) else str(request.data)
+            query = (
+                request.data.get("query") if isinstance(request.data, dict) else str(request.data)
+            )
             params = request.data.get("params", {}) if isinstance(request.data, dict) else {}
-            
+
             if not query:
                 raise ValueError("No query provided")
 
@@ -89,7 +95,7 @@ class DatabaseAdapter(ExternalSystemPort):
 
             async with self.session_factory() as session:
                 result = await session.execute(text(query), params)
-                
+
                 # Commit if it's a modification
                 if request.operation.lower() in ["insert", "update", "delete"]:
                     await session.commit()
@@ -101,7 +107,7 @@ class DatabaseAdapter(ExternalSystemPort):
                         # Convert rows to dicts if possible, or list of values
                         if result.keys():
                             keys = list(result.keys())
-                            data = [dict(zip(keys, row)) for row in rows]
+                            data = [dict(zip(keys, row, strict=False)) for row in rows]
                         else:
                             data = [list(row) for row in rows]
                     except Exception:
@@ -109,12 +115,9 @@ class DatabaseAdapter(ExternalSystemPort):
 
             latency = (time.time() - start_time) * 1000
             return IntegrationResponse(
-                request_id=request.request_id,
-                success=True,
-                data=data,
-                latency_ms=latency
+                request_id=request.request_id, success=True, data=data, latency_ms=latency
             )
-            
+
         except Exception as e:
             latency = (time.time() - start_time) * 1000
             return IntegrationResponse(
@@ -122,14 +125,14 @@ class DatabaseAdapter(ExternalSystemPort):
                 success=False,
                 data=None,
                 error_message=str(e),
-                latency_ms=latency
+                latency_ms=latency,
             )
 
     async def health_check(self) -> bool:
         """Check health of database."""
         if not self.engine:
             return False
-            
+
         try:
             async with self.engine.connect() as conn:
                 await conn.execute(text("SELECT 1"))

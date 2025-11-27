@@ -8,11 +8,11 @@ loading JWT settings from YAML configuration files using MMFConfiguration.
 from pathlib import Path
 
 from mmf_new.framework.infrastructure.config import MMFConfiguration
-from mmf_new.services.identity.infrastructure.adapters.out.auth.jwt_adapter import (
-    JWTConfig,
-)
 from mmf_new.services.identity.infrastructure.adapters.out.auth.basic_auth_adapter import (
     BasicAuthConfig,
+)
+from mmf_new.services.identity.infrastructure.adapters.out.auth.jwt_adapter import (
+    JWTConfig,
 )
 
 

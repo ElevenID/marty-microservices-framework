@@ -11,7 +11,6 @@ This test suite demonstrates end-to-end testing of microservices using:
 import asyncio
 
 import pytest
-
 from tests.e2e.kind_playwright_infrastructure import (
     KindClusterManager,
     PlaywrightTester,

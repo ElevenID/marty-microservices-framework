@@ -6,27 +6,27 @@ testing the complete flow from request to storage across all components.
 """
 
 import asyncio
+import os
 import tempfile
+import time
 from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import Optional
 from unittest.mock import AsyncMock, patch
 
+import psutil
 import pytest
 import pytest_asyncio
 
 from mmf_new.core.domain.audit_types import AuditEventType, AuditOutcome, AuditSeverity
 from mmf_new.services.audit.application.commands import LogRequestCommand
 from mmf_new.services.audit.di_config import AuditConfig
-from mmf_new.services.audit.service_factory import AuditService, audit_context
-from mmf_new.services.audit.tests.fixtures import (
-    batch_test_events,
-    high_severity_events,
-    integration_test_scenarios,
-    sample_log_request_command,
-    test_audit_di_container,
-    test_audit_service,
+from mmf_new.services.audit.infrastructure.adapters.fastapi_middleware import (
+    AuditMiddlewareConfig,
+    FastAPIAuditMiddleware,
+    MiddlewareAuditor,
 )
+from mmf_new.services.audit.service_factory import AuditService, audit_context
 
 
 class TestAuditServiceIntegration:
@@ -111,7 +111,7 @@ class TestAuditServiceIntegration:
             method="GET",
             status_code=200,
             outcome=AuditOutcome.SUCCESS,
-            message="Test message"
+            message="Test message",
         )
 
         response = await service.log_request(command)
@@ -142,7 +142,7 @@ class TestAuditServiceIntegration:
                 "response_data": {
                     "access_token": "secret_token",  # Should be encrypted
                     "user_id": "123",
-                }
+                },
             },
             status_code=200,
         )
@@ -234,9 +234,9 @@ class TestAuditServiceIntegration:
         config = AuditConfig(
             database_url="sqlite+aiosqlite:///:memory:",
             encryption_enabled=False,
-            enabled_destinations=["console"]
+            enabled_destinations=["console"],
         )
-        
+
         async def mock_session_factory():
             yield AsyncMock()
 
@@ -267,12 +267,11 @@ class TestAuditServiceIntegration:
         # For now, just verify service can be created
         service = AuditService(test_audit_di_container)
         await service.initialize(test_audit_di_container._session_factory)
-        
+
         assert service is not None
 
     async def test_performance_under_load(self, audit_service):
         """Basic performance test under load."""
-        import time
 
         start_time = time.time()
 
@@ -318,11 +317,6 @@ class TestMiddlewareIntegration:
 
     async def test_fastapi_middleware_integration(self):
         """Test FastAPI middleware integration."""
-        from mmf_new.services.audit.infrastructure.adapters.fastapi_middleware import (
-            AuditMiddlewareConfig,
-            FastAPIAuditMiddleware,
-            MiddlewareAuditor,
-        )
 
         # Create mock audit service
         mock_audit_service = AsyncMock()
@@ -341,13 +335,15 @@ class TestMiddlewareIntegration:
             method="POST",
             endpoint="/api/test",
             user_id="test-user",
-            request_data={"test": "data"}
+            request_data={"test": "data"},
         )
 
         assert event_id is not None
         mock_audit_service.log_request.assert_called_once()
 
-    @pytest.mark.skip(reason="GrpcMiddlewareAuditor needs refactoring to match IMiddlewareAuditor interface")
+    @pytest.mark.skip(
+        reason="GrpcMiddlewareAuditor needs refactoring to match IMiddlewareAuditor interface"
+    )
     async def test_grpc_interceptor_integration(self):
         """Test gRPC interceptor integration."""
         pass
@@ -360,7 +356,6 @@ class TestAuditServicePerformance:
     @pytest.mark.asyncio
     async def test_throughput_measurement(self, audit_service):
         """Measure audit service throughput."""
-        import time
 
         # Warm up
         warm_up_command = LogRequestCommand(
@@ -417,9 +412,6 @@ class TestAuditServicePerformance:
     @pytest.mark.asyncio
     async def test_memory_usage_stability(self, audit_service):
         """Test memory usage remains stable under load."""
-        import os
-
-        import psutil
 
         process = psutil.Process(os.getpid())
         initial_memory = process.memory_info().rss

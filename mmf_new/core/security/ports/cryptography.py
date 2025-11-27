@@ -25,7 +25,6 @@ class ICryptographyManager(Protocol):
         ...
 
     def decrypt_data(self, encrypted_data: str, key_id: str = "default") -> str:
-
         """
         Decrypt data using specified key.
 

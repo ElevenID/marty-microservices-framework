@@ -5,18 +5,16 @@ This module exports the core components of the observability framework,
 following the Hexagonal Architecture pattern.
 """
 
+from mmf_new.framework.observability.adapters.monitoring import HealthCheck
+from mmf_new.framework.observability.adapters.monitoring import (
+    ServiceMonitor as ObservabilityService,
+)
+from mmf_new.framework.observability.adapters.tracing import OTEL_ENABLED
 from mmf_new.framework.observability.domain.protocols import (
     HealthStatus,
     IMetricsCollector,
     ITracer,
     MetricType,
-)
-from mmf_new.framework.observability.adapters.monitoring import (
-    HealthCheck,
-    ServiceMonitor as ObservabilityService,
-)
-from mmf_new.framework.observability.adapters.tracing import (
-    OTEL_ENABLED,
 )
 
 # Legacy exports (to be removed or refactored)

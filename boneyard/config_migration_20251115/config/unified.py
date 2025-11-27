@@ -49,12 +49,12 @@ import yaml
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient  # type: ignore
 from google.cloud import secretmanager  # type: ignore
-from pydantic import BaseModel, Field, ValidationError
-from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Import from new modular security structure
 from marty_msf.crypto_secrets import VaultClient, VaultConfig
 from marty_msf.framework.config.manager import Environment
+from pydantic import BaseModel, Field, ValidationError
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Import existing security module components with fallbacks
 try:

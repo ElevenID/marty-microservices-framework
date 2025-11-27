@@ -9,10 +9,10 @@ from __future__ import annotations
 import builtins
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any
 from enum import Enum
+from typing import Any
 
-from mmf_new.core.domain.audit_types import SecurityThreatLevel, SecurityEventType
+from mmf_new.core.domain.audit_types import SecurityEventType, SecurityThreatLevel
 
 
 class ThreatType(Enum):

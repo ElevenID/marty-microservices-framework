@@ -8,9 +8,9 @@ from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable
 
+from ..domain.enums import ComplianceFramework
 from ..domain.models.result import ComplianceResult
 from ..domain.models.user import SecurityPrincipal
-from ..domain.enums import ComplianceFramework
 
 
 @runtime_checkable

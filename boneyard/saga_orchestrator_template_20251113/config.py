@@ -21,14 +21,13 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
-
 # Import unified configuration system
 from marty_msf.framework.config import (
     ConfigurationStrategy,
     Environment,
     create_unified_config_manager,
 )
+from pydantic import BaseModel, Field
 
 
 class StorageBackend(Enum):

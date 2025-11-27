@@ -32,9 +32,8 @@ from .enhanced_event_bus import (
 )
 
 # Enhanced event types
-from .enhanced_events import EVENT_REGISTRY, DomainEvent, EventRegistry
+from .enhanced_events import EVENT_REGISTRY, DomainEvent, EventRegistry, SystemEvent, register_event
 from .enhanced_events import GenericEvent as Event
-from .enhanced_events import SystemEvent, register_event
 from .exceptions import EventPublishingError
 from .types import AuditEventType, NotificationEventType
 

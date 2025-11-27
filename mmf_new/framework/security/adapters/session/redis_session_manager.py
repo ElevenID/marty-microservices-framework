@@ -6,20 +6,20 @@ Implementation of ISessionManager using Redis for storage.
 
 import json
 import logging
+import uuid
 from datetime import datetime, timedelta
 from typing import Any
-import uuid
 
 import redis.asyncio as redis
 from redis.asyncio.client import Redis
 
 from ...domain.config import SessionConfig
 from ...domain.models.session import (
-    SessionData,
-    SessionState,
-    SessionEventType,
     SessionCleanupEvent,
+    SessionData,
+    SessionEventType,
     SessionMetrics,
+    SessionState,
 )
 from ...ports.session import ISessionManager
 
@@ -133,11 +133,7 @@ class RedisSessionManager(ISessionManager):
         key = self._get_key(session_id)
         ttl_seconds = int((expires_at - now).total_seconds())
 
-        await self._redis.setex(
-            key,
-            ttl_seconds,
-            self._serialize_session(session)
-        )
+        await self._redis.setex(key, ttl_seconds, self._serialize_session(session))
 
         # Add to user index
         user_key = f"{self.config.key_prefix}:user:{user_id}"
@@ -198,11 +194,7 @@ class RedisSessionManager(ISessionManager):
             return False
 
         key = self._get_key(session.session_id)
-        await self._redis.setex(
-            key,
-            ttl_seconds,
-            self._serialize_session(session)
-        )
+        await self._redis.setex(key, ttl_seconds, self._serialize_session(session))
         return True
 
     async def extend_session(self, session_id: str, minutes: int) -> bool:
@@ -253,7 +245,7 @@ class RedisSessionManager(ISessionManager):
                 session_id=session_id,
                 user_id=session.user_id,
                 event_type=reason,
-                timestamp=datetime.utcnow()
+                timestamp=datetime.utcnow(),
             )
             # We could publish to a channel
             # await self._redis.publish("session_events", json.dumps(asdict(event)))
@@ -263,8 +255,6 @@ class RedisSessionManager(ISessionManager):
             logger.info("Session %s terminated: %s. Event: %s", session_id, reason.value, event)
 
         return True
-
-
 
     async def cleanup_expired_sessions(self) -> int:
         """
@@ -331,7 +321,9 @@ class RedisSessionManager(ISessionManager):
 
     async def process_cleanup_event(self, event: SessionCleanupEvent) -> bool:
         """Process a session cleanup event."""
-        logger.info("Processing cleanup event for session %s: %s", event.session_id, event.event_type)
+        logger.info(
+            "Processing cleanup event for session %s: %s", event.session_id, event.event_type
+        )
         return True
 
     async def get_metrics(self) -> SessionMetrics:
@@ -347,5 +339,3 @@ class RedisSessionManager(ISessionManager):
             return True
         except Exception:
             return False
-
-

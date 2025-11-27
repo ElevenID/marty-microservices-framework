@@ -9,23 +9,30 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from mmf_new.core.security.domain.models.result import AuthenticationResult, AuthorizationResult
-from mmf_new.core.security.domain.models.user import AuthenticatedUser, User
+from mmf_new.core.domain.audit_types import SecurityEventSeverity, SecurityEventType
 from mmf_new.core.security.domain.models.context import AuthorizationContext
+from mmf_new.core.security.domain.models.result import (
+    AuthenticationResult,
+    AuthorizationResult,
+)
+from mmf_new.core.security.domain.models.user import AuthenticatedUser, User
 from mmf_new.core.security.ports.authentication import IAuthenticator
 from mmf_new.core.security.ports.authorization import IAuthorizer
 from mmf_new.core.security.ports.common import IAuditor
-
-# Import service implementations
-from mmf_new.services.identity.application.services.authentication_manager import AuthenticationManager
+from mmf_new.framework.authorization.api import IAuthorizer as CoreIAuthorizer
+from mmf_new.services.audit_compliance.service_factory import AuditComplianceService
 from mmf_new.services.identity.application.ports_out import (
     AuthenticationCredentials,
     AuthenticationMethod,
-    AuthenticationResult as IdentityAuthenticationResult
 )
-from mmf_new.framework.authorization.api import IAuthorizer as CoreIAuthorizer
-from mmf_new.services.audit_compliance.service_factory import AuditComplianceService
-from mmf_new.core.domain.audit_types import SecurityEventType, SecurityEventSeverity
+from mmf_new.services.identity.application.ports_out import (
+    AuthenticationResult as IdentityAuthenticationResult,
+)
+
+# Import service implementations
+from mmf_new.services.identity.application.services.authentication_manager import (
+    AuthenticationManager,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -47,12 +54,11 @@ class IdentityServiceAuthenticator(IAuthenticator):
             except KeyError:
                 method = AuthenticationMethod.BASIC
 
-            auth_credentials = AuthenticationCredentials(
-                method=method,
-                credentials=credentials
-            )
+            auth_credentials = AuthenticationCredentials(method=method, credentials=credentials)
 
-            result: IdentityAuthenticationResult = await self.auth_manager.authenticate(auth_credentials)
+            result: IdentityAuthenticationResult = await self.auth_manager.authenticate(
+                auth_credentials
+            )
 
             # Map IdentityAuthenticationResult to domain AuthenticationResult
             user = None
@@ -64,14 +70,14 @@ class IdentityServiceAuthenticator(IAuthenticator):
                     email=result.user.email,
                     roles=set(result.user.roles),
                     permissions=set(result.user.permissions),
-                    metadata=result.user.metadata
+                    metadata=result.user.metadata,
                 )
 
             return AuthenticationResult(
                 success=result.success,
                 user=user,
                 error=result.error_message,
-                metadata=result.metadata or {}
+                metadata=result.metadata or {},
             )
         except Exception as e:
             logger.error(f"Authentication failed: {e}")
@@ -103,7 +109,7 @@ class CoreAuthorizerAdapter(IAuthorizer):
                 allowed=result.allowed,
                 reason=result.reason,
                 policies_evaluated=result.policies_evaluated,
-                metadata=result.metadata
+                metadata=result.metadata,
             )
         except Exception as e:
             logger.error(f"Authorization failed: {e}")
@@ -136,11 +142,11 @@ class AuditServiceAdapter(IAuditor):
 
             await self.audit_service.log_audit_event(
                 event_type=security_event_type,
-                severity=SecurityEventSeverity.INFO, # Default severity
+                severity=SecurityEventSeverity.INFO,  # Default severity
                 source="security_framework",
                 description=details.get("description", f"Security event: {event_type}"),
                 user_id=details.get("user_id"),
-                metadata=details
+                metadata=details,
             )
         except Exception as e:
             logger.error(f"Audit logging failed: {e}")

@@ -9,10 +9,10 @@ import logging
 import time
 
 from mmf_new.discovery.domain.models import (
-    ServiceInstance,
     HealthStatus,
-    ServiceStatus,
+    ServiceInstance,
     ServiceRegistryConfig,
+    ServiceStatus,
 )
 from mmf_new.discovery.ports.registry import IServiceRegistry
 
@@ -24,7 +24,9 @@ class MemoryRegistry(IServiceRegistry):
 
     def __init__(self, config: ServiceRegistryConfig):
         self.config = config
-        self._services: dict[str, dict[str, ServiceInstance]] = {}  # service_name -> {instance_id -> instance}
+        self._services: dict[
+            str, dict[str, ServiceInstance]
+        ] = {}  # service_name -> {instance_id -> instance}
 
         # Background tasks
         self._cleanup_task: asyncio.Task | None = None
@@ -186,7 +188,9 @@ class MemoryRegistry(IServiceRegistry):
     def _update_counts(self):
         """Update current counts."""
         self._stats["current_services"] = len(self._services)
-        self._stats["current_instances"] = sum(len(instances) for instances in self._services.values())
+        self._stats["current_instances"] = sum(
+            len(instances) for instances in self._services.values()
+        )
 
     async def _cleanup_loop(self):
         """Background loop to clean up expired instances."""

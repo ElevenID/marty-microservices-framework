@@ -4,7 +4,10 @@ Infrastructure port interface.
 
 from abc import ABC, abstractmethod
 
-from mmf_new.framework.deployment.domain.models import InfrastructureStack, InfrastructureState
+from mmf_new.framework.deployment.domain.models import (
+    InfrastructureStack,
+    InfrastructureState,
+)
 
 
 class InfrastructurePort(ABC):

@@ -9,8 +9,10 @@ from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 
+
 class WorkflowModel(Base):
     """SQLAlchemy model for workflow state."""
+
     __tablename__ = "workflows"
 
     id = Column(String, primary_key=True)

@@ -8,8 +8,8 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from ..domain.models.session import (
-    SessionData,
     SessionCleanupEvent,
+    SessionData,
     SessionEventType,
     SessionMetrics,
 )

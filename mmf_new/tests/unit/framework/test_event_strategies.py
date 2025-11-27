@@ -9,7 +9,8 @@ from enum import Enum
 
 import pytest
 
-from mmf_new.framework.events.enhanced_events import BaseEvent as Event, EventMetadata, EventPriority
+from mmf_new.framework.events.enhanced_events import BaseEvent as Event
+from mmf_new.framework.events.enhanced_events import EventMetadata, EventPriority
 
 
 def test_import_event_types():

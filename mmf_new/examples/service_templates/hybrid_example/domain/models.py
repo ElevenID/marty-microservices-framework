@@ -1,12 +1,14 @@
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-import uuid
+
 
 @dataclass
 class OrderItem:
     product_id: str
     quantity: int
     price: float
+
 
 @dataclass
 class Order:
@@ -33,11 +35,7 @@ class Order:
             "total_amount": self.total_amount,
             "created_at": self.created_at.isoformat(),
             "items": [
-                {
-                    "product_id": item.product_id,
-                    "quantity": item.quantity,
-                    "price": item.price
-                }
+                {"product_id": item.product_id, "quantity": item.quantity, "price": item.price}
                 for item in self.items
-            ]
+            ],
         }

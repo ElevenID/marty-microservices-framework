@@ -12,11 +12,11 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from ..models.rate_limit import (
-    RateLimitStrategy,
-    RateLimitRule,
-    RateLimitWindow,
-    RateLimitResult,
     RateLimitQuota,
+    RateLimitResult,
+    RateLimitRule,
+    RateLimitStrategy,
+    RateLimitWindow,
 )
 
 
@@ -87,9 +87,7 @@ class RateLimitEngine:
 
         # Refill bucket (up to limit + burst)
         max_tokens = rule.limit + rule.burst_size
-        current_window.current_count = min(
-            max_tokens, current_window.current_count + tokens_to_add
-        )
+        current_window.current_count = min(max_tokens, current_window.current_count + tokens_to_add)
 
         # Check if request can be allowed
         if current_window.current_count >= 1:
@@ -133,11 +131,11 @@ class RateLimitEngine:
         # For sliding window, we need to track requests in time buckets
         # This is a simplified implementation - in practice, you'd maintain
         # a list of timestamps or use Redis sorted sets
-        window_start = now - timedelta(seconds=rule.window_seconds)
+        now - timedelta(seconds=rule.window_seconds)
 
         # In a real implementation, you'd filter requests within the sliding window
         # For now, we'll use a simple approximation
-        current_rate = current_window.current_count / rule.window_seconds
+        current_window.current_count / rule.window_seconds
 
         # Check if adding this request would exceed the limit
         effective_limit = rule.limit + rule.burst_size
@@ -255,9 +253,7 @@ class SessionCleanupService:
     def should_run_cleanup(self) -> bool:
         """Check if cleanup should run based on interval."""
         now = datetime.utcnow()
-        return (now - self.last_cleanup).total_seconds() >= (
-            self.cleanup_interval_minutes * 60
-        )
+        return (now - self.last_cleanup).total_seconds() >= (self.cleanup_interval_minutes * 60)
 
     def mark_cleanup_completed(self) -> None:
         """Mark cleanup as completed."""
@@ -319,9 +315,7 @@ class RateLimitCoordinationService:
         # Apply Istio limits for unauthenticated users or when app limits are hit
         return not user_authenticated or not app_result.allowed
 
-    def create_coordination_metadata(
-        self, app_result: RateLimitResult
-    ) -> builtins.dict[str, Any]:
+    def create_coordination_metadata(self, app_result: RateLimitResult) -> builtins.dict[str, Any]:
         """
         Create metadata for coordinating rate limits.
 

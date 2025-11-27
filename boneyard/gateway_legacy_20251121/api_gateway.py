@@ -33,7 +33,6 @@ from typing import Any
 # HTTP client imports
 import aiohttp
 import jwt
-
 from marty_msf.framework.config.injection import container
 
 logger = logging.getLogger(__name__)

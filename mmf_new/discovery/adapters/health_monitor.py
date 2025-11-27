@@ -12,7 +12,11 @@ from typing import Any
 
 import aiohttp
 
-from mmf_new.discovery.domain.models import HealthStatus, ServiceInstance, ServiceInstanceType
+from mmf_new.discovery.domain.models import (
+    HealthStatus,
+    ServiceInstance,
+    ServiceInstanceType,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +69,9 @@ class ServiceHealthMonitor:
             try:
                 await self._perform_health_check(service)
                 # Use configured interval if available, else default
-                interval = service.health_check.interval if service.health_check else self.check_interval
+                interval = (
+                    service.health_check.interval if service.health_check else self.check_interval
+                )
                 await asyncio.sleep(interval)
             except asyncio.CancelledError:
                 break
@@ -122,8 +128,13 @@ class ServiceHealthMonitor:
             health_url = service.health_check.url
         else:
             # Construct from endpoint
-            scheme = "https" if service.endpoint.ssl_enabled or service.endpoint.protocol == ServiceInstanceType.HTTPS else "http"
-            path = "/health" # Default
+            scheme = (
+                "https"
+                if service.endpoint.ssl_enabled
+                or service.endpoint.protocol == ServiceInstanceType.HTTPS
+                else "http"
+            )
+            path = "/health"  # Default
             if service.endpoint.path:
                 path = service.endpoint.path
 
@@ -139,7 +150,9 @@ class ServiceHealthMonitor:
             async with session.request(method, health_url, headers=headers) as response:
                 body = await response.text()
 
-                expected_status = service.health_check.expected_status if service.health_check else 200
+                expected_status = (
+                    service.health_check.expected_status if service.health_check else 200
+                )
                 healthy = response.status == expected_status or (200 <= response.status < 300)
 
                 return {
@@ -154,8 +167,12 @@ class ServiceHealthMonitor:
     async def _tcp_health_check(self, service: ServiceInstance) -> dict[str, Any]:
         """TCP health check."""
         host = service.endpoint.host
-        port = service.health_check.tcp_port if service.health_check and service.health_check.tcp_port else service.endpoint.port
-        
+        port = (
+            service.health_check.tcp_port
+            if service.health_check and service.health_check.tcp_port
+            else service.endpoint.port
+        )
+
         try:
             reader, writer = await asyncio.wait_for(
                 asyncio.open_connection(host, port),
@@ -180,9 +197,7 @@ class ServiceHealthMonitor:
         """Get current health status for an instance."""
         return self.health_results.get(instance_id)
 
-    def get_health_history(
-        self, instance_id: str, limit: int = 50
-    ) -> list[dict[str, Any]]:
+    def get_health_history(self, instance_id: str, limit: int = 50) -> list[dict[str, Any]]:
         """Get health check history for an instance."""
         history = self.health_history.get(instance_id, deque())
         return list(history)[-limit:]

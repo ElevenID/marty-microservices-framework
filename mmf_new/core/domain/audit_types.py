@@ -233,6 +233,7 @@ class AuditOutcome(Enum):
     PARTIAL = "partial"
     UNKNOWN = "unknown"
 
+
 class ThreatCategory(Enum):
     """Categories of security threats."""
 

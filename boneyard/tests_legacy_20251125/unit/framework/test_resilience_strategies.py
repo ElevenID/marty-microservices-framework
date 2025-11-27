@@ -8,7 +8,6 @@ fallback strategies and retry mechanisms with minimal mocking.
 import inspect
 
 import pytest
-
 from marty_msf.framework.resilience import fallback as fallback_module
 from marty_msf.framework.resilience import retry as retry_module
 from marty_msf.framework.resilience.fallback import (

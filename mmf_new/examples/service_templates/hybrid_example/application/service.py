@@ -1,5 +1,9 @@
 from mmf_new.examples.service_templates.hybrid_example.domain.models import Order
-from mmf_new.examples.service_templates.hybrid_example.domain.ports import OrderRepository, InventoryServicePort
+from mmf_new.examples.service_templates.hybrid_example.domain.ports import (
+    InventoryServicePort,
+    OrderRepository,
+)
+
 
 class OrderService:
     def __init__(self, repo: OrderRepository, inventory: InventoryServicePort):
@@ -16,7 +20,7 @@ class OrderService:
 
         # Calculate total
         order.calculate_total()
-        
+
         # Save order
         return await self.repo.save(order)
 

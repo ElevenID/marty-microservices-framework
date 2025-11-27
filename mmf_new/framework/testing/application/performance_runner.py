@@ -13,10 +13,10 @@ import aiohttp
 import numpy as np
 
 from mmf_new.framework.testing.domain.entities import (
-    TestResult,
-    TestStatus,
-    TestSeverity,
     TestMetrics,
+    TestResult,
+    TestSeverity,
+    TestStatus,
     TestType,
 )
 from mmf_new.framework.testing.domain.performance import (
@@ -29,6 +29,7 @@ from mmf_new.framework.testing.domain.performance import (
 )
 
 logger = logging.getLogger(__name__)
+
 
 class MetricsCollector:
     """Collects and aggregates performance metrics."""
@@ -130,6 +131,7 @@ class MetricsCollector:
                 "error_rate": error_rate,
                 "active_requests": len(recent_metrics),
             }
+
 
 class LoadGenerator:
     """Generates load based on specified patterns."""
@@ -412,6 +414,7 @@ class LoadGenerator:
 
         variation_factor = 1 + random.uniform(-variation, variation)
         return max(0, base_time * variation_factor)
+
 
 class PerformanceRunner:
     """Executes performance tests."""

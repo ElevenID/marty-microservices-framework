@@ -3,7 +3,6 @@ Complete and corrected load balancing strategy tests.
 """
 
 import pytest
-
 from marty_msf.framework.discovery.core import HealthStatus, ServiceInstance
 from marty_msf.framework.discovery.load_balancing import (
     HealthBasedBalancer,

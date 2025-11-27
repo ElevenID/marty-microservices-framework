@@ -14,7 +14,6 @@ from datetime import datetime, timezone
 from typing import Any
 
 import numpy as np
-
 from marty_msf.framework.ml.models import (
     ModelFramework,
     ModelMetrics,

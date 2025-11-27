@@ -18,10 +18,9 @@ from typing import Any, Optional
 import grpc
 from fastapi import Request, Response
 from grpc import ServicerContext
+from marty_msf.framework.grpc import ServiceDefinition
 from opentelemetry import trace
 from starlette.middleware.base import BaseHTTPMiddleware
-
-from marty_msf.framework.grpc import ServiceDefinition
 
 logger = logging.getLogger(__name__)
 

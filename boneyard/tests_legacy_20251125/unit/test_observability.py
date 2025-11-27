@@ -3,14 +3,13 @@ Tests for observability components
 """
 
 import pytest
-from observability import setup_observability
-
 from marty_msf.observability.kafka import EventBus, EventMessage, KafkaConfig
 from marty_msf.observability.load_testing.load_tester import (
     LoadTestConfig,
     LoadTestRunner,
 )
 from marty_msf.observability.metrics import MetricsCollector, MetricsConfig
+from observability import setup_observability
 
 
 @pytest.fixture

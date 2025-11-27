@@ -4,7 +4,12 @@ Integration Management Ports
 
 from abc import ABC, abstractmethod
 from typing import Any
-from mmf_new.framework.integration.domain.models import ConnectionConfig, CircuitBreakerStatus
+
+from mmf_new.framework.integration.domain.models import (
+    CircuitBreakerStatus,
+    ConnectionConfig,
+)
+
 
 class ConnectorManagementPort(ABC):
     """Port for managing connectors."""

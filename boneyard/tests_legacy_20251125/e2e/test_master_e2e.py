@@ -17,7 +17,6 @@ import json
 from pathlib import Path
 
 import pytest
-
 from tests.e2e.conftest import PerformanceAnalyzer, TimeoutMonitor
 from tests.e2e.performance_reporting import generate_comprehensive_performance_report
 from tests.e2e.test_auditability import TestAuditability

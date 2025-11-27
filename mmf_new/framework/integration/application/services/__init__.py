@@ -2,7 +2,7 @@
 Integration Application Services
 """
 
-from .transformation_service import DataTransformationService
 from .manager_service import ConnectorManagerService
+from .transformation_service import DataTransformationService
 
 __all__ = ["DataTransformationService", "ConnectorManagerService"]

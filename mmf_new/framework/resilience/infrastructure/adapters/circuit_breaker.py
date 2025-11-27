@@ -11,9 +11,13 @@ from functools import wraps
 from typing import Any, Generic, TypeVar
 
 from mmf_new.framework.resilience.domain.config import CircuitBreakerConfig
-from mmf_new.framework.resilience.domain.exceptions import CircuitBreakerError, CircuitBreakerState
+from mmf_new.framework.resilience.domain.exceptions import (
+    CircuitBreakerError,
+    CircuitBreakerState,
+)
 
 T = TypeVar("T")
+
 
 class CircuitBreaker(Generic[T]):
     """
@@ -250,9 +254,11 @@ class CircuitBreaker(Generic[T]):
                 },
             }
 
+
 # Global registry for circuit breakers
 _circuit_breakers: dict[str, CircuitBreaker] = {}
 _registry_lock = threading.Lock()
+
 
 def get_circuit_breaker(name: str, config: CircuitBreakerConfig | None = None) -> CircuitBreaker:
     """Get or create a circuit breaker by name."""
@@ -261,16 +267,19 @@ def get_circuit_breaker(name: str, config: CircuitBreakerConfig | None = None) -
             _circuit_breakers[name] = CircuitBreaker(name, config)
         return _circuit_breakers[name]
 
+
 def get_all_circuit_breakers() -> dict[str, CircuitBreaker]:
     """Get all registered circuit breakers."""
     with _registry_lock:
         return _circuit_breakers.copy()
+
 
 def reset_all_circuit_breakers() -> None:
     """Reset all circuit breakers to initial state."""
     with _registry_lock:
         for cb in _circuit_breakers.values():
             cb.reset()
+
 
 def get_circuit_breaker_stats() -> dict[str, dict[str, Any]]:
     """Get statistics for all circuit breakers."""

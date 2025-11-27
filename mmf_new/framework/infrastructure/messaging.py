@@ -6,7 +6,13 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import Any
 
-from mmf_new.core.application.base import Command, CommandResult, CommandStatus, Query, QueryResult
+from mmf_new.core.application.base import (
+    Command,
+    CommandResult,
+    CommandStatus,
+    Query,
+    QueryResult,
+)
 from mmf_new.core.application.handlers import CommandHandler, QueryHandler
 
 logger = logging.getLogger(__name__)

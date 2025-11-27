@@ -7,6 +7,7 @@ Interface for service mesh lifecycle management functionality.
 from abc import ABC, abstractmethod
 from typing import Any
 
+
 class MeshLifecyclePort(ABC):
     """Interface for service mesh lifecycle operations."""
 
@@ -20,7 +21,9 @@ class MeshLifecyclePort(ABC):
         """
 
     @abstractmethod
-    async def deploy(self, namespace: str = "istio-system", config: dict[str, Any] | None = None) -> bool:
+    async def deploy(
+        self, namespace: str = "istio-system", config: dict[str, Any] | None = None
+    ) -> bool:
         """
         Deploy the service mesh to the cluster.
 
@@ -51,7 +54,9 @@ class MeshLifecyclePort(ABC):
         """
 
     @abstractmethod
-    async def generate_deployment_script(self, service_name: str, config: dict[str, Any] | None = None) -> str:
+    async def generate_deployment_script(
+        self, service_name: str, config: dict[str, Any] | None = None
+    ) -> str:
         """
         Generate a deployment script for the service mesh.
 

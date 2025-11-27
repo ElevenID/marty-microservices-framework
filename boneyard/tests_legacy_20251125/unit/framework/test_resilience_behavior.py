@@ -10,7 +10,6 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
-
 from marty_msf.framework.resilience.bulkhead import (
     BulkheadConfig,
     SemaphoreBulkhead,

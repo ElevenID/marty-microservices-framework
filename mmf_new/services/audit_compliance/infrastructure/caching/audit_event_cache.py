@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timedelta
 from typing import Any, Optional
 
+from mmf_new.core.domain import AuditLevel, SecurityEventType
 from mmf_new.framework.infrastructure.cache import CacheManager
 
 from ...domain.models import SecurityAuditEvent
@@ -20,7 +21,7 @@ class AuditEventCache:
     async def cache_event(self, event: SecurityAuditEvent) -> None:
         """Cache an audit event in Redis ZSET for sliding window access."""
         # Use timestamp as score for sliding window
-        score = event.timestamp.timestamp()
+        event.timestamp.timestamp()
 
         # Create cache key based on different access patterns
         base_key = "audit_events"
@@ -39,9 +40,9 @@ class AuditEventCache:
             keys_to_update.append(f"{base_key}:correlation:{event.correlation_id}")
 
         # Serialize event for storage
-        event_data = self._serialize_event(event)
+        self._serialize_event(event)
 
-        for key in keys_to_update:
+        for _key in keys_to_update:
             # Add to sorted set with timestamp as score
             # TODO: CacheManager does not support zadd (sorted sets).
             # Need to use Redis backend directly or update CacheManager.
@@ -61,11 +62,10 @@ class AuditEventCache:
         hours_back: int = 24,
     ) -> list[SecurityAuditEvent]:
         """Get recent events from cache."""
-        cache_key = f"audit_events:{key_pattern}"
 
         # Calculate time range for sliding window
-        end_time = datetime.utcnow().timestamp()
-        start_time = (datetime.utcnow() - timedelta(hours=hours_back)).timestamp()
+        datetime.utcnow().timestamp()
+        (datetime.utcnow() - timedelta(hours=hours_back)).timestamp()
 
         # Get events from sorted set within time range
         # TODO: CacheManager does not support zrevrangebyscore.
@@ -199,7 +199,6 @@ class AuditEventCache:
             event_dict = json.loads(event_data)
 
             # Import enums
-            from mmf_new.core.domain import AuditLevel, SecurityEventType
 
             # Reconstruct the event
             event = SecurityAuditEvent(

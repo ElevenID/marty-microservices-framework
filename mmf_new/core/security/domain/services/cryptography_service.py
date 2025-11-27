@@ -41,7 +41,6 @@ class CryptographyService(ICryptographyManager):
         self.key_versions: dict[str, int] = defaultdict(int)
         self.key_rotation_schedule: dict[str, datetime] = {}
 
-
     def _generate_master_key(self) -> bytes:
         """Generate or load master encryption key."""
         # In production, this should be loaded from secure key management service

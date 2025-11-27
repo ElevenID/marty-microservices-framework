@@ -11,22 +11,23 @@ import re
 import time
 import uuid
 from collections import defaultdict, deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Callable
+from typing import Any
 
 from prometheus_client import Counter, Histogram
 
+from mmf_new.core.domain.audit_types import SecurityEventType, SecurityThreatLevel
 from mmf_new.core.security.domain.config import ThreatDetectionConfig
 from mmf_new.core.security.domain.models.threat import (
+    AnomalyDetectionResult,
     SecurityEvent,
+    ServiceBehaviorProfile,
     ThreatDetectionResult,
     UserBehaviorProfile,
-    ServiceBehaviorProfile,
-    AnomalyDetectionResult,
 )
 from mmf_new.core.security.ports.threat_detection import IThreatDetector
-from mmf_new.core.domain.audit_types import SecurityThreatLevel, SecurityEventType
 
 logger = logging.getLogger(__name__)
 
@@ -187,7 +188,7 @@ class EventProcessorThreatDetector(IThreatDetector):
                 is_threat=False,
                 threat_score=0.0,
                 threat_level=SecurityThreatLevel.LOW,
-                analyzed_at=datetime.now(timezone.utc)
+                analyzed_at=datetime.now(timezone.utc),
             )
 
         # 2. Enrich event
@@ -220,7 +221,7 @@ class EventProcessorThreatDetector(IThreatDetector):
             detected_threats=[r.name for r in triggered_rules],
             risk_factors=[f"Rule: {r.name}" for r in triggered_rules],
             recommended_actions=recommended_actions,
-            analyzed_at=datetime.now(timezone.utc)
+            analyzed_at=datetime.now(timezone.utc),
         )
 
         # Update metrics
@@ -271,7 +272,10 @@ class EventProcessorThreatDetector(IThreatDetector):
 
             # Check service patterns
             if filter_config.service_patterns:
-                if not any(self._match_pattern(p, event.service_name) for p in filter_config.service_patterns):
+                if not any(
+                    self._match_pattern(p, event.service_name)
+                    for p in filter_config.service_patterns
+                ):
                     continue
 
             # Check event types
@@ -307,7 +311,9 @@ class EventProcessorThreatDetector(IThreatDetector):
 
         # Request Analysis
         if "request_body" in event.details:
-            enrichments["request_analysis"] = self._analyze_request(str(event.details["request_body"]))
+            enrichments["request_analysis"] = self._analyze_request(
+                str(event.details["request_body"])
+            )
 
         return enrichments
 
@@ -323,7 +329,9 @@ class EventProcessorThreatDetector(IThreatDetector):
 
         return analysis
 
-    async def _apply_rules(self, event: SecurityEvent) -> tuple[builtins.list[SecurityEventRule], builtins.list[str]]:
+    async def _apply_rules(
+        self, event: SecurityEvent
+    ) -> tuple[builtins.list[SecurityEventRule], builtins.list[str]]:
         """Apply rules to event."""
         triggered = []
         actions = []
@@ -359,7 +367,7 @@ class EventProcessorThreatDetector(IThreatDetector):
         self,
         event: SecurityEvent,
         triggered_rules: builtins.list[SecurityEventRule],
-        enrichments: builtins.dict[str, Any]
+        enrichments: builtins.dict[str, Any],
     ) -> float:
         """Calculate threat score."""
         score = 0.0
@@ -369,7 +377,7 @@ class EventProcessorThreatDetector(IThreatDetector):
             SecurityThreatLevel.LOW: 0.2,
             SecurityThreatLevel.MEDIUM: 0.5,
             SecurityThreatLevel.HIGH: 0.8,
-            SecurityThreatLevel.CRITICAL: 1.0
+            SecurityThreatLevel.CRITICAL: 1.0,
         }
         score += severity_scores.get(event.severity, 0.2)
 

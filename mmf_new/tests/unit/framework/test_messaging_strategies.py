@@ -9,13 +9,11 @@ from mmf_new.framework.messaging import api as dlq_module
 
 # Import messaging components
 from mmf_new.framework.messaging.api import (
+    DLQConfig,
     Message,
     MessageHeaders,
     MessagePriority,
     MessageStatus,
-)
-from mmf_new.framework.messaging.api import (
-    DLQConfig,
     RetryConfig,
     RetryStrategy,
 )
@@ -77,13 +75,13 @@ def test_message_creation():
 
         # Test message with custom headers
         custom_headers = MessageHeaders(data={"custom-header": "value"})
-        
+
         headers_message = Message(
-            body={"test": "data"}, 
+            body={"test": "data"},
             headers=custom_headers,
             correlation_id="corr-123",
             routing_key="user.created",
-            priority=MessagePriority.HIGH
+            priority=MessagePriority.HIGH,
         )
         assert headers_message is not None
         assert headers_message.correlation_id == "corr-123"
@@ -126,9 +124,7 @@ def test_dlq_manager_basic_functionality():
     try:
         # Create configurations
         retry_config = RetryConfig(max_attempts=2)
-        dlq_config = DLQConfig(
-            queue_name="test.dlq", retry_config=retry_config
-        )
+        dlq_config = DLQConfig(queue_name="test.dlq", retry_config=retry_config)
         assert dlq_config is not None
         assert dlq_config.queue_name == "test.dlq"
         assert dlq_config.retry_config.max_attempts == 2
@@ -227,9 +223,7 @@ async def test_messaging_strategy_integration():
             max_delay=1.0,
         )
 
-        dlq_config = DLQConfig(
-            enabled=True, retry_config=retry_config
-        )
+        dlq_config = DLQConfig(enabled=True, retry_config=retry_config)
 
         # Mock backend
         mock_backend = AsyncMock()
@@ -238,9 +232,7 @@ async def test_messaging_strategy_integration():
         dlq_manager = DLQManager(dlq_config, mock_backend)
 
         # Create test message
-        message = Message(
-            id="integration-test-123", body={"test": "integration"}
-        )
+        message = Message(id="integration-test-123", body={"test": "integration"})
 
         # Test message processing workflow (without actual backend calls)
         assert message.retry_count == 0
@@ -257,4 +249,3 @@ async def test_messaging_strategy_integration():
 
     except Exception as e:
         pytest.fail(f"Messaging strategy integration test failed: {e}")
-

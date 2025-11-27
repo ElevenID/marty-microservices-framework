@@ -6,7 +6,6 @@ Tests basic deployment strategy enumeration and basic functionality.
 from enum import Enum
 
 import pytest
-
 from marty_msf.framework.deployment.strategies import (
     DeploymentPhase,
     DeploymentStatus,

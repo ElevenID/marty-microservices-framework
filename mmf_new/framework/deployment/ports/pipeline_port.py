@@ -5,7 +5,10 @@ Pipeline port interface.
 from abc import ABC, abstractmethod
 from typing import Any
 
-from mmf_new.framework.deployment.domain.models import DeploymentPipeline, PipelineExecution
+from mmf_new.framework.deployment.domain.models import (
+    DeploymentPipeline,
+    PipelineExecution,
+)
 
 
 class PipelinePort(ABC):

@@ -8,10 +8,7 @@ import time
 from typing import Any
 
 from mmf_new.discovery.domain.models import ServiceInstance
-from mmf_new.discovery.ports.load_balancer import (
-    ILoadBalancer,
-    LoadBalancingConfig,
-)
+from mmf_new.discovery.ports.load_balancer import ILoadBalancer, LoadBalancingConfig
 
 
 class BaseLoadBalancer(ILoadBalancer):
@@ -46,7 +43,9 @@ class BaseLoadBalancer(ILoadBalancer):
             if instance.instance_id not in self._stats["instance_selections"]:
                 self._stats["instance_selections"][instance.instance_id] = 0
 
-    def record_request(self, instance: ServiceInstance, success: bool, response_time: float) -> None:
+    def record_request(
+        self, instance: ServiceInstance, success: bool, response_time: float
+    ) -> None:
         """Record request result for metrics."""
         self._stats["total_requests"] += 1
 

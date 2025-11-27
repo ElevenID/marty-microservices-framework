@@ -7,7 +7,7 @@ Defines the interface for service registry implementations.
 import builtins
 from abc import ABC, abstractmethod
 
-from mmf_new.discovery.domain.models import ServiceInstance, HealthStatus
+from mmf_new.discovery.domain.models import HealthStatus, ServiceInstance
 
 
 class IServiceRegistry(ABC):

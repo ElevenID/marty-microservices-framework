@@ -9,7 +9,6 @@ from datetime import datetime, timezone
 from typing import Any
 
 import numpy as np
-
 from marty_msf.framework.ml.models import Feature, FeatureGroup, FeatureType
 
 from .interface import FeatureStoreInterface

@@ -1,7 +1,9 @@
 from enum import Enum
 
+
 class TestType(Enum):
     """Types of tests supported by the framework."""
+
     UNIT = "unit"
     INTEGRATION = "integration"
     CONTRACT = "contract"
@@ -11,8 +13,10 @@ class TestType(Enum):
     SMOKE = "smoke"
     REGRESSION = "regression"
 
+
 class TestStatus(Enum):
     """Test execution status."""
+
     PENDING = "pending"
     RUNNING = "running"
     PASSED = "passed"
@@ -20,8 +24,10 @@ class TestStatus(Enum):
     SKIPPED = "skipped"
     ERROR = "error"
 
+
 class TestSeverity(Enum):
     """Test failure severity levels."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"

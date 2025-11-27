@@ -63,7 +63,7 @@ class WorkflowEngine:
 
             if self.repository:
                 await self.repository.update_status(workflow_id, WorkflowStatus.COMPLETED)
-            
+
             return context
 
         except Exception:

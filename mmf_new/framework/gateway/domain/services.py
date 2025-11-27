@@ -2,19 +2,16 @@
 Gateway Domain Services
 """
 
-import re
 import fnmatch
 import random
+import re
 from abc import ABC, abstractmethod
 from re import Pattern
 
-from .models import (
-    GatewayRequest,
-    UpstreamGroup,
-    UpstreamServer
-)
+from .models import GatewayRequest, UpstreamGroup, UpstreamServer
 
 # --- Routing Services ---
+
 
 class RouteMatcher(ABC):
     """Abstract route matcher interface."""
@@ -26,6 +23,7 @@ class RouteMatcher(ABC):
     @abstractmethod
     def extract_params(self, pattern: str, path: str) -> dict[str, str]:
         """Extract parameters from matched path."""
+
 
 class ExactMatcher(RouteMatcher):
     """Exact path matching."""
@@ -41,6 +39,7 @@ class ExactMatcher(RouteMatcher):
 
     def extract_params(self, pattern: str, path: str) -> dict[str, str]:
         return {}
+
 
 class PrefixMatcher(RouteMatcher):
     """Prefix path matching."""
@@ -59,6 +58,7 @@ class PrefixMatcher(RouteMatcher):
             remaining = path[len(pattern) :].lstrip("/")
             return {"*": remaining} if remaining else {}
         return {}
+
 
 class RegexMatcher(RouteMatcher):
     """Regular expression path matching."""
@@ -88,6 +88,7 @@ class RegexMatcher(RouteMatcher):
         except re.error:
             return {}
 
+
 class WildcardMatcher(RouteMatcher):
     """Wildcard path matching using shell-style patterns."""
 
@@ -104,6 +105,7 @@ class WildcardMatcher(RouteMatcher):
         if "*" in pattern:
             return {"wildcard": path}
         return {}
+
 
 class TemplateMatcher(RouteMatcher):
     """Template-based path matching with parameter extraction."""
@@ -146,7 +148,9 @@ class TemplateMatcher(RouteMatcher):
         except re.error:
             return {}
 
+
 # --- Load Balancing Services ---
+
 
 class LoadBalancer(ABC):
     """Abstract load balancer interface."""
@@ -154,6 +158,7 @@ class LoadBalancer(ABC):
     @abstractmethod
     def select_server(self, group: UpstreamGroup, request: GatewayRequest) -> UpstreamServer | None:
         """Select server from group for request."""
+
 
 class RoundRobinBalancer(LoadBalancer):
     """Round-robin load balancer."""
@@ -167,6 +172,7 @@ class RoundRobinBalancer(LoadBalancer):
         group.current_index += 1
         return server
 
+
 class RandomBalancer(LoadBalancer):
     """Random load balancer."""
 
@@ -175,6 +181,7 @@ class RandomBalancer(LoadBalancer):
         if not healthy_servers:
             return None
         return random.choice(healthy_servers)
+
 
 class LeastConnectionsBalancer(LoadBalancer):
     """Least connections load balancer."""
@@ -186,6 +193,7 @@ class LeastConnectionsBalancer(LoadBalancer):
 
         # Find server with minimum connections
         return min(healthy_servers, key=lambda s: s.current_connections)
+
 
 class WeightedRoundRobinBalancer(LoadBalancer):
     """Weighted round-robin load balancer."""

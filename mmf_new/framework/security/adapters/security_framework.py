@@ -9,40 +9,45 @@ from __future__ import annotations
 
 import logging
 
-from mmf_new.framework.infrastructure.dependency_injection import (
-    register_instance,
-    get_service,
-    has_service
-)
+import bcrypt
+
 from mmf_new.core.security.domain.config import SecurityConfig
 from mmf_new.core.security.ports.authentication import IAuthenticator
 from mmf_new.core.security.ports.authorization import IAuthorizer
 from mmf_new.core.security.ports.common import IAuditor
+from mmf_new.framework.authorization.bootstrap import create_role_based_authorizer
+from mmf_new.framework.infrastructure.dependency_injection import (
+    get_service,
+    has_service,
+    register_instance,
+)
+from mmf_new.services.audit_compliance.di_config import (
+    get_container as get_audit_container,
+)
+from mmf_new.services.audit_compliance.service_factory import AuditComplianceService
+
+# Import service factories/managers
+from mmf_new.services.identity import (
+    AuthenticationMethod,
+    BasicAuthAdapter,
+    BasicAuthConfig,
+    authentication_manager,
+)
+
 from ..ports.service_mesh import IServiceMeshManager
 from ..ports.threat_detection import IThreatDetector, IVulnerabilityScanner
 
 # Import adapters
 from .implementations import (
-    IdentityServiceAuthenticator,
+    AuditServiceAdapter,
     CoreAuthorizerAdapter,
-    AuditServiceAdapter
+    IdentityServiceAuthenticator,
 )
 from .service_mesh.istio_mesh_manager import IstioMeshManager
 from .threat_detection.event_processor import EventProcessorThreatDetector
 from .threat_detection.ml_analyzer import MLThreatDetector
 from .threat_detection.pattern_detector import PatternBasedThreatDetector
 from .threat_detection.scanner import VulnerabilityScanner
-
-# Import service factories/managers
-from mmf_new.services.identity import (
-    authentication_manager,
-    BasicAuthAdapter,
-    BasicAuthConfig,
-    AuthenticationMethod
-)
-from mmf_new.framework.authorization.bootstrap import create_role_based_authorizer
-from mmf_new.services.audit_compliance.service_factory import AuditComplianceService
-from mmf_new.services.audit_compliance.di_config import get_container as get_audit_container
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +100,7 @@ class SecurityHardeningFramework:
         basic_provider = BasicAuthAdapter(config)
 
         # Add demo user manually (since there is no public API for it in the adapter yet)
-        import bcrypt
+
         password = "demo_pass"
         password_hash = bcrypt.hashpw(
             password.encode("utf-8"), bcrypt.gensalt(rounds=config.bcrypt_rounds)
@@ -113,9 +118,7 @@ class SecurityHardeningFramework:
         }
 
         authentication_manager.register_provider(
-            AuthenticationMethod.BASIC,
-            basic_provider,
-            is_default=True
+            AuthenticationMethod.BASIC, basic_provider, is_default=True
         )
 
         # Wrap it in our adapter

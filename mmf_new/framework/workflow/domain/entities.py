@@ -10,6 +10,7 @@ from typing import Any
 
 class WorkflowStatus(Enum):
     """Workflow execution status."""
+
     CREATED = "created"
     RUNNING = "running"
     PAUSED = "paused"
@@ -22,6 +23,7 @@ class WorkflowStatus(Enum):
 
 class StepStatus(Enum):
     """Individual step status."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -32,6 +34,7 @@ class StepStatus(Enum):
 
 class StepType(Enum):
     """Types of workflow steps."""
+
     ACTION = "action"
     DECISION = "decision"
     PARALLEL = "parallel"
@@ -43,6 +46,7 @@ class StepType(Enum):
 @dataclass
 class StepResult:
     """Result of step execution."""
+
     success: bool
     data: dict[str, Any] = field(default_factory=dict)
     error: str | None = None
@@ -53,6 +57,7 @@ class StepResult:
 @dataclass
 class WorkflowContext:
     """Workflow execution context."""
+
     workflow_id: str
     correlation_id: str
     data: dict[str, Any] = field(default_factory=dict)

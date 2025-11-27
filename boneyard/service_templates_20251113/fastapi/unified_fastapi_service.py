@@ -19,6 +19,13 @@ from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
+
+# Import unified configuration system
+from marty_msf.framework.config import (
+    ConfigurationStrategy,
+    Environment,
+    create_unified_config_manager,
+)
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
     Counter,
@@ -27,13 +34,6 @@ from prometheus_client import (
     generate_latest,
 )
 from pydantic import BaseModel, Field
-
-# Import unified configuration system
-from marty_msf.framework.config import (
-    ConfigurationStrategy,
-    Environment,
-    create_unified_config_manager,
-)
 
 # Configure structured logging
 structlog.configure(

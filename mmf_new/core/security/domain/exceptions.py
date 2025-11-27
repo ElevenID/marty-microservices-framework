@@ -54,4 +54,3 @@ def handle_security_exception(exc: Exception) -> None:
     """
     # This is a placeholder for centralized exception handling logic
     _ = exc
-

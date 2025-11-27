@@ -23,10 +23,10 @@ import httpx
 
 # FastAPI/Starlette imports - fail if not available
 from fastapi import Request, Response
-from starlette.middleware.base import BaseHTTPMiddleware
 
 # Framework imports
 from marty_msf.framework.grpc import ServiceRegistrationProtocol
+from starlette.middleware.base import BaseHTTPMiddleware
 
 logger = logging.getLogger(__name__)
 

@@ -14,25 +14,29 @@ Key Components:
 - Authorization decorators: @require_rbac, @require_abac
 """
 
+import asyncio
 import functools
 import logging
 import threading
-import asyncio
 from collections.abc import Callable
 from datetime import datetime, timezone
 from typing import Any, TypeVar
 
-from mmf_new.core.security.domain.models.user import User
-from mmf_new.core.security.domain.models.context import AuthorizationContext
 from mmf_new.core.security.domain.exceptions import (
     AuthenticationError,
     AuthorizationError,
     PermissionDeniedError,
     RoleRequiredError,
 )
+from mmf_new.core.security.domain.models.context import AuthorizationContext
+from mmf_new.core.security.domain.models.user import User
 from mmf_new.core.security.ports.authentication import IAuthenticator
 from mmf_new.core.security.ports.authorization import IAuthorizer
-from mmf_new.framework.infrastructure.dependency_injection import get_service, has_service, register_instance
+from mmf_new.framework.infrastructure.dependency_injection import (
+    get_service,
+    has_service,
+    register_instance,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -294,7 +298,13 @@ def require_authenticated(func: F) -> F:
 
         except Exception as e:
             # Simple error handling since handle_security_exception is removed
-            if isinstance(e, (AuthenticationError, AuthorizationError, PermissionDeniedError, RoleRequiredError)):
+            if isinstance(
+                e,
+                AuthenticationError
+                | AuthorizationError
+                | PermissionDeniedError
+                | RoleRequiredError,
+            ):
                 raise
             logger.error(f"Security error: {e}")
             raise AuthenticationError(str(e)) from e
@@ -342,7 +352,13 @@ def require_role(role: str) -> Callable[[F], F]:
                     return func(*args, **kwargs)
 
             except Exception as e:
-                if isinstance(e, (AuthenticationError, AuthorizationError, PermissionDeniedError, RoleRequiredError)):
+                if isinstance(
+                    e,
+                    AuthenticationError
+                    | AuthorizationError
+                    | PermissionDeniedError
+                    | RoleRequiredError,
+                ):
                     raise
                 logger.error(f"Security error: {e}")
                 raise AuthorizationError(str(e)) from e
@@ -397,7 +413,13 @@ def require_permission(permission: str) -> Callable[[F], F]:
                     return func(*args, **kwargs)
 
             except Exception as e:
-                if isinstance(e, (AuthenticationError, AuthorizationError, PermissionDeniedError, RoleRequiredError)):
+                if isinstance(
+                    e,
+                    AuthenticationError
+                    | AuthorizationError
+                    | PermissionDeniedError
+                    | RoleRequiredError,
+                ):
                     raise
                 logger.error(f"Security error: {e}")
                 raise AuthorizationError(str(e)) from e
@@ -452,7 +474,13 @@ def require_any_role(*roles: str) -> Callable[[F], F]:
                     return func(*args, **kwargs)
 
             except Exception as e:
-                if isinstance(e, (AuthenticationError, AuthorizationError, PermissionDeniedError, RoleRequiredError)):
+                if isinstance(
+                    e,
+                    AuthenticationError
+                    | AuthorizationError
+                    | PermissionDeniedError
+                    | RoleRequiredError,
+                ):
                     raise
                 logger.error(f"Security error: {e}")
                 raise AuthorizationError(str(e)) from e
@@ -500,12 +528,14 @@ def require_rbac(resource: str, action: str) -> Callable[[F], F]:
                     user=current_user,
                     resource=resource,
                     action=action,
-                    environment={} # TODO: Extract environment from request if possible
+                    environment={},  # TODO: Extract environment from request if possible
                 )
 
                 result = authorizer.authorize(context)
                 if not result.allowed:
-                    raise AuthorizationError(f"Access denied to {resource}:{action}: {result.reason}")
+                    raise AuthorizationError(
+                        f"Access denied to {resource}:{action}: {result.reason}"
+                    )
 
                 if asyncio.iscoroutinefunction(func):
                     return await func(*args, **kwargs)
@@ -513,7 +543,13 @@ def require_rbac(resource: str, action: str) -> Callable[[F], F]:
                     return func(*args, **kwargs)
 
             except Exception as e:
-                if isinstance(e, (AuthenticationError, AuthorizationError, PermissionDeniedError, RoleRequiredError)):
+                if isinstance(
+                    e,
+                    AuthenticationError
+                    | AuthorizationError
+                    | PermissionDeniedError
+                    | RoleRequiredError,
+                ):
                     raise
                 logger.error(f"Security error: {e}")
                 raise AuthorizationError(str(e)) from e
@@ -561,15 +597,14 @@ def require_abac(resource: str, action: str) -> Callable[[F], F]:
                 # In the future, this could use more complex attribute-based logic
                 authorizer = get_service(IAuthorizer)
                 context = AuthorizationContext(
-                    user=current_user,
-                    resource=resource,
-                    action=action,
-                    environment={}
+                    user=current_user, resource=resource, action=action, environment={}
                 )
 
                 result = authorizer.authorize(context)
                 if not result.allowed:
-                    raise AuthorizationError(f"Access denied to {resource}:{action}: {result.reason}")
+                    raise AuthorizationError(
+                        f"Access denied to {resource}:{action}: {result.reason}"
+                    )
 
                 if asyncio.iscoroutinefunction(func):
                     return await func(*args, **kwargs)
@@ -577,7 +612,13 @@ def require_abac(resource: str, action: str) -> Callable[[F], F]:
                     return func(*args, **kwargs)
 
             except Exception as e:
-                if isinstance(e, (AuthenticationError, AuthorizationError, PermissionDeniedError, RoleRequiredError)):
+                if isinstance(
+                    e,
+                    AuthenticationError
+                    | AuthorizationError
+                    | PermissionDeniedError
+                    | RoleRequiredError,
+                ):
                     raise
                 logger.error(f"Security error: {e}")
                 raise AuthorizationError(str(e)) from e

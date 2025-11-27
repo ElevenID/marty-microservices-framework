@@ -33,10 +33,9 @@ from prometheus_client import (
     generate_latest,
 )
 
-logger = logging.getLogger(__name__)
-
-
 from mmf_new.framework.observability.domain.protocols import HealthStatus, MetricType
+
+logger = logging.getLogger(__name__)
 
 
 class AlertSeverity(Enum):

@@ -9,6 +9,7 @@ import logging
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from typing import Any
 
+from mmf_new.core.infrastructure.database import BaseModel
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -18,8 +19,6 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import QueuePool
-
-from mmf_new.core.infrastructure.database import BaseModel
 
 from .config import DatabaseConfig
 

@@ -7,8 +7,8 @@ Orchestrates service registration, discovery, and load balancing.
 import logging
 
 from mmf_new.discovery.domain.models import ServiceInstance, ServiceQuery
-from mmf_new.discovery.ports.registry import IServiceRegistry
 from mmf_new.discovery.ports.load_balancer import ILoadBalancer, LoadBalancingContext
+from mmf_new.discovery.ports.registry import IServiceRegistry
 
 logger = logging.getLogger(__name__)
 

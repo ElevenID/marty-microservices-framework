@@ -7,11 +7,11 @@ Domain models for session management functionality in the security module.
 from __future__ import annotations
 
 import builtins
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
-import uuid
 
 
 class SessionState(Enum):
@@ -147,8 +147,7 @@ class SessionLifecycle:
 
         # Use requested timeout or default
         timeout_minutes = min(
-            requested_timeout or self.default_timeout_minutes,
-            self.max_timeout_minutes
+            requested_timeout or self.default_timeout_minutes, self.max_timeout_minutes
         )
 
         # Calculate various expiration times
@@ -177,9 +176,7 @@ class SessionMetrics:
         """Record session creation."""
         self.total_sessions_created += 1
         self.active_sessions += 1
-        self.peak_concurrent_sessions = max(
-            self.peak_concurrent_sessions, self.active_sessions
-        )
+        self.peak_concurrent_sessions = max(self.peak_concurrent_sessions, self.active_sessions)
 
     def record_session_terminated(self, reason: SessionEventType) -> None:
         """Record session termination."""

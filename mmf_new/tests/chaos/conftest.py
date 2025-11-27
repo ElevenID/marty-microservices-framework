@@ -330,10 +330,10 @@ class SystemUnderTest:
         """Simulate a request."""
         if self.network_partition_active:
             raise ConnectionError("Network partition")
-        
+
         if self.latency_ms > 0:
             await asyncio.sleep(self.latency_ms / 1000)
-            
+
         if random.random() < self.packet_loss_rate:
             raise ConnectionError("Packet loss")
 
@@ -350,7 +350,7 @@ class SystemUnderTest:
     async def perform_disk_operation(self):
         """Simulate disk operation."""
         if self.disk_error_rate > 0 and random.random() < self.disk_error_rate:
-            raise IOError("Disk error")
+            raise OSError("Disk error")
         if self.disk_latency_ms > 0:
             await asyncio.sleep(self.disk_latency_ms / 1000)
         return True
@@ -365,7 +365,7 @@ def system_under_test():
 @dataclass
 class ChaosExperimentRunner:
     """Runner for chaos experiments."""
-    
+
     system: SystemUnderTest
 
     @asynccontextmanager
@@ -467,6 +467,7 @@ def chaos_experiment(system_under_test):
 @dataclass
 class HealthStatus:
     """System health status."""
+
     overall_health: float = 1.0
 
 
