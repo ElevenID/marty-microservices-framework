@@ -103,6 +103,7 @@ test = [
     "docker>=7.1.0",
     "locust>=2.34.0",
     "schedule>=1.2.0",
+    "numpy>=2.0.2",
 ]
 analytics = [
     "matplotlib>=3.9.4",
