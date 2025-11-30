@@ -21,6 +21,54 @@ class SecurityLevel(Enum):
     CRITICAL = "critical"  # Highly sensitive production
 
 
+class SecretProviderType(Enum):
+    """Types of secret providers."""
+
+    ENVIRONMENT = "environment"
+    VAULT = "vault"
+    KUBERNETES = "kubernetes"
+    FILE = "file"
+
+
+class VaultAuthMethod(Enum):
+    """Vault authentication methods."""
+
+    TOKEN = "token"
+    AWS_IAM = "aws"
+    KUBERNETES = "kubernetes"
+    USERPASS = "userpass"
+    APPROLE = "approle"
+
+
+@dataclass
+class VaultConfig:
+    """Vault client configuration."""
+
+    url: str = "http://localhost:8200"
+    auth_method: VaultAuthMethod = VaultAuthMethod.TOKEN
+    mount_path: str = "secret"
+
+    # Authentication credentials
+    token: str | None = None
+    role_id: str | None = None
+    secret_id: str | None = None
+    username: str | None = None
+    password: str | None = None
+    jwt_token: str | None = None
+    role: str | None = None
+
+    # TLS configuration
+    verify_ssl: bool = True
+    ca_cert_path: str | None = None
+    client_cert_path: str | None = None
+    client_key_path: str | None = None
+
+    # Client settings
+    timeout: int = 30
+    max_retries: int = 3
+    namespace: str | None = None
+
+
 @dataclass
 class JWTConfig:
     """JWT authentication configuration."""
@@ -162,6 +210,10 @@ class SecurityConfig:
     jwt_config: JWTConfig | None = None
     mtls_config: MTLSConfig | None = None
     api_key_config: APIKeyConfig | None = None
+
+    # Secret management
+    secret_provider_type: SecretProviderType = SecretProviderType.ENVIRONMENT
+    vault_config: VaultConfig | None = None
 
     # Rate limiting
     rate_limit_config: RateLimitConfig = field(default_factory=RateLimitConfig)

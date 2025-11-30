@@ -34,7 +34,7 @@ class ResourceType(Enum):
     SYSTEM = "system"
 
 
-@dataclass
+@dataclass(frozen=True)
 class Permission:
     """
     Represents a permission to perform an action on a resource.

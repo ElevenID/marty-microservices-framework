@@ -186,7 +186,17 @@ class PluginManager(IPluginManager):
 
     async def discover_plugins(self, paths: list[str]) -> list[str]:
         """Discover available plugins in the given paths."""
-        return await self.discovery.discover(paths)
+        discovered_paths = await self.discovery.discover(paths)
+
+        for path in discovered_paths:
+            # Map plugin name to path
+            # Use directory name or filename as plugin name
+            path_obj = Path(path)
+            plugin_name = path_obj.name
+            self._plugin_paths[plugin_name] = str(path)
+            self.logger.info(f"Discovered plugin {plugin_name} at {path}")
+
+        return list(self._plugin_paths.keys())
 
     async def load_plugin(self, plugin_name: str) -> bool:
         """Load a specific plugin."""

@@ -235,7 +235,6 @@ class TestKindClusterManagement:
     """Test Kind cluster management functionality."""
 
     @pytest.mark.asyncio
-    @pytest.mark.unit
     async def test_cluster_lifecycle(self):
         """Test cluster creation and deletion."""
         cluster = KindClusterManager("lifecycle-test")
@@ -259,7 +258,6 @@ class TestKindClusterManagement:
             raise
 
     @pytest.mark.asyncio
-    @pytest.mark.unit
     async def test_service_deployment(self):
         """Test service deployment functionality."""
         async with kind_playwright_test_environment(

@@ -9,45 +9,31 @@ from __future__ import annotations
 
 import logging
 
-import bcrypt
-
 from mmf_new.core.security.domain.config import SecurityConfig
 from mmf_new.core.security.ports.authentication import IAuthenticator
 from mmf_new.core.security.ports.authorization import IAuthorizer
 from mmf_new.core.security.ports.common import IAuditor
-from mmf_new.framework.authorization.bootstrap import create_role_based_authorizer
+from mmf_new.core.security.ports.service_mesh import IServiceMeshManager
+from mmf_new.core.security.ports.threat_detection import (
+    IThreatDetector,
+    IVulnerabilityScanner,
+)
 from mmf_new.framework.infrastructure.dependency_injection import (
     get_service,
-    has_service,
     register_instance,
 )
-from mmf_new.services.audit_compliance.di_config import (
-    get_container as get_audit_container,
+from mmf_new.framework.security.adapters.audit.factory import AuditFactory
+from mmf_new.framework.security.adapters.authentication.factory import (
+    AuthenticationFactory,
 )
-from mmf_new.services.audit_compliance.service_factory import AuditComplianceService
-
-# Import service factories/managers
-from mmf_new.services.identity import (
-    AuthenticationMethod,
-    BasicAuthAdapter,
-    BasicAuthConfig,
-    authentication_manager,
+from mmf_new.framework.security.adapters.authorization.factory import (
+    AuthorizationFactory,
 )
-
-from ..ports.service_mesh import IServiceMeshManager
-from ..ports.threat_detection import IThreatDetector, IVulnerabilityScanner
-
-# Import adapters
-from .implementations import (
-    AuditServiceAdapter,
-    CoreAuthorizerAdapter,
-    IdentityServiceAuthenticator,
+from mmf_new.framework.security.adapters.secrets.factory import SecretsFactory
+from mmf_new.framework.security.adapters.service_mesh.factory import ServiceMeshFactory
+from mmf_new.framework.security.adapters.threat_detection.factory import (
+    ThreatDetectionFactory,
 )
-from .service_mesh.istio_mesh_manager import IstioMeshManager
-from .threat_detection.event_processor import EventProcessorThreatDetector
-from .threat_detection.ml_analyzer import MLThreatDetector
-from .threat_detection.pattern_detector import PatternBasedThreatDetector
-from .threat_detection.scanner import VulnerabilityScanner
 
 logger = logging.getLogger(__name__)
 
@@ -93,74 +79,36 @@ class SecurityHardeningFramework:
 
     def _initialize_authenticator(self) -> None:
         """Initialize authentication service."""
-        # Use the singleton authentication_manager from identity service
-
-        # Register Basic Auth Provider
-        config = BasicAuthConfig()
-        basic_provider = BasicAuthAdapter(config)
-
-        # Add demo user manually (since there is no public API for it in the adapter yet)
-
-        password = "demo_pass"
-        password_hash = bcrypt.hashpw(
-            password.encode("utf-8"), bcrypt.gensalt(rounds=config.bcrypt_rounds)
-        )
-
-        basic_provider._users["demo_user"] = {
-            "user_id": "user_demo_user",
-            "email": "demo@example.com",
-            "roles": ["admin"],
-            "permissions": ["read", "write"],
-            "password_hash": password_hash.decode("utf-8"),
-            "created_at": "2023-01-01T00:00:00Z",
-            "password_changed_at": "2023-01-01T00:00:00Z",
-            "is_active": True,
-        }
-
-        authentication_manager.register_provider(
-            AuthenticationMethod.BASIC, basic_provider, is_default=True
-        )
-
-        # Wrap it in our adapter
-        authenticator = IdentityServiceAuthenticator(authentication_manager)
-        register_instance(IAuthenticator, authenticator)
+        registrations = AuthenticationFactory.create_registrations()
+        for entry in registrations:
+            register_instance(entry.interface, entry.instance)
         logger.debug("Registered IAuthenticator")
 
     def _initialize_authorizer(self) -> None:
         """Initialize authorization service."""
-        # Create a default authorizer (e.g., RBAC)
-        # In a real scenario, we might choose based on config
-        core_authorizer = create_role_based_authorizer()
-        authorizer = CoreAuthorizerAdapter(core_authorizer)
-        register_instance(IAuthorizer, authorizer)
+        registrations = AuthorizationFactory.create_registrations()
+        for entry in registrations:
+            register_instance(entry.interface, entry.instance)
         logger.debug("Registered IAuthorizer")
 
     def _initialize_auditor(self) -> None:
         """Initialize audit service."""
-        # Create AuditComplianceService
-        # Assuming it can be instantiated or retrieved
-        # For now, we'll instantiate it directly or get from DI if already there
-        if has_service(AuditComplianceService):
-            audit_service = get_service(AuditComplianceService)
-        else:
-            # Pass the container to AuditComplianceService
-            container = get_audit_container()
-            audit_service = AuditComplianceService(container=container)
-            register_instance(AuditComplianceService, audit_service)
-
-        auditor = AuditServiceAdapter(audit_service)
-        register_instance(IAuditor, auditor)
+        registrations = AuditFactory.create_registrations()
+        for entry in registrations:
+            register_instance(entry.interface, entry.instance)
         logger.debug("Registered IAuditor")
 
     def _initialize_secret_manager(self) -> None:
         """Initialize secret manager."""
-        # TODO: Implement secret manager initialization
-        # For now, we skip or register a placeholder if needed
+        registrations = SecretsFactory.create_registrations(self.config)
+        for entry in registrations:
+            register_instance(entry.interface, entry.instance)
+        logger.debug("Registered ISecretManager")
 
     def _initialize_service_mesh_manager(self) -> None:
         """Initialize service mesh manager."""
-        if self.config.service_mesh_config.enabled:
-            mesh_manager = IstioMeshManager(self.config.service_mesh_config)
+        mesh_manager = ServiceMeshFactory.create_manager(self.config.service_mesh_config)
+        if mesh_manager:
             register_instance(IServiceMeshManager, mesh_manager)
             logger.debug("Registered IServiceMeshManager")
         else:
@@ -172,25 +120,9 @@ class SecurityHardeningFramework:
             logger.debug("Threat detection disabled")
             return
 
-        # 1. Initialize Event Processor (Primary Detector)
-        event_processor = EventProcessorThreatDetector(self.config.threat_detection_config)
-
-        # 2. Initialize ML Detector (if enabled)
-        if self.config.threat_detection_config.enable_ml_detection:
-            ml_detector = MLThreatDetector(self.config.threat_detection_config)
-            register_instance(MLThreatDetector, ml_detector)
-
-        # 3. Initialize Pattern Detector
-        pattern_detector = PatternBasedThreatDetector(self.config.service_name)
-        register_instance(PatternBasedThreatDetector, pattern_detector)
-
-        # Register the primary threat detector (Event Processor)
-        register_instance(IThreatDetector, event_processor)
-        register_instance(EventProcessorThreatDetector, event_processor)
-
-        # 4. Initialize Vulnerability Scanner
-        scanner = VulnerabilityScanner(self.config.service_name)
-        register_instance(IVulnerabilityScanner, scanner)
+        registrations = ThreatDetectionFactory.create_registrations(self.config)
+        for entry in registrations:
+            register_instance(entry.interface, entry.instance)
 
         logger.debug("Registered IThreatDetector and IVulnerabilityScanner")
 

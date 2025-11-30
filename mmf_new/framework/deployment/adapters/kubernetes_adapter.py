@@ -5,8 +5,12 @@ Kubernetes deployment adapter.
 import asyncio
 import json
 import logging
+import os
+import tempfile
 from datetime import datetime
 from typing import Any
+
+import yaml
 
 from mmf_new.framework.deployment.domain.enums import (
     DeploymentStatus,
@@ -193,15 +197,159 @@ class KubernetesAdapter(DeploymentPort):
 
     def _generate_manifests(self, deployment: Deployment) -> list[dict[str, Any]]:
         """Generate Kubernetes manifests."""
-        # TODO: Implement manifest generation logic or use Helm
-        return []
+        config = deployment.config
+
+        # Labels
+        labels = {
+            "app": config.service_name,
+            "version": config.version,
+            "managed-by": "mmf",
+        }
+        labels.update(config.labels)
+
+        # Deployment Manifest
+        k8s_deployment = {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "metadata": {
+                "name": config.service_name,
+                "namespace": config.target.namespace or "default",
+                "labels": labels,
+                "annotations": config.annotations,
+            },
+            "spec": {
+                "replicas": config.resources.replicas,
+                "selector": {"matchLabels": {"app": config.service_name}},
+                "template": {
+                    "metadata": {
+                        "labels": labels,
+                    },
+                    "spec": {
+                        "serviceAccountName": config.service_account,
+                        "containers": [
+                            {
+                                "name": config.service_name,
+                                "image": config.image,
+                                "resources": {
+                                    "requests": {
+                                        "cpu": config.resources.cpu_request,
+                                        "memory": config.resources.memory_request,
+                                    },
+                                    "limits": {
+                                        "cpu": config.resources.cpu_limit,
+                                        "memory": config.resources.memory_limit,
+                                    },
+                                },
+                                "env": [
+                                    {"name": k, "value": v}
+                                    for k, v in config.environment_variables.items()
+                                ],
+                                "ports": [{"containerPort": config.health_check.port}],
+                                "livenessProbe": {
+                                    "httpGet": {
+                                        "path": config.health_check.path,
+                                        "port": config.health_check.port,
+                                        "scheme": config.health_check.scheme,
+                                    },
+                                    "initialDelaySeconds": config.health_check.initial_delay,
+                                    "periodSeconds": config.health_check.period,
+                                    "timeoutSeconds": config.health_check.timeout,
+                                    "failureThreshold": config.health_check.failure_threshold,
+                                },
+                                "readinessProbe": {
+                                    "httpGet": {
+                                        "path": config.health_check.path,
+                                        "port": config.health_check.port,
+                                        "scheme": config.health_check.scheme,
+                                    },
+                                    "initialDelaySeconds": config.health_check.initial_delay,
+                                    "periodSeconds": config.health_check.period,
+                                    "timeoutSeconds": config.health_check.timeout,
+                                    "failureThreshold": config.health_check.failure_threshold,
+                                },
+                            }
+                        ],
+                    },
+                },
+            },
+        }
+
+        # Service Manifest
+        service = {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "name": config.service_name,
+                "namespace": config.target.namespace or "default",
+                "labels": labels,
+            },
+            "spec": {
+                "selector": {"app": config.service_name},
+                "ports": [
+                    {
+                        "protocol": "TCP",
+                        "port": 80,
+                        "targetPort": config.health_check.port,
+                    }
+                ],
+                "type": "ClusterIP",
+            },
+        }
+
+        return [k8s_deployment, service]
 
     async def _apply_manifest(self, deployment: Deployment, manifest: dict[str, Any]) -> bool:
         """Apply Kubernetes manifest."""
-        # TODO: Implement apply logic
-        return True
+        try:
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+                yaml.dump(manifest, f)
+                temp_path = f.name
+
+            cmd = [
+                self.kubectl_binary,
+                "apply",
+                "-f",
+                temp_path,
+            ]
+
+            if self.kubeconfig_path:
+                cmd.extend(["--kubeconfig", self.kubeconfig_path])
+
+            result = await self._run_kubectl_command(cmd)
+
+            # Cleanup
+            os.unlink(temp_path)
+
+            if result.returncode != 0:
+                logger.error(f"Failed to apply manifest: {result.stderr}")
+                return False
+
+            return True
+        except Exception as e:
+            logger.error(f"Error applying manifest: {e}")
+            if "temp_path" in locals() and os.path.exists(temp_path):
+                os.unlink(temp_path)
+            return False
 
     async def _wait_for_deployment_ready(self, deployment: Deployment) -> bool:
         """Wait for deployment to be ready."""
-        # TODO: Implement wait logic
+        cmd = [
+            self.kubectl_binary,
+            "rollout",
+            "status",
+            f"deployment/{deployment.config.service_name}",
+            "-n",
+            deployment.config.target.namespace or "default",
+            "--timeout=300s",
+        ]
+
+        if self.kubeconfig_path:
+            cmd.extend(["--kubeconfig", self.kubeconfig_path])
+
+        result = await self._run_kubectl_command(cmd)
+
+        if result.returncode != 0:
+            logger.error(f"Deployment failed to become ready: {result.stderr}")
+            return False
+
         return True

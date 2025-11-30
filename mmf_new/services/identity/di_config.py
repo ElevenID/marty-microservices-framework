@@ -2,9 +2,17 @@
 
 import logging
 
+import bcrypt
+
 from mmf_new.core.di import BaseDIContainer
-from mmf_new.services.identity.application.ports_out import BasicAuthenticationProvider
+from mmf_new.services.identity.application.ports_out import (
+    AuthenticationMethod,
+    BasicAuthenticationProvider,
+)
 from mmf_new.services.identity.application.ports_out.token_provider import TokenProvider
+from mmf_new.services.identity.application.services.authentication_manager import (
+    AuthenticationManager,
+)
 from mmf_new.services.identity.application.use_cases.authenticate_with_basic import (
     AuthenticateWithBasicUseCase,
 )
@@ -72,6 +80,9 @@ class IdentityDIContainer(BaseDIContainer):
         self._token_provider: TokenProvider | None = None
         self._basic_auth_provider: BasicAuthenticationProvider | None = None
 
+        # Domain Services
+        self._authentication_manager: AuthenticationManager | None = None
+
         # Application (use cases)
         self._authenticate_use_case: AuthenticateWithJWTUseCase | None = None
         self._authenticate_basic_use_case: AuthenticateWithBasicUseCase | None = None
@@ -88,6 +99,9 @@ class IdentityDIContainer(BaseDIContainer):
         # Initialize infrastructure adapters
         self._initialize_token_provider()
         self._initialize_basic_auth_provider()
+
+        # Initialize domain services
+        self._initialize_authentication_manager()
 
         # Initialize application use cases
         self._initialize_use_cases()
@@ -114,6 +128,54 @@ class IdentityDIContainer(BaseDIContainer):
 
         self._mark_cleanup()
         logger.info("Identity DI Container cleanup complete")
+
+    @property
+    def authentication_manager(self) -> AuthenticationManager:
+        """Get authentication manager instance."""
+        self._ensure_initialized()
+        if not self._authentication_manager:
+            raise RuntimeError("Authentication manager not initialized")
+        return self._authentication_manager
+
+    def _initialize_authentication_manager(self) -> None:
+        """Initialize authentication manager and register providers."""
+        self._authentication_manager = AuthenticationManager()
+
+        # Register Basic Auth Provider
+        if self._basic_auth_provider:
+            self._authentication_manager.register_provider(
+                AuthenticationMethod.BASIC, self._basic_auth_provider, is_default=True
+            )
+            logger.info("Registered Basic Auth provider with Authentication Manager")
+
+        # Register JWT Provider (if it implements AuthenticationProvider)
+        # Currently JWTTokenProvider is for token generation/validation, not full auth provider interface
+        # If needed, we would adapt it here.
+
+    def seed_demo_user(self) -> None:
+        """Seed a demo user for testing purposes."""
+        if not self._basic_auth_provider:
+            logger.warning("Cannot seed demo user: Basic Auth provider not initialized")
+            return
+
+        password = "demo_pass"  # pragma: allowlist secret
+        # Use config rounds if available, else default
+        rounds = self.config.basic_auth.password_hash_rounds
+        password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(rounds=rounds))
+
+        # Accessing protected member for seeding purposes
+        # In a real app, we would use a repository or use case
+        self._basic_auth_provider._users["demo_user"] = {
+            "user_id": "user_demo_user",
+            "email": "demo@example.com",
+            "roles": ["admin"],
+            "permissions": ["read", "write"],
+            "password_hash": password_hash.decode("utf-8"),  # pragma: allowlist secret
+            "created_at": "2023-01-01T00:00:00Z",
+            "password_changed_at": "2023-01-01T00:00:00Z",
+            "is_active": True,
+        }
+        logger.info("Seeded demo user 'demo_user'")
 
     def _initialize_token_provider(self) -> None:
         """Initialize token provider based on configuration."""

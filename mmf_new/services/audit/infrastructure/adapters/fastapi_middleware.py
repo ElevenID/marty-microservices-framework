@@ -8,8 +8,7 @@ import uuid
 from typing import Any
 
 from fastapi import FastAPI, Request, Response
-from fastapi.middleware.base import BaseHTTPMiddleware
-from starlette.middleware.base import RequestResponseEndpoint
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
 from mmf_new.core.domain.audit_types import AuditEventType, AuditOutcome, AuditSeverity
 from mmf_new.services.audit.application.commands import LogRequestCommand

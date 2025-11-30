@@ -4,7 +4,17 @@ These tests use pytest-archon to verify that the codebase adheres to the
 strict dependency rules defined in ARCHITECTURE.md.
 """
 
+import sys
+from pathlib import Path
+
+import pytest
 from pytest_archon import archrule
+
+# Add tools directory to path to import ImportAnalyzer
+TOOLS_DIR = Path(__file__).parents[2] / "tools"
+sys.path.append(str(TOOLS_DIR))
+
+from analyze_project_imports import ImportAnalyzer
 
 
 def test_service_domain_isolation():
@@ -51,3 +61,12 @@ def test_framework_domain_isolation():
         .should_not_import("mmf_new.framework.*.adapters")
         .check("mmf_new")
     )
+
+
+def test_no_circular_dependencies():
+    """Ensure there are no circular dependencies in the project using ImportAnalyzer."""
+    root_dir = Path(__file__).parents[2]
+    analyzer = ImportAnalyzer(str(root_dir), "mmf_new", real_time=True)
+    analyzer.analyze_imports()
+    cycles = analyzer.find_circular_dependencies()
+    assert len(cycles) == 0, f"Found circular dependencies: {cycles}"

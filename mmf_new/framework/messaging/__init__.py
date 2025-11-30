@@ -1,23 +1,30 @@
 """Messaging system for reliable message passing and event handling."""
 
-# Import from API layer (contracts and interfaces)
-from .api import (
+# Import from Domain Layer (contracts and interfaces)
+# Import from bootstrap layer (concrete implementations)
+from .bootstrap import (
+    DLQHandler,
+    DLQManager,
+    EventStreamManager,
+    JSONMessageSerializer,
+    MemoryMessageBackend,
+    MessageBus,
+    MessageConsumer,
+    MessageProducer,
+    MessageQueue,
+    MessageRouter,
+    MessagingManager,
+    MiddlewareChain,
+    create_messaging_manager,
+    setup_messaging_system,
+)
+from .domain.models import (
     BackendConfig,
     BackendType,
     ConsumerConfig,
     DLQConfig,
     DLQMessage,
     DLQPolicy,
-    IDLQManager,
-    IMessageBackend,
-    IMessageConsumer,
-    IMessageExchange,
-    IMessageMiddleware,
-    IMessageProducer,
-    IMessageQueue,
-    IMessageRouter,
-    IMessageSerializer,
-    IMessagingManager,
     MatchType,
     Message,
     MessageHeaders,
@@ -36,31 +43,27 @@ from .api import (
     RoutingRule,
     RoutingType,
 )
-
-# Import from bootstrap layer (concrete implementations)
-from .bootstrap import (
-    DLQHandler,
-    DLQManager,
-    EventStreamManager,
-    JSONMessageSerializer,
-    MemoryMessageBackend,
-    MessageBus,
-    MessageConsumer,
-    MessageProducer,
-    MessageQueue,
-    MessageRouter,
-    MessagingManager,
-    MiddlewareChain,
-    create_messaging_manager,
-    setup_messaging_system,
+from .domain.ports import (
+    IDLQManager,
+    IMessageBackend,
+    IMessageConsumer,
+    IMessageExchange,
+    IMessageMiddleware,
+    IMessageProducer,
+    IMessageQueue,
+    IMessageRouter,
+    IMessageSerializer,
+    IMessagingManager,
 )
 
 __all__ = [
-    # API Layer - Interfaces and Contracts
+    # Domain Layer - Interfaces and Contracts
     "BackendConfig",
     "BackendType",
     "ConsumerConfig",
     "DLQConfig",
+    "DLQMessage",
+    "DLQPolicy",
     "IDLQManager",
     "IMessageBackend",
     "IMessageConsumer",
@@ -87,19 +90,20 @@ __all__ = [
     "RoutingType",
     "MatchType",
     "RetryConfig",
-    "RetryStrategy",  # Bootstrap Layer - Concrete Implementations
+    "RetryStrategy",
+    # Bootstrap Layer - Concrete Implementations
     "DLQHandler",
     "DLQManager",
+    "EventStreamManager",
     "JSONMessageSerializer",
     "MemoryMessageBackend",
+    "MessageBus",
     "MessageConsumer",
     "MessageProducer",
+    "MessageQueue",
     "MessageRouter",
     "MessagingManager",
     "MiddlewareChain",
     "create_messaging_manager",
     "setup_messaging_system",
-    "MessageQueue",
-    "EventStreamManager",
-    "MessageBus",
 ]

@@ -5,7 +5,13 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
 
-from mmf_new.core.domain.audit_types import AuditEventType, AuditOutcome, AuditSeverity
+from mmf_new.core.domain.audit_types import (
+    AuditEventType,
+    AuditOutcome,
+    AuditSeverity,
+    SecurityEventSeverity,
+    SecurityEventType,
+)
 from mmf_new.services.audit.domain.contracts import IAuditDestination, IAuditRepository
 from mmf_new.services.audit.domain.entities import ApiCallEvent, RequestAuditEvent
 from mmf_new.services.audit.domain.value_objects import (
@@ -194,15 +200,44 @@ class LogRequestUseCase:
 
         try:
             # Forward to audit_compliance (async fire-and-forget to avoid blocking)
-            # This would use the audit_compliance service's log_security_event method
             security_event_id = str(uuid4())
             logger.info(
                 f"Forwarding high-severity event {event.id} to audit_compliance "
                 f"as security_event_id {security_event_id}"
             )
-            # TODO: Implement actual forwarding to audit_compliance service
-            # await self.compliance_logger.log_security_event(...)
+
+            # Map severity
+            severity_map = {
+                AuditSeverity.INFO: SecurityEventSeverity.INFO,
+                AuditSeverity.LOW: SecurityEventSeverity.LOW,
+                AuditSeverity.MEDIUM: SecurityEventSeverity.MEDIUM,
+                AuditSeverity.HIGH: SecurityEventSeverity.HIGH,
+                AuditSeverity.CRITICAL: SecurityEventSeverity.CRITICAL,
+            }
+            severity = severity_map.get(event.severity, SecurityEventSeverity.MEDIUM)
+
+            # Map event type (simplified mapping)
+            event_type = SecurityEventType.SECURITY_VIOLATION
+
+            user_id = event.actor_info.user_id if event.actor_info else None
+            resource_id = event.resource_info.resource_id if event.resource_info else None
+
+            # Call compliance logger
+            if hasattr(self.compliance_logger, "log_audit_event"):
+                result = await self.compliance_logger.log_audit_event(
+                    event_type=event_type,
+                    severity=severity,
+                    source="audit-service",
+                    description=event.message or "High severity audit event",
+                    user_id=user_id,
+                    resource_id=resource_id,
+                    metadata=event.details,
+                )
+                if result:
+                    return str(result.event_id)
+
             return security_event_id
+
         except Exception as e:
             logger.error(f"Failed to forward to compliance: {e}", exc_info=True)
             return None

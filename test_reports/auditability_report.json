@@ -7,24 +7,24 @@
       "security_events",
       "high_load_audit"
     ],
-    "total_events_generated": 1735,
-    "total_correlation_chains": 881
+    "total_events_generated": 1831,
+    "total_correlation_chains": 929
   },
   "audit_quality_metrics": {
     "completeness_score": 1.0,
     "traceability_score": 1.0,
     "coverage_analysis": {
       "services_covered": [
-        "pipeline_service",
         "security_service",
-        "monitoring_service",
-        "simulation_service"
+        "simulation_service",
+        "pipeline_service",
+        "monitoring_service"
       ],
       "event_types_covered": [
         "security",
-        "error",
         "business",
-        "performance"
+        "performance",
+        "error"
       ],
       "service_count": 4,
       "event_type_count": 4
@@ -32,21 +32,21 @@
   },
   "compliance_report": {
     "report_metadata": {
-      "generated_at": "2025-11-26T11:25:18.868431",
+      "generated_at": "2025-11-29T20:24:35.423567",
       "report_type": "compliance_audit",
-      "period_start": "2025-11-26T11:23:55.918137",
-      "period_end": "2025-11-26T11:25:16.438551"
+      "period_start": "2025-11-29T20:23:15.364588",
+      "period_end": "2025-11-29T20:24:32.958981"
     },
     "event_summary": {
-      "total_events": 1735,
-      "error_events": 126,
-      "business_events": 1568,
-      "security_events": 6,
-      "performance_events": 35
+      "total_events": 1831,
+      "error_events": 141,
+      "business_events": 1647,
+      "security_events": 7,
+      "performance_events": 36
     },
     "traceability_metrics": {
-      "total_correlation_chains": 881,
-      "avg_events_per_chain": 1.9693530079455164,
+      "total_correlation_chains": 929,
+      "avg_events_per_chain": 1.9709364908503768,
       "max_chain_length": 2
     },
     "compliance_checks": [
@@ -70,46 +70,46 @@
       "patterns": [
         {
           "service": "simulation_service",
-          "total_errors": 126,
+          "total_errors": 141,
           "error_clusters": 1,
-          "largest_cluster": 126
+          "largest_cluster": 141
         }
       ],
       "insights": [
-        "High error volume detected: 126 errors",
-        "Service simulation_service shows error clustering pattern (1 clusters, max 126 errors)"
+        "High error volume detected: 141 errors",
+        "Service simulation_service shows error clustering pattern (1 clusters, max 141 errors)"
       ]
     }
   },
   "scenario_results": {
     "normal_operations": {
-      "events_generated": 300,
-      "error_events": 6,
-      "business_events": 286,
+      "events_generated": 394,
+      "error_events": 4,
+      "business_events": 384,
       "security_events": 0,
-      "performance_events": 8,
+      "performance_events": 6,
       "correlation_chains": 0
     },
     "error_scenarios": {
-      "events_generated": 515,
-      "error_events": 43,
-      "business_events": 463,
+      "events_generated": 517,
+      "error_events": 60,
+      "business_events": 448,
       "security_events": 0,
       "performance_events": 9,
       "correlation_chains": 0
     },
     "security_events": {
-      "events_generated": 271,
-      "error_events": 4,
-      "business_events": 256,
-      "security_events": 6,
-      "performance_events": 5,
+      "events_generated": 275,
+      "error_events": 3,
+      "business_events": 257,
+      "security_events": 7,
+      "performance_events": 8,
       "correlation_chains": 0
     },
     "high_load_audit": {
-      "events_generated": 649,
-      "error_events": 73,
-      "business_events": 563,
+      "events_generated": 645,
+      "error_events": 74,
+      "business_events": 558,
       "security_events": 0,
       "performance_events": 13,
       "correlation_chains": 0
@@ -119,14 +119,14 @@
     "patterns": [
       {
         "service": "simulation_service",
-        "total_errors": 126,
+        "total_errors": 141,
         "error_clusters": 1,
-        "largest_cluster": 126
+        "largest_cluster": 141
       }
     ],
     "insights": [
-      "High error volume detected: 126 errors",
-      "Service simulation_service shows error clustering pattern (1 clusters, max 126 errors)"
+      "High error volume detected: 141 errors",
+      "Service simulation_service shows error clustering pattern (1 clusters, max 141 errors)"
     ]
   },
   "gaps_and_recommendations": {
@@ -135,12 +135,12 @@
   },
   "sample_correlation_chains": [
     {
-      "correlation_id": "f660b546-8d67-4b76-9f84-2ef0ce1c3ed9",
+      "correlation_id": "87df8cf8-42f8-45eb-8041-bcb8be58cbb1",
       "event_count": 1,
       "events": [
         {
-          "id": "8e5c4475-f0e7-46e9-9d1b-8eab0c8989c5",
-          "timestamp": "2025-11-26T11:23:55.918137",
+          "id": "7a5c04ed-1a50-4bf2-a657-a310d48c85f5",
+          "timestamp": "2025-11-29T20:23:15.364588",
           "service": "monitoring_service",
           "event_type": "performance",
           "severity": "info",
@@ -150,17 +150,17 @@
             "check_type": "routine"
           },
           "user_id": "system",
-          "request_id": "f660b546-8d67-4b76-9f84-2ef0ce1c3ed9"
+          "request_id": "87df8cf8-42f8-45eb-8041-bcb8be58cbb1"
         }
       ]
     },
     {
-      "correlation_id": "11a280be-acf9-4c5e-b46e-66f31846be91",
+      "correlation_id": "c35aaa94-4e16-4258-ba52-44ee9344b7d4",
       "event_count": 2,
       "events": [
         {
-          "id": "c271cc6b-6f86-4b1c-b321-9e2ec5e96dd5",
-          "timestamp": "2025-11-26T11:23:55.922884",
+          "id": "4ad40427-4926-4976-8d68-4ddec8d65e67",
+          "timestamp": "2025-11-29T20:23:15.364934",
           "service": "simulation_service",
           "event_type": "business",
           "severity": "info",
@@ -171,11 +171,11 @@
             "scenario": "normal_operations"
           },
           "user_id": "test_user_001",
-          "request_id": "11a280be-acf9-4c5e-b46e-66f31846be91"
+          "request_id": "c35aaa94-4e16-4258-ba52-44ee9344b7d4"
         },
         {
-          "id": "869eda4c-4003-4203-ad79-95e028c08735",
-          "timestamp": "2025-11-26T11:23:55.934923",
+          "id": "9f0ddd41-dc03-40e0-a267-ffbc5e43b4f1",
+          "timestamp": "2025-11-29T20:23:15.376901",
           "service": "simulation_service",
           "event_type": "business",
           "severity": "info",
@@ -187,17 +187,17 @@
             "scenario": "normal_operations"
           },
           "user_id": "test_user_001",
-          "request_id": "11a280be-acf9-4c5e-b46e-66f31846be91"
+          "request_id": "c35aaa94-4e16-4258-ba52-44ee9344b7d4"
         }
       ]
     },
     {
-      "correlation_id": "b04c6727-caa5-4ea1-8839-4a93dbd01233",
+      "correlation_id": "0468f97e-13e8-4ceb-b21d-0356c8ec54f7",
       "event_count": 2,
       "events": [
         {
-          "id": "f17f2947-4a1c-4741-943e-1b1102e41356",
-          "timestamp": "2025-11-26T11:23:55.924451",
+          "id": "e948f422-d86d-4232-8abc-e8e466c0f912",
+          "timestamp": "2025-11-29T20:23:15.365028",
           "service": "simulation_service",
           "event_type": "business",
           "severity": "info",
@@ -208,11 +208,11 @@
             "scenario": "normal_operations"
           },
           "user_id": "test_user_001",
-          "request_id": "b04c6727-caa5-4ea1-8839-4a93dbd01233"
+          "request_id": "0468f97e-13e8-4ceb-b21d-0356c8ec54f7"
         },
         {
-          "id": "7f91bd26-2d1b-43e2-8c08-be58f331947e",
-          "timestamp": "2025-11-26T11:23:55.935958",
+          "id": "c0ccc888-9ef9-4552-96e2-1a79e1e8939a",
+          "timestamp": "2025-11-29T20:23:15.377140",
           "service": "simulation_service",
           "event_type": "business",
           "severity": "info",
@@ -224,7 +224,7 @@
             "scenario": "normal_operations"
           },
           "user_id": "test_user_001",
-          "request_id": "b04c6727-caa5-4ea1-8839-4a93dbd01233"
+          "request_id": "0468f97e-13e8-4ceb-b21d-0356c8ec54f7"
         }
       ]
     }

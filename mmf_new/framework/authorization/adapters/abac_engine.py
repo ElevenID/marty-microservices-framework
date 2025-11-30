@@ -48,12 +48,15 @@ from datetime import datetime, timezone
 from typing import Any
 
 from mmf_new.core.security.domain.exceptions import AuthorizationError
+from mmf_new.framework.authorization.api import (
+    AttributeType,
+    ConditionOperator,
+    PolicyEffect,
+)
 from mmf_new.framework.infrastructure.dependency_injection import (
     get_container,
     register_instance,
 )
-
-from .api import AttributeType, ConditionOperator, PolicyEffect
 
 logger = logging.getLogger(__name__)
 

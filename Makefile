@@ -38,15 +38,15 @@ test: ## Run all tests (unit + integration + contract + e2e)
 
 test-unit: ## Run unit tests only
 	@echo "🧪 Running unit tests..."
-	@uv run pytest tests/unit/ -v -m unit
+	@uv run pytest tests/ mmf_new/ -v -m unit
 
 test-integration: ## Run integration tests only
 	@echo "🧪 Running integration tests..."
-	@uv run pytest tests/integration/ -v -m integration
+	@uv run pytest mmf_new/ -v -m integration
 
 test-contract: ## Run contract tests only
 	@echo "🧪 Running contract tests..."
-	@uv run pytest tests/contract/ -v -m contract
+	@uv run pytest mmf_new/ -v -m contract
 
 test-e2e: ## Run comprehensive end-to-end tests with KIND
 	@echo "🧪 Running comprehensive E2E tests with KIND..."

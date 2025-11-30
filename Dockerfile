@@ -23,11 +23,14 @@ RUN uv pip install --system \
     pydantic-settings>=2.11.0 \
     aiofiles>=24.1.0 \
     click>=8.1.0 \
-    pyyaml>=6.0.0
+    pyyaml>=6.0.0 \
+    hvac>=2.3.0 \
+    redis>=5.0.0 \
+    bcrypt>=4.0.1
 
 # Copy application code
 COPY mmf_new/ ./mmf_new/
-COPY platform_core/ ./platform_core/
+COPY platform_plugins/ ./platform_plugins/
 
 # Set Python path
 ENV PYTHONPATH=/app

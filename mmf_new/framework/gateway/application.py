@@ -5,6 +5,8 @@ Gateway Application Service
 import logging
 from typing import Any
 
+from mmf_new.core.security.ports.authentication import IAuthenticator
+
 from .domain.exceptions import (
     AuthenticationError,
     AuthorizationError,
@@ -19,6 +21,7 @@ from .domain.models import (
     RouteConfig,
     UpstreamGroup,
 )
+from .domain.security import CredentialExtractorFactory
 from .domain.services import LoadBalancer, RouteMatcher
 from .ports.input import RequestHandlerPort
 from .ports.output import RateLimitStoragePort, ServiceRegistryPort, UpstreamClientPort
@@ -37,6 +40,7 @@ class GatewayService(RequestHandlerPort):
         upstream_client: UpstreamClientPort,
         service_registry: ServiceRegistryPort,
         rate_limit_storage: RateLimitStoragePort | None = None,
+        authenticator: IAuthenticator | None = None,
     ):
         self.routes = routes
         self.matcher = matcher
@@ -44,6 +48,7 @@ class GatewayService(RequestHandlerPort):
         self.upstream_client = upstream_client
         self.service_registry = service_registry
         self.rate_limit_storage = rate_limit_storage
+        self.authenticator = authenticator
         self._upstream_groups: dict[str, UpstreamGroup] = {}
 
     async def handle_request(self, request: GatewayRequest) -> GatewayResponse:
@@ -115,27 +120,46 @@ class GatewayService(RequestHandlerPort):
         self, auth_type: AuthenticationType, request: GatewayRequest
     ) -> dict[str, Any] | None:
         """Authenticate request based on authentication type."""
-        if auth_type == AuthenticationType.API_KEY:
-            auth_header = request.get_header("Authorization") or ""
-            api_key = request.get_header("X-API-Key") or auth_header.replace("ApiKey ", "")
+        if not self.authenticator:
+            # If no authenticator is configured but auth is required, we must fail secure
+            # or return None if auth is optional (handled by caller)
+            return None
 
-            if not api_key:
-                raise AuthenticationError("API key required")
+        extractor = CredentialExtractorFactory.get_extractor(auth_type)
+        if not extractor:
+            return None
 
-            # Validate API key (stub - in real world check DB/Cache)
-            if api_key.startswith("ak_"):
-                return {"user_id": f"user_{api_key[-8:]}", "scopes": ["read", "write"]}
-            raise AuthenticationError("Invalid API key")
+        credentials = extractor.extract(request)
 
         if auth_type == AuthenticationType.BEARER_TOKEN:
-            auth_header = request.get_header("Authorization") or ""
-            if not auth_header.startswith("Bearer "):
-                raise AuthenticationError("Bearer token required")
+            # Use validate_token for Bearer tokens
+            result = await self.authenticator.validate_token(credentials["token"])
+            if not result.success:
+                raise AuthenticationError(result.error or "Invalid bearer token")
 
-            token = auth_header[7:]
-            # Validate token (stub)
-            if len(token) >= 32:
-                return {"user_id": f"user_{token[-8:]}", "scopes": ["read", "write"]}
-            raise AuthenticationError("Invalid bearer token")
+            # Map user to dict context
+            if result.user:
+                return {
+                    "user_id": result.user.user_id,
+                    "username": result.user.username,
+                    "roles": list(result.user.roles),
+                    "permissions": list(result.user.permissions),
+                }
+            return {}
+
+        # For other types, use authenticate method
+        if credentials:
+            result = await self.authenticator.authenticate(credentials)
+            if not result.success:
+                raise AuthenticationError(result.error or "Authentication failed")
+
+            if result.user:
+                return {
+                    "user_id": result.user.user_id,
+                    "username": result.user.username,
+                    "roles": list(result.user.roles),
+                    "permissions": list(result.user.permissions),
+                }
+            return {}
 
         return None
