@@ -12,15 +12,15 @@ Usage:
 
 import asyncio
 
-# from mmf_new.core.security.domain.models.result import AuthenticationResult
-# from mmf_new.core.security.domain.exceptions import SecurityError
-# from mmf_new.core.security.domain.models.user import User
-from mmf_new.core.security.adapters.security_framework import initialize_security_system
-from mmf_new.core.security.domain.config import SecurityConfig
-from mmf_new.core.security.domain.models.context import AuthorizationContext
-from mmf_new.core.security.ports.authentication import IAuthenticator
-from mmf_new.core.security.ports.authorization import IAuthorizer
-from mmf_new.infrastructure.dependency_injection import get_service
+# from mmf.core.security.domain.models.result import AuthenticationResult
+# from mmf.core.security.domain.exceptions import SecurityError
+# from mmf.core.security.domain.models.user import User
+from mmf.core.security.adapters.security_framework import initialize_security_system
+from mmf.core.security.domain.config import SecurityConfig
+from mmf.core.security.domain.models.context import AuthorizationContext
+from mmf.core.security.ports.authentication import IAuthenticator
+from mmf.core.security.ports.authorization import IAuthorizer
+from mmf.infrastructure.dependency_injection import get_service
 
 # from marty_msf.audit_compliance import SecurityEventManager, create_event_manager
 # from marty_msf.audit_compliance.monitoring import (

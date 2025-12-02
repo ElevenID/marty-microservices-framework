@@ -5,7 +5,7 @@ on:
     branches: [ main, dev ]
     types: [ opened, synchronize, reopened, ready_for_review ]
     paths:
-      - 'mmf_new/**'
+      - 'mmf/**'
       - 'tests/**'
       - 'pyproject.toml'
       - 'requirements.txt'
@@ -74,7 +74,7 @@ jobs:
         uv sync --group dev
 
     - name: Run code quality checks
-      working-directory: ./mmf_new
+      working-directory: ./mmf
       run: |
         echo "Running linting and formatting checks on MMF..."
         uv run ruff check . || echo "Linting issues found - will continue with tests"
@@ -83,10 +83,10 @@ jobs:
     - name: Run architectural tests
       run: |
         echo "Running architectural tests..."
-        uv run pytest mmf_new/tests/test_architecture.py -v
+        uv run pytest mmf/tests/test_architecture.py -v
 
     - name: Run unit tests
-      working-directory: ./mmf_new
+      working-directory: ./mmf
       run: |
         echo "Running MMF unit tests..."
         uv run pytest tests/unit -v
@@ -94,7 +94,7 @@ jobs:
     - name: Run integration tests
       run: |
         echo "Running integration tests..."
-        uv run pytest mmf_new/tests/integration/ -v --tb=short -x || true
+        uv run pytest mmf/tests/integration/ -v --tb=short -x || true
 
   # Contract tests - validate API compatibility
   contract-tests:
@@ -122,7 +122,7 @@ jobs:
         uv sync --group dev
 
     - name: Run contract tests
-      working-directory: ./mmf_new
+      working-directory: ./mmf
       run: |
         echo "Running MMF API contract validation tests..."
         ../tests/run_mmf_tests.sh --contract --verbose
@@ -186,7 +186,7 @@ jobs:
 
     - name: Run E2E Tests (${{ matrix.test-mode }} mode)
       id: e2e-tests
-      working-directory: ./mmf_new
+      working-directory: ./mmf
       run: |
         cd ${{ github.workspace }}
 
@@ -252,7 +252,7 @@ jobs:
         uv sync --group dev
 
     - name: Run performance baseline tests
-      working-directory: ./mmf_new
+      working-directory: ./mmf
       run: |
         echo "Running MMF performance baseline tests..."
         # Use unified test runner for performance tests
@@ -294,7 +294,7 @@ jobs:
         uv sync --group dev
 
     - name: Run security baseline tests
-      working-directory: ./mmf_new
+      working-directory: ./mmf
       run: |
         echo "Running MMF security baseline tests..."
         # Use unified test runner for security tests

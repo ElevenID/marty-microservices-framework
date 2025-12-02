@@ -52,15 +52,15 @@ jobs:
     - name: Run Architecture Checks
       run: |
         # Run the architecture tests
-        uv run pytest mmf_new/tests/test_architecture.py
+        uv run pytest mmf/tests/test_architecture.py
 
     - name: Run Core Tests with Coverage
       run: |
         # Run unit and integration tests with coverage enforcement
         # The --cov-fail-under=70 flag is set in pyproject.toml, but we can override or rely on it.
-        uv run pytest mmf_new/tests/unit mmf_new/tests/integration
+        uv run pytest mmf/tests/unit mmf/tests/integration
 
     - name: Run Contract Tests (POC)
       run: |
         # Run contract tests
-        uv run pytest mmf_new/tests/contract
+        uv run pytest mmf/tests/contract

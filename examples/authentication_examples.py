@@ -8,13 +8,13 @@ authentication system with different providers.
 import asyncio
 from datetime import datetime, timezone
 
-from mmf_new.services.identity.application import (
+from mmf.services.identity.application import (
     AuthenticationContext,
     AuthenticationCredentials,
     AuthenticationMethod,
     authentication_manager,
 )
-from mmf_new.services.identity.infrastructure.adapters import (
+from mmf.services.identity.infrastructure.adapters import (
     APIKeyAdapter,
     APIKeyConfig,
     BasicAuthAdapter,

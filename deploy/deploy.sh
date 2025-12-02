@@ -47,7 +47,7 @@ echo -e "${YELLOW}🐳 Building Docker image...${NC}"
 docker build -t mmf/identity-service:minimal .
 
 echo -e "${YELLOW}🐳 Building UI Docker image...${NC}"
-docker build -t mmf/identity-ui:latest -f mmf_new/services/identity/ui/Dockerfile mmf_new/services/identity/ui
+docker build -t mmf/identity-ui:latest -f mmf/services/identity/ui/Dockerfile mmf/services/identity/ui
 
 # Load image into KIND cluster
 echo -e "${YELLOW}📥 Loading Docker image into KIND cluster...${NC}"

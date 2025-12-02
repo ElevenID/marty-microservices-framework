@@ -34,19 +34,19 @@ install: ## Install framework dependencies
 
 test: ## Run all tests (unit + integration + contract + e2e)
 	@echo "🧪 Running comprehensive test suite..."
-	@./tests/run_tests.sh
+	@uv run pytest mmf/tests -v
 
 test-unit: ## Run unit tests only
 	@echo "🧪 Running unit tests..."
-	@uv run pytest tests/ mmf_new/ -v -m unit
+	@uv run pytest mmf/tests/unit -v
 
 test-integration: ## Run integration tests only
 	@echo "🧪 Running integration tests..."
-	@uv run pytest mmf_new/ -v -m integration
+	@uv run pytest mmf/tests/integration -v
 
 test-contract: ## Run contract tests only
 	@echo "🧪 Running contract tests..."
-	@uv run pytest mmf_new/ -v -m contract
+	@uv run pytest mmf/tests/contract -v
 
 test-e2e: ## Run comprehensive end-to-end tests with KIND
 	@echo "🧪 Running comprehensive E2E tests with KIND..."

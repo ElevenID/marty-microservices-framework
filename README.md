@@ -18,7 +18,7 @@ Marty Microservices Framework (MMF) is a "batteries-included" platform designed 
 The project follows a strict Hexagonal Architecture:
 
 ```
-mmf_new/                        # Core Framework & Services
+mmf/                        # Core Framework & Services
 ├── services/                   # Domain Services (Bounded Contexts)
 │   ├── identity/               # Identity & Access Management
 │   └── audit/                  # Audit Logging

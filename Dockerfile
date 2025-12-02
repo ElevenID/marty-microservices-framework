@@ -29,7 +29,7 @@ RUN uv pip install --system \
     bcrypt>=4.0.1
 
 # Copy application code
-COPY mmf_new/ ./mmf_new/
+COPY mmf/ ./mmf/
 COPY platform_plugins/ ./platform_plugins/
 
 # Set Python path
@@ -43,4 +43,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Run the application using system Python
-CMD ["python", "-m", "uvicorn", "mmf_new.services.identity.infrastructure.adapters.http_adapter:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "mmf.services.identity.infrastructure.adapters.http_adapter:app", "--host", "0.0.0.0", "--port", "8000"]

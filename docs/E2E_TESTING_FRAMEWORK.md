@@ -259,4 +259,4 @@ The framework demonstrates that:
 - ✅ API contracts are stable and reliable
 - ✅ Deployment automation is functional
 
-This provides a solid foundation for migrating existing code from `mmf/` to the new `mmf_new/` structure with confidence.
+This provides a solid foundation for migrating existing code from `mmf/` to the new `mmf/` structure with confidence.

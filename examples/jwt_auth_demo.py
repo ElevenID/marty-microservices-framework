@@ -11,14 +11,14 @@ import uvicorn
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from mmf_new.services.identity.integration import (
+from mmf.services.identity.integration import (
     JWTAuthenticationMiddleware,
     create_development_config,
     create_production_config,
     get_current_user,
     require_authenticated_user,
 )
-from mmf_new.services.identity.integration import (
+from mmf.services.identity.integration import (
     router as jwt_router,  # Router and endpoints; Middleware; Configuration
 )
 

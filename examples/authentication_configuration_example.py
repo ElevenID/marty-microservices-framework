@@ -9,14 +9,14 @@ import asyncio
 import os
 from datetime import datetime, timezone
 
-from mmf_new.infrastructure.config_manager import Environment
-from mmf_new.services.identity.application import (
+from mmf.infrastructure.config_manager import Environment
+from mmf.services.identity.application import (
     AuthenticationContext,
     AuthenticationCredentials,
     AuthenticationMethod,
     authentication_manager,
 )
-from mmf_new.services.identity.config import (
+from mmf.services.identity.config import (
     AuthenticationProviderType,
     create_development_config,
     create_production_config,
@@ -25,7 +25,7 @@ from mmf_new.services.identity.config import (
     get_authentication_settings,
     load_config_from_file,
 )
-from mmf_new.services.identity.infrastructure.adapters import (
+from mmf.services.identity.infrastructure.adapters import (
     APIKeyAdapter,
     APIKeyConfig,
     BasicAuthAdapter,

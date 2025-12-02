@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
-MMF_NEW_ROOT = PROJECT_ROOT / "mmf_new"
+MMF_ROOT = PROJECT_ROOT / "mmf"
 
 
 def get_imports(file_path):
@@ -41,8 +41,8 @@ def check_layer_violations(layer_path, forbidden_layers):
         imports = get_imports(file_path)
         for imp in imports:
             for forbidden in forbidden_layers:
-                # Check for absolute imports like 'mmf_new.infrastructure...'
-                if imp.startswith(f"mmf_new.{forbidden}"):
+                # Check for absolute imports like 'mmf.infrastructure...'
+                if imp.startswith(f"mmf.{forbidden}"):
                     violations.append(f"{file_path.relative_to(PROJECT_ROOT)} imports {imp}")
                 # Check for relative imports? (Harder with AST, assuming absolute imports for now or standard structure)
 
@@ -52,17 +52,17 @@ def check_layer_violations(layer_path, forbidden_layers):
 @pytest.mark.unit
 def test_domain_layer_independence():
     """Domain layer should not import Application or Infrastructure."""
-    # Based on file structure in prompt: mmf_new/core, mmf_new/application, mmf_new/infrastructure
+    # Based on file structure in prompt: mmf/core, mmf/application, mmf/infrastructure
 
     violations = []
 
     # Check core domain
     violations.extend(
-        check_layer_violations(MMF_NEW_ROOT / "core" / "domain", ["application", "infrastructure"])
+        check_layer_violations(MMF_ROOT / "core" / "domain", ["application", "infrastructure"])
     )
 
     # Check services domain
-    services_path = MMF_NEW_ROOT / "services"
+    services_path = MMF_ROOT / "services"
     if services_path.exists():
         for service in services_path.iterdir():
             if service.is_dir():
@@ -79,12 +79,10 @@ def test_application_layer_independence():
     violations = []
 
     # Check core application
-    violations.extend(
-        check_layer_violations(MMF_NEW_ROOT / "core" / "application", ["infrastructure"])
-    )
+    violations.extend(check_layer_violations(MMF_ROOT / "core" / "application", ["infrastructure"]))
 
     # Check services application
-    services_path = MMF_NEW_ROOT / "services"
+    services_path = MMF_ROOT / "services"
     if services_path.exists():
         for service in services_path.iterdir():
             if service.is_dir():

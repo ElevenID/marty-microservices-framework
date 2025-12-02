@@ -12,15 +12,15 @@ import asyncio
 import traceback
 from datetime import datetime, timezone
 
-from mmf_new.services.identity.application.ports_out.authentication_provider import (
+from mmf.services.identity.application.ports_out.authentication_provider import (
     AuthenticationContext,
 )
-from mmf_new.services.identity.domain.models.mfa import (
+from mmf.services.identity.domain.models.mfa import (
     MFADeviceType,
     MFAMethod,
     MFAVerification,
 )
-from mmf_new.services.identity.infrastructure.adapters.mfa import (
+from mmf.services.identity.infrastructure.adapters.mfa import (
     EmailMFAAdapter,
     EmailMFAConfig,
     SMSMFAAdapter,

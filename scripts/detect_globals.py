@@ -22,18 +22,18 @@ def find_global_statements(directory: str) -> list[tuple[str, int, str]]:
     Returns:
         List of (file_path, line_number, line_content) tuples
     """
-    global_pattern = re.compile(r'^\s*global\s+\w+')
+    global_pattern = re.compile(r"^\s*global\s+\w+")
     results = []
 
     for root, dirs, files in os.walk(directory):
         # Skip cache directories and other non-source directories
-        dirs[:] = [d for d in dirs if not d.startswith('.') and d != '__pycache__']
+        dirs[:] = [d for d in dirs if not d.startswith(".") and d != "__pycache__"]
 
         for file in files:
-            if file.endswith('.py'):
+            if file.endswith(".py"):
                 file_path = os.path.join(root, file)
                 try:
-                    with open(file_path, encoding='utf-8') as f:
+                    with open(file_path, encoding="utf-8") as f:
                         for line_num, line in enumerate(f, 1):
                             if global_pattern.match(line):
                                 results.append((file_path, line_num, line.strip()))
@@ -65,7 +65,7 @@ def suggest_migration(global_statements: list[tuple[str, int, str]]) -> None:
             print(f"   Line {line_num}: {line_content}")
 
             # Extract variable name for suggestions
-            match = re.search(r'global\s+(\w+)', line_content)
+            match = re.search(r"global\s+(\w+)", line_content)
             if match:
                 var_name = match.group(1)
                 print("   💡 Suggestion: Replace with dependency injection")

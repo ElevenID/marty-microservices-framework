@@ -121,7 +121,7 @@ all = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["mmf_new"]
+packages = ["mmf"]
 
 [project.urls]
 Homepage = "https://github.com/marty-framework/marty-microservices-framework"
@@ -139,7 +139,7 @@ Issues = "https://github.com/marty-framework/marty-microservices-framework/issue
 # production_payment = "plugins.production_payment_service:ProductionPaymentPlugin"
 
 [project.entry-points.pytest11]
-mmf_testing = "mmf_new.framework.testing.infrastructure.pytest.fixtures"
+mmf_testing = "mmf.framework.testing.infrastructure.pytest.fixtures"
 
 [dependency-groups]
 dev = [
@@ -275,7 +275,7 @@ marty-msf = { workspace = true }
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-testpaths = ["tests", "mmf_new"]
+testpaths = ["tests", "mmf"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
@@ -284,12 +284,12 @@ addopts = [
     "--strict-config",
     "--verbose",
     "--tb=short",
-    "--cov=mmf_new",
+    "--cov=mmf",
     "--cov-branch",
     "--cov-report=term-missing",
     "--cov-report=html:htmlcov",
     "--cov-report=xml",
-    "--cov-fail-under=70",
+    "--cov-fail-under=80",
     "--asyncio-mode=auto",
     "--durations=10",
 ]
@@ -337,7 +337,7 @@ log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
 log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 
 [tool.coverage.run]
-source = ["mmf_new"]
+source = ["mmf"]
 branch = true
 omit = [
     "*/tests/*",

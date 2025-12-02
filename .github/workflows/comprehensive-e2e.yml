@@ -5,7 +5,7 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
     branches: [main, dev]
     paths:
-      - 'mmf_new/**'
+      - 'mmf/**'
       - 'tests/**'
       - 'pyproject.toml'
       - 'requirements.txt'
@@ -129,7 +129,7 @@ jobs:
         uv sync --group dev
 
     - name: Run contract tests
-      working-directory: ./mmf_new
+      working-directory: ./mmf
       run: |
         echo "Running MMF contract validation tests..."
         uv run pytest tests/contract -v
@@ -197,7 +197,7 @@ jobs:
 
     - name: Run ${{ matrix.test-category }} tests (${{ matrix.test-mode }} mode)
       timeout-minutes: ${{ matrix.timeout }}
-      working-directory: ./mmf_new
+      working-directory: ./mmf
       run: |
         echo "Running MMF ${{ matrix.test-category }} tests in ${{ matrix.test-mode }} mode..."
         uv run pytest tests/${{ matrix.test-category }} -v
@@ -255,7 +255,7 @@ jobs:
         uv sync --group dev
 
     - name: Run performance tests
-      working-directory: ./mmf_new
+      working-directory: ./mmf
       run: |
         echo "Running MMF performance validation tests..."
         uv run pytest tests/performance -v
@@ -297,7 +297,7 @@ jobs:
         uv sync --group dev
 
     - name: Run security tests
-      working-directory: ./mmf_new
+      working-directory: ./mmf
       run: |
         echo "Running MMF security validation tests..."
         uv run pytest tests/security -v
@@ -359,7 +359,7 @@ jobs:
         uv sync --group dev
 
     - name: Run chaos engineering tests
-      working-directory: ./mmf_new
+      working-directory: ./mmf
       run: |
         echo "Running MMF chaos engineering tests..."
         uv run pytest tests/chaos -v

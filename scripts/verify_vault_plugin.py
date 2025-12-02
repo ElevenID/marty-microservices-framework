@@ -14,11 +14,11 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
-from mmf_new.application.services.plugin_manager import PluginManager
-from mmf_new.framework.infrastructure.plugins.discovery import PluginDiscovery
-from mmf_new.framework.infrastructure.plugins.loader import PluginLoader
-from mmf_new.framework.infrastructure.plugins.registry import PluginRegistry
-from mmf_new.framework.plugins.models import PluginContext
+from mmf.application.services.plugin_manager import PluginManager
+from mmf.framework.infrastructure.plugins.discovery import PluginDiscovery
+from mmf.framework.infrastructure.plugins.loader import PluginLoader
+from mmf.framework.infrastructure.plugins.registry import PluginRegistry
+from mmf.framework.plugins.models import PluginContext
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
