@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 
 # Mock redis module to avoid installation requirement for unit tests
 redis_mock = MagicMock()
+redis_mock.VERSION = (6, 0, 0)  # Mock version for compatibility checks
 redis_exceptions_mock = MagicMock()
 redis_asyncio_mock = MagicMock()
 

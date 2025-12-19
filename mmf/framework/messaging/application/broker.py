@@ -12,17 +12,15 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
-from mmf.framework.messaging.domain.models import (
+from mmf.core.messaging import (
     ConsumerConfig,
-    Message,
-    ProducerConfig,
-)
-from mmf.framework.messaging.interfaces import (
     IMessageBackend,
     IMessageBroker,
     IMessageConsumer,
     IMessageProducer,
     IMessageRouter,
+    Message,
+    ProducerConfig,
 )
 
 

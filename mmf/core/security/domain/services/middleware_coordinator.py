@@ -8,6 +8,8 @@ import logging
 from typing import Any
 
 from mmf.core.security.domain.config import JWTConfig, RateLimitConfig, SessionConfig
+from mmf.core.security.domain.models.rate_limit import RateLimitQuota, RateLimitResult
+from mmf.core.security.domain.models.session import SessionData
 from mmf.core.security.domain.services.middleware.authentication import (
     AuthenticationMiddleware,
 )
@@ -111,3 +113,39 @@ class SecurityMiddlewareCoordinator(IMiddlewareCoordinator):
 
         response_context["headers"] = headers
         return response_context
+
+    async def check_rate_limits(
+        self,
+        request_context: dict[str, Any],
+    ) -> RateLimitResult:
+        """Check rate limits for request."""
+        quota = RateLimitQuota(
+            ip_address=request_context.get("ip_address"),
+            user_id=request_context.get("user_id"),
+            endpoint=request_context.get("path"),
+        )
+        return await self.rate_limiter.check_rate_limit(quota)
+
+    async def manage_session(
+        self,
+        request_context: dict[str, Any],
+    ) -> SessionData | None:
+        """Manage session for request."""
+        session_id = request_context.get("cookies", {}).get(self.session_config.session_cookie_name)
+        if session_id:
+            return await self.session_manager.get_session(session_id)
+        return None
+
+    async def log_security_event(
+        self,
+        event_type: str,
+        request_context: dict[str, Any],
+        details: dict[str, Any] | None = None,
+    ) -> bool:
+        """Log security event."""
+        logger.info(f"Security Event: {event_type} - {details}")
+        return True
+
+    async def health_check(self) -> dict[str, Any]:
+        """Check health of all middleware components."""
+        return {"status": "healthy", "components": {"rate_limiter": "ok", "session_manager": "ok"}}

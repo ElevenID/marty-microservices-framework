@@ -26,7 +26,6 @@ This directory contains utility scripts for development, testing, and maintenanc
 
 ## Generation Scripts
 
-- **generate_service.py** - Service generation utility
 - **helm_to_kustomize_converter.py** - Migration tool for Helm to Kustomize
 
 ## Infrastructure Scripts
@@ -47,9 +46,6 @@ python scripts/setup_dev.py
 
 # Validate framework
 ./scripts/validate.sh
-
-# Generate a new service
-python scripts/generate_service.py
 ```
 
 For scripts that require specific environments or dependencies, refer to the script's documentation header for requirements and usage instructions.

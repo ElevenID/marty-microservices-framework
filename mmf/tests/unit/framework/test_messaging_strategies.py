@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from mmf.core import messaging as core_module
 from mmf.framework.messaging import (
     DLQConfig,
     DLQManager,
@@ -15,7 +16,6 @@ from mmf.framework.messaging import (
     RetryStrategy,
 )
 from mmf.framework.messaging.application import dlq as dlq_module
-from mmf.framework.messaging.domain import models as core_module
 
 
 # Try direct imports to see if messaging modules work better

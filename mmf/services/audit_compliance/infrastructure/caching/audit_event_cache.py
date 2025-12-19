@@ -21,7 +21,7 @@ class AuditEventCache:
     async def cache_event(self, event: SecurityAuditEvent) -> None:
         """Cache an audit event in Redis ZSET for sliding window access."""
         # Use timestamp as score for sliding window
-        event.timestamp.timestamp()
+        score = event.timestamp.timestamp()
 
         # Create cache key based on different access patterns
         base_key = "audit_events"
@@ -40,20 +40,17 @@ class AuditEventCache:
             keys_to_update.append(f"{base_key}:correlation:{event.correlation_id}")
 
         # Serialize event for storage
-        self._serialize_event(event)
+        event_data = self._serialize_event(event)
 
-        for _key in keys_to_update:
+        for key in keys_to_update:
             # Add to sorted set with timestamp as score
-            # TODO: CacheManager does not support zadd (sorted sets).
-            # Need to use Redis backend directly or update CacheManager.
-            # await self.cache.zadd(key, {event_data: score})
+            await self.cache.zadd(key, {event_data: score})
 
             # Maintain sliding window size
-            # await self._maintain_sliding_window(key)
+            await self._maintain_sliding_window(key)
 
             # Set TTL on the key
-            # await self.cache.expire(key, self.ttl)
-            pass
+            await self.cache.expire(key, self.ttl)
 
     async def get_recent_events(
         self,
@@ -64,19 +61,19 @@ class AuditEventCache:
         """Get recent events from cache."""
 
         # Calculate time range for sliding window
-        datetime.utcnow().timestamp()
-        (datetime.utcnow() - timedelta(hours=hours_back)).timestamp()
+        end_time = datetime.utcnow().timestamp()
+        start_time = (datetime.utcnow() - timedelta(hours=hours_back)).timestamp()
+
+        cache_key = f"audit_events:{key_pattern}"
 
         # Get events from sorted set within time range
-        # TODO: CacheManager does not support zrevrangebyscore.
-        # event_data_list = await self.cache.zrevrangebyscore(
-        #     cache_key,
-        #     end_time,
-        #     start_time,
-        #     start=0,
-        #     num=limit,
-        # )
-        event_data_list = []
+        event_data_list = await self.cache.zrevrangebyscore(
+            cache_key,
+            end_time,
+            start_time,
+            start=0,
+            num=limit,
+        )
 
         # Deserialize events
         events = []
@@ -158,23 +155,67 @@ class AuditEventCache:
         hours_back: int = 24,
     ) -> dict[str, int]:
         """Get event counts by different categories from cache."""
-        # TODO: CacheManager does not support keys/zcount
-        return {}
+        end_time = datetime.utcnow().timestamp()
+        start_time = (datetime.utcnow() - timedelta(hours=hours_back)).timestamp()
+
+        counts = {}
+
+        # Get all keys for types
+        type_keys = await self.cache.keys("audit_events:type:*")
+        for key in type_keys:
+            type_name = key.split(":")[-1]
+            count = await self.cache.zcount(key, start_time, end_time)
+            counts[f"type:{type_name}"] = count
+
+        # Get all keys for levels
+        level_keys = await self.cache.keys("audit_events:level:*")
+        for key in level_keys:
+            level_name = key.split(":")[-1]
+            count = await self.cache.zcount(key, start_time, end_time)
+            counts[f"level:{level_name}"] = count
+
+        return counts
 
     async def clear_old_events(self, hours_to_keep: int = 168) -> int:
         """Clear events older than specified hours from cache."""
-        # TODO: CacheManager does not support keys/zremrangebyscore
-        return 0
+        cutoff_time = (datetime.utcnow() - timedelta(hours=hours_to_keep)).timestamp()
+
+        all_keys = await self.cache.keys("audit_events:*")
+        total_removed = 0
+
+        for key in all_keys:
+            removed = await self.cache.zremrangebyscore(key, 0, cutoff_time)
+            total_removed += removed
+
+        return total_removed
 
     async def get_cache_stats(self) -> dict[str, Any]:
         """Get cache statistics."""
-        # TODO: CacheManager does not support keys/zcard/ttl
-        return {}
+        stats = await self.cache.get_stats()
+
+        # Add specific audit stats
+        all_keys = await self.cache.keys("audit_events:*")
+        total_events = 0
+        for key in all_keys:
+            total_events += await self.cache.zcard(key)
+
+        return {
+            "hits": stats.hits,
+            "misses": stats.misses,
+            "total_keys": len(all_keys),
+            "total_events_cached": total_events,
+        }
 
     async def _maintain_sliding_window(self, key: str) -> None:
         """Maintain sliding window size by removing oldest entries."""
-        # TODO: CacheManager does not support zcard/zremrangebyrank
-        pass
+        count = await self.cache.zcard(key)
+        if count > self.sliding_window_size:
+            # Remove oldest entries (lowest scores)
+            # Rank 0 is lowest score.
+            # We want to keep top N (highest scores).
+            # So remove from 0 to (count - N - 1)
+            remove_count = count - self.sliding_window_size
+            await self.cache.zremrangebyrank(key, 0, remove_count - 1)
 
     def _serialize_event(self, event: SecurityAuditEvent) -> str:
         """Serialize audit event for cache storage."""
@@ -224,8 +265,12 @@ class AuditEventCache:
 
     async def invalidate_pattern(self, pattern: str) -> int:
         """Invalidate cache entries matching a pattern."""
-        # TODO: CacheManager does not support keys
-        return 0
+        keys = await self.cache.keys(pattern)
+        count = 0
+        for key in keys:
+            if await self.cache.delete(key):
+                count += 1
+        return count
 
     async def refresh_event_cache(self, events: list[SecurityAuditEvent]) -> None:
         """Refresh cache with a batch of events."""

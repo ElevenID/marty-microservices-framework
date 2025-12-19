@@ -198,6 +198,7 @@ repos:
         language: system
         files: \.py$
         exclude: ^(examples/demos/istio-1\.27\.2/.*\.py|examples/.*\.py|scripts/detect_globals\.py|.*migration.*\.py|.*legacy.*\.py|boneyard/)$
+        require_serial: true
 
       # Code Quality Analysis - Comprehensive complexity and length checks
       - id: code-quality-check
@@ -234,7 +235,7 @@ repos:
         entry: python3 scripts/pre_commit_check_globals.py
         language: system
         files: \.py$
-        exclude: ^(tests/.*test_.*\.py|examples/demos/.*\.py|scripts/detect_globals\.py|.*migration.*\.py|.*legacy.*\.py|tools/scaffolding/.*\.py|.*_template\.py|tests/.*/conftest\.py|services/shared/modern_service_template\.py|boneyard/.*)$
+        exclude: ^(tests/.*test_.*\.py|examples/demos/.*\.py|scripts/detect_globals\.py|.*migration.*\.py|.*legacy.*\.py|tools/scaffolding/.*\.py|.*_template\.py|tests/.*/conftest\.py|services/shared/modern_service_template\.py|boneyard/.*|mmf/adapters/credentials/.*)$
         require_serial: true
         pass_filenames: false
         stages: [pre-commit]

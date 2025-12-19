@@ -3,8 +3,13 @@ from __future__ import annotations
 import logging
 import time
 
-from mmf.framework.messaging.domain.models import DLQConfig, Message, MessageStatus
-from mmf.framework.messaging.domain.ports import IDLQManager, IMessageBackend
+from mmf.core.messaging import (
+    DLQConfig,
+    IDLQManager,
+    IMessageBackend,
+    Message,
+    MessageStatus,
+)
 
 
 class DLQManager(IDLQManager):

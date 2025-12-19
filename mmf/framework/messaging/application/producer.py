@@ -3,17 +3,15 @@ from __future__ import annotations
 import logging
 import time
 
-from mmf.framework.messaging.domain.models import (
+from mmf.core.messaging import (
+    IMessageBackend,
+    IMessageProducer,
+    IMessageSerializer,
     Message,
     MessagePriority,
     MessageStatus,
     MessagingError,
     ProducerConfig,
-)
-from mmf.framework.messaging.domain.ports import (
-    IMessageBackend,
-    IMessageProducer,
-    IMessageSerializer,
 )
 from mmf.framework.messaging.infrastructure.adapters.serializer import (
     JSONMessageSerializer,

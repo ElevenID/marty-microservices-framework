@@ -25,11 +25,15 @@ from prometheus_client import Counter, Gauge, Histogram, Info, generate_latest
 
 # MMF framework imports
 from mmf.framework.infrastructure.config_manager import BaseServiceConfig
-from mmf.framework.observability.monitoring import (
-    HealthCheck,
+from mmf.framework.observability.adapters.monitoring import (
     HealthChecker,
-    HealthStatus,
     MetricsCollector,
+)
+from mmf.framework.observability.domain.protocols import (
+    HealthCheck,
+    HealthStatus,
+    IHealthChecker,
+    IMetricsCollector,
 )
 
 # OpenTelemetry imports for tracing
@@ -64,12 +68,19 @@ class ObservabilityManager:
     and tracing across all Marty services using the unified configuration system.
     """
 
-    def __init__(self, config: BaseServiceConfig):
+    def __init__(
+        self,
+        config: BaseServiceConfig,
+        metrics_collector: IMetricsCollector | None = None,
+        health_checker: IHealthChecker | None = None,
+    ):
         """
         Initialize observability manager with unified configuration.
 
         Args:
             config: Service configuration from unified config system
+            metrics_collector: Optional injected metrics collector
+            health_checker: Optional injected health checker
         """
         self.config = config
         self.service_name = config.service_name
@@ -77,14 +88,18 @@ class ObservabilityManager:
         self.logger = logging.getLogger(f"marty.{self.service_name}.observability")
 
         # Initialize components
-        self._metrics_collector: MetricsCollector | None = None
-        self._health_checker: HealthChecker | None = None
+        self._metrics_collector: IMetricsCollector | None = metrics_collector
+        self._health_checker: IHealthChecker | None = health_checker
         self._tracer: Any | None = None
         self._business_metrics: dict[str, Any] = {}
 
         # Setup observability components
-        self._setup_metrics()
-        self._setup_health_checks()
+        if not self._metrics_collector:
+            self._setup_metrics()
+
+        if not self._health_checker:
+            self._setup_health_checks()
+
         self._setup_tracing()
 
         self.logger.info(f"Observability manager initialized for {self.service_name}")
@@ -260,13 +275,15 @@ class ObservabilityManager:
         trace.set_tracer_provider(provider)
 
         # Get tracer for this service
-        self._tracer = trace.get_tracer(f"marty.{self.service_name}", version="1.0.0")
+        self._tracer = trace.get_tracer(
+            f"marty.{self.service_name}", instrumenting_library_version="1.0.0"
+        )
 
         self.logger.info("Distributed tracing initialized")
 
     # Public API methods
 
-    def get_metrics_collector(self) -> MetricsCollector | None:
+    def get_metrics_collector(self) -> IMetricsCollector | None:
         """Get the metrics collector instance."""
         return self._metrics_collector
 

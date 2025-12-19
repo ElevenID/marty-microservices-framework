@@ -10,7 +10,7 @@ The Marty framework now includes comprehensive API documentation generation and 
 
 #### Unified Documentation Generator
 
-- **Location**: `/src/marty_msf/framework/documentation/api_docs.py`
+- **Location**: `/mmf/framework/documentation/api_docs.py`
 - **Purpose**: Generate unified documentation across REST and gRPC APIs
 - **Key Classes**:
   - `APIDocumentationManager`: Orchestrates documentation generation
@@ -20,7 +20,7 @@ The Marty framework now includes comprehensive API documentation generation and 
 
 #### Templates and Themes
 
-- **Location**: `/src/marty_msf/framework/documentation/templates/`
+- **Location**: `/mmf/framework/documentation/templates/`
 - **Purpose**: HTML and Markdown templates for documentation rendering
 - **Features**:
   - Bootstrap-based responsive design
@@ -42,7 +42,7 @@ The Marty framework now includes comprehensive API documentation generation and 
 
 #### Enhanced Contract Testing
 
-- **Location**: `/src/marty_msf/framework/testing/grpc_contract_testing.py`
+- **Location**: `/mmf/framework/testing/grpc_contract_testing.py`
 - **Purpose**: Consumer-driven contract testing for gRPC services
 - **Key Classes**:
   - `GRPCContractBuilder`: Fluent API for contract creation

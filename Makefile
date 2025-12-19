@@ -379,3 +379,30 @@ ci: ## Run CI/CD pipeline (validate, test, check)
 	@uv run ruff check .
 	@python3 -m mypy scripts/ --config-file mypy.ini
 	@echo "✅ CI/CD pipeline completed!"
+
+# ==============================================================================
+# Petstore Demo
+# ==============================================================================
+
+petstore-compose-up: ## Start Petstore demo with Docker Compose
+	@echo "🚀 Starting Petstore demo with Docker Compose..."
+	@cd examples/petstore_domain && docker compose up --build -d
+	@echo "✅ Petstore demo running!"
+	@echo "  - Pet Service: http://localhost:8000"
+	@echo "  - Store Service: http://localhost:8001"
+	@echo "  - Delivery Board Service: http://localhost:8002"
+	@echo "Observability:"
+	@echo "  - Log Viewer (Dozzle): http://localhost:8888"
+	@echo "  - Jaeger (Tracing):    http://localhost:16686"
+	@echo "  - Prometheus (Metrics): http://localhost:9090"
+	@echo "  - Grafana (Dashboards): http://localhost:3000"
+
+petstore-compose-down: ## Stop Petstore demo
+	@echo "🛑 Stopping Petstore demo..."
+	@cd examples/petstore_domain && docker compose down
+	@echo "✅ Petstore demo stopped!"
+
+
+petstore-demo-run: ## Run the Petstore demo driver scenario
+	@echo "🚗 Running Petstore demo scenario..."
+	@uv run python examples/petstore_domain/demo_driver.py

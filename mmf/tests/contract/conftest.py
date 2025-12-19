@@ -18,6 +18,22 @@ CONTRACT_TEST_TIMEOUT = 30
 API_BASE_URL = "http://localhost:8000"
 
 
+def _is_server_available(url: str) -> bool:
+    """Check if the identity service is running."""
+    try:
+        response = requests.get(f"{url}/health", timeout=2)
+        return response.status_code == 200
+    except (requests.ConnectionError, requests.Timeout):
+        return False
+
+
+# Skip tests that require running server if server is not available
+requires_running_server = pytest.mark.skipif(
+    not _is_server_available(API_BASE_URL),
+    reason=f"Identity service not running at {API_BASE_URL}",
+)
+
+
 @pytest.fixture(scope="session")
 def api_base_url():
     """Provides the API base URL for contract tests."""

@@ -2,29 +2,23 @@
 
 # Import from Domain Layer (contracts and interfaces)
 # Import from bootstrap layer (concrete implementations)
-from .bootstrap import (
-    DLQHandler,
-    DLQManager,
-    EventStreamManager,
-    JSONMessageSerializer,
-    MemoryMessageBackend,
-    MessageBus,
-    MessageConsumer,
-    MessageProducer,
-    MessageQueue,
-    MessageRouter,
-    MessagingManager,
-    MiddlewareChain,
-    create_messaging_manager,
-    setup_messaging_system,
-)
-from .domain.models import (
+from mmf.core.messaging import (
     BackendConfig,
     BackendType,
     ConsumerConfig,
     DLQConfig,
     DLQMessage,
     DLQPolicy,
+    IDLQManager,
+    IMessageBackend,
+    IMessageConsumer,
+    IMessageExchange,
+    IMessageMiddleware,
+    IMessageProducer,
+    IMessageQueue,
+    IMessageRouter,
+    IMessageSerializer,
+    IMessagingManager,
     MatchType,
     Message,
     MessageHeaders,
@@ -43,17 +37,22 @@ from .domain.models import (
     RoutingRule,
     RoutingType,
 )
-from .domain.ports import (
-    IDLQManager,
-    IMessageBackend,
-    IMessageConsumer,
-    IMessageExchange,
-    IMessageMiddleware,
-    IMessageProducer,
-    IMessageQueue,
-    IMessageRouter,
-    IMessageSerializer,
-    IMessagingManager,
+
+from .bootstrap import (
+    DLQHandler,
+    DLQManager,
+    EventStreamManager,
+    JSONMessageSerializer,
+    MemoryMessageBackend,
+    MessageBus,
+    MessageConsumer,
+    MessageProducer,
+    MessageQueue,
+    MessageRouter,
+    MessagingManager,
+    MiddlewareChain,
+    create_messaging_manager,
+    setup_messaging_system,
 )
 
 __all__ = [

@@ -21,13 +21,22 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Generic, Optional, TypeVar
+from typing import Any, Generic, TypeVar
 
-from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text, create_engine
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
+
+from mmf.core.messaging import (
+    BackendConfig,
+    BackendType,
+    ConsumerConfig,
+    IMessageBackend,
+    IMessageConsumer,
+    IMessageProducer,
+    Message,
+    ProducerConfig,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -473,7 +482,7 @@ class DeadLetterEvent(PersistenceBase):
 
 
 class EnhancedEventBus(EventBus):
-    """Kafka-only enhanced event bus implementation with transactional outbox pattern."""
+    """Enhanced event bus implementation with transactional outbox pattern."""
 
     def __init__(
         self,
@@ -502,9 +511,19 @@ class EnhancedEventBus(EventBus):
         self._subscriptions: dict[str, list[str]] = defaultdict(list)
         self._plugin_handlers: dict[str, PluginEventHandler] = {}
 
-        # Kafka components
-        self._kafka_producer: AIOKafkaProducer | None = None
-        self._kafka_consumers: dict[str, AIOKafkaConsumer] = {}
+        # Messaging components
+        # Convert KafkaConfig to BackendConfig
+        backend_config = BackendConfig(
+            type=BackendType.KAFKA,
+            connection_url=kafka_config.bootstrap_servers[0],  # Use first broker
+        )
+        from mmf.framework.messaging.infrastructure.adapters.faststream_adapter import (
+            FastStreamBackend,
+        )
+
+        self._backend: IMessageBackend = FastStreamBackend(backend_config)
+        self._producer: IMessageProducer | None = None
+        self._consumers: dict[str, IMessageConsumer] = {}
         self._consumer_tasks: dict[str, asyncio.Task] = {}
 
         # Database components for outbox pattern
@@ -716,8 +735,8 @@ class EnhancedEventBus(EventBus):
                             event_data = json.loads(outbox_event.event_data)
                             event = BaseEvent.from_dict(event_data)
 
-                            # Publish to Kafka
-                            await self._publish_to_kafka(event)
+                            # Publish to backend
+                            await self._publish_to_backend(event)
 
                             # Mark as completed
                             outbox_event.status = EventStatus.COMPLETED.value
@@ -839,108 +858,78 @@ class EnhancedEventBus(EventBus):
         # Use event type as topic name, replacing dots with underscores
         return event_type.replace(".", "_").lower()
 
-    async def _start_kafka_producer(self) -> None:
-        """Start Kafka producer."""
-        if self._kafka_producer is not None:
+    async def _start_producer(self) -> None:
+        """Start message producer."""
+        if self._producer is not None:
             return
 
-        producer_config = {
-            "bootstrap_servers": self.kafka_config.bootstrap_servers,
-            "security_protocol": self.kafka_config.security_protocol,
-        }
+        await self._backend.connect()
 
-        # Add SASL configuration if provided
-        if self.kafka_config.sasl_mechanism:
-            producer_config.update(
-                {
-                    "sasl_mechanism": self.kafka_config.sasl_mechanism,
-                    "sasl_plain_username": self.kafka_config.sasl_plain_username,
-                    "sasl_plain_password": self.kafka_config.sasl_plain_password,
-                }
-            )
+        # Create producer config
+        # We map KafkaConfig to ProducerConfig where possible
+        producer_config = ProducerConfig(
+            name="enhanced-event-bus-producer",
+            exchange="default",  # Default exchange
+            routing_key="",
+        )
 
-        self._kafka_producer = AIOKafkaProducer(**producer_config)
-        await self._kafka_producer.start()
-        logger.info("Kafka producer started")
+        self._producer = await self._backend.create_producer(producer_config)
+        await self._producer.start()
+        logger.info("Message producer started")
 
-    async def _stop_kafka_producer(self) -> None:
-        """Stop Kafka producer."""
-        if self._kafka_producer:
-            await self._kafka_producer.stop()
-            self._kafka_producer = None
-            logger.info("Kafka producer stopped")
+    async def _stop_producer(self) -> None:
+        """Stop message producer."""
+        if self._producer:
+            await self._producer.stop()
+            self._producer = None
+            await self._backend.disconnect()
+            logger.info("Message producer stopped")
 
-    async def _start_kafka_consumer(self, topic: str) -> None:
-        """Start Kafka consumer for a topic."""
-        if topic in self._kafka_consumers:
+    async def _start_consumer(self, topic: str) -> None:
+        """Start consumer for a topic."""
+        if topic in self._consumers:
             return
 
-        consumer_config = {
-            "bootstrap_servers": self.kafka_config.bootstrap_servers,
-            "group_id": self.kafka_config.consumer_group_id,
-            "auto_offset_reset": self.kafka_config.auto_offset_reset,
-            "enable_auto_commit": self.kafka_config.enable_auto_commit,
-            "max_poll_records": self.kafka_config.max_poll_records,
-            "session_timeout_ms": self.kafka_config.session_timeout_ms,
-            "heartbeat_interval_ms": self.kafka_config.heartbeat_interval_ms,
-            "security_protocol": self.kafka_config.security_protocol,
-        }
+        consumer_config = ConsumerConfig(
+            name=f"consumer-{topic}",
+            queue=topic,
+            # group_id and auto_offset_reset are not in ConsumerConfig
+            # We rely on defaults or backend-specific configuration
+        )
 
-        # Add SASL configuration if provided
-        if self.kafka_config.sasl_mechanism:
-            consumer_config.update(
-                {
-                    "sasl_mechanism": self.kafka_config.sasl_mechanism,
-                    "sasl_plain_username": self.kafka_config.sasl_plain_username,
-                    "sasl_plain_password": self.kafka_config.sasl_plain_password,
-                }
-            )
-
-        consumer = AIOKafkaConsumer(topic, **consumer_config)
+        consumer = await self._backend.create_consumer(consumer_config)
+        await consumer.set_handler(self._handle_message)
         await consumer.start()
 
-        self._kafka_consumers[topic] = consumer
-        self._consumer_tasks[topic] = asyncio.create_task(self._consume_messages(topic, consumer))
+        self._consumers[topic] = consumer
+        logger.info(f"Started consumer for topic: {topic}")
 
-        logger.info(f"Started Kafka consumer for topic: {topic}")
-
-    async def _stop_kafka_consumers(self) -> None:
-        """Stop all Kafka consumers."""
-        # Cancel consumer tasks
-        for task in self._consumer_tasks.values():
-            task.cancel()
-
-        # Wait for tasks to complete
-        if self._consumer_tasks:
-            await asyncio.gather(*self._consumer_tasks.values(), return_exceptions=True)
-
-        # Stop consumers
-        for consumer in self._kafka_consumers.values():
+    async def _stop_consumers(self) -> None:
+        """Stop all consumers."""
+        for consumer in self._consumers.values():
             await consumer.stop()
 
-        self._kafka_consumers.clear()
-        self._consumer_tasks.clear()
-        logger.info("All Kafka consumers stopped")
+        self._consumers.clear()
+        logger.info("All consumers stopped")
 
-    async def _consume_messages(self, topic: str, consumer: AIOKafkaConsumer) -> None:
-        """Consume messages from Kafka topic."""
+    async def _handle_message(self, message: Message) -> None:
+        """Handle incoming message from backend."""
         try:
-            async for message in consumer:
-                try:
-                    # Deserialize event
-                    event_data = json.loads(message.value.decode("utf-8"))
-                    event = BaseEvent.from_dict(event_data)
+            # Deserialize event
+            if isinstance(message.body, bytes):
+                event_data = json.loads(message.body.decode("utf-8"))
+            elif isinstance(message.body, str):
+                event_data = json.loads(message.body)
+            else:
+                event_data = message.body
 
-                    # Process event with handlers
-                    await self._dispatch_event(event)
+            event = BaseEvent.from_dict(event_data)
 
-                except Exception as e:
-                    logger.error(f"Error processing message from topic {topic}: {e}")
+            # Process event with handlers
+            await self._dispatch_event(event)
 
-        except asyncio.CancelledError:
-            logger.info(f"Consumer task for topic {topic} was cancelled")
         except Exception as e:
-            logger.error(f"Consumer task for topic {topic} failed: {e}")
+            logger.error(f"Error processing message: {e}")
 
     async def _dispatch_event(self, event: BaseEvent) -> None:
         """Dispatch event to appropriate handlers."""
@@ -979,21 +968,24 @@ class EnhancedEventBus(EventBus):
                 if isinstance(result, Exception):
                     logger.error(f"Handler {handlers[i].handler_id} failed: {result}")
 
-    async def _publish_to_kafka(self, event: BaseEvent) -> None:
-        """Publish event to Kafka."""
-        if not self._kafka_producer:
-            raise RuntimeError("Kafka producer not started")
+    async def _publish_to_backend(self, event: BaseEvent) -> None:
+        """Publish event to backend."""
+        if not self._producer:
+            raise RuntimeError("Producer not started")
 
         topic = await self._get_topic_name(event.event_type)
-        event_data = json.dumps(event.to_dict()).encode("utf-8")
+
+        message = Message(
+            body=event.to_dict(),
+            routing_key=topic,
+            correlation_id=event.metadata.correlation_id,
+        )
 
         try:
-            await self._kafka_producer.send_and_wait(
-                topic, event_data, key=event.event_id.encode("utf-8")
-            )
-            logger.debug(f"Published event {event.event_id} to Kafka topic {topic}")
+            await self._producer.publish(message)
+            logger.debug(f"Published event {event.event_id} to topic {topic}")
         except Exception as e:
-            logger.error(f"Failed to publish event {event.event_id} to Kafka: {e}")
+            logger.error(f"Failed to publish event {event.event_id}: {e}")
             raise
 
     async def publish(
@@ -1010,22 +1002,22 @@ class EnhancedEventBus(EventBus):
             # For delayed publishing, we could implement a scheduler
             # For now, just log a warning
             logger.warning(
-                "Delayed publishing not yet implemented for Kafka backend, publishing immediately"
+                "Delayed publishing not yet implemented for backend, publishing immediately"
             )
 
-        await self._publish_to_kafka(event)
+        await self._publish_to_backend(event)
 
     async def publish_batch(
         self,
         events: list[BaseEvent],
         delivery_guarantee: DeliveryGuarantee = DeliveryGuarantee.AT_LEAST_ONCE,
     ) -> None:
-        """Publish multiple events as a batch to Kafka."""
+        """Publish multiple events as a batch to backend."""
         if not self._running:
             raise RuntimeError("Event bus is not running")
 
         # Publish events concurrently
-        tasks = [self._publish_to_kafka(event) for event in events]
+        tasks = [self._publish_to_backend(event) for event in events]
         await asyncio.gather(*tasks)
 
     async def subscribe(
@@ -1048,10 +1040,10 @@ class EnhancedEventBus(EventBus):
             for event_type in event_types:
                 self._subscriptions[event_type].append(handler.handler_id)
 
-                # Start Kafka consumer for this event type if running
+                # Start consumer for this event type if running
                 if self._running:
                     topic = await self._get_topic_name(event_type)
-                    await self._start_kafka_consumer(topic)
+                    await self._start_consumer(topic)
 
             logger.info(f"Subscribed handler {handler.handler_id} to event types: {event_types}")
             return subscription_id
@@ -1101,7 +1093,7 @@ class EnhancedEventBus(EventBus):
         if self._running and event_filter.event_types:
             for event_type in event_filter.event_types:
                 topic = await self._get_topic_name(event_type)
-                await self._start_kafka_consumer(topic)
+                await self._start_consumer(topic)
 
         logger.info(f"Subscribed plugin {plugin_name} ({plugin_id}) to events")
         return plugin_handler.handler_id
@@ -1116,14 +1108,14 @@ class EnhancedEventBus(EventBus):
         return True
 
     async def start(self) -> None:
-        """Start the Kafka event bus."""
+        """Start the event bus."""
         if self._running:
             return
 
         self._running = True
 
-        # Start Kafka producer
-        await self._start_kafka_producer()
+        # Start producer
+        await self._start_producer()
 
         # Start outbox processor if configured
         if self.outbox_config and self._session_factory:
@@ -1144,7 +1136,7 @@ class EnhancedEventBus(EventBus):
 
         # Start consumers
         for topic in topics_to_consume:
-            await self._start_kafka_consumer(topic)
+            await self._start_consumer(topic)
 
         logger.info("Enhanced event bus with transactional outbox started")
 
@@ -1165,9 +1157,9 @@ class EnhancedEventBus(EventBus):
             self._outbox_processor_task = None
             logger.info("Stopped outbox processor")
 
-        # Stop Kafka components
-        await self._stop_kafka_producer()
-        await self._stop_kafka_consumers()
+        # Stop components
+        await self._stop_producer()
+        await self._stop_consumers()
 
         logger.info("Enhanced event bus stopped")
 
@@ -1175,12 +1167,12 @@ class EnhancedEventBus(EventBus):
         """Perform health check on the event bus."""
         health = {
             "status": "healthy" if self._running else "stopped",
-            "backend": "kafka",
+            "backend": "faststream",
             "handlers_count": len(self._handlers),
             "plugin_handlers_count": len(self._plugin_handlers),
-            "kafka_producer_running": self._kafka_producer is not None,
-            "kafka_consumers_count": len(self._kafka_consumers),
-            "active_topics": list(self._kafka_consumers.keys()),
+            "producer_running": self._producer is not None,
+            "consumers_count": len(self._consumers),
+            "active_topics": list(self._consumers.keys()),
             "outbox_enabled": self.outbox_config is not None,
             "outbox_processor_running": self._outbox_processor_task is not None
             and not self._outbox_processor_task.done()

@@ -6,14 +6,14 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from mmf.framework.messaging.application.broker import MessageBroker
-from mmf.framework.messaging.domain.models import Message
-from mmf.framework.messaging.interfaces import (
+from mmf.core.messaging import (
     IMessageBackend,
     IMessageConsumer,
     IMessageProducer,
     IMessageRouter,
+    Message,
 )
+from mmf.framework.messaging.application.broker import MessageBroker
 
 
 class TestMessageBroker:

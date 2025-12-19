@@ -39,11 +39,20 @@ We have significantly improved the testing infrastructure and quality assurance 
     - `ruff`: Enforces Python linting and formatting.
     - `check-json`: Validates JSON syntax.
 
+### 6. Refactoring & Unit Testing
+- **Gateway Service**:
+    - **Refactoring**: Decoupled `GatewayService` from `GatewaySecurityHandler` and `GatewayRateLimiter` by introducing `IGatewaySecurityHandler` and `IGatewayRateLimiter` interfaces.
+    - **Testing**: Updated unit tests to use dependency injection, eliminating the need for `patch` and improving testability.
+
 ## Next Steps
 
 1.  **Expand Contract Tests**: Write Pact tests for all service interactions.
 2.  **Increase Coverage**: Write more unit tests to meet the 70% threshold across all modules.
 3.  **Fix Integration Tests**: Ensure Docker is available in the CI environment (GitHub Actions supports service containers).
+4.  **Continue Refactoring**:
+    - [x] `framework.gateway`: Decoupled Security and Rate Limiting.
+    - [x] `framework.messaging`: Decoupled Router and DLQ Manager from Messaging Manager.
+    - [ ] Apply the same decoupling pattern to other high-coupling modules.
 
 ## How to Run Tests
 

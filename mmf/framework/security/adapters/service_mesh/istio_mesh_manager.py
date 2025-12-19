@@ -12,8 +12,8 @@ from typing import Any
 
 import yaml
 
-from ...domain.config import ServiceMeshConfig
-from ...domain.models.service_mesh import (
+from mmf.core.security.domain.config import ServiceMeshConfig
+from mmf.core.security.domain.models.service_mesh import (
     MeshType,
     MTLSMode,
     NetworkSegment,
@@ -23,7 +23,7 @@ from ...domain.models.service_mesh import (
     ServiceMeshPolicy,
     ServiceMeshStatus,
 )
-from ...ports.service_mesh import IServiceMeshManager
+from mmf.core.security.ports.service_mesh import IServiceMeshManager
 
 logger = logging.getLogger(__name__)
 

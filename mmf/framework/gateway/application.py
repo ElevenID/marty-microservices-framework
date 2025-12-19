@@ -4,44 +4,47 @@ Gateway Application Service
 
 import logging
 
+from mmf.core.gateway import (
+    GatewayRequest,
+    GatewayResponse,
+    IGatewayRateLimiter,
+    IGatewayRequestHandler,
+    IGatewaySecurityHandler,
+    ILoadBalancer,
+    IRouteMatcher,
+    IServiceRegistry,
+    IUpstreamClient,
+    RouteConfig,
+    RouteNotFoundError,
+    UpstreamError,
+    UpstreamGroup,
+)
 from mmf.core.security.ports.authentication import IAuthenticator
-
-from .domain.exceptions import RouteNotFoundError, UpstreamError
-from .domain.models import GatewayRequest, GatewayResponse, RouteConfig, UpstreamGroup
-from .domain.rate_limit import GatewayRateLimiter
-from .domain.security import GatewaySecurityHandler
-from .domain.services import LoadBalancer, RouteMatcher
-from .ports.input import RequestHandlerPort
-from .ports.output import RateLimitStoragePort, ServiceRegistryPort, UpstreamClientPort
 
 logger = logging.getLogger(__name__)
 
 
-class GatewayService(RequestHandlerPort):
+class GatewayService(IGatewayRequestHandler):
     """Implementation of the Gateway Request Handler."""
 
     def __init__(
         self,
         routes: list[RouteConfig],
-        matcher: RouteMatcher,
-        load_balancer: LoadBalancer,
-        upstream_client: UpstreamClientPort,
-        service_registry: ServiceRegistryPort,
-        rate_limit_storage: RateLimitStoragePort | None = None,
-        authenticator: IAuthenticator | None = None,
+        matcher: IRouteMatcher,
+        load_balancer: ILoadBalancer,
+        upstream_client: IUpstreamClient,
+        service_registry: IServiceRegistry,
+        security_handler: IGatewaySecurityHandler,
+        rate_limiter: IGatewayRateLimiter,
     ):
         self.routes = routes
         self.matcher = matcher
         self.load_balancer = load_balancer
         self.upstream_client = upstream_client
         self.service_registry = service_registry
-        self.rate_limit_storage = rate_limit_storage
-        self.authenticator = authenticator
+        self.security_handler = security_handler
+        self.rate_limiter = rate_limiter
         self._upstream_groups: dict[str, UpstreamGroup] = {}
-
-        # Initialize handlers
-        self.security_handler = GatewaySecurityHandler(authenticator)
-        self.rate_limiter = GatewayRateLimiter(rate_limit_storage)
 
     async def handle_request(self, request: GatewayRequest) -> GatewayResponse:
         # 1. Match Route

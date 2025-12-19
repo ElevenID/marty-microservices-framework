@@ -5,16 +5,20 @@ This module provides services for handling security-related tasks in the gateway
 such as credential extraction.
 """
 
-from abc import ABC, abstractmethod
 from typing import Any
 
+from mmf.core.gateway import (
+    AuthenticationError,
+    AuthenticationType,
+    GatewayRequest,
+    ICredentialExtractor,
+    IGatewaySecurityHandler,
+    RouteConfig,
+)
 from mmf.core.security.ports.authentication import IAuthenticator
 
-from .exceptions import AuthenticationError
-from .models import AuthenticationType, GatewayRequest, RouteConfig
 
-
-class GatewaySecurityHandler:
+class GatewaySecurityHandler(IGatewaySecurityHandler):
     """
     Handles security validation for gateway requests.
     """
@@ -90,23 +94,7 @@ class GatewaySecurityHandler:
         return None
 
 
-class CredentialExtractor(ABC):
-    """Abstract base class for credential extraction strategies."""
-
-    @abstractmethod
-    def extract(self, request: GatewayRequest) -> dict[str, Any]:
-        """
-        Extract credentials from the request.
-
-        Returns:
-            dict: A dictionary of credentials suitable for the authenticator.
-
-        Raises:
-            AuthenticationError: If credentials are missing or invalid format.
-        """
-
-
-class ApiKeyExtractor(CredentialExtractor):
+class ApiKeyExtractor(ICredentialExtractor):
     """Extracts API Key from headers."""
 
     def extract(self, request: GatewayRequest) -> dict[str, Any]:
@@ -123,7 +111,7 @@ class ApiKeyExtractor(CredentialExtractor):
         return {"method": "api_key", "api_key": api_key}
 
 
-class BearerTokenExtractor(CredentialExtractor):
+class BearerTokenExtractor(ICredentialExtractor):
     """Extracts Bearer Token from Authorization header."""
 
     def extract(self, request: GatewayRequest) -> dict[str, Any]:
@@ -144,6 +132,6 @@ class CredentialExtractorFactory:
     }
 
     @classmethod
-    def get_extractor(cls, auth_type: AuthenticationType) -> CredentialExtractor | None:
+    def get_extractor(cls, auth_type: AuthenticationType) -> ICredentialExtractor | None:
         """Get the appropriate extractor for the auth type."""
         return cls._extractors.get(auth_type)

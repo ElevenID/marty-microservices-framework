@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from mmf.framework.messaging.domain.models import Message, RoutingConfig, RoutingRule
-from mmf.framework.messaging.domain.ports import IMessageRouter
+from mmf.core.messaging import IMessageRouter, Message, RoutingConfig, RoutingRule
 
 
 class MessageRouter(IMessageRouter):

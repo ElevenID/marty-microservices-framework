@@ -8,23 +8,23 @@ This document outlines the consolidated event bus strategy for the Marty Microse
 
 ### Existing Implementations
 
-1. **Enhanced Event Bus** (`src/marty_msf/framework/events/enhanced_event_bus.py`)
+1. **Enhanced Event Bus** (`mmf/framework/events/enhanced_event_bus.py`)
    - Kafka-only event bus with transactional outbox pattern
    - Complete lifecycle management (publish, consume, retry, DLQ)
    - Plugin integration support
    - **Status**: Primary implementation, feature-complete
 
-2. **Event Publisher** (`src/marty_msf/framework/events/publisher.py`)
+2. **Event Publisher** (`mmf/framework/events/publisher.py`)
    - Unified publisher for audit/notification/domain events
    - Kafka integration with outbox pattern support
    - **Status**: Overlapping functionality with Enhanced Event Bus
 
-3. **Outbox Repository** (`src/marty_msf/framework/database/outbox.py`)
+3. **Outbox Repository** (`mmf/framework/database/outbox.py`)
    - Database pattern implementation for transactional consistency
    - Simple outbox table management
    - **Status**: Superseded by Enhanced Event Bus outbox implementation
 
-4. **Event Streaming Core** (`src/marty_msf/framework/event_streaming/core.py`)
+4. **Event Streaming Core** (`mmf/framework/event_streaming/core.py`)
    - Event sourcing abstractions and domain event patterns
    - **Status**: Keep for event sourcing use cases
 
@@ -205,7 +205,7 @@ notification_event → topic: "notifications.{channel}.{type}"
 3. **Update Framework Exports**
 
    ```python
-   # src/marty_msf/framework/events/__init__.py
+   # mmf/framework/events/__init__.py
    from .enhanced_event_bus import EnhancedEventBus as UnifiedEventBus
    from .adapters import EventPublisherAdapter as EventPublisher  # Compatibility
    ```

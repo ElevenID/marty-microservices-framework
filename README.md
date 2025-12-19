@@ -61,6 +61,20 @@ MMF enforces a strict dependency rule:
 
 Detailed documentation is available in the `docs/` directory.
 
+* [Architecture Standards](docs/architecture/STANDARDS.md) - Strict guidelines for Hexagonal Architecture.
+* [Core Migration Guide](docs/CORE_MIGRATION_GUIDE.md) - Guide for migrating legacy code.
+* [Standardization Plan](docs/STANDARDIZATION_PLAN.md) - Roadmap for framework standardization.
+
+## 💡 Examples
+
+Explore the `examples/` directory for practical implementations:
+
+* **Authentication**: `authentication_examples.py`, `jwt_auth_demo.py`, `mfa_authentication_example.py`
+* **Domains**: `petstore_domain/`, `video_streaming_domain/`, `production-payment-service/`
+* **Resilience**: `resilience/`, `resilience_test.py`
+* **Security**: `security/`, `security_recovery_demo.py`
+* **Kubernetes**: `k8s/`
+
 ## ⚠️ Legacy Code
 
 Legacy components from the previous monolithic architecture have been moved to `boneyard/`.

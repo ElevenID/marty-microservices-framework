@@ -3,8 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from mmf.framework.messaging.domain.models import Message, MiddlewareStage
-from mmf.framework.messaging.domain.ports import IMessageMiddleware
+from mmf.core.messaging import IMessageMiddleware, Message, MiddlewareStage
 
 
 class MiddlewareChain:

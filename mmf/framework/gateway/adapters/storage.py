@@ -2,10 +2,10 @@
 Storage Adapter for Gateway
 """
 
-from ..ports.output import RateLimitStoragePort
+from mmf.core.gateway import IRateLimitStorage
 
 
-class InMemoryRateLimitAdapter(RateLimitStoragePort):
+class InMemoryRateLimitAdapter(IRateLimitStorage):
     """In-memory implementation of RateLimitStoragePort."""
 
     def __init__(self):

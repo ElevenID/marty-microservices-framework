@@ -124,9 +124,11 @@ class ResilienceManager(ResilienceManagerPort):
             if not bulkhead:
                 bulkhead = self._bulkhead_manager.create_bulkhead(op_name, config.bulkhead)
 
+            func_to_isolate = current_func
+
             async def bulkhead_wrapper() -> Any:
                 try:
-                    return await bulkhead.execute_async(current_func)  # type: ignore
+                    return await bulkhead.execute_async(func_to_isolate)  # type: ignore
                 except BulkheadError:
                     self._metrics.bulkhead_rejected_count += 1
                     raise
@@ -137,9 +139,11 @@ class ResilienceManager(ResilienceManagerPort):
         if config.circuit_breaker_enabled:
             circuit = get_circuit_breaker(op_name, config.circuit_breaker)
 
+            func_to_protect = current_func
+
             async def circuit_wrapper() -> Any:
                 try:
-                    return await circuit.call(current_func)
+                    return await circuit.call(func_to_protect)
                 except CircuitBreakerError:
                     self._metrics.circuit_breaker_open_count += 1
                     raise
@@ -148,10 +152,11 @@ class ResilienceManager(ResilienceManagerPort):
 
         # 1. Retry
         if config.retry_enabled:
+            func_to_retry = current_func
 
             async def retry_wrapper() -> Any:
                 try:
-                    return await retry_async(current_func, config=config.retry)
+                    return await retry_async(func_to_retry, config=config.retry)
                 except Exception:
                     self._metrics.retry_count += (
                         1  # This counts failed retry sequences, not individual retries

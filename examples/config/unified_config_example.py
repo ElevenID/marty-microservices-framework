@@ -10,15 +10,21 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from marty_msf.framework.config.manager import Environment
-from marty_msf.framework.config.unified import (
+from pydantic import BaseModel, Field
+
+from mmf.framework.infrastructure.config_manager import Environment
+from mmf.framework.infrastructure.unified_config import (
     ConfigurationStrategy,
     EnvironmentDetector,
     HostingEnvironment,
     SecretBackend,
     create_unified_config_manager,
 )
-from pydantic import BaseModel, Field
+
+# --- MOCK CLASSES FOR MISSING COMPONENTS ---
+# These components were removed or refactored.
+# This example is kept for reference but will not run as-is.
+# -------------------------------------------
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)

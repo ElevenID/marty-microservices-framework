@@ -9,9 +9,32 @@ import pytest
 import requests
 from jsonschema import ValidationError, validate
 
+# Skip marker for tests that require running server
+requires_running_server = pytest.mark.skipif(
+    True,  # Will be overridden by the dynamic check below
+    reason="Identity service not running at http://localhost:8000",
+)
+
+
+def _is_server_available() -> bool:
+    """Check if the identity service is running."""
+    try:
+        response = requests.get("http://localhost:8000/health", timeout=2)
+        return response.status_code == 200
+    except (requests.ConnectionError, requests.Timeout):
+        return False
+
+
+# Update skip condition dynamically
+requires_running_server = pytest.mark.skipif(
+    not _is_server_available(),
+    reason="Identity service not running at http://localhost:8000",
+)
+
 
 @pytest.mark.contract
 @pytest.mark.api_contract
+@requires_running_server
 class TestIdentityServiceContract:
     """Test suite for identity service API contracts."""
 
@@ -189,6 +212,7 @@ class TestDataSchemaValidation:
 
 @pytest.mark.contract
 @pytest.mark.backward_compatibility
+@requires_running_server
 class TestBackwardCompatibility:
     """Test suite for backward compatibility validation."""
 

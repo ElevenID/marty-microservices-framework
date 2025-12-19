@@ -7,13 +7,12 @@ It is part of the Infrastructure layer.
 
 from __future__ import annotations
 
-from mmf.framework.messaging.domain.models import (
+from mmf.core.messaging import (
     BackendConfig,
     BackendType,
+    IMessageBackend,
     MessagingError,
 )
-from mmf.framework.messaging.domain.ports import IMessageBackend
-from mmf.framework.messaging.infrastructure.adapters.faststream import FastStreamBackend
 from mmf.framework.messaging.infrastructure.adapters.memory import MemoryMessageBackend
 
 
@@ -29,8 +28,12 @@ class BackendFactory:
             BackendType.KAFKA,
             BackendType.RABBITMQ,
             BackendType.REDIS,
-            BackendType.PUBSUB,
+            BackendType.NATS,
         ):
+            from mmf.framework.messaging.infrastructure.adapters.faststream_adapter import (
+                FastStreamBackend,
+            )
+
             return FastStreamBackend(config)
         else:
             # In real implementation, create other backend types

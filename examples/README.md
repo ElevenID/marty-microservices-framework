@@ -1,14 +1,14 @@
 # Marty Microservices Framework - Examples
 
-This directory contains example implementations demonstrating the framework adoption flow: **clone → generate → add business logic**.
+This directory contains example implementations demonstrating the framework adoption flow: **clone → copy template → add business logic**.
 
 ## Framework Adoption Flow
 
 The Marty Microservices Framework is designed for a streamlined adoption process:
 
 1. **Clone** the framework repository
-2. **Generate** a new service using the production service generator
-3. **Add** your specific business logic to the generated structure
+2. **Copy** a service template from `mmf/examples/service_templates`
+3. **Add** your specific business logic to the structure
 
 ## Examples Structure
 
@@ -45,9 +45,6 @@ petstore_domain/
 
 A complete, production-ready payment processing service that demonstrates:
 
-A complete, production-ready payment processing service that demonstrates:
-
-- **Framework Adoption Flow**: Generated using `uv run python scripts/dev/generate_service.py production payment-service`
 - **Business Logic Integration**: Payment processing with fraud detection and bank API integration
 - **Comprehensive Patterns**: All Marty framework patterns implemented:
   - Structured logging with correlation IDs

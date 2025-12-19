@@ -2,42 +2,45 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from mmf.framework.gateway.application import GatewayService
-from mmf.framework.gateway.domain.exceptions import RouteNotFoundError, UpstreamError
-from mmf.framework.gateway.domain.models import (
+from mmf.core.gateway import (
     GatewayRequest,
     GatewayResponse,
     HTTPMethod,
+    ILoadBalancer,
+    IRouteMatcher,
+    IServiceRegistry,
+    IUpstreamClient,
     RouteConfig,
+    RouteNotFoundError,
+    UpstreamError,
 )
-from mmf.framework.gateway.domain.services import LoadBalancer, RouteMatcher
-from mmf.framework.gateway.ports.output import ServiceRegistryPort, UpstreamClientPort
+from mmf.framework.gateway.application import GatewayService
 
 
 @pytest.fixture
 def mock_matcher():
-    matcher = MagicMock(spec=RouteMatcher)
+    matcher = MagicMock(spec=IRouteMatcher)
     matcher.matches.return_value = True
     return matcher
 
 
 @pytest.fixture
 def mock_load_balancer():
-    lb = MagicMock(spec=LoadBalancer)
+    lb = MagicMock(spec=ILoadBalancer)
     lb.select_server.return_value = "http://upstream:8080"
     return lb
 
 
 @pytest.fixture
 def mock_upstream_client():
-    client = AsyncMock(spec=UpstreamClientPort)
+    client = AsyncMock(spec=IUpstreamClient)
     client.send_request.return_value = GatewayResponse(status_code=200, body=b"OK", headers={})
     return client
 
 
 @pytest.fixture
 def mock_registry():
-    registry = AsyncMock(spec=ServiceRegistryPort)
+    registry = AsyncMock(spec=IServiceRegistry)
     registry.get_service_instances.return_value = ["http://upstream:8080"]
     return registry
 
@@ -73,24 +76,16 @@ def gateway_service(
     mock_security_handler,
     mock_rate_limiter,
 ):
-    with (
-        patch(
-            "mmf.framework.gateway.application.GatewaySecurityHandler",
-            return_value=mock_security_handler,
-        ),
-        patch(
-            "mmf.framework.gateway.application.GatewayRateLimiter",
-            return_value=mock_rate_limiter,
-        ),
-    ):
-        service = GatewayService(
-            routes=[route_config],
-            matcher=mock_matcher,
-            load_balancer=mock_load_balancer,
-            upstream_client=mock_upstream_client,
-            service_registry=mock_registry,
-        )
-        return service
+    service = GatewayService(
+        routes=[route_config],
+        matcher=mock_matcher,
+        load_balancer=mock_load_balancer,
+        upstream_client=mock_upstream_client,
+        service_registry=mock_registry,
+        security_handler=mock_security_handler,
+        rate_limiter=mock_rate_limiter,
+    )
+    return service
 
 
 @pytest.mark.asyncio

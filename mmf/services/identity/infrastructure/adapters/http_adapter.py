@@ -8,7 +8,7 @@ from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
 
 from mmf.application.services.plugin_manager import PluginManager
-from mmf.framework.plugins.models import PluginContext
+from mmf.core.plugins import PluginContext
 from mmf.services.identity.application.ports_out import (
     AuthenticationCredentials,
     AuthenticationMethod,
@@ -213,9 +213,8 @@ class IdentityServiceApp:
         async def list_plugins():
             """List loaded plugins."""
             plugins = {}
-            # Access internal status dict since there's no public accessor for all statuses
-            # This is a bit hacky but works for now. Ideally PluginManager should expose this.
-            for plugin_id, status in self.plugin_manager._plugin_status.items():
+            # Use public accessor
+            for plugin_id, status in self.plugin_manager.list_plugins().items():
                 plugin = self.plugin_manager.registry.get_plugin(plugin_id)
                 version = "unknown"
                 if plugin:

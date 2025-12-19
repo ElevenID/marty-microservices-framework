@@ -42,13 +42,32 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Generic, TypeVar
 
-import boto3
 import yaml
-from azure.identity import DefaultAzureCredential
-from azure.keyvault.secrets import SecretClient  # type: ignore
-from google.cloud import secretmanager  # type: ignore
 from pydantic import BaseModel, ValidationError
 from pydantic_settings import BaseSettings
+
+# Optional cloud dependencies
+try:
+    import boto3
+
+    BOTO3_AVAILABLE = True
+except ImportError:
+    BOTO3_AVAILABLE = False
+
+try:
+    from azure.identity import DefaultAzureCredential
+    from azure.keyvault.secrets import SecretClient
+
+    AZURE_AVAILABLE = True
+except ImportError:
+    AZURE_AVAILABLE = False
+
+try:
+    from google.cloud import secretmanager
+
+    GCP_AVAILABLE = True
+except ImportError:
+    GCP_AVAILABLE = False
 
 from mmf.framework.security.adapters.secrets.environment_adapter import (
     EnvironmentSecretAdapter,
@@ -235,10 +254,8 @@ class AWSSecretsManagerBackend(SecretBackendInterface):
     def _check_availability(self) -> bool:
         """Check if AWS SDK is available."""
         if self._available is None:
-            try:
-                self._available = True
-            except ImportError:
-                self._available = False
+            self._available = BOTO3_AVAILABLE
+            if not self._available:
                 logger.warning("boto3 not available - AWS Secrets Manager backend disabled")
         return self._available
 
@@ -348,10 +365,8 @@ class GCPSecretManagerBackend(SecretBackendInterface):
     def _check_availability(self) -> bool:
         """Check if GCP SDK is available."""
         if self._available is None:
-            try:
-                self._available = True
-            except ImportError:
-                self._available = False
+            self._available = GCP_AVAILABLE
+            if not self._available:
                 logger.warning(
                     "google-cloud-secret-manager not available - GCP Secret Manager backend disabled"
                 )
@@ -472,10 +487,8 @@ class AzureKeyVaultBackend(SecretBackendInterface):
     def _check_availability(self) -> bool:
         """Check if Azure SDK is available."""
         if self._available is None:
-            try:
-                self._available = True
-            except ImportError:
-                self._available = False
+            self._available = AZURE_AVAILABLE
+            if not self._available:
                 logger.warning(
                     "azure-keyvault-secrets not available - Azure Key Vault backend disabled"
                 )

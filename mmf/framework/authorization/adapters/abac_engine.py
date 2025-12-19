@@ -20,8 +20,17 @@ Architecture:
 - ABACPolicy: Policy definition with conditions, effect, and patterns
 - ABACContext: Context for policy evaluation (principal, resource, action, environment)
 - PolicyEvaluationResult: Result of policy evaluation with metadata
-- ABACManager: Central manager for policy lifecycle and evaluation
-- ABACManagerService: DI-compatible service wrapper
+- InMemoryPolicyRepository: Thread-safe policy storage
+- ABACPolicyEvaluator: Policy evaluation logic
+- ABACManager: Facade for backward compatibility
+
+Protocol-based Design:
+- IConditionEvaluator: Protocol for condition evaluation
+- IPolicyMatcher: Protocol for request matching
+- IABACPolicy: Protocol for policy interface
+- IPolicyRepository: Protocol for policy storage
+- IPolicyEvaluator: Protocol for policy evaluation
+- IPolicyCache: Protocol for result caching
 
 Policy Evaluation:
 1. Filter applicable policies by resource/action patterns
@@ -52,6 +61,15 @@ from mmf.framework.authorization.api import (
     AttributeType,
     ConditionOperator,
     PolicyEffect,
+)
+from mmf.framework.authorization.ports.abac import (
+    ABACContext,
+    IABACPolicy,
+    IConditionEvaluator,
+    IPolicyCache,
+    IPolicyEvaluator,
+    IPolicyRepository,
+    PolicyEvaluationResult,
 )
 from mmf.framework.infrastructure.dependency_injection import (
     get_container,
@@ -197,28 +215,7 @@ class ABACPolicy:
     resource, action, and environment. Policies can be scoped to specific
     resource and action patterns, and are evaluated in priority order.
 
-    Attributes:
-        id: Unique policy identifier
-        name: Human-readable policy name
-        description: Policy purpose description
-        effect: Policy effect (ALLOW, DENY, AUDIT)
-        conditions: List of conditions that must all be true
-        resource_pattern: Pattern for resources (supports wildcards/regex)
-        action_pattern: Pattern for actions (supports wildcards/regex)
-        priority: Evaluation priority (lower = higher priority)
-        is_active: If False, policy is not evaluated
-        metadata: Additional policy metadata
-        created_at: Policy creation timestamp
-
-    Pattern Matching:
-        - "*" matches any value
-        - "prefix*" matches values starting with prefix
-        - "/regex/" matches values against regex pattern
-        - Exact string matches without wildcards
-
-    Evaluation:
-        All conditions must evaluate to true for policy to apply.
-        First matching policy by priority determines access decision.
+    Implements IABACPolicy protocol for protocol-based composition.
     """
 
     id: str
@@ -315,14 +312,7 @@ class ABACPolicy:
         return pattern == value
 
     def to_dict(self) -> dict[str, Any]:
-        """
-        Convert policy to dictionary representation.
-
-        Suitable for serialization, storage, or API responses.
-
-        Returns:
-            Dictionary with all policy attributes
-        """
+        """Convert policy to dictionary representation."""
         return {
             "id": self.id,
             "name": self.name,
@@ -346,127 +336,216 @@ class ABACPolicy:
         }
 
 
-@dataclass
-class ABACContext:
+# Re-export ABACContext and PolicyEvaluationResult from ports (single source of truth)
+# ABACContext and PolicyEvaluationResult are imported from ports above
+
+
+class InMemoryPolicyCache:
     """
-    Context for ABAC policy evaluation.
+    In-memory implementation of IPolicyCache.
 
-    Contains all attributes needed for policy evaluation: principal
-    information, resource being accessed, action being performed,
-    and environmental context.
+    Provides simple dictionary-based caching for policy evaluation results.
+    Thread-safety note: This implementation is not thread-safe.
+    """
 
-    Attributes:
-        principal: Principal attributes (user ID, roles, department, etc.)
-        resource: Resource identifier or pattern
-        action: Action being performed (read, write, delete, etc.)
-        environment: Environmental attributes (time, location, IP, etc.)
+    def __init__(self, enabled: bool = True):
+        self._cache: dict[str, PolicyEvaluationResult] = {}
+        self._enabled = enabled
 
-    Example:
+    @property
+    def enabled(self) -> bool:
+        """Whether caching is enabled."""
+        return self._enabled
+
+    def get(self, key: str) -> PolicyEvaluationResult | None:
+        """Get cached result."""
+        if not self._enabled:
+            return None
+        return self._cache.get(key)
+
+    def set(self, key: str, result: PolicyEvaluationResult) -> None:
+        """Cache a result."""
+        if self._enabled:
+            self._cache[key] = result
+
+    def invalidate(self) -> None:
+        """Invalidate all cached results."""
+        self._cache.clear()
+
+
+class InMemoryPolicyRepository:
+    """
+    In-memory implementation of IPolicyRepository.
+
+    Provides thread-safe policy storage with CRUD operations.
+    Implements IPolicyRepository protocol.
+    """
+
+    def __init__(self):
+        self._policies: dict[str, ABACPolicy] = {}
+
+    def add_policy(self, policy: ABACPolicy) -> bool:
+        """Add a new policy."""
+        if policy.id in self._policies:
+            raise ValueError(f"Policy '{policy.id}' already exists")
+        self._policies[policy.id] = policy
+        logger.info("Added ABAC policy: %s", policy.id)
+        return True
+
+    def remove_policy(self, policy_id: str) -> bool:
+        """Remove a policy by ID."""
+        if policy_id in self._policies:
+            del self._policies[policy_id]
+            logger.info("Removed ABAC policy: %s", policy_id)
+            return True
+        return False
+
+    def get_policy(self, policy_id: str) -> ABACPolicy | None:
+        """Get a policy by ID."""
+        return self._policies.get(policy_id)
+
+    def list_policies(self, active_only: bool = False) -> list[ABACPolicy]:
+        """List all policies sorted by priority."""
+        policies = list(self._policies.values())
+        if active_only:
+            policies = [p for p in policies if p.is_active]
+        return sorted(policies, key=lambda p: p.priority)
+
+    def get_applicable_policies(self, resource: str, action: str) -> list[ABACPolicy]:
+        """Get policies that apply to the given resource and action."""
+        applicable = []
+        for policy in self._policies.values():
+            if policy.is_active and policy.matches_request(resource, action):
+                applicable.append(policy)
+        return sorted(applicable, key=lambda p: p.priority)
+
+
+class ABACPolicyEvaluator:
+    """
+    Policy evaluation implementation.
+
+    Implements IPolicyEvaluator protocol with caching support.
+    Separates evaluation logic from policy storage.
+    """
+
+    def __init__(
+        self,
+        repository: InMemoryPolicyRepository,
+        cache: InMemoryPolicyCache | None = None,
+        default_effect: PolicyEffect = PolicyEffect.DENY,
+    ):
+        self._repository = repository
+        self._cache = cache or InMemoryPolicyCache()
+        self._default_effect = default_effect
+
+    def evaluate_access(
+        self,
+        principal: dict[str, Any],
+        resource: str,
+        action: str,
+        environment: dict[str, Any] | None = None,
+    ) -> PolicyEvaluationResult:
+        """Evaluate access request against policies."""
         context = ABACContext(
-            principal={"id": "user123", "roles": ["admin"], "department": "finance"},
-            resource="/api/v1/transactions/12345",
-            action="POST",
-            environment={"time_of_day": 14, "business_hours": True}
+            principal=principal,
+            resource=resource,
+            action=action,
+            environment=environment or {},
         )
-    """
+        return self._evaluate_context(context)
 
-    principal: dict[str, Any]
-    resource: str
-    action: str
-    environment: dict[str, Any]
+    def _evaluate_context(self, context: ABACContext) -> PolicyEvaluationResult:
+        """Evaluate context against policies."""
+        start_time = datetime.now()
 
-    def to_dict(self) -> dict[str, Any]:
-        """
-        Convert context to dictionary for policy evaluation.
+        try:
+            # Check cache
+            cache_key = self._get_cache_key(context)
+            cached = self._cache.get(cache_key)
+            if cached is not None:
+                return cached
 
-        Returns:
-            Dictionary with all context attributes
-        """
-        return {
-            "principal": self.principal,
-            "resource": self.resource,
-            "action": self.action,
-            "environment": self.environment,
-        }
+            # Get applicable policies sorted by priority
+            applicable_policies = self._repository.get_applicable_policies(
+                context.resource, context.action
+            )
 
+            evaluation_context = context.to_dict()
+            decision = self._default_effect
+            matched_policies = []
 
-@dataclass
-class PolicyEvaluationResult:
-    """
-    Result of ABAC policy evaluation.
+            # Evaluate policies in priority order
+            for policy in applicable_policies:
+                if policy.evaluate(evaluation_context):
+                    matched_policies.append(policy.id)
+                    decision = policy.effect
+                    break  # First matching policy determines decision
 
-    Contains the access decision, applicable policies, performance metrics,
-    and any errors encountered during evaluation.
+            evaluation_time = (datetime.now() - start_time).total_seconds() * 1000
 
-    Attributes:
-        decision: Policy effect (ALLOW, DENY, AUDIT)
-        applicable_policies: List of policy IDs that matched
-        evaluation_time_ms: Time taken to evaluate in milliseconds
-        context_snapshot: Copy of evaluation context for audit
-        error: Error message if evaluation failed
-    """
+            result = PolicyEvaluationResult(
+                decision=decision,
+                applicable_policies=matched_policies,
+                evaluation_time_ms=evaluation_time,
+                context_snapshot=evaluation_context,
+            )
 
-    decision: PolicyEffect
-    applicable_policies: list[str] = field(default_factory=list)
-    evaluation_time_ms: float = 0.0
-    context_snapshot: dict[str, Any] | None = None
-    error: str | None = None
+            self._cache.set(cache_key, result)
+
+            logger.debug(
+                "ABAC evaluation: %s for %s on %s (%sms, %d policies matched)",
+                decision.value,
+                context.action,
+                context.resource,
+                f"{evaluation_time:.2f}",
+                len(matched_policies),
+            )
+
+            return result
+
+        except (ValueError, TypeError, KeyError) as e:
+            logger.error("ABAC evaluation failed: %s", e)
+            return PolicyEvaluationResult(decision=PolicyEffect.DENY, error=str(e))
+
+    def _get_cache_key(self, context: ABACContext) -> str:
+        """Generate cache key for context."""
+        context_str = json.dumps(context.to_dict(), sort_keys=True)
+        return f"abac:{hash(context_str)}"
 
 
 class ABACManager:
     """
-    Comprehensive ABAC management system.
+    Facade for ABAC management system (backward-compatible).
 
-    Central manager for attribute-based access control, handling:
-    - Policy lifecycle (create, update, delete)
-    - Policy evaluation with context
-    - Pattern matching for resources and actions
-    - Priority-based policy resolution
-    - Result caching for performance
-    - Configuration-based policy management
+    This class now delegates to focused components:
+    - InMemoryPolicyRepository: Policy storage
+    - InMemoryPolicyCache: Result caching
+    - ABACPolicyEvaluator: Policy evaluation
 
-    Policy Evaluation Process:
-    1. Filter policies by resource/action patterns
-    2. Sort by priority (lower number = higher priority)
-    3. Evaluate conditions in priority order
-    4. First matching policy determines decision
-    5. Cache result for performance
-
-    Default Policies:
-    - admin_access: Admins have full access (priority 10)
-    - business_hours_sensitive: Sensitive operations during business hours (priority 50)
-    - high_value_transaction: High-value transactions require manager approval (priority 30)
-    - default_deny: Deny all access by default (priority 1000)
-
-    Thread Safety:
-        This implementation is not thread-safe. For concurrent access,
-        external synchronization is required.
-
-    Performance:
-        - Results are cached by context hash
-        - Cache is invalidated on policy changes
-        - Configurable cache enable/disable
+    The facade pattern maintains backward compatibility while
+    allowing internal refactoring to protocol-based composition.
     """
 
     def __init__(self):
         """Initialize ABAC manager with default policies."""
-        self.policies: dict[str, ABACPolicy] = {}
-        self.policy_cache: dict[str, PolicyEvaluationResult] = {}
+        self._repository = InMemoryPolicyRepository()
+        self._cache = InMemoryPolicyCache()
+        self._evaluator = ABACPolicyEvaluator(
+            repository=self._repository,
+            cache=self._cache,
+            default_effect=PolicyEffect.DENY,
+        )
+
+        # Expose for backward compatibility
+        self.policies = self._repository._policies
+        self.policy_cache = self._cache._cache
         self.cache_enabled = True
         self.default_effect = PolicyEffect.DENY
 
         self._initialize_default_policies()
 
     def _initialize_default_policies(self):
-        """
-        Create default ABAC policies.
-
-        Default policies provide baseline access control:
-        - Admin full access
-        - Business hours restrictions for sensitive operations
-        - High-value transaction approval requirements
-        - Default deny for unmatched requests
-        """
+        """Create default ABAC policies."""
         # Admin access policy
         admin_policy = ABACPolicy(
             id="admin_access",
@@ -553,130 +632,30 @@ class ABACManager:
         logger.info("Initialized default ABAC policies")
 
     def add_policy(self, policy: ABACPolicy) -> bool:
-        """
-        Add a new ABAC policy.
-
-        Validates policy uniqueness and adds to policy store.
-        Clears cache to ensure fresh evaluation.
-
-        Args:
-            policy: Policy to add
-
-        Returns:
-            True if added successfully, False on error
-
-        Raises:
-            ValueError: If policy ID already exists
-        """
+        """Add a new ABAC policy."""
         try:
-            if policy.id in self.policies:
-                raise ValueError(f"Policy '{policy.id}' already exists")
-
-            self.policies[policy.id] = policy
-            self._clear_cache()
-
-            logger.info("Added ABAC policy: %s", policy.id)
-            return True
-
+            result = self._repository.add_policy(policy)
+            if result:
+                self._cache.invalidate()
+            return result
         except (ValueError, TypeError) as e:
             logger.error("Failed to add ABAC policy %s: %s", policy.id, e)
             return False
 
     def remove_policy(self, policy_id: str) -> bool:
-        """
-        Remove an ABAC policy.
-
-        Removes policy from store and clears cache.
-
-        Args:
-            policy_id: ID of policy to remove
-
-        Returns:
-            True if removed, False if not found
-        """
+        """Remove an ABAC policy."""
         try:
-            if policy_id in self.policies:
-                del self.policies[policy_id]
-                self._clear_cache()
-                logger.info("Removed ABAC policy: %s", policy_id)
-                return True
-            return False
-
+            result = self._repository.remove_policy(policy_id)
+            if result:
+                self._cache.invalidate()
+            return result
         except (KeyError, ValueError) as e:
             logger.error("Failed to remove ABAC policy %s: %s", policy_id, e)
             return False
 
     def evaluate_access(self, context: ABACContext) -> PolicyEvaluationResult:
-        """
-        Evaluate access request against ABAC policies.
-
-        Process:
-        1. Check cache for previous evaluation
-        2. Filter applicable policies by resource/action patterns
-        3. Sort policies by priority (lower = higher priority)
-        4. Evaluate conditions in priority order
-        5. First matching policy determines decision
-        6. Cache result for future requests
-
-        Args:
-            context: Evaluation context with all attributes
-
-        Returns:
-            PolicyEvaluationResult with decision and metadata
-        """
-        start_time = datetime.now()
-
-        try:
-            # Check cache
-            cache_key = self._get_cache_key(context)
-            if self.cache_enabled and cache_key in self.policy_cache:
-                return self.policy_cache[cache_key]
-
-            # Get applicable policies sorted by priority
-            applicable_policies = self._get_applicable_policies(context.resource, context.action)
-            applicable_policies.sort(key=lambda p: p.priority)
-
-            evaluation_context = context.to_dict()
-            decision = self.default_effect
-            matched_policies = []
-
-            # Evaluate policies in priority order
-            for policy in applicable_policies:
-                if policy.evaluate(evaluation_context):
-                    matched_policies.append(policy.id)
-                    decision = policy.effect
-
-                    # First matching policy determines decision
-                    break
-
-            # Calculate evaluation time
-            evaluation_time = (datetime.now() - start_time).total_seconds() * 1000
-
-            result = PolicyEvaluationResult(
-                decision=decision,
-                applicable_policies=matched_policies,
-                evaluation_time_ms=evaluation_time,
-                context_snapshot=evaluation_context,
-            )
-
-            # Cache result
-            if self.cache_enabled:
-                self.policy_cache[cache_key] = result
-
-            logger.debug(
-                "ABAC evaluation: %s for %s on %s (%sms, %d policies matched)",
-                decision.value,
-                context.action,
-                context.resource,
-                f"{evaluation_time:.2f}",
-                len(matched_policies),
-            )
-
-            return result
-
-        except (ValueError, TypeError, KeyError) as e:
-            logger.error("ABAC evaluation failed: %s", e)
-            return PolicyEvaluationResult(decision=PolicyEffect.DENY, error=str(e))
+        """Evaluate access request against ABAC policies."""
+        return self._evaluator._evaluate_context(context)
 
     def check_access(
         self,
@@ -685,25 +664,8 @@ class ABACManager:
         action: str,
         environment: dict[str, Any] | None = None,
     ) -> bool:
-        """
-        Check if access should be allowed.
-
-        Convenience method for simple allow/deny decision.
-
-        Args:
-            principal: Principal attributes
-            resource: Resource identifier
-            action: Action to perform
-            environment: Optional environmental attributes
-
-        Returns:
-            True if access allowed (ALLOW or AUDIT), False otherwise
-        """
-        context = ABACContext(
-            principal=principal, resource=resource, action=action, environment=environment or {}
-        )
-
-        result = self.evaluate_access(context)
+        """Check if access should be allowed."""
+        result = self._evaluator.evaluate_access(principal, resource, action, environment)
         return result.decision in [PolicyEffect.ALLOW, PolicyEffect.AUDIT]
 
     def require_access(
@@ -713,20 +675,7 @@ class ABACManager:
         action: str,
         environment: dict[str, Any] | None = None,
     ):
-        """
-        Require access or raise AuthorizationError.
-
-        Convenience method for enforcing access control.
-
-        Args:
-            principal: Principal attributes
-            resource: Resource identifier
-            action: Action to perform
-            environment: Optional environmental attributes
-
-        Raises:
-            AuthorizationError: If access denied
-        """
+        """Require access or raise AuthorizationError."""
         if not self.check_access(principal, resource, action, environment):
             raise AuthorizationError(
                 f"ABAC policy denied access to {action} on {resource}",
@@ -736,44 +685,17 @@ class ABACManager:
             )
 
     def _get_applicable_policies(self, resource: str, action: str) -> list[ABACPolicy]:
-        """
-        Get policies that apply to the given resource and action.
-
-        Filters policies by active status and pattern matching.
-
-        Args:
-            resource: Resource identifier
-            action: Action being performed
-
-        Returns:
-            List of applicable policies
-        """
-        applicable = []
-
-        for policy in self.policies.values():
-            if policy.is_active and policy.matches_request(resource, action):
-                applicable.append(policy)
-
-        return applicable
+        """Get policies that apply to the given resource and action."""
+        return self._repository.get_applicable_policies(resource, action)
 
     def _get_cache_key(self, context: ABACContext) -> str:
-        """
-        Generate cache key for context.
-
-        Uses hash of sorted JSON representation for consistency.
-
-        Args:
-            context: Evaluation context
-
-        Returns:
-            Cache key string
-        """
+        """Generate cache key for context."""
         context_str = json.dumps(context.to_dict(), sort_keys=True)
         return f"abac:{hash(context_str)}"
 
     def _clear_cache(self):
         """Clear policy evaluation cache."""
-        self.policy_cache.clear()
+        self._cache.invalidate()
 
     def load_policies_from_config(self, config_data: dict[str, Any]) -> bool:
         """
@@ -988,21 +910,25 @@ def reset_abac_manager():
     )
 
 
-# Initialize and register the service as singleton on module load
-_abac_service = ABACManagerService()
-register_instance(ABACManagerService, _abac_service)
-
-
 __all__ = [
+    # Protocols (re-exported from ports)
+    "ABACContext",
+    "PolicyEvaluationResult",
+    # Dataclasses
     "AttributeCondition",
     "ABACPolicy",
-    "ABACContext",
+    # Focused components (Protocol implementations)
+    "InMemoryPolicyCache",
+    "InMemoryPolicyRepository",
+    "ABACPolicyEvaluator",
+    # Facade (backward compatible)
     "ABACManager",
-    "PolicyEvaluationResult",
+    "ABACManagerService",
+    # Enums (re-exported from api)
     "AttributeType",
     "PolicyEffect",
     "ConditionOperator",
-    "ABACManagerService",
+    # DI helpers
     "get_abac_manager",
     "reset_abac_manager",
 ]

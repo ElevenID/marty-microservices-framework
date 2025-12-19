@@ -18,8 +18,14 @@ class TestTrustConfig:
         with pytest.raises(ValueError, match="PKD update interval must be positive"):
             PKDConfig(update_interval_hours=0)
 
+        with pytest.raises(ValueError, match="PKD update interval must be positive"):
+            PKDConfig(update_interval_hours=-1)
+
         with pytest.raises(ValueError, match="PKD timeout must be positive"):
             PKDConfig(timeout_seconds=0)
+
+        with pytest.raises(ValueError, match="PKD timeout must be positive"):
+            PKDConfig(timeout_seconds=-1)
 
     def test_trust_anchor_config_defaults(self):
         config = TrustAnchorConfig()
@@ -29,6 +35,9 @@ class TestTrustConfig:
     def test_trust_anchor_config_validation(self):
         with pytest.raises(ValueError, match="Trust anchor update interval must be positive"):
             TrustAnchorConfig(update_interval_hours=0)
+
+        with pytest.raises(ValueError, match="Trust anchor update interval must be positive"):
+            TrustAnchorConfig(update_interval_hours=-1)
 
     def test_trust_store_config_from_dict(self):
         data = {
@@ -55,3 +64,12 @@ class TestTrustConfig:
         # Check defaults for missing fields
         assert config.pkd.max_retries == 3
         assert config.trust_anchor.validation_timeout_seconds == 30
+
+    def test_trust_store_config_from_dict_partial(self):
+        data = {"pkd": {"service_url": "https://pkd.example.com"}}
+
+        config = TrustStoreConfig.from_dict(data)
+
+        assert config.pkd.service_url == "https://pkd.example.com"
+        assert config.pkd.enabled is True  # Default
+        assert config.trust_anchor.certificate_store_path == "/app/data/trust"  # Default

@@ -28,9 +28,9 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from .abac import ABACContext, ABACManager, get_abac_manager
+from .adapters.abac_engine import ABACContext, ABACManager, get_abac_manager
+from .adapters.rbac_engine import RBACManager, get_rbac_manager
 from .api import AuthorizationContext, AuthorizationResult, IAuthorizer, User
-from .rbac import RBACManager, get_rbac_manager
 
 logger = logging.getLogger(__name__)
 

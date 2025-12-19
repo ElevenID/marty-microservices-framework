@@ -2,17 +2,21 @@
 Gateway Rate Limiting Domain Service
 """
 
-from ..ports.output import RateLimitStoragePort
-from .exceptions import RateLimitExceededError
-from .models import GatewayRequest, RouteConfig
+from mmf.core.gateway import (
+    GatewayRequest,
+    IGatewayRateLimiter,
+    IRateLimitStorage,
+    RateLimitExceededError,
+    RouteConfig,
+)
 
 
-class GatewayRateLimiter:
+class GatewayRateLimiter(IGatewayRateLimiter):
     """
     Handles rate limiting for gateway requests.
     """
 
-    def __init__(self, storage: RateLimitStoragePort | None = None):
+    def __init__(self, storage: IRateLimitStorage | None = None):
         self.storage = storage
 
     async def check_rate_limit(self, route: RouteConfig, request: GatewayRequest) -> None:

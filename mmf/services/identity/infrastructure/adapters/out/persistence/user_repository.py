@@ -1,17 +1,17 @@
 """Concrete repository implementation for the identity service."""
 
 import os
-
-# Import existing framework components
 import sys
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import delete, func, select
 
 from mmf.core.domain.ports.repository import Repository
 from mmf.services.identity.domain.models.authenticated_user import AuthenticatedUser
+from mmf.services.identity.infrastructure.adapters.out.persistence.models import (
+    AuthenticatedUserModel,
+)
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../../src"))
 
@@ -32,113 +32,112 @@ class AuthenticatedUserRepository(Repository[AuthenticatedUser]):
         self.db_manager = db_manager
 
     async def save(self, entity: AuthenticatedUser) -> AuthenticatedUser:
-        """Save an authenticated user entity.
-
-        Note: AuthenticatedUser is a value object, so this would typically
-        be used for caching or session storage rather than persistent storage.
-        """
-        # For demonstration - in practice this might store session data
-        async with self.db_manager.get_transaction():
-            # This would involve converting to a persistence model
-            # and saving to database if needed
+        """Save an authenticated user entity."""
+        async with self.db_manager.get_transaction() as session:
+            model = AuthenticatedUserModel(
+                user_id=entity.user_id,
+                username=entity.username,
+                email=entity.email,
+                roles=list(entity.roles),
+                permissions=list(entity.permissions),
+                session_id=entity.session_id,
+                auth_method=entity.auth_method,
+                expires_at=entity.expires_at,
+                metadata_=entity.metadata,
+                created_at=entity.created_at,
+            )
+            await session.merge(model)
             return entity
 
-    async def find_by_id(self, entity_id: UUID) -> AuthenticatedUser | None:
-        """Find authenticated user by ID.
-
-        Args:
-            entity_id: The unique identifier
-
-        Returns:
-            The authenticated user if found, None otherwise
-        """
-        # Implementation would depend on how users are stored
-        # This is a placeholder showing the interface
-        return None
+    async def find_by_id(self, entity_id: UUID | str) -> AuthenticatedUser | None:
+        """Find authenticated user by ID."""
+        id_str = str(entity_id)
+        async with self.db_manager.get_transaction() as session:
+            result = await session.execute(
+                select(AuthenticatedUserModel).where(AuthenticatedUserModel.user_id == id_str)
+            )
+            model = result.scalar_one_or_none()
+            if not model:
+                return None
+            return AuthenticatedUser(**model.to_dict())
 
     async def find_all(self, skip: int = 0, limit: int = 100) -> list[AuthenticatedUser]:
-        """Find all authenticated users with pagination.
-
-        Args:
-            skip: Number of users to skip
-            limit: Maximum number of users to return
-
-        Returns:
-            List of authenticated users
-        """
-        # Implementation placeholder
-        return []
+        """Find all authenticated users with pagination."""
+        async with self.db_manager.get_transaction() as session:
+            result = await session.execute(select(AuthenticatedUserModel).offset(skip).limit(limit))
+            models = result.scalars().all()
+            return [AuthenticatedUser(**model.to_dict()) for model in models]
 
     async def update(
         self, entity_id: UUID | str | int, updates: dict[str, Any]
     ) -> AuthenticatedUser | None:
-        """Update an authenticated user entity.
+        """Update an authenticated user entity."""
+        id_str = str(entity_id)
+        async with self.db_manager.get_transaction() as session:
+            # First check if exists
+            result = await session.execute(
+                select(AuthenticatedUserModel).where(AuthenticatedUserModel.user_id == id_str)
+            )
+            model = result.scalar_one_or_none()
+            if not model:
+                return None
 
-        Args:
-            entity_id: The unique identifier
-            updates: Dictionary of fields to update
+            # Update fields
+            for key, value in updates.items():
+                if hasattr(model, key):
+                    setattr(model, key, value)
+                elif key == "metadata":
+                    model.metadata_ = value
 
-        Returns:
-            The updated user if found, None otherwise
-        """
-        # Implementation placeholder
-        return None
+            await session.merge(model)
+            return AuthenticatedUser(**model.to_dict())
 
-    async def delete(self, entity_id: UUID) -> bool:
-        """Delete an authenticated user by ID.
+    async def delete(self, entity_id: UUID | str) -> bool:
+        """Delete an authenticated user by ID."""
+        id_str = str(entity_id)
+        async with self.db_manager.get_transaction() as session:
+            result = await session.execute(
+                delete(AuthenticatedUserModel).where(AuthenticatedUserModel.user_id == id_str)
+            )
+            return result.rowcount > 0
 
-        Args:
-            entity_id: The unique identifier
-
-        Returns:
-            True if user was deleted, False if not found
-        """
-        # Implementation placeholder
-        return False
-
-    async def exists(self, entity_id: UUID) -> bool:
-        """Check if an authenticated user exists.
-
-        Args:
-            entity_id: The unique identifier
-
-        Returns:
-            True if user exists, False otherwise
-        """
-        # Implementation placeholder
-        return False
+    async def exists(self, entity_id: UUID | str) -> bool:
+        """Check if an authenticated user exists."""
+        id_str = str(entity_id)
+        async with self.db_manager.get_transaction() as session:
+            result = await session.execute(
+                select(AuthenticatedUserModel.user_id).where(
+                    AuthenticatedUserModel.user_id == id_str
+                )
+            )
+            return result.first() is not None
 
     async def count(self) -> int:
-        """Count total number of authenticated users.
-
-        Returns:
-            Total count of users
-        """
-        # Implementation placeholder
-        return 0
+        """Count total number of authenticated users."""
+        async with self.db_manager.get_transaction() as session:
+            result = await session.execute(select(func.count(AuthenticatedUserModel.user_id)))
+            return result.scalar() or 0
 
     async def find_by_username(self, username: str) -> AuthenticatedUser | None:
-        """Find authenticated user by username.
-
-        Args:
-            username: The username to search for
-
-        Returns:
-            The authenticated user if found, None otherwise
-        """
-        # Implementation would query the underlying user storage
-        _ = username  # Acknowledge unused parameter
-        return None
+        """Find authenticated user by username."""
+        async with self.db_manager.get_transaction() as session:
+            result = await session.execute(
+                select(AuthenticatedUserModel).where(AuthenticatedUserModel.username == username)
+            )
+            model = result.scalar_one_or_none()
+            if not model:
+                return None
+            return AuthenticatedUser(**model.to_dict())
 
     async def find_by_session_id(self, session_id: str) -> AuthenticatedUser | None:
-        """Find authenticated user by session ID.
-
-        Args:
-            session_id: The session ID to search for
-
-        Returns:
-            The authenticated user if found, None otherwise
-        """
-        # Implementation would query session storage
-        _ = session_id  # Acknowledge unused parameter
-        return None
+        """Find authenticated user by session ID."""
+        async with self.db_manager.get_transaction() as session:
+            result = await session.execute(
+                select(AuthenticatedUserModel).where(
+                    AuthenticatedUserModel.session_id == session_id
+                )
+            )
+            model = result.scalar_one_or_none()
+            if not model:
+                return None
+            return AuthenticatedUser(**model.to_dict())

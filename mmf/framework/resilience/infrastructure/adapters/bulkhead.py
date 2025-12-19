@@ -12,6 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 from functools import wraps
 from typing import Any, TypeVar
 
+from mmf.core.registry import get_service, register_singleton
 from mmf.framework.resilience.domain.config import BulkheadConfig, BulkheadType
 from mmf.framework.resilience.domain.exceptions import BulkheadError
 
@@ -391,13 +392,17 @@ class BulkheadManager:
             self._bulkheads.clear()
 
 
-# Global bulkhead manager
-_bulkhead_manager = BulkheadManager()
+# Global bulkhead manager replaced with Service Registry pattern
 
 
 def get_bulkhead_manager() -> BulkheadManager:
     """Get the global bulkhead manager."""
-    return _bulkhead_manager
+    try:
+        return get_service(BulkheadManager)
+    except KeyError:
+        manager = BulkheadManager()
+        register_singleton(BulkheadManager, manager)
+        return manager
 
 
 def bulkhead_isolate(

@@ -13,7 +13,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.security import HTTPBearer
 
 # Import new modular security architecture
-from marty_msf.security import (  # Bootstrap functions; Core interfaces; Data models
+from mmf.framework.security import (  # Bootstrap functions; Core interfaces; Data models
     AuthenticationResult,
     AuthorizationContext,
     AuthorizationResult,

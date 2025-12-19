@@ -13,7 +13,7 @@ hexagonal architecture patterns.
 ### Before: Monolithic Structure
 
 ```text
-src/marty_msf/audit_compliance/
+mmf/audit_compliance/
 ├── monitoring.py                    # 1,300+ lines of mixed concerns
 ├── compliance_scanner.py            # Tightly coupled scanning logic
 ├── threat_detector.py               # Embedded threat analysis

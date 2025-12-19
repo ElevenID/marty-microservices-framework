@@ -5,11 +5,13 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
-from mmf.framework.messaging.domain.models import ConsumerConfig, Message, MessageStatus
-from mmf.framework.messaging.domain.ports import (
+from mmf.core.messaging import (
+    ConsumerConfig,
     IMessageBackend,
     IMessageConsumer,
     IMessageSerializer,
+    Message,
+    MessageStatus,
 )
 from mmf.framework.messaging.infrastructure.adapters.serializer import (
     JSONMessageSerializer,

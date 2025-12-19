@@ -10,7 +10,10 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from ..enums import UserType
 
 
 @dataclass(frozen=True)
@@ -32,6 +35,9 @@ class AuthenticatedUser:
     expires_at: datetime | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    # Extended fields for user type support
+    user_type: str | None = None  # 'administrator' or 'applicant'
+    applicant_id: str | None = None  # Links to ApplicantRecord for applicant users
 
     def __post_init__(self):
         """Validate the authenticated user data."""
@@ -91,6 +97,14 @@ class AuthenticatedUser:
         """Check if user has all of the specified permissions."""
         return permissions.issubset(self.permissions)
 
+    def is_administrator(self) -> bool:
+        """Check if user is an administrator."""
+        return self.user_type == "administrator" or "administrator" in self.roles
+
+    def is_applicant(self) -> bool:
+        """Check if user is an applicant."""
+        return self.user_type == "applicant" or "applicant" in self.roles
+
     def is_expired(self) -> bool:
         """Check if the authentication has expired."""
         if not self.expires_at:
@@ -117,6 +131,8 @@ class AuthenticatedUser:
             expires_at=self.expires_at,
             metadata=self.metadata,
             created_at=self.created_at,
+            user_type=self.user_type,
+            applicant_id=self.applicant_id,
         )
 
     def with_expiry(self, expires_at: datetime) -> AuthenticatedUser:
@@ -132,6 +148,8 @@ class AuthenticatedUser:
             expires_at=expires_at,
             metadata=self.metadata,
             created_at=self.created_at,
+            user_type=self.user_type,
+            applicant_id=self.applicant_id,
         )
 
     def add_role(self, role: str) -> AuthenticatedUser:
@@ -149,6 +167,8 @@ class AuthenticatedUser:
             expires_at=self.expires_at,
             metadata=self.metadata,
             created_at=self.created_at,
+            user_type=self.user_type,
+            applicant_id=self.applicant_id,
         )
 
     def add_permission(self, permission: str) -> AuthenticatedUser:
@@ -166,6 +186,8 @@ class AuthenticatedUser:
             expires_at=self.expires_at,
             metadata=self.metadata,
             created_at=self.created_at,
+            user_type=self.user_type,
+            applicant_id=self.applicant_id,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -181,6 +203,8 @@ class AuthenticatedUser:
             "expires_at": self.expires_at.isoformat() if self.expires_at else None,
             "metadata": self.metadata,
             "created_at": self.created_at.isoformat(),
+            "user_type": self.user_type,
+            "applicant_id": self.applicant_id,
         }
 
     @classmethod
@@ -203,6 +227,8 @@ class AuthenticatedUser:
             expires_at=expires_at,
             metadata=data.get("metadata", {}),
             created_at=created_at,
+            user_type=data.get("user_type"),
+            applicant_id=data.get("applicant_id"),
         )
 
 

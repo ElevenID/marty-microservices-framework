@@ -228,6 +228,10 @@ class DIContainer(metaclass=SingletonMeta):
             if service_type in self._services:
                 return cast(T, self._services[service_type])
 
+            # Check enhanced registrations
+            if service_type in self._registrations:
+                return self._get_or_create_service(service_type)
+
             # Create instance using factory
             if service_type in self._factories:
                 factory = self._factories[service_type]
@@ -264,7 +268,11 @@ class DIContainer(metaclass=SingletonMeta):
     def has(self, service_type: type[T]) -> bool:
         """Check if a service type is registered."""
         with self._lock:
-            return service_type in self._services or service_type in self._factories
+            return (
+                service_type in self._services
+                or service_type in self._factories
+                or service_type in self._registrations
+            )
 
     def remove(self, service_type: type[T]) -> bool:
         """
@@ -303,16 +311,35 @@ class DIContainer(metaclass=SingletonMeta):
         with self._lock:
             # Shutdown all services
             for service in self._services.values():
-                if hasattr(service, "shutdown"):
+                if hasattr(service, "shutdown") and not isinstance(service, type):
                     try:
                         service.shutdown()
                     except (AttributeError, RuntimeError):
                         # Log error but don't re-raise during cleanup
                         pass
 
+            # Shutdown registered services
+            for registration in self._registrations.values():
+                if (
+                    registration.instance
+                    and hasattr(registration.instance, "shutdown")
+                    and not isinstance(registration.instance, type)
+                ):
+                    try:
+                        registration.instance.shutdown()
+                    except (AttributeError, RuntimeError):
+                        pass
+
             self._services.clear()
             self._factories.clear()
             self._configurations.clear()
+            self._registrations.clear()
+            self._scopes.clear()
+
+            # Re-create default scope
+            self._default_scope = ServiceScope("default")
+            self._scopes["default"] = self._default_scope
+            self._current_scope = self._default_scope
 
     def register_service(
         self,
@@ -481,6 +508,12 @@ class _ContainerSingleton:
             if cls._instance is not None:
                 cls._instance.clear()
                 cls._instance = None
+
+            # Also clear from SingletonMeta to ensure fresh instance
+            if DIContainer in SingletonMeta._instances:
+                # Ensure it's cleared
+                SingletonMeta._instances[DIContainer].clear()
+                del SingletonMeta._instances[DIContainer]
 
 
 def get_container() -> DIContainer:

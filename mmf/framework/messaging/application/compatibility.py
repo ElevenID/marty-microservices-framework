@@ -4,10 +4,9 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
+from mmf.core.messaging import IMessageBackend, IMessageQueue, Message, QueueConfig
 from mmf.framework.messaging.application.dlq import DLQManager
 from mmf.framework.messaging.application.manager import MessagingManager
-from mmf.framework.messaging.domain.models import Message, QueueConfig
-from mmf.framework.messaging.domain.ports import IMessageBackend, IMessageQueue
 
 
 class MessageQueue:

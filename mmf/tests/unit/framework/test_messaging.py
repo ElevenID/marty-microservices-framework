@@ -2,8 +2,7 @@ import asyncio
 
 import pytest
 
-from mmf.framework.messaging.bootstrap import create_messaging_manager
-from mmf.framework.messaging.domain.models import (
+from mmf.core.messaging import (
     ConsumerConfig,
     ExchangeConfig,
     Message,
@@ -11,6 +10,7 @@ from mmf.framework.messaging.domain.models import (
     ProducerConfig,
     QueueConfig,
 )
+from mmf.framework.messaging.bootstrap import create_messaging_manager
 
 
 @pytest.mark.unit

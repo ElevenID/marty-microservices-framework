@@ -6,18 +6,18 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from mmf.core.security.domain.models.result import AuthenticationResult
-from mmf.core.security.domain.models.user import User
-from mmf.core.security.ports.authentication import IAuthenticator
-from mmf.framework.gateway.domain.models import (
+from mmf.core.gateway import (
+    AuthenticationError,
     AuthenticationType,
     GatewayRequest,
     HTTPMethod,
     RouteConfig,
 )
+from mmf.core.security.domain.models.result import AuthenticationResult
+from mmf.core.security.domain.models.user import User
+from mmf.core.security.ports.authentication import IAuthenticator
 from mmf.framework.gateway.domain.security import (
     ApiKeyExtractor,
-    AuthenticationError,
     BearerTokenExtractor,
     CredentialExtractorFactory,
     GatewaySecurityHandler,

@@ -33,7 +33,13 @@ from prometheus_client import (
     generate_latest,
 )
 
-from mmf.framework.observability.domain.protocols import HealthStatus, MetricType
+from mmf.framework.observability.domain.protocols import (
+    HealthCheck,
+    HealthStatus,
+    IHealthChecker,
+    IMetricsCollector,
+    MetricType,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -45,21 +51,6 @@ class AlertSeverity(Enum):
     WARNING = "warning"
     ERROR = "error"
     CRITICAL = "critical"
-
-
-@dataclass
-class HealthCheck:
-    """Health check definition."""
-
-    name: str
-    check_func: Callable[[], bool]
-    timeout: float = 5.0
-    interval: float = 30.0
-    enabled: bool = True
-    last_run: datetime | None = None
-    last_status: HealthStatus = HealthStatus.UNKNOWN
-    failure_count: int = 0
-    max_failures: int = 3
 
 
 @dataclass
@@ -87,7 +78,7 @@ class Alert:
     labels: builtins.dict[str, str] = field(default_factory=dict)
 
 
-class MetricsCollector:
+class MetricsCollector(IMetricsCollector):
     """Collects and manages metrics using Prometheus."""
 
     def __init__(self, service_name: str = "microservice", registry=None):
@@ -247,7 +238,7 @@ class MetricsCollector:
         }
 
 
-class HealthChecker:
+class HealthChecker(IHealthChecker):
     """Manages health checks."""
 
     def __init__(self):

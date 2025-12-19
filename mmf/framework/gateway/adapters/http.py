@@ -4,14 +4,13 @@ FastAPI Adapter for Gateway
 
 from fastapi import APIRouter, Request, Response
 
-from ..domain.models import GatewayRequest, HTTPMethod
-from ..ports.input import RequestHandlerPort
+from mmf.core.gateway import GatewayRequest, HTTPMethod, IGatewayRequestHandler
 
 
 class FastAPIAdapter:
     """FastAPI adapter for the gateway."""
 
-    def __init__(self, handler: RequestHandlerPort):
+    def __init__(self, handler: IGatewayRequestHandler):
         self.handler = handler
         self.router = APIRouter()
         self.router.add_api_route(

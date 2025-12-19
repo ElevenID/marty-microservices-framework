@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pet-service
+  labels:
+    app: pet-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pet-service
+  template:
+    metadata:
+      labels:
+        app: pet-service
+    spec:
+      containers:
+      - name: pet-service
+        image: mmf/pet-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8002
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pet-service
+  labels:
+    app: pet-service
+spec:
+  selector:
+    app: pet-service
+  ports:
+  - port: 80
+    targetPort: 8002
+    name: http

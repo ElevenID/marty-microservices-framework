@@ -77,7 +77,7 @@ def suggest_migration(global_statements: list[tuple[str, int, str]]) -> None:
 
 def main():
     """Main entry point."""
-    directory = sys.argv[1] if len(sys.argv) > 1 else "src/marty_msf"
+    directory = sys.argv[1] if len(sys.argv) > 1 else "mmf"
 
     if not os.path.exists(directory):
         print(f"❌ Directory '{directory}' does not exist")
@@ -89,8 +89,8 @@ def main():
     suggest_migration(global_statements)
 
     print("\n📖 Migration Guide:")
-    print("1. Review the Dependency Injection pattern in src/marty_msf/core/di_container.py")
-    print("2. Create service factories following examples in src/marty_msf/security/factories.py")
+    print("1. Review the Dependency Injection pattern in mmf/core/di_container.py")
+    print("2. Create service factories following examples in mmf/security/factories.py")
     print("3. Update service functions to use get_service() pattern")
     print("4. Add backward compatibility with auto-registration")
     print("5. Verify with MyPy: uv run --isolated mypy <your_file>.py")

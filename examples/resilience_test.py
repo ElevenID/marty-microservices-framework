@@ -7,7 +7,7 @@ import logging
 import time
 from typing import Any
 
-from marty_msf.framework.resilience import (
+from mmf.framework.resilience import (
     api_call,
     cache_call,
     database_call,

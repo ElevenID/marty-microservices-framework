@@ -122,3 +122,17 @@ class TestAuthenticateUserUseCase:
 
         with pytest.raises(ValidationError, match="Valid authentication method is required"):
             AuthenticateUserRequest(credentials=Mock(method="invalid"))
+
+    def test_get_supported_methods(self, use_case):
+        """Test getting supported methods."""
+        methods = use_case.get_supported_methods()
+        assert AuthenticationMethod.BASIC in methods
+        assert len(methods) == 1
+
+    def test_get_providers_for_method(self, use_case, mock_provider):
+        """Test getting providers for a method."""
+        providers = use_case.get_providers_for_method(AuthenticationMethod.BASIC)
+        assert providers == [mock_provider]
+
+        providers_empty = use_case.get_providers_for_method(AuthenticationMethod.JWT)
+        assert providers_empty == []

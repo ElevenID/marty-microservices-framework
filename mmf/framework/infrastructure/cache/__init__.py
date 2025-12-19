@@ -39,23 +39,25 @@ from mmf.framework.infrastructure.cache import (
         return await database.get_user(user_id)
 """
 
-from .manager import (  # Core classes; Configuration and data classes; Enums; Global functions; Decorators
-    CacheBackend,
-    CacheBackendInterface,
-    CacheConfig,
+from .manager import (
     CacheFactory,
     CacheManager,
-    CachePattern,
-    CacheSerializer,
-    CacheStats,
-    InMemoryCache,
-    RedisCache,
-    SerializationFormat,
     cache_context,
     cache_invalidate,
     cached,
     create_cache_manager,
     get_cache_manager,
+)
+from .memory_cache import InMemoryCache
+from .redis_cache import RedisCache
+from .types import (
+    CacheBackend,
+    CacheBackendInterface,
+    CacheConfig,
+    CachePattern,
+    CacheSerializer,
+    CacheStats,
+    SerializationFormat,
 )
 
 __all__ = [

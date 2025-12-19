@@ -23,7 +23,8 @@ EXCLUSION_PATTERNS = [
     r".*migration.*\.py",
     r".*legacy.*\.py",
     r"boneyard/.*",
-    r"src/marty_msf/core/di_container\.py",  # DI container itself needs globals
+    r"mmf/core/di_container\.py",  # DI container itself needs globals
+    r"mmf/adapters/credentials/.*\.py",  # Credential adapters use singleton pattern
 ]
 
 
@@ -160,7 +161,7 @@ def main() -> int:
         print(f"\n🚫 COMMIT BLOCKED: Found {total_globals} global variable(s) in staged files!")
         print("\n💡 To fix this:")
         print("1. Replace global variables with dependency injection")
-        print("2. Use the pattern from src/marty_msf/core/di_container.py")
+        print("2. Use the pattern from mmf/core/di_container.py")
         print("3. See GLOBAL_VARIABLE_MIGRATION.md for examples")
         print("4. Run 'python scripts/detect_globals.py' for detailed suggestions")
         print("\n📖 Dependency Injection Pattern:")

@@ -16,438 +16,29 @@ Features:
 
 import asyncio
 import builtins
-import datetime
-import io
-import json
+import functools
+import inspect
 import logging
 import pickle
-import time
-import warnings
-from abc import ABC, abstractmethod
 from collections.abc import Callable
 from contextlib import asynccontextmanager
-from dataclasses import dataclass
-from enum import Enum
-from typing import Any, Generic, TypeVar
-
-# Required Redis imports (fail if missing)
-import redis.asyncio as redis
-from redis.asyncio import Redis
-from redis.exceptions import RedisError
+from typing import Any, TypeVar
 
 from mmf.core.domain.ports.cache import CachePort
 
-REDIS_AVAILABLE = True
+from .memory_cache import InMemoryCache
+from .types import (
+    CacheBackend,
+    CacheBackendInterface,
+    CacheConfig,
+    CachePattern,
+    CacheSerializer,
+    CacheStats,
+)
 
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
-
-
-class CacheBackend(Enum):
-    """Supported cache backends."""
-
-    MEMORY = "memory"
-    REDIS = "redis"
-    MEMCACHED = "memcached"
-
-
-class CachePattern(Enum):
-    """Cache access patterns."""
-
-    CACHE_ASIDE = "cache_aside"
-    WRITE_THROUGH = "write_through"
-    WRITE_BEHIND = "write_behind"
-    REFRESH_AHEAD = "refresh_ahead"
-
-
-class RestrictedUnpickler(pickle.Unpickler):
-    """Restricted unpickler that only allows safe types to prevent code execution."""
-
-    SAFE_BUILTINS = {
-        "str",
-        "int",
-        "float",
-        "bool",
-        "list",
-        "tuple",
-        "dict",
-        "set",
-        "frozenset",
-        "bytes",
-        "bytearray",
-        "complex",
-        "type",
-        "slice",
-        "range",
-    }
-
-    def find_class(self, module, name):
-        # Only allow safe built-in types and specific allowed modules
-        if module == "builtins" and name in self.SAFE_BUILTINS:
-            return getattr(builtins, name)
-        # Allow datetime objects which are commonly cached
-        if module == "datetime" and name in {"datetime", "date", "time", "timedelta"}:
-            return getattr(datetime, name)
-        # Block everything else
-        raise pickle.UnpicklingError(f"Forbidden class {module}.{name}")
-
-
-class SerializationFormat(Enum):
-    """Serialization formats for cache values."""
-
-    PICKLE = "pickle"
-    JSON = "json"
-    STRING = "string"
-    BYTES = "bytes"
-
-
-@dataclass
-class CacheConfig:
-    """Cache configuration."""
-
-    backend: CacheBackend = CacheBackend.MEMORY
-    host: str = "localhost"
-    port: int = 6379
-    url: str | None = None
-    database: int = 0
-    password: str | None = None
-    max_connections: int = 100
-    default_ttl: int = 3600  # 1 hour
-    serialization: SerializationFormat = SerializationFormat.PICKLE
-    compression_enabled: bool = True
-    key_prefix: str = ""
-    namespace: str = "default"
-
-
-@dataclass
-class CacheStats:
-    """Cache statistics."""
-
-    hits: int = 0
-    misses: int = 0
-    sets: int = 0
-    deletes: int = 0
-    errors: int = 0
-    total_size: int = 0
-
-    @property
-    def hit_rate(self) -> float:
-        """Calculate cache hit rate."""
-        total = self.hits + self.misses
-        return self.hits / total if total > 0 else 0.0
-
-
-class CacheSerializer:
-    """Handles serialization and deserialization of cache values."""
-
-    def __init__(self, format_type: SerializationFormat = SerializationFormat.PICKLE):
-        self.format = format_type
-
-    def serialize(self, value: Any) -> bytes:
-        """Serialize value to bytes."""
-        try:
-            if self.format == SerializationFormat.PICKLE:
-                return pickle.dumps(value)
-            if self.format == SerializationFormat.JSON:
-                return json.dumps(value).encode("utf-8")
-            if self.format == SerializationFormat.STRING:
-                return str(value).encode("utf-8")
-            if self.format == SerializationFormat.BYTES:
-                return value if isinstance(value, bytes) else str(value).encode("utf-8")
-            raise ValueError(f"Unsupported serialization format: {self.format}")
-        except Exception as e:
-            logger.error("Serialization failed: %s", e)
-            raise
-
-    def deserialize(self, data: bytes) -> Any:
-        """Deserialize bytes to value."""
-        try:
-            if self.format == SerializationFormat.PICKLE:
-                # Security: Use restricted unpickler to prevent arbitrary code execution
-                warnings.warn(
-                    "Pickle deserialization is potentially unsafe. Consider using JSON format for better security.",
-                    UserWarning,
-                    stacklevel=2,
-                )
-
-                return RestrictedUnpickler(io.BytesIO(data)).load()
-            if self.format == SerializationFormat.JSON:
-                return json.loads(data.decode("utf-8"))
-            if self.format == SerializationFormat.STRING:
-                return data.decode("utf-8")
-            if self.format == SerializationFormat.BYTES:
-                return data
-            raise ValueError(f"Unsupported serialization format: {self.format}")
-        except Exception as e:
-            logger.error("Deserialization failed: %s", e)
-            raise
-
-
-class CacheBackendInterface(ABC):
-    """Abstract interface for cache backends."""
-
-    @abstractmethod
-    async def get(self, key: str) -> bytes | None:
-        """Get value from cache."""
-
-    @abstractmethod
-    async def set(self, key: str, value: bytes, ttl: int | None = None) -> bool:
-        """Set value in cache."""
-
-    @abstractmethod
-    async def delete(self, key: str) -> bool:
-        """Delete value from cache."""
-
-    @abstractmethod
-    async def exists(self, key: str) -> bool:
-        """Check if key exists in cache."""
-
-    @abstractmethod
-    async def clear(self) -> bool:
-        """Clear all cache entries."""
-
-    @abstractmethod
-    async def get_stats(self) -> CacheStats:
-        """Get cache statistics."""
-
-
-class InMemoryCache(CacheBackendInterface):
-    """In-memory cache backend."""
-
-    def __init__(self, max_size: int = 1000):
-        self.cache: builtins.dict[str, tuple] = {}  # key -> (value, expiry_time)
-        self.max_size = max_size
-        self.stats = CacheStats()
-
-    def _is_expired(self, expiry_time: float | None) -> bool:
-        """Check if cache entry is expired."""
-        return expiry_time is not None and time.time() > expiry_time
-
-    def _cleanup_expired(self) -> None:
-        """Remove expired entries."""
-        current_time = time.time()
-        expired_keys = [
-            key
-            for key, (_, expiry) in self.cache.items()
-            if expiry is not None and current_time > expiry
-        ]
-        for key in expired_keys:
-            del self.cache[key]
-
-    def _evict_if_needed(self) -> None:
-        """Evict entries if cache is full (LRU)."""
-        if len(self.cache) >= self.max_size:
-            # Simple LRU: remove oldest entry
-            oldest_key = next(iter(self.cache))
-            del self.cache[oldest_key]
-
-    async def get(self, key: str) -> bytes | None:
-        """Get value from cache."""
-        self._cleanup_expired()
-
-        if key in self.cache:
-            value, expiry = self.cache[key]
-            if not self._is_expired(expiry):
-                self.stats.hits += 1
-                return value
-            del self.cache[key]
-
-        self.stats.misses += 1
-        return None
-
-    async def set(self, key: str, value: bytes, ttl: int | None = None) -> bool:
-        """Set value in cache."""
-        try:
-            self._cleanup_expired()
-            self._evict_if_needed()
-
-            expiry_time = time.time() + ttl if ttl else None
-            self.cache[key] = (value, expiry_time)
-            self.stats.sets += 1
-            return True
-        except (MemoryError, OSError) as e:
-            logger.error("Failed to set cache key %s: %s", key, e)
-            self.stats.errors += 1
-            return False
-
-    async def delete(self, key: str) -> bool:
-        """Delete value from cache."""
-        if key in self.cache:
-            del self.cache[key]
-            self.stats.deletes += 1
-            return True
-        return False
-
-    async def exists(self, key: str) -> bool:
-        """Check if key exists in cache."""
-        self._cleanup_expired()
-        return key in self.cache
-
-    async def clear(self) -> bool:
-        """Clear all cache entries."""
-        self.cache.clear()
-        return True
-
-    async def get_stats(self) -> CacheStats:
-        """Get cache statistics."""
-        self.stats.total_size = len(self.cache)
-        return self.stats
-
-
-class RedisCache(CacheBackendInterface):
-    """Redis cache backend."""
-
-    def __init__(self, config: CacheConfig):
-        if not REDIS_AVAILABLE:
-            raise ImportError("Redis is not available. Please install redis: pip install redis")
-
-        self.config = config
-        self.redis: Any | None = None  # Type as Any to avoid typing issues
-        self.stats = CacheStats()
-
-    async def connect(self) -> None:
-        """Connect to Redis."""
-        if not REDIS_AVAILABLE:
-            raise ImportError("Redis is not available")
-
-        try:
-            if redis is None:
-                raise ImportError("Redis module not available")
-
-            if self.config.url:
-                self.redis = redis.from_url(
-                    self.config.url,
-                    db=self.config.database,
-                    password=self.config.password,
-                    max_connections=self.config.max_connections,
-                    decode_responses=False,
-                )
-            else:
-                self.redis = redis.Redis(
-                    host=self.config.host,
-                    port=self.config.port,
-                    db=self.config.database,
-                    password=self.config.password,
-                    max_connections=self.config.max_connections,
-                    decode_responses=False,  # We handle bytes directly
-                )
-            # Test connection
-            if self.redis:
-                await self.redis.ping()  # type: ignore
-
-            if self.config.url:
-                logger.info("Connected to Redis at %s", self.config.url)
-            else:
-                logger.info("Connected to Redis at %s:%s", self.config.host, self.config.port)
-        except Exception as e:
-            logger.error("Failed to connect to Redis: %s", e)
-            raise
-
-    async def disconnect(self) -> None:
-        """Disconnect from Redis."""
-        if self.redis:
-            await self.redis.close()
-            self.redis = None
-
-    def _get_key(self, key: str) -> str:
-        """Get full cache key with prefix and namespace."""
-        prefix = f"{self.config.key_prefix}:" if self.config.key_prefix else ""
-        return f"{prefix}{self.config.namespace}:{key}"
-
-    async def get(self, key: str) -> bytes | None:
-        """Get value from cache."""
-        if not self.redis:
-            await self.connect()
-
-        try:
-            full_key = self._get_key(key)
-            value = await self.redis.get(full_key)  # type: ignore
-
-            if value is not None:
-                self.stats.hits += 1
-                return value
-            self.stats.misses += 1
-            return None
-
-        except (
-            ConnectionError,
-            TimeoutError,
-            RedisError,
-        ) as e:  # Specific Redis-related exceptions
-            logger.error("Redis get error for key %s: %s", key, e)
-            self.stats.errors += 1
-            return None
-
-    async def set(self, key: str, value: bytes, ttl: int | None = None) -> bool:
-        """Set value in cache."""
-        if not self.redis:
-            await self.connect()
-
-        try:
-            full_key = self._get_key(key)
-            cache_ttl = ttl or self.config.default_ttl
-
-            result = await self.redis.setex(full_key, cache_ttl, value)  # type: ignore
-            if result:
-                self.stats.sets += 1
-            return bool(result)
-
-        except (ConnectionError, TimeoutError, RedisError) as e:
-            logger.error("Redis set error for key %s: %s", key, e)
-            self.stats.errors += 1
-            return False
-
-    async def delete(self, key: str) -> bool:
-        """Delete value from cache."""
-        if not self.redis:
-            await self.connect()
-
-        try:
-            full_key = self._get_key(key)
-            result = await self.redis.delete(full_key)  # type: ignore
-            if result:
-                self.stats.deletes += 1
-            return bool(result)
-
-        except (ConnectionError, TimeoutError, RedisError) as e:
-            logger.error("Redis delete error for key %s: %s", key, e)
-            self.stats.errors += 1
-            return False
-
-    async def exists(self, key: str) -> bool:
-        """Check if key exists in cache."""
-        if not self.redis:
-            await self.connect()
-
-        try:
-            full_key = self._get_key(key)
-            result = await self.redis.exists(full_key)  # type: ignore
-            return bool(result)
-
-        except (ConnectionError, TimeoutError, RedisError) as e:
-            logger.error("Redis exists error for key %s: %s", key, e)
-            return False
-
-    async def clear(self) -> bool:
-        """Clear all cache entries in namespace."""
-        if not self.redis:
-            await self.connect()
-
-        try:
-            pattern = self._get_key("*")
-            keys = await self.redis.keys(pattern)  # type: ignore
-            if keys:
-                await self.redis.delete(*keys)  # type: ignore
-            return True
-
-        except (ConnectionError, TimeoutError, RedisError) as e:
-            logger.error("Redis clear error: %s", e)
-            return False
-
-    async def get_stats(self) -> CacheStats:
-        """Get cache statistics."""
-        return self.stats
 
 
 class CacheManager(CachePort[T]):
@@ -467,6 +58,9 @@ class CacheManager(CachePort[T]):
 
     async def start(self) -> None:
         """Start cache manager."""
+        if hasattr(self.backend, "connect"):
+            await self.backend.connect()  # type: ignore
+
         if self.pattern == CachePattern.WRITE_BEHIND:
             self._write_behind_task = asyncio.create_task(self._write_behind_worker())
 
@@ -478,6 +72,9 @@ class CacheManager(CachePort[T]):
                 await self._write_behind_task
             except asyncio.CancelledError:
                 pass
+
+        if hasattr(self.backend, "disconnect"):
+            await self.backend.disconnect()  # type: ignore
 
     async def get(self, key: str) -> T | None:
         """Get value from cache with deserialization."""
@@ -555,15 +152,62 @@ class CacheManager(CachePort[T]):
         tasks = []
 
         for key, factory in keys_and_factories.items():
+            tasks.append(self.get_or_set(key, factory, ttl))
 
-            async def warm_key(k: str, f: Callable[[], T]):
-                if not await self.backend.exists(k):
-                    value = await f() if asyncio.iscoroutinefunction(f) else f()
-                    await self.set(k, value, ttl)
+        await asyncio.gather(*tasks)
 
-            tasks.append(warm_key(key, factory))
+    async def zadd(self, key: str, mapping: dict[T, float]) -> int:
+        """Add members to sorted set."""
+        try:
+            byte_mapping = {self.serializer.serialize(k): v for k, v in mapping.items()}
+            return await self.backend.zadd(key, byte_mapping)
+        except (ValueError, TypeError, pickle.PicklingError) as e:
+            logger.error("Cache zadd failed for key %s: %s", key, e)
+            return 0
 
-        await asyncio.gather(*tasks, return_exceptions=True)
+    async def zrevrangebyscore(
+        self,
+        key: str,
+        max_score: float,
+        min_score: float,
+        start: int | None = None,
+        num: int | None = None,
+    ) -> list[T]:
+        """Get members from sorted set by score (descending)."""
+        try:
+            items = await self.backend.zrevrangebyscore(key, max_score, min_score, start, num)
+            return [self.serializer.deserialize(item) for item in items]
+        except (ValueError, TypeError, pickle.UnpicklingError) as e:
+            logger.error("Cache zrevrangebyscore failed for key %s: %s", key, e)
+            return []
+
+    async def zcount(self, key: str, min_score: float, max_score: float) -> int:
+        """Count members in sorted set with score within range."""
+        return await self.backend.zcount(key, min_score, max_score)
+
+    async def zremrangebyscore(self, key: str, min_score: float, max_score: float) -> int:
+        """Remove members from sorted set by score range."""
+        return await self.backend.zremrangebyscore(key, min_score, max_score)
+
+    async def zcard(self, key: str) -> int:
+        """Get number of members in sorted set."""
+        return await self.backend.zcard(key)
+
+    async def zremrangebyrank(self, key: str, min_rank: int, max_rank: int) -> int:
+        """Remove members from sorted set by rank range."""
+        return await self.backend.zremrangebyrank(key, min_rank, max_rank)
+
+    async def expire(self, key: str, ttl: int) -> bool:
+        """Set expiration on key."""
+        return await self.backend.expire(key, ttl)
+
+    async def keys(self, pattern: str) -> list[str]:
+        """Get keys matching pattern."""
+        return await self.backend.keys(pattern)
+
+    async def clear(self) -> bool:
+        """Clear all cache entries."""
+        return await self.backend.clear()
 
     async def _write_behind_worker(self) -> None:
         """Background worker for write-behind pattern."""
@@ -591,6 +235,8 @@ class CacheFactory:
         if config.backend == CacheBackend.MEMORY:
             return InMemoryCache(max_size=1000)
         if config.backend == CacheBackend.REDIS:
+            from .redis_cache import RedisCache
+
             return RedisCache(config)
         raise ValueError(f"Unsupported cache backend: {config.backend}")
 
@@ -650,9 +296,20 @@ def cached(
     """Decorator for caching function results."""
 
     def decorator(func):
+        @functools.wraps(func)
         async def wrapper(*args, **kwargs):
             # Generate cache key
             key_values = {"args": args, "kwargs": kwargs}
+
+            # Add function arguments by name
+            try:
+                sig = inspect.signature(func)
+                bound_args = sig.bind(*args, **kwargs)
+                bound_args.apply_defaults()
+                key_values.update(bound_args.arguments)
+            except Exception:
+                pass
+
             cache_key = key_template.format(**key_values)
 
             cache_manager = get_cache_manager(cache_name)
@@ -682,6 +339,7 @@ def cache_invalidate(
     """Decorator for cache invalidation after function execution."""
 
     def decorator(func):
+        @functools.wraps(func)
         async def wrapper(*args, **kwargs):
             result = await func(*args, **kwargs)
 
@@ -689,6 +347,14 @@ def cache_invalidate(
             if cache_manager:
                 # Generate invalidation key
                 key_values = {"args": args, "kwargs": kwargs, "result": result}
+                try:
+                    sig = inspect.signature(func)
+                    bound_args = sig.bind(*args, **kwargs)
+                    bound_args.apply_defaults()
+                    key_values.update(bound_args.arguments)
+                except Exception:
+                    pass
+
                 cache_key = key_pattern.format(**key_values)
                 await cache_manager.delete(cache_key)
 

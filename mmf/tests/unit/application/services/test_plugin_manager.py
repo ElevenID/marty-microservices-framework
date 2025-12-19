@@ -12,19 +12,17 @@ from mmf.application.services.plugin_manager import (
     PluginManager,
     ServiceManager,
 )
-from mmf.framework.plugins.models import (
-    PluginMetadata,
-    PluginStatus,
-    ServiceDefinition,
-    ServiceStatus,
-)
-from mmf.framework.plugins.ports import (
+from mmf.core.plugins import (
     IPluginDiscovery,
     IPluginEventSubscriptionManager,
     IPluginLoader,
     IPluginRegistry,
     IServiceManager,
     PluginInterface,
+    PluginMetadata,
+    PluginStatus,
+    ServiceDefinition,
+    ServiceStatus,
 )
 
 

@@ -70,3 +70,91 @@ def test_no_circular_dependencies():
     analyzer.analyze_imports()
     cycles = analyzer.find_circular_dependencies()
     assert len(cycles) == 0, f"Found circular dependencies: {cycles}"
+
+
+# =============================================================================
+# Example Services Architecture Rules (petstore_domain)
+# =============================================================================
+
+
+def test_example_petstore_domain_isolation():
+    """
+    Example service Domain layers MUST NOT import from Application or Infrastructure.
+
+    This ensures examples follow the same strict Hexagonal Architecture rules
+    as production services in mmf/services.
+    """
+    (
+        archrule("example_petstore_domain_isolation")
+        .match("examples.petstore_domain.services.*.domain")
+        .should_not_import("examples.petstore_domain.services.*.infrastructure")
+        .should_not_import("examples.petstore_domain.services.*.application")
+        .check("examples")
+    )
+
+
+def test_example_petstore_application_isolation():
+    """
+    Example service Application layers MUST NOT import from Infrastructure.
+
+    Application layers should only depend on Domain and define Ports (interfaces)
+    that Infrastructure adapters implement.
+    """
+    (
+        archrule("example_petstore_application_isolation")
+        .match("examples.petstore_domain.services.*.application")
+        .should_not_import("examples.petstore_domain.services.*.infrastructure")
+        .check("examples")
+    )
+
+
+def test_example_bounded_context_isolation():
+    """
+    Example services MUST NOT import from other services' internal layers.
+
+    Each service is a bounded context with its own domain model. Services
+    should only communicate via well-defined APIs, not by importing each
+    other's domain, application, or infrastructure modules.
+    """
+    # pet_service should not import from store_service internals
+    (
+        archrule("pet_service_bounded_context")
+        .match("examples.petstore_domain.services.pet_service")
+        .should_not_import("examples.petstore_domain.services.store_service.domain")
+        .should_not_import("examples.petstore_domain.services.store_service.application")
+        .should_not_import("examples.petstore_domain.services.store_service.infrastructure")
+        .should_not_import("examples.petstore_domain.services.delivery_board_service.domain")
+        .should_not_import("examples.petstore_domain.services.delivery_board_service.application")
+        .should_not_import(
+            "examples.petstore_domain.services.delivery_board_service.infrastructure"
+        )
+        .check("examples")
+    )
+
+    # store_service should not import from pet_service internals
+    (
+        archrule("store_service_bounded_context")
+        .match("examples.petstore_domain.services.store_service")
+        .should_not_import("examples.petstore_domain.services.pet_service.domain")
+        .should_not_import("examples.petstore_domain.services.pet_service.application")
+        .should_not_import("examples.petstore_domain.services.pet_service.infrastructure")
+        .should_not_import("examples.petstore_domain.services.delivery_board_service.domain")
+        .should_not_import("examples.petstore_domain.services.delivery_board_service.application")
+        .should_not_import(
+            "examples.petstore_domain.services.delivery_board_service.infrastructure"
+        )
+        .check("examples")
+    )
+
+    # delivery_board_service should not import from other services' internals
+    (
+        archrule("delivery_board_service_bounded_context")
+        .match("examples.petstore_domain.services.delivery_board_service")
+        .should_not_import("examples.petstore_domain.services.pet_service.domain")
+        .should_not_import("examples.petstore_domain.services.pet_service.application")
+        .should_not_import("examples.petstore_domain.services.pet_service.infrastructure")
+        .should_not_import("examples.petstore_domain.services.store_service.domain")
+        .should_not_import("examples.petstore_domain.services.store_service.application")
+        .should_not_import("examples.petstore_domain.services.store_service.infrastructure")
+        .check("examples")
+    )

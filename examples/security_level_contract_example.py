@@ -7,7 +7,7 @@ that follows the level contract principle.
 
 import logging
 
-from marty_msf.security import (  # Bootstrap for wiring components; Core interfaces; Data models; Implementations (if you want to create custom configurations)
+from mmf.framework.security import (  # Bootstrap for wiring components; Core interfaces; Data models; Implementations (if you want to create custom configurations)
     AuthorizationContext,
     BasicAuthenticator,
     EnvironmentSecretManager,

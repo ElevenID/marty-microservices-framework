@@ -1,0 +1,9 @@
+"""
+aiofiles==23.2.1
+aiohttp==3.9.0
+
+fastapi==0.104.1
+FastAPI Example Service - Requirements
+pydantic==2.5.0
+sqlalchemy[asyncio]==2.0.23
+uvicorn[standard]==0.24.0

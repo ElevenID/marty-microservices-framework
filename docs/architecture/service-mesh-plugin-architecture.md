@@ -15,14 +15,14 @@ The Marty Microservices Framework now implements a **plugin-based service mesh a
 
 ### After (Solution)
 
-- **Framework Library**: Core service mesh functions in `src/marty_msf/framework/service_mesh/`
+- **Framework Library**: Core service mesh functions in `mmf/framework/service_mesh/`
 - **Generated Scripts**: Each project gets customized deployment scripts with framework dependency
 - **Plugin Extensions**: Domain-specific customizations in project plugins
 - **Production Manifests**: Enterprise-grade Kubernetes manifests for both Istio and Linkerd
 
 ## Key Components
 
-### 1. Framework Library (`src/marty_msf/framework/service_mesh/service_mesh_lib.sh`)
+### 1. Framework Library (`mmf/framework/service_mesh/service_mesh_lib.sh`)
 
 Contains reusable functions for:
 
@@ -31,7 +31,7 @@ Contains reusable functions for:
 - Validation and verification (`msf_check_prerequisites()`, `msf_verify_deployment()`)
 - Script generation (`msf_generate_deployment_script()`)
 
-### 2. Python Integration (`src/marty_msf/framework/service_mesh/__init__.py`)
+### 2. Python Integration (`mmf/framework/service_mesh/__init__.py`)
 
 Provides Python API for:
 

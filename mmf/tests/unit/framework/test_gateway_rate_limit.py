@@ -2,21 +2,21 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from mmf.framework.gateway.domain.exceptions import RateLimitExceededError
-from mmf.framework.gateway.domain.models import (
+from mmf.core.gateway import (
     AuthenticationType,
     GatewayRequest,
     HTTPMethod,
+    IRateLimitStorage,
     RateLimitConfig,
+    RateLimitExceededError,
     RouteConfig,
 )
 from mmf.framework.gateway.domain.rate_limit import GatewayRateLimiter
-from mmf.framework.gateway.ports.output import RateLimitStoragePort
 
 
 @pytest.fixture
 def mock_storage():
-    return AsyncMock(spec=RateLimitStoragePort)
+    return AsyncMock(spec=IRateLimitStorage)
 
 
 @pytest.fixture

@@ -5,27 +5,20 @@ Gateway Domain Services
 import fnmatch
 import random
 import re
-from abc import ABC, abstractmethod
 from re import Pattern
 
-from .models import GatewayRequest, UpstreamGroup, UpstreamServer
+from mmf.core.gateway import (
+    GatewayRequest,
+    ILoadBalancer,
+    IRouteMatcher,
+    UpstreamGroup,
+    UpstreamServer,
+)
 
 # --- Routing Services ---
 
 
-class RouteMatcher(ABC):
-    """Abstract route matcher interface."""
-
-    @abstractmethod
-    def matches(self, pattern: str, path: str) -> bool:
-        """Check if pattern matches path."""
-
-    @abstractmethod
-    def extract_params(self, pattern: str, path: str) -> dict[str, str]:
-        """Extract parameters from matched path."""
-
-
-class ExactMatcher(RouteMatcher):
+class ExactMatcher(IRouteMatcher):
     """Exact path matching."""
 
     def __init__(self, case_sensitive: bool = True):
@@ -41,7 +34,7 @@ class ExactMatcher(RouteMatcher):
         return {}
 
 
-class PrefixMatcher(RouteMatcher):
+class PrefixMatcher(IRouteMatcher):
     """Prefix path matching."""
 
     def __init__(self, case_sensitive: bool = True):
@@ -60,7 +53,7 @@ class PrefixMatcher(RouteMatcher):
         return {}
 
 
-class RegexMatcher(RouteMatcher):
+class RegexMatcher(IRouteMatcher):
     """Regular expression path matching."""
 
     def __init__(self, case_sensitive: bool = True):
@@ -89,7 +82,7 @@ class RegexMatcher(RouteMatcher):
             return {}
 
 
-class WildcardMatcher(RouteMatcher):
+class WildcardMatcher(IRouteMatcher):
     """Wildcard path matching using shell-style patterns."""
 
     def __init__(self, case_sensitive: bool = True):
@@ -107,7 +100,7 @@ class WildcardMatcher(RouteMatcher):
         return {}
 
 
-class TemplateMatcher(RouteMatcher):
+class TemplateMatcher(IRouteMatcher):
     """Template-based path matching with parameter extraction."""
 
     def __init__(self, case_sensitive: bool = True):
@@ -152,15 +145,7 @@ class TemplateMatcher(RouteMatcher):
 # --- Load Balancing Services ---
 
 
-class LoadBalancer(ABC):
-    """Abstract load balancer interface."""
-
-    @abstractmethod
-    def select_server(self, group: UpstreamGroup, request: GatewayRequest) -> UpstreamServer | None:
-        """Select server from group for request."""
-
-
-class RoundRobinBalancer(LoadBalancer):
+class RoundRobinBalancer(ILoadBalancer):
     """Round-robin load balancer."""
 
     def select_server(self, group: UpstreamGroup, request: GatewayRequest) -> UpstreamServer | None:
@@ -173,7 +158,7 @@ class RoundRobinBalancer(LoadBalancer):
         return server
 
 
-class RandomBalancer(LoadBalancer):
+class RandomBalancer(ILoadBalancer):
     """Random load balancer."""
 
     def select_server(self, group: UpstreamGroup, request: GatewayRequest) -> UpstreamServer | None:
@@ -183,7 +168,7 @@ class RandomBalancer(LoadBalancer):
         return random.choice(healthy_servers)
 
 
-class LeastConnectionsBalancer(LoadBalancer):
+class LeastConnectionsBalancer(ILoadBalancer):
     """Least connections load balancer."""
 
     def select_server(self, group: UpstreamGroup, request: GatewayRequest) -> UpstreamServer | None:
@@ -195,7 +180,7 @@ class LeastConnectionsBalancer(LoadBalancer):
         return min(healthy_servers, key=lambda s: s.current_connections)
 
 
-class WeightedRoundRobinBalancer(LoadBalancer):
+class WeightedRoundRobinBalancer(ILoadBalancer):
     """Weighted round-robin load balancer."""
 
     def select_server(self, group: UpstreamGroup, request: GatewayRequest) -> UpstreamServer | None:

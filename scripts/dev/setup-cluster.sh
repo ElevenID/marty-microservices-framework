@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 # Configuration
 CLUSTER_NAME="microservices-framework"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
 SERVICE_MESH=${SERVICE_MESH:-"istio"} # Options: istio, linkerd, none
 OBSERVABILITY=${OBSERVABILITY:-"true"}
 
@@ -64,7 +64,7 @@ create_kind_cluster() {
         kind delete cluster --name "$CLUSTER_NAME"
     fi
 
-    kind create cluster --name "$CLUSTER_NAME" --config "$PROJECT_ROOT/k8s/kind-cluster-config.yaml"
+    kind create cluster --name "$CLUSTER_NAME" --config "$PROJECT_ROOT/deploy/kind-config.yaml"
 
     # Wait for cluster to be ready
     kubectl cluster-info --context "kind-$CLUSTER_NAME"

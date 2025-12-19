@@ -10,6 +10,7 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any, Generic, TypeVar
 
+from mmf.core.registry import get_service, register_singleton
 from mmf.framework.resilience.domain.config import CircuitBreakerConfig
 from mmf.framework.resilience.domain.exceptions import (
     CircuitBreakerError,
@@ -255,33 +256,64 @@ class CircuitBreaker(Generic[T]):
             }
 
 
-# Global registry for circuit breakers
-_circuit_breakers: dict[str, CircuitBreaker] = {}
-_registry_lock = threading.Lock()
+class CircuitBreakerRegistry:
+    """Registry for circuit breakers."""
+
+    def __init__(self) -> None:
+        self._circuit_breakers: dict[str, CircuitBreaker] = {}
+        self._lock = threading.RLock()
+
+    def get_or_create(
+        self, name: str, config: CircuitBreakerConfig | None = None
+    ) -> CircuitBreaker:
+        """Get or create a circuit breaker."""
+        with self._lock:
+            if name not in self._circuit_breakers:
+                self._circuit_breakers[name] = CircuitBreaker(name, config)
+            return self._circuit_breakers[name]
+
+    def get_all(self) -> dict[str, CircuitBreaker]:
+        """Get all registered circuit breakers."""
+        with self._lock:
+            return self._circuit_breakers.copy()
+
+    def reset_all(self) -> None:
+        """Reset all circuit breakers."""
+        with self._lock:
+            for cb in self._circuit_breakers.values():
+                cb.reset()
+
+    def get_stats(self) -> dict[str, dict[str, Any]]:
+        """Get statistics for all circuit breakers."""
+        with self._lock:
+            return {name: cb.get_stats() for name, cb in self._circuit_breakers.items()}
+
+
+def get_circuit_breaker_registry() -> CircuitBreakerRegistry:
+    """Get the circuit breaker registry."""
+    try:
+        return get_service(CircuitBreakerRegistry)
+    except KeyError:
+        registry = CircuitBreakerRegistry()
+        register_singleton(CircuitBreakerRegistry, registry)
+        return registry
 
 
 def get_circuit_breaker(name: str, config: CircuitBreakerConfig | None = None) -> CircuitBreaker:
     """Get or create a circuit breaker by name."""
-    with _registry_lock:
-        if name not in _circuit_breakers:
-            _circuit_breakers[name] = CircuitBreaker(name, config)
-        return _circuit_breakers[name]
+    return get_circuit_breaker_registry().get_or_create(name, config)
 
 
 def get_all_circuit_breakers() -> dict[str, CircuitBreaker]:
     """Get all registered circuit breakers."""
-    with _registry_lock:
-        return _circuit_breakers.copy()
+    return get_circuit_breaker_registry().get_all()
 
 
 def reset_all_circuit_breakers() -> None:
     """Reset all circuit breakers to initial state."""
-    with _registry_lock:
-        for cb in _circuit_breakers.values():
-            cb.reset()
+    get_circuit_breaker_registry().reset_all()
 
 
 def get_circuit_breaker_stats() -> dict[str, dict[str, Any]]:
     """Get statistics for all circuit breakers."""
-    with _registry_lock:
-        return {name: cb.get_stats() for name, cb in _circuit_breakers.items()}
+    return get_circuit_breaker_registry().get_stats()

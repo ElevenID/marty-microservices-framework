@@ -156,6 +156,13 @@ class AuditEventType(Enum):
     AUTHZ_ROLE_ASSIGNED = "authz_role_assigned"
     AUTHZ_ROLE_REMOVED = "authz_role_removed"
 
+    # General Categories (for high-level grouping)
+    ACCESS_CONTROL = "access_control"
+    SECURITY = "security"
+    SYSTEM = "system"
+    DATA = "data"
+    COMPLIANCE = "compliance"
+
     # API and Service Operations
     API_REQUEST = "api_request"
     API_RESPONSE = "api_response"

@@ -162,9 +162,8 @@ def main():
     if plugin_import_ok and framework_ok:
         print("✅ Plugin integration setup is working correctly!")
         print("\n🚀 Next steps:")
-        print("  1. Use the generator script to create services")
-        print("  2. Configure plugin settings for your environment")
-        print("  3. Start services with plugin integration")
+        print("  1. Configure plugin settings for your environment")
+        print("  2. Start services with plugin integration")
         return 0
     else:
         print("❌ Some tests failed. Please check the setup.")

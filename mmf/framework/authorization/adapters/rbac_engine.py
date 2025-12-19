@@ -395,10 +395,7 @@ class RBACManager:
         """
         if not self.check_permission(user_id, resource_type, resource_id, action):
             raise PermissionDeniedError(
-                f"Permission denied for {action} on {resource_type}:{resource_id}",
-                permission=f"{resource_type}:{resource_id}:{action}",
-                resource=f"{resource_type}:{resource_id}",
-                action=action,
+                f"Permission denied for {action} on {resource_type}:{resource_id}"
             )
 
     def check_role(self, user_id: str, role_name: str) -> bool:
@@ -427,7 +424,7 @@ class RBACManager:
             RoleRequiredError: If user lacks role
         """
         if not self.check_role(user_id, role_name):
-            raise RoleRequiredError(f"Role '{role_name}' required", required_role=role_name)
+            raise RoleRequiredError(f"Role '{role_name}' required")
 
     def get_user_roles(self, user_id: str) -> set[str]:
         """
@@ -722,8 +719,9 @@ def get_rbac_manager() -> RBACManager:
         Singleton RBACManager instance
     """
     container = get_container()
-    service = container.get(RBACManagerService)
-    if service is None:
+    try:
+        service = container.get(RBACManagerService)
+    except ValueError:
         # Create and register if not exists
         service = RBACManagerService()
         register_instance(RBACManagerService, service)
@@ -743,11 +741,6 @@ def reset_rbac_manager():
     raise NotImplementedError(
         "reset_rbac_manager is not supported. Use the DI container lifecycle management instead."
     )
-
-
-# Initialize and register the service as singleton on module load
-_rbac_service = RBACManagerService()
-register_instance(RBACManagerService, _rbac_service)
 
 
 __all__ = [

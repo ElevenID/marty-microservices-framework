@@ -22,8 +22,8 @@ from mmf.core.security.ports.authentication import IAuthenticator
 from mmf.core.security.ports.authorization import IAuthorizer
 from mmf.infrastructure.dependency_injection import get_service
 
-# from marty_msf.audit_compliance import SecurityEventManager, create_event_manager
-# from marty_msf.audit_compliance.monitoring import (
+# from mmf.audit_compliance import SecurityEventManager, create_event_manager
+# from mmf.audit_compliance.monitoring import (
 #     SecurityEventSeverity,
 #     SecurityEventType,
 # )

@@ -4,11 +4,15 @@ Upstream Adapter for Gateway
 
 import aiohttp
 
-from ..domain.models import GatewayRequest, GatewayResponse, UpstreamServer
-from ..ports.output import UpstreamClientPort
+from mmf.core.gateway import (
+    GatewayRequest,
+    GatewayResponse,
+    IUpstreamClient,
+    UpstreamServer,
+)
 
 
-class AIOHTTPUpstreamAdapter(UpstreamClientPort):
+class AIOHTTPUpstreamAdapter(IUpstreamClient):
     """AIOHTTP implementation of UpstreamClientPort."""
 
     async def send_request(

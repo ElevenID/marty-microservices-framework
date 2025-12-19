@@ -3,33 +3,42 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from mmf.framework.messaging.application.dlq import DLQManager
-from mmf.framework.messaging.application.middleware import MiddlewareChain
-from mmf.framework.messaging.application.router import MessageRouter
-from mmf.framework.messaging.domain.models import (
+from mmf.core.messaging import (
     ConsumerConfig,
+    IDLQManager,
+    IMessageBackend,
+    IMessageBroker,
+    IMessageConsumer,
+    IMessageProducer,
+    IMessageRouter,
+    IMessagingManager,
     MessagingConfig,
     MessagingError,
     ProducerConfig,
 )
-from mmf.framework.messaging.domain.ports import (
-    IMessageBackend,
-    IMessageConsumer,
-    IMessageProducer,
-    IMessagingManager,
-)
+from mmf.framework.messaging.application.broker import MessageBroker
+from mmf.framework.messaging.application.dlq import DLQManager
+from mmf.framework.messaging.application.middleware import MiddlewareChain
+from mmf.framework.messaging.application.router import MessageRouter
 
 
 class MessagingManager(IMessagingManager):
     """Messaging manager implementation."""
 
-    def __init__(self, config: MessagingConfig, backend: IMessageBackend):
+    def __init__(
+        self,
+        config: MessagingConfig,
+        backend: IMessageBackend,
+        router: IMessageRouter,
+        dlq_manager: IDLQManager,
+    ):
         self.config = config
         self.backend = backend
+        self.router = router
+        self.dlq_manager = dlq_manager
         self.logger = logging.getLogger(__name__)
-        self.router: MessageRouter | None = None
-        self.dlq_manager: DLQManager | None = None
         self.middleware_chain = MiddlewareChain()
+        self.broker = MessageBroker(backend, router)
         self.producers: dict[str, IMessageProducer] = {}
         self.consumers: dict[str, IMessageConsumer] = {}
         self._initialized = False
@@ -41,12 +50,6 @@ class MessagingManager(IMessagingManager):
 
         # Connect backend
         await self.backend.connect()
-
-        # Create router
-        self.router = MessageRouter(self.config.routing)
-
-        # Create DLQ manager
-        self.dlq_manager = DLQManager(self.config.dlq, self.backend)
 
         self._initialized = True
         self.logger.info("Messaging system initialized")
@@ -97,6 +100,10 @@ class MessagingManager(IMessagingManager):
         if not self.backend:
             raise MessagingError("Backend not initialized")
         return self.backend
+
+    async def get_broker(self) -> IMessageBroker:
+        """Get the message broker."""
+        return self.broker
 
     async def health_check(self) -> dict[str, Any]:
         """Perform health check on messaging system."""

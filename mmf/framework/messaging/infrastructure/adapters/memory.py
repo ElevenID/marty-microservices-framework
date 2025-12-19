@@ -4,23 +4,21 @@ import asyncio
 import logging
 from typing import Any
 
-from mmf.framework.messaging.application.consumer import MessageConsumer
-from mmf.framework.messaging.application.producer import MessageProducer
-from mmf.framework.messaging.domain.models import (
+from mmf.core.messaging import (
     BackendConfig,
     ConsumerConfig,
-    Message,
-    MessageStatus,
-    MessagingError,
-    ProducerConfig,
-)
-from mmf.framework.messaging.domain.ports import (
     IMessageBackend,
     IMessageConsumer,
     IMessageExchange,
     IMessageProducer,
     IMessageQueue,
+    Message,
+    MessageStatus,
+    MessagingError,
+    ProducerConfig,
 )
+from mmf.framework.messaging.application.consumer import MessageConsumer
+from mmf.framework.messaging.application.producer import MessageProducer
 
 
 class MemoryMessageQueue(IMessageQueue):

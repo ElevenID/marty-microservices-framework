@@ -66,3 +66,15 @@ class SecurityPolicyType(Enum):
     ABAC = "abac"
     ACL = "acl"
     CUSTOM = "custom"
+
+
+class UserType(Enum):
+    """
+    User type classification for role-based access control.
+
+    Distinguishes between users who manage travel documents (administrators)
+    and users seeking to obtain travel documents (applicants).
+    """
+
+    ADMINISTRATOR = "administrator"
+    APPLICANT = "applicant"

@@ -13,10 +13,26 @@ from mmf.services.identity.infrastructure.adapters.out.persistence.user_reposito
 
 
 @pytest.fixture
-def mock_db_manager():
-    """Create a mock database manager."""
+def mock_session():
+    """Create a mock session with async methods."""
+    session = AsyncMock()
+    session.merge = AsyncMock()
+    session.execute = AsyncMock()
+    session.commit = AsyncMock()
+    return session
+
+
+@pytest.fixture
+def mock_db_manager(mock_session):
+    """Create a mock database manager with proper async context manager."""
     manager = MagicMock()
-    manager.get_transaction = MagicMock(return_value=AsyncMock())
+
+    # Create an async context manager that yields the mock session
+    async_context = AsyncMock()
+    async_context.__aenter__ = AsyncMock(return_value=mock_session)
+    async_context.__aexit__ = AsyncMock(return_value=None)
+    manager.get_transaction = MagicMock(return_value=async_context)
+
     return manager
 
 
@@ -52,73 +68,112 @@ class TestAuthenticatedUserRepository:
     @pytest.mark.asyncio
     async def test_save_returns_entity(self, repository, sample_user):
         """Test that save returns the entity."""
-        # Setup mock transaction context manager
-        mock_context = AsyncMock()
-        mock_context.__aenter__ = AsyncMock(return_value=None)
-        mock_context.__aexit__ = AsyncMock(return_value=None)
-        repository.db_manager.get_transaction.return_value = mock_context
-
         result = await repository.save(sample_user)
 
         assert result is sample_user
         repository.db_manager.get_transaction.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_find_by_id_returns_none(self, repository):
-        """Test find_by_id returns None (placeholder implementation)."""
+    async def test_find_by_id_returns_none(self, repository, mock_session):
+        """Test find_by_id returns None when user not found."""
         user_id = uuid4()
+        # Mock execute to return a result with no scalar
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = None
+        mock_session.execute.return_value = mock_result
+
         result = await repository.find_by_id(user_id)
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_find_all_returns_empty_list(self, repository):
-        """Test find_all returns empty list (placeholder implementation)."""
+    async def test_find_all_returns_empty_list(self, repository, mock_session):
+        """Test find_all returns empty list when no users exist."""
+        # Mock execute to return empty scalars
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = []
+        mock_session.execute.return_value = mock_result
+
         result = await repository.find_all()
         assert result == []
 
     @pytest.mark.asyncio
-    async def test_find_all_with_pagination(self, repository):
+    async def test_find_all_with_pagination(self, repository, mock_session):
         """Test find_all accepts pagination parameters."""
+        # Mock execute to return empty scalars
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = []
+        mock_session.execute.return_value = mock_result
+
         result = await repository.find_all(skip=10, limit=50)
         assert result == []
 
     @pytest.mark.asyncio
-    async def test_update_returns_none(self, repository):
-        """Test update returns None (placeholder implementation)."""
+    async def test_update_returns_none(self, repository, mock_session):
+        """Test update returns None when user not found."""
         user_id = uuid4()
         updates = {"username": "newname"}
+        # Mock execute to return no result
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = None
+        mock_session.execute.return_value = mock_result
+
         result = await repository.update(user_id, updates)
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_delete_returns_false(self, repository):
-        """Test delete returns False (placeholder implementation)."""
+    async def test_delete_returns_false(self, repository, mock_session):
+        """Test delete returns False when user not found."""
         user_id = uuid4()
+        # Mock execute for delete operation
+        mock_result = MagicMock()
+        mock_result.rowcount = 0
+        mock_session.execute.return_value = mock_result
+
         result = await repository.delete(user_id)
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_exists_returns_false(self, repository):
-        """Test exists returns False (placeholder implementation)."""
+    async def test_exists_returns_false(self, repository, mock_session):
+        """Test exists returns False when user not found."""
         user_id = uuid4()
+        # Mock execute to return result with first() returning None
+        mock_result = MagicMock()
+        mock_result.first.return_value = None
+        mock_session.execute.return_value = mock_result
+
         result = await repository.exists(user_id)
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_count_returns_zero(self, repository):
-        """Test count returns 0 (placeholder implementation)."""
+    async def test_count_returns_zero(self, repository, mock_session):
+        """Test count returns 0 when no users exist."""
+        # Mock execute to return count of 0
+        mock_result = MagicMock()
+        mock_result.scalar.return_value = 0
+        mock_session.execute.return_value = mock_result
+
         result = await repository.count()
         assert result == 0
 
     @pytest.mark.asyncio
-    async def test_find_by_username_returns_none(self, repository):
-        """Test find_by_username returns None (placeholder implementation)."""
+    async def test_find_by_username_returns_none(self, repository, mock_session):
+        """Test find_by_username returns None when user not found."""
+        # Mock execute to return no result
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = None
+        mock_session.execute.return_value = mock_result
+
         result = await repository.find_by_username("testuser")
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_find_by_session_id_returns_none(self, repository):
-        """Test find_by_session_id returns None (placeholder implementation)."""
+    async def test_find_by_session_id_returns_none(self, repository, mock_session):
+        """Test find_by_session_id returns None when session not found."""
+        # Mock execute to return no result
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = None
+        mock_session.execute.return_value = mock_result
+
         result = await repository.find_by_session_id("session123")
         assert result is None
 

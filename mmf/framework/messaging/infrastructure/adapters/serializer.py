@@ -3,8 +3,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from mmf.framework.messaging.domain.models import MessagingError
-from mmf.framework.messaging.domain.ports import IMessageSerializer
+from mmf.core.messaging import IMessageSerializer, MessagingError
 
 
 class JSONMessageSerializer(IMessageSerializer):
