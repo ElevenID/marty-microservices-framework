@@ -183,7 +183,7 @@ dev = [
     "build>=1.3.0",
     "twine>=6.2.0",
     "radon>=6.0.1",
-    "marty-msf[cli,microservices,observability]",
+    "marty-msf[security,observability]",
     "pipdeptree>=2.29.0",
     "autopep8>=2.3.2",
     "pytest-archon>=0.0.7",
