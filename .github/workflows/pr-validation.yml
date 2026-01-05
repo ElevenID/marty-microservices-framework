@@ -83,7 +83,7 @@ jobs:
     - name: Run architectural tests
       run: |
         echo "Running architectural tests..."
-        uv run pytest mmf/tests/test_architecture.py -v
+        uv run pytest mmf/tests/test_architecture.py -v --no-cov
 
     - name: Run unit tests
       working-directory: ./mmf
