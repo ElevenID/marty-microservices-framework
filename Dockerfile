@@ -30,7 +30,6 @@ RUN uv pip install --system \
 
 # Copy application code
 COPY mmf/ ./mmf/
-COPY platform_plugins/ ./platform_plugins/
 
 # Set Python path
 ENV PYTHONPATH=/app

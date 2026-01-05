@@ -132,7 +132,7 @@ jobs:
       working-directory: ./mmf
       run: |
         echo "Running MMF contract validation tests..."
-        uv run pytest tests/contract -v
+        uv run pytest mmf/tests/contract -v --no-cov
 
     - name: Upload contract test results
       if: always()
@@ -200,7 +200,7 @@ jobs:
       working-directory: ./mmf
       run: |
         echo "Running MMF ${{ matrix.test-category }} tests in ${{ matrix.test-mode }} mode..."
-        uv run pytest tests/${{ matrix.test-category }} -v
+        uv run pytest mmf/tests/${{ matrix.test-category }} -v
 
     - name: Upload test artifacts
       if: always()
@@ -258,7 +258,7 @@ jobs:
       working-directory: ./mmf
       run: |
         echo "Running MMF performance validation tests..."
-        uv run pytest tests/performance -v
+        uv run pytest mmf/tests/performance -v --no-cov
 
     - name: Upload performance results
       if: always()
@@ -300,7 +300,7 @@ jobs:
       working-directory: ./mmf
       run: |
         echo "Running MMF security validation tests..."
-        uv run pytest tests/security -v
+        uv run pytest mmf/tests/security -v --no-cov
 
     - name: Security scan
       run: |
@@ -362,7 +362,7 @@ jobs:
       working-directory: ./mmf
       run: |
         echo "Running MMF chaos engineering tests..."
-        uv run pytest tests/chaos -v
+        uv run pytest mmf/tests/chaos -v --no-cov
 
     - name: Upload chaos test results
       if: always()
