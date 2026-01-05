@@ -35,6 +35,13 @@ from .application.base import (
     WriteCommand,
 )
 from .application.handlers import CommandHandler, QueryHandler
+from .cache import (
+    BaseCacheManager,
+    ICacheManager,
+    ICacheMetrics,
+    InMemoryCacheManager,
+    KeyPrefixConfig,
+)
 from .domain.entity import AggregateRoot, DomainEvent, Entity, ValueObject
 from .domain.ports.repository import (
     DomainRepository,
@@ -53,6 +60,13 @@ __version__ = "2.0.0"
 # Removed old framework dependency to avoid circular imports
 
 __all__ = [
+    # Cache infrastructure
+    "ICacheManager",
+    "ICacheMetrics",
+    "BaseCacheManager",
+    "InMemoryCacheManager",
+    "KeyPrefixConfig",
+    # Commands and queries
     "Command",
     "Query",
     "WriteCommand",

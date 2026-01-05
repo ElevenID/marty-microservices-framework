@@ -83,11 +83,116 @@ class PluginContext:
     event_bus: Any = None
     metrics: Any = None
     security: Any = None
+    cache: Any = None  # ICacheManager - typed as Any for import cycle avoidance
+    database: Any = None  # DatabaseManager
 
     def __post_init__(self):
         """Post-initialization setup."""
         if self.logger is None:
             self.logger = logging.getLogger(f"plugin.{self.plugin_id}")
+
+
+class PluginContextBuilder:
+    """
+    Builder for creating fully-wired PluginContext instances.
+
+    Provides a fluent interface for dependency injection into plugins.
+
+    Example:
+        context = (
+            PluginContextBuilder("my-plugin")
+            .with_config({"key": "value"})
+            .with_cache(cache_manager)
+            .with_event_bus(event_bus)
+            .build()
+        )
+    """
+
+    def __init__(self, plugin_id: str):
+        """
+        Initialize builder with plugin ID.
+
+        Args:
+            plugin_id: Unique identifier for the plugin
+        """
+        self._plugin_id = plugin_id
+        self._config: dict[str, Any] = {}
+        self._logger: Any = None
+        self._registry: Any = None
+        self._event_bus: Any = None
+        self._metrics: Any = None
+        self._security: Any = None
+        self._cache: Any = None
+        self._database: Any = None
+
+    def with_config(self, config: dict[str, Any]) -> PluginContextBuilder:
+        """Set plugin configuration."""
+        self._config = config
+        return self
+
+    def with_logger(self, logger: Any) -> PluginContextBuilder:
+        """Set custom logger."""
+        self._logger = logger
+        return self
+
+    def with_registry(self, registry: Any) -> PluginContextBuilder:
+        """Set plugin registry."""
+        self._registry = registry
+        return self
+
+    def with_event_bus(self, event_bus: Any) -> PluginContextBuilder:
+        """Set event bus for plugin communication."""
+        self._event_bus = event_bus
+        return self
+
+    def with_metrics(self, metrics: Any) -> PluginContextBuilder:
+        """Set metrics collector."""
+        self._metrics = metrics
+        return self
+
+    def with_security(self, security: Any) -> PluginContextBuilder:
+        """Set security manager."""
+        self._security = security
+        return self
+
+    def with_cache(self, cache: Any) -> PluginContextBuilder:
+        """
+        Set cache manager.
+
+        Args:
+            cache: ICacheManager implementation for plugin caching
+        """
+        self._cache = cache
+        return self
+
+    def with_database(self, database: Any) -> PluginContextBuilder:
+        """
+        Set database manager.
+
+        Args:
+            database: DatabaseManager for plugin data access
+        """
+        self._database = database
+        return self
+
+    def build(self) -> PluginContext:
+        """
+        Build the PluginContext with all configured dependencies.
+
+        Returns:
+            Fully configured PluginContext instance
+        """
+        return PluginContext(
+            plugin_id=self._plugin_id,
+            config=self._config,
+            logger=self._logger,
+            registry=self._registry,
+            event_bus=self._event_bus,
+            metrics=self._metrics,
+            security=self._security,
+            cache=self._cache,
+            database=self._database,
+        )
 
 
 @dataclass
@@ -486,6 +591,7 @@ __all__ = [
     "RouteMethod",
     "PluginMetadata",
     "PluginContext",
+    "PluginContextBuilder",
     "ServiceDefinition",
     "RouteDefinition",
     "PluginSubscriptionBase",

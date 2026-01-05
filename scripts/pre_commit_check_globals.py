@@ -25,6 +25,8 @@ EXCLUSION_PATTERNS = [
     r"boneyard/.*",
     r"mmf/core/di_container\.py",  # DI container itself needs globals
     r"mmf/adapters/credentials/.*\.py",  # Credential adapters use singleton pattern
+    r"mmf/adapters/auth/__init__\.py",  # Auth adapter uses singleton pattern
+    r"mmf/framework/observability/cache_metrics\.py",  # Metrics use singleton pattern
 ]
 
 
