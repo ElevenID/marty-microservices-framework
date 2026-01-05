@@ -1,0 +1,3 @@
+"""
+Authentication output adapters.
+"""
