@@ -129,7 +129,6 @@ jobs:
         uv sync --group dev
 
     - name: Run contract tests
-      working-directory: ./mmf
       run: |
         echo "Running MMF contract validation tests..."
         uv run pytest mmf/tests/contract -v --no-cov
@@ -197,7 +196,6 @@ jobs:
 
     - name: Run ${{ matrix.test-category }} tests (${{ matrix.test-mode }} mode)
       timeout-minutes: ${{ matrix.timeout }}
-      working-directory: ./mmf
       run: |
         echo "Running MMF ${{ matrix.test-category }} tests in ${{ matrix.test-mode }} mode..."
         uv run pytest mmf/tests/${{ matrix.test-category }} -v
@@ -255,7 +253,6 @@ jobs:
         uv sync --group dev
 
     - name: Run performance tests
-      working-directory: ./mmf
       run: |
         echo "Running MMF performance validation tests..."
         uv run pytest mmf/tests/performance -v --no-cov
@@ -297,7 +294,6 @@ jobs:
         uv sync --group dev
 
     - name: Run security tests
-      working-directory: ./mmf
       run: |
         echo "Running MMF security validation tests..."
         uv run pytest mmf/tests/security -v --no-cov
@@ -359,7 +355,6 @@ jobs:
         uv sync --group dev
 
     - name: Run chaos engineering tests
-      working-directory: ./mmf
       run: |
         echo "Running MMF chaos engineering tests..."
         uv run pytest mmf/tests/chaos -v --no-cov
