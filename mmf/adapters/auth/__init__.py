@@ -168,9 +168,7 @@ class RSAChallengeSigner:
         """
         private_key_pem = os.environ.get("MMF_AUTH_SIGNING_PRIVATE_KEY")
         if not private_key_pem:
-            logger.warning(
-                "MMF_AUTH_SIGNING_PRIVATE_KEY not set. " "Challenge signing is disabled."
-            )
+            logger.warning("MMF_AUTH_SIGNING_PRIVATE_KEY not set. Challenge signing is disabled.")
             return None
 
         password = os.environ.get("MMF_AUTH_SIGNING_KEY_PASSWORD")

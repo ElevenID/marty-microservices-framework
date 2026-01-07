@@ -74,7 +74,7 @@ class TestLambdaFactory:
 
     def test_get_service_type(self):
         factory = LambdaFactory(str, lambda x: "test")
-        assert factory.get_service_type() == str
+        assert factory.get_service_type() is str
 
 
 class TestSingletonFactory:
@@ -94,7 +94,7 @@ class TestSingletonFactory:
     def test_get_service_type(self):
         inner_factory = Mock()
         factory = SingletonFactory(str, inner_factory)
-        assert factory.get_service_type() == str
+        assert factory.get_service_type() is str
 
 
 class TestDIContainer:
@@ -173,7 +173,7 @@ class TestDIContainer:
     def test_register_service_enhanced(self, container):
         registration = container.register_service(str, instance="test", is_singleton=True)
 
-        assert registration.service_type == str
+        assert registration.service_type is str
         assert registration.instance == "test"
         assert container.get_service_typed(str) == "test"
 

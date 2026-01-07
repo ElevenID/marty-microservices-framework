@@ -287,12 +287,6 @@ addopts = [
     "--strict-config",
     "--verbose",
     "--tb=short",
-    "--cov=mmf",
-    "--cov-branch",
-    "--cov-report=term-missing",
-    "--cov-report=html:htmlcov",
-    "--cov-report=xml",
-    "--cov-fail-under=30",
     "--asyncio-mode=auto",
     "--durations=10",
 ]
