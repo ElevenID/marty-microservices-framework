@@ -349,6 +349,9 @@ class RedisCacheManager(BaseCacheManager):
         """
         Get all keys matching a pattern within this cache's namespace.
 
+        Note: Uses SCAN for Redis Cluster compatibility. For large keyspaces,
+        consider implementing pagination or using more specific patterns.
+
         Args:
             pattern: Glob-style pattern (applied after prefix)
 
@@ -358,14 +361,27 @@ class RedisCacheManager(BaseCacheManager):
         full_pattern = self._build_key(pattern)
 
         try:
-            keys = await self._redis.keys(full_pattern)
+            # Use SCAN instead of KEYS for Redis Cluster compatibility
+            # SCAN is cursor-based and doesn't block the server
+            keys = []
+            cursor = 0
+            while True:
+                cursor, batch = await self._redis.scan(
+                    cursor=cursor,
+                    match=full_pattern,
+                    count=100,  # Reasonable batch size
+                )
+                keys.extend(batch)
+                if cursor == 0:
+                    break
+
             # Strip prefix from returned keys
             return [
                 self._prefix.strip_prefix(k.decode() if isinstance(k, bytes) else k) for k in keys
             ]
         except Exception as e:
             self._record_error("keys")
-            self._logger.error(f"Redis KEYS error for {pattern}: {e}")
+            self._logger.error(f"Redis SCAN error for {pattern}: {e}")
             raise
 
     async def health_check(self) -> bool:
