@@ -56,23 +56,20 @@ jobs:
 
       - name: Install build dependencies
         run: |
-          source .venv/bin/activate
-          pip install build hatchling twine
+          uv pip install build hatchling twine
 
       - name: Build package
         run: |
-          source .venv/bin/activate
-          python -m build
+          uv run python -m build
 
       - name: Publish to GitHub Packages
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          source .venv/bin/activate
           REPO_URL="https://pypi.pkg.github.com/ElevenID/"
 
-          twine upload dist/* \
+          uv run twine upload dist/* \
             --repository-url "$REPO_URL" \
             --skip-existing \
             --non-interactive || echo "Warning: Upload failed, continuing..."
