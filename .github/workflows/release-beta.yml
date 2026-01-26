@@ -1,0 +1,97 @@
+name: Release Beta
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Beta version to release (e.g., 1.0.0-beta.1)'
+        required: true
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build-and-publish:
+    name: Build and Publish Beta
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Set beta version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            SHORT_SHA=$(git rev-parse --short HEAD)
+            BASE_VERSION=$(grep -oP '__version__ = "\K[^"]+' mmf/__init__.py || echo "1.0.0")
+            VERSION="${BASE_VERSION}-beta.$(date +%Y%m%d).${SHORT_SHA}"
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building beta version: $VERSION"
+
+      - name: Update version in code
+        run: |
+          sed -i "s/__version__ = .*/__version__ = \"${{ steps.version.outputs.VERSION }}\"/" mmf/__init__.py
+
+      - name: Install build dependencies
+        run: |
+          uv pip install --system build hatchling twine
+
+      - name: Build package
+        run: python -m build
+
+      - name: Publish to GitHub Packages
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPO_URL="https://upload.pypi.org/legacy/"
+
+          twine upload dist/* \
+            --repository-url "$REPO_URL" \
+            --skip-existing \
+            --non-interactive || echo "Warning: Upload failed, continuing..."
+
+      - name: Create artifact manifest
+        run: |
+          echo "# Beta Release - marty-microservices-framework" > dist/MANIFEST.md
+          echo "" >> dist/MANIFEST.md
+          echo "Version: ${{ steps.version.outputs.VERSION }}" >> dist/MANIFEST.md
+          echo "Commit: ${{ github.sha }}" >> dist/MANIFEST.md
+          echo "Date: $(date -u +%Y-%m-%d\ %H:%M:%S\ UTC)" >> dist/MANIFEST.md
+          echo "" >> dist/MANIFEST.md
+          echo "## Installation" >> dist/MANIFEST.md
+          echo '```bash' >> dist/MANIFEST.md
+          echo "pip install marty-microservices-framework==${{ steps.version.outputs.VERSION }}" >> dist/MANIFEST.md
+          echo '```' >> dist/MANIFEST.md
+          echo "" >> dist/MANIFEST.md
+          echo "## Artifacts" >> dist/MANIFEST.md
+          ls -lh dist/*.whl dist/*.tar.gz >> dist/MANIFEST.md 2>/dev/null || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: beta-release-${{ steps.version.outputs.VERSION }}
+          path: |
+            dist/*.whl
+            dist/*.tar.gz
+            dist/MANIFEST.md
+          retention-days: 30
