@@ -63,7 +63,7 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          REPO_URL="https://upload.pypi.org/legacy/"
+          REPO_URL="https://pypi.pkg.github.com/ElevenID/"
 
           twine upload dist/* \
             --repository-url "$REPO_URL" \
@@ -80,7 +80,7 @@ jobs:
           echo "" >> dist/MANIFEST.md
           echo "## Installation" >> dist/MANIFEST.md
           echo '```bash' >> dist/MANIFEST.md
-          echo "pip install marty-microservices-framework==${{ steps.version.outputs.VERSION }}" >> dist/MANIFEST.md
+          echo "pip install --pre marty-msf==${{ steps.version.outputs.VERSION }}" >> dist/MANIFEST.md
           echo '```' >> dist/MANIFEST.md
           echo "" >> dist/MANIFEST.md
           echo "## Artifacts" >> dist/MANIFEST.md
