@@ -186,7 +186,12 @@ class AlembicMigrationAdapter(MigrationManagerPort):
             engine = create_engine(sync_url, poolclass=pool.NullPool)
 
             with engine.connect() as connection:
-                context = MigrationContext.configure(connection)
+                # Configure with service-specific schema if available
+                config_opts = {}
+                if self._service_name:
+                    config_opts["version_table_schema"] = f"{self._service_name}_service"
+
+                context = MigrationContext.configure(connection, opts=config_opts)
                 current_rev = context.get_current_revision()
                 return current_rev
 

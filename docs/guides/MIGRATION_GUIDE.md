@@ -15,9 +15,9 @@ from marty_chassis.discovery import ServiceRegistry
 **After (Framework):**
 
 ```python
-from marty_msf.framework.config import create_service_config
-from marty_msf.framework.logging import UnifiedServiceLogger
-from marty_msf.framework.discovery import ServiceDiscoveryManager
+from mmf.framework.infrastructure.config import create_service_config
+from mmf.framework.infrastructure.logging import UnifiedServiceLogger
+from mmf.framework.infrastructure.discovery import ServiceDiscoveryManager
 ```
 
 ### Configuration Updates
@@ -45,7 +45,7 @@ plugin_config = PluginContext.get_plugin_config_sync()
 **After:**
 
 ```python
-from marty_msf.framework.plugins import PluginConfigManager
+from mmf.framework.plugins import PluginConfigManager
 plugin_config = await PluginConfigManager.get_config()
 ```
 
