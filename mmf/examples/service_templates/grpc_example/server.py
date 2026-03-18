@@ -10,171 +10,109 @@ from mmf.examples.service_templates.grpc_example.infrastructure.adapters import 
     ExternalInventoryAdapter,
     InMemoryOrderRepository,
 )
+from mmf.examples.service_templates.grpc_example.proto import (
+    order_service_pb2,
+    order_service_pb2_grpc,
+)
+from mmf.framework.grpc import (
+    ObservableGrpcServiceMixin,
+    ServiceDefinition,
+    UnifiedGrpcServer,
+)
 from mmf.framework.integration.adapters.rest_adapter import RESTAPIAdapter
 from mmf.framework.integration.domain.models import ConnectionConfig, ConnectorType
 
-# Generated gRPC imports would go here
-# from proto import order_service_pb2
-# from proto import order_service_pb2_grpc
 
-
-# Mock protobuf message classes (normally generated from .proto files)
-class MockOrderItemPb:
-    def __init__(self, product_id: str = "", quantity: int = 0, price: float = 0.0):
-        self.product_id = product_id
-        self.quantity = quantity
-        self.price = price
-
-
-class MockOrderPb:
-    def __init__(self):
-        self.order_id = ""
-        self.customer_id = ""
-        self.items = []
-        self.status = ""
-        self.total_amount = 0.0
-        self.created_at = 0
-
-
-class MockCreateOrderRequest:
-    def __init__(self):
-        self.customer_id = ""
-        self.items = []
-
-
-class MockCreateOrderResponse:
-    def __init__(self):
-        self.order = MockOrderPb()
-        self.success = False
-        self.error_message = ""
-
-
-class MockGetOrderRequest:
-    def __init__(self):
-        self.order_id = ""
-
-
-class MockGetOrderResponse:
-    def __init__(self):
-        self.order = MockOrderPb()
-        self.success = False
-        self.error_message = ""
-
-
-class MockHealthCheckRequest:
-    pass
-
-
-class MockHealthCheckResponse:
-    def __init__(self):
-        self.status = ""
-        self.dependencies = {}
+def _order_to_pb(order: Order) -> order_service_pb2.Order:
+    """Convert a domain Order to its protobuf representation."""
+    pb = order_service_pb2.Order(
+        order_id=order.order_id,
+        customer_id=order.customer_id,
+        status=order.status,
+        total_amount=order.total_amount,
+        created_at=order.to_timestamp(),
+    )
+    for item in order.items:
+        pb.items.append(
+            order_service_pb2.OrderItem(
+                product_id=item.product_id,
+                quantity=item.quantity,
+                price=item.price,
+            )
+        )
+    return pb
 
 
 # gRPC Service Implementation
-class OrderServiceImpl:
-    """gRPC service implementation."""
+class OrderServiceImpl(
+    order_service_pb2_grpc.OrderServiceServicer,
+    ObservableGrpcServiceMixin,
+):
+    """gRPC service implementation using generated protobuf stubs."""
 
     def __init__(self, order_service: OrderService, inventory_adapter: RESTAPIAdapter):
+        super().__init__()
         self.order_service = order_service
         self.inventory_adapter = inventory_adapter
 
-    async def CreateOrder(
-        self, request: MockCreateOrderRequest, context
-    ) -> MockCreateOrderResponse:
+    async def CreateOrder(self, request, context):
         """Create a new order."""
         try:
-            # Convert gRPC request to domain model
             items = [
                 OrderItem(product_id=item.product_id, quantity=item.quantity, price=item.price)
                 for item in request.items
             ]
-
             order = Order(customer_id=request.customer_id, items=items)
-
-            # Process through application service
             created_order = await self.order_service.create_order(order)
 
-            # Convert to gRPC response
-            response = MockCreateOrderResponse()
-            response.success = True
-            response.order.order_id = created_order.order_id
-            response.order.customer_id = created_order.customer_id
-            response.order.status = created_order.status
-            response.order.total_amount = created_order.total_amount
-            response.order.created_at = created_order.to_timestamp()
-
-            # Convert items
-            for item in created_order.items:
-                grpc_item = MockOrderItemPb(
-                    product_id=item.product_id, quantity=item.quantity, price=item.price
-                )
-                response.order.items.append(grpc_item)
-
-            return response
-
+            return order_service_pb2.CreateOrderResponse(
+                order=_order_to_pb(created_order),
+                success=True,
+            )
         except ValueError as e:
-            response = MockCreateOrderResponse()
-            response.success = False
-            response.error_message = str(e)
-            return response
+            return order_service_pb2.CreateOrderResponse(
+                success=False,
+                error_message=str(e),
+            )
         except Exception as e:
             logging.exception("Failed to create order: %s", e)
-            response = MockCreateOrderResponse()
-            response.success = False
-            response.error_message = "Internal server error"
-            return response
+            return order_service_pb2.CreateOrderResponse(
+                success=False,
+                error_message="Internal server error",
+            )
 
-    async def GetOrder(self, request: MockGetOrderRequest, context) -> MockGetOrderResponse:
+    async def GetOrder(self, request, context):
         """Get an order by ID."""
         try:
             order = await self.order_service.get_order(request.order_id)
-            response = MockGetOrderResponse()
-
             if order:
-                response.success = True
-                response.order.order_id = order.order_id
-                response.order.customer_id = order.customer_id
-                response.order.status = order.status
-                response.order.total_amount = order.total_amount
-                response.order.created_at = order.to_timestamp()
-
-                # Convert items
-                for item in order.items:
-                    grpc_item = MockOrderItemPb(
-                        product_id=item.product_id, quantity=item.quantity, price=item.price
-                    )
-                    response.order.items.append(grpc_item)
-            else:
-                response.success = False
-                response.error_message = "Order not found"
-
-            return response
-
+                return order_service_pb2.GetOrderResponse(
+                    order=_order_to_pb(order),
+                    success=True,
+                )
+            return order_service_pb2.GetOrderResponse(
+                success=False,
+                error_message="Order not found",
+            )
         except Exception as e:
             logging.exception("Failed to get order: %s", e)
-            response = MockGetOrderResponse()
-            response.success = False
-            response.error_message = "Internal server error"
-            return response
+            return order_service_pb2.GetOrderResponse(
+                success=False,
+                error_message="Internal server error",
+            )
 
-    async def HealthCheck(
-        self, request: MockHealthCheckRequest, context
-    ) -> MockHealthCheckResponse:
+    async def HealthCheck(self, request, context):
         """Check service health."""
-        response = MockHealthCheckResponse()
-        response.status = "healthy"
-
-        # Check dependencies
         inventory_health = await self.inventory_adapter.health_check()
-        response.dependencies["inventory_service"] = "healthy" if inventory_health else "unhealthy"
-
-        return response
+        return order_service_pb2.HealthCheckResponse(
+            status="healthy",
+            dependencies={"inventory_service": "healthy" if inventory_health else "unhealthy"},
+        )
 
 
 # Server setup
 async def serve():
-    """Start the gRPC server."""
+    """Start the gRPC server using the framework's UnifiedGrpcServer."""
     # Configuration
     inventory_config = ConnectionConfig(
         system_id="inventory-service",
@@ -188,29 +126,25 @@ async def serve():
     inventory_adapter = RESTAPIAdapter(inventory_config)
     order_repo = InMemoryOrderRepository()
     inventory_service = ExternalInventoryAdapter(inventory_adapter)
-    order_service = OrderService(order_repo, inventory_service)
+    order_svc = OrderService(order_repo, inventory_service)
 
     # Connect to external services
     await inventory_adapter.connect()
 
     try:
-        # Create gRPC server
-        server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))
+        # Create server using the framework
+        server = UnifiedGrpcServer(port=50051, service_name="order-service")
 
-        # Add service implementation
-        OrderServiceImpl(order_service, inventory_adapter)
+        # Register service using ServiceDefinition
+        server.register_service(
+            ServiceDefinition(
+                name="order-service",
+                servicer_factory=lambda: OrderServiceImpl(order_svc, inventory_adapter),
+                registration_func=order_service_pb2_grpc.add_OrderServiceServicer_to_server,
+            )
+        )
 
-        # In a real implementation, you would do:
-        # order_service_pb2_grpc.add_OrderServiceServicer_to_server(service_impl, server)
-
-        # Configure server
-        listen_addr = "[::]:50051"
-        server.add_insecure_port(listen_addr)
-
-        logging.info("Starting gRPC server on %s", listen_addr)
-        await server.start()
-        await server.wait_for_termination()
-
+        await server.serve()
     finally:
         await inventory_adapter.disconnect()
 

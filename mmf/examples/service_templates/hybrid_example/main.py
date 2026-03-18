@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from concurrent import futures
 from contextlib import asynccontextmanager
 
 import grpc
@@ -15,6 +14,15 @@ from mmf.examples.service_templates.hybrid_example.domain.models import Order, O
 from mmf.examples.service_templates.hybrid_example.infrastructure.adapters import (
     ExternalInventoryAdapter,
     InMemoryOrderRepository,
+)
+from mmf.examples.service_templates.hybrid_example.proto import (
+    hybrid_order_service_pb2,
+    hybrid_order_service_pb2_grpc,
+)
+from mmf.framework.grpc import (
+    ObservableGrpcServiceMixin,
+    ServiceDefinition,
+    UnifiedGrpcServer,
 )
 from mmf.framework.integration.adapters.rest_adapter import RESTAPIAdapter
 from mmf.framework.integration.domain.models import ConnectionConfig, ConnectorType
@@ -62,69 +70,24 @@ class BatchOrderResponse(BaseModel):
     orders: list[OrderResponse]
 
 
-# Mock gRPC classes (in production, these would be generated)
-class MockOrderItemPb:
-    def __init__(self, product_id: str = "", quantity: int = 0, price: float = 0.0):
-        self.product_id = product_id
-        self.quantity = quantity
-        self.price = price
-
-
-class MockOrderPb:
-    def __init__(self):
-        self.order_id = ""
-        self.customer_id = ""
-        self.items = []
-        self.status = ""
-        self.total_amount = 0.0
-        self.created_at = 0
-
-
-class MockCreateOrderRequest:
-    def __init__(self):
-        self.customer_id = ""
-        self.items = []
-
-
-class MockCreateOrderResponse:
-    def __init__(self):
-        self.order = MockOrderPb()
-        self.success = False
-        self.error_message = ""
-
-
-class MockGetOrderRequest:
-    def __init__(self):
-        self.order_id = ""
-
-
-class MockGetOrderResponse:
-    def __init__(self):
-        self.order = MockOrderPb()
-        self.success = False
-        self.error_message = ""
-
-
-class MockBatchGetOrdersRequest:
-    def __init__(self):
-        self.order_ids = []
-
-
-class MockBatchGetOrdersResponse:
-    def __init__(self):
-        self.orders = []
-        self.success = False
-        self.error_message = ""
-
-
-class MockHealthCheckRequest:
-    pass
-
-
-class MockHealthCheckResponse:
-    def __init__(self):
-        self.status = ""
-        self.dependencies = {}
+def _order_to_pb(order: Order) -> hybrid_order_service_pb2.Order:
+    """Convert a domain Order to its protobuf representation."""
+    pb = hybrid_order_service_pb2.Order(
+        order_id=order.order_id,
+        customer_id=order.customer_id,
+        status=order.status,
+        total_amount=order.total_amount,
+        created_at=order.to_timestamp(),
+    )
+    for item in order.items:
+        pb.items.append(
+            hybrid_order_service_pb2.OrderItem(
+                product_id=item.product_id,
+                quantity=item.quantity,
+                price=item.price,
+            )
+        )
+    return pb
 
 
 # FastAPI App
@@ -209,152 +172,104 @@ async def health_check_rest():
 
 
 # gRPC Service Implementation
-class HybridOrderServiceImpl:
-    """gRPC service implementation."""
+class HybridOrderServiceImpl(
+    hybrid_order_service_pb2_grpc.HybridOrderServiceServicer,
+    ObservableGrpcServiceMixin,
+):
+    """gRPC service implementation using generated protobuf stubs."""
 
     def __init__(
         self, order_service_instance: OrderService, inventory_adapter_instance: RESTAPIAdapter
     ):
+        super().__init__()
         self.order_service = order_service_instance
         self.inventory_adapter = inventory_adapter_instance
 
-    async def CreateOrder(
-        self, request: MockCreateOrderRequest, context
-    ) -> MockCreateOrderResponse:
+    async def CreateOrder(self, request, context):
         """gRPC endpoint to create order."""
         try:
             items = [
                 OrderItem(product_id=item.product_id, quantity=item.quantity, price=item.price)
                 for item in request.items
             ]
-
             order = Order(customer_id=request.customer_id, items=items)
-
             created_order = await self.order_service.create_order(order)
 
-            response = MockCreateOrderResponse()
-            response.success = True
-            response.order.order_id = created_order.order_id
-            response.order.customer_id = created_order.customer_id
-            response.order.status = created_order.status
-            response.order.total_amount = created_order.total_amount
-            response.order.created_at = created_order.to_timestamp()
-
-            for item in created_order.items:
-                grpc_item = MockOrderItemPb(
-                    product_id=item.product_id, quantity=item.quantity, price=item.price
-                )
-                response.order.items.append(grpc_item)
-
-            return response
-
+            return hybrid_order_service_pb2.CreateOrderResponse(
+                order=_order_to_pb(created_order),
+                success=True,
+            )
         except ValueError as e:
-            response = MockCreateOrderResponse()
-            response.success = False
-            response.error_message = str(e)
-            return response
+            return hybrid_order_service_pb2.CreateOrderResponse(
+                success=False,
+                error_message=str(e),
+            )
         except Exception as e:
             logging.exception("Failed to create order: %s", e)
-            response = MockCreateOrderResponse()
-            response.success = False
-            response.error_message = "Internal server error"
-            return response
+            return hybrid_order_service_pb2.CreateOrderResponse(
+                success=False,
+                error_message="Internal server error",
+            )
 
-    async def GetOrder(self, request: MockGetOrderRequest, context) -> MockGetOrderResponse:
+    async def GetOrder(self, request, context):
         """gRPC endpoint to get order."""
         try:
             order = await self.order_service.get_order(request.order_id)
-            response = MockGetOrderResponse()
-
             if order:
-                response.success = True
-                response.order.order_id = order.order_id
-                response.order.customer_id = order.customer_id
-                response.order.status = order.status
-                response.order.total_amount = order.total_amount
-                response.order.created_at = order.to_timestamp()
-
-                for item in order.items:
-                    grpc_item = MockOrderItemPb(
-                        product_id=item.product_id, quantity=item.quantity, price=item.price
-                    )
-                    response.order.items.append(grpc_item)
-            else:
-                response.success = False
-                response.error_message = "Order not found"
-
-            return response
-
+                return hybrid_order_service_pb2.GetOrderResponse(
+                    order=_order_to_pb(order),
+                    success=True,
+                )
+            return hybrid_order_service_pb2.GetOrderResponse(
+                success=False,
+                error_message="Order not found",
+            )
         except Exception as e:
             logging.exception("Failed to get order: %s", e)
-            response = MockGetOrderResponse()
-            response.success = False
-            response.error_message = "Internal server error"
-            return response
+            return hybrid_order_service_pb2.GetOrderResponse(
+                success=False,
+                error_message="Internal server error",
+            )
 
-    async def BatchGetOrders(
-        self, request: MockBatchGetOrdersRequest, context
-    ) -> MockBatchGetOrdersResponse:
+    async def BatchGetOrders(self, request, context):
         """gRPC endpoint to get multiple orders."""
         try:
             orders = await self.order_service.get_orders_batch(list(request.order_ids))
-            response = MockBatchGetOrdersResponse()
-            response.success = True
-
-            for order in orders:
-                grpc_order = MockOrderPb()
-                grpc_order.order_id = order.order_id
-                grpc_order.customer_id = order.customer_id
-                grpc_order.status = order.status
-                grpc_order.total_amount = order.total_amount
-                grpc_order.created_at = order.to_timestamp()
-
-                for item in order.items:
-                    grpc_item = MockOrderItemPb(
-                        product_id=item.product_id, quantity=item.quantity, price=item.price
-                    )
-                    grpc_order.items.append(grpc_item)
-
-                response.orders.append(grpc_order)
-
-            return response
-
+            pb_orders = [_order_to_pb(order) for order in orders]
+            return hybrid_order_service_pb2.BatchGetOrdersResponse(
+                orders=pb_orders,
+                success=True,
+            )
         except Exception as e:
             logging.exception("Failed to get orders batch: %s", e)
-            response = MockBatchGetOrdersResponse()
-            response.success = False
-            response.error_message = "Internal server error"
-            return response
+            return hybrid_order_service_pb2.BatchGetOrdersResponse(
+                success=False,
+                error_message="Internal server error",
+            )
 
-    async def HealthCheck(
-        self, request: MockHealthCheckRequest, context
-    ) -> MockHealthCheckResponse:
+    async def HealthCheck(self, request, context):
         """gRPC health check endpoint."""
-        response = MockHealthCheckResponse()
-        response.status = "healthy"
-
         inventory_health = await self.inventory_adapter.health_check()
-        response.dependencies["inventory_service"] = "healthy" if inventory_health else "unhealthy"
-
-        return response
+        return hybrid_order_service_pb2.HealthCheckResponse(
+            status="healthy",
+            dependencies={"inventory_service": "healthy" if inventory_health else "unhealthy"},
+        )
 
 
 # Server runner functions
 async def run_grpc_server():
-    """Run the gRPC server."""
-    server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))
+    """Run the gRPC server using the framework's UnifiedGrpcServer."""
+    server = UnifiedGrpcServer(port=50051, service_name="hybrid-order-service")
 
-    # Add service implementation
-    HybridOrderServiceImpl(order_service, inventory_adapter)
+    server.register_service(
+        ServiceDefinition(
+            name="hybrid-order-service",
+            servicer_factory=lambda: HybridOrderServiceImpl(order_service, inventory_adapter),
+            registration_func=hybrid_order_service_pb2_grpc.add_HybridOrderServiceServicer_to_server,
+        )
+    )
 
-    # In production: hybrid_order_service_pb2_grpc.add_HybridOrderServiceServicer_to_server(service_impl, server)
-
-    listen_addr = "[::]:50051"
-    server.add_insecure_port(listen_addr)
-
-    logging.info("Starting gRPC server on %s", listen_addr)
-    await server.start()
-    await server.wait_for_termination()
+    await server.serve()
 
 
 def run_fastapi_server():

@@ -217,6 +217,7 @@ class UnifiedGrpcServer:
         # Store initialization parameters
         self.service_name = service_name or "grpc-server"
         self.port = port
+        self.interceptors = kwargs.pop("interceptors", None) or []
         self.config_kwargs = kwargs
 
         # These will be initialized during start()
@@ -310,9 +311,6 @@ class UnifiedGrpcServer:
             # Ensure initialization
             await self.initialize()
 
-            if not self.config_manager:
-                raise RuntimeError("Configuration manager not initialized")
-
             # Get server configuration
             max_workers = getattr(self.config, "grpc_max_workers", 10)
 
@@ -329,6 +327,7 @@ class UnifiedGrpcServer:
             self.server = aio.server(
                 futures.ThreadPoolExecutor(max_workers=max_workers),
                 options=default_options,
+                interceptors=self.interceptors or None,
             )
 
             # Add health service
@@ -346,8 +345,12 @@ class UnifiedGrpcServer:
             # Enable reflection if configured
             if getattr(self.config, "grpc_reflection_enabled", True):
                 try:
-                    # Enable reflection for all registered services
-                    reflection.enable_server_reflection([reflection.SERVICE_NAME], self.server)
+                    # Collect all registered service names for reflection
+                    service_names = [reflection.SERVICE_NAME]
+                    for service_def in self.service_definitions.values():
+                        if service_def.health_service_name:
+                            service_names.append(service_def.health_service_name)
+                    reflection.enable_server_reflection(service_names, self.server)
                 except Exception as e:
                     self.logger.warning("Failed to enable server reflection: %s", e)
 
@@ -423,12 +426,26 @@ class UnifiedGrpcServer:
                 with open(server_key, "rb") as f:
                     key_data = f.read()
 
-                credentials = grpc.ssl_server_credentials([(key_data, cert_data)])
+                # mTLS: optionally require client certificates
+                client_ca_cert = getattr(self.config, "grpc_tls_client_ca_cert", None)
+                root_ca_data = None
+                require_client_auth = getattr(self.config, "grpc_tls_require_client_auth", False)
+                if client_ca_cert:
+                    with open(client_ca_cert, "rb") as f:
+                        root_ca_data = f.read()
+
+                credentials = grpc.ssl_server_credentials(
+                    [(key_data, cert_data)],
+                    root_certificates=root_ca_data,
+                    require_client_auth=require_client_auth,
+                )
                 if self.server is None:
                     raise RuntimeError("Server not initialized")
                 self.server.add_secure_port(listen_addr, credentials)
 
-                self.logger.info("gRPC TLS enabled")
+                self.logger.info(
+                    "gRPC TLS enabled (mTLS=%s)", "yes" if require_client_auth else "no"
+                )
             else:
                 self.logger.warning("TLS enabled but cert/key not configured, using insecure")
                 if self.server is None:
