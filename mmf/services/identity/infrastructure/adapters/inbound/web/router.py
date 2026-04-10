@@ -5,6 +5,8 @@ Provides HTTP endpoints for JWT authentication operations including
 token creation, validation, and user authentication.
 """
 
+import logging
+import time
 from datetime import datetime
 from typing import Annotated
 
@@ -32,6 +34,42 @@ from mmf.services.identity.infrastructure.adapters.out.config.config_integration
     get_basic_auth_config_from_yaml,
     get_jwt_config_from_yaml,
 )
+
+logger = logging.getLogger(__name__)
+
+# In-memory token blacklist.  Production deployments should replace this
+# with a Redis-backed implementation shared across replicas.
+_blacklisted_tokens: dict[str, float] = {}  # token_hash -> expiry timestamp
+_BLACKLIST_CLEANUP_INTERVAL = 600
+_blacklist_last_cleanup: float = 0.0
+
+
+def _blacklist_token(token: str, ttl: int = 3600) -> None:
+    """Add a token to the blacklist."""
+    global _blacklist_last_cleanup
+    import hashlib
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    now = time.time()
+    _blacklisted_tokens[token_hash] = now + ttl
+    # Periodic cleanup
+    if now - _blacklist_last_cleanup > _BLACKLIST_CLEANUP_INTERVAL:
+        _blacklist_last_cleanup = now
+        expired = [k for k, exp in _blacklisted_tokens.items() if exp <= now]
+        for k in expired:
+            del _blacklisted_tokens[k]
+
+
+def is_token_blacklisted(token: str) -> bool:
+    """Check if a token has been blacklisted."""
+    import hashlib
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    expiry = _blacklisted_tokens.get(token_hash)
+    if expiry is None:
+        return False
+    if expiry <= time.time():
+        del _blacklisted_tokens[token_hash]
+        return False
+    return True
 
 
 # Request/Response Models
@@ -190,9 +228,10 @@ async def login(
             username=authenticated_user.username or request.username,
         )
     except Exception as e:
+        logger.exception("Failed to create token")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create token: {str(e)}",
+            detail="Failed to create token",
         ) from e
 
 
@@ -224,10 +263,11 @@ async def validate_token(
         else:
             return ValidateTokenResponse(valid=False)
 
-    except Exception as e:
+    except Exception:
+        logger.exception("Token validation failed")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Token validation failed: {str(e)}",
+            detail="Token validation failed",
         )
 
 
@@ -266,10 +306,11 @@ async def get_current_user(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
+        logger.exception("Failed to get user information")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get user information: {str(e)}",
+            detail="Failed to get user information",
         )
 
 
@@ -284,8 +325,17 @@ async def refresh_token(
     This endpoint allows refreshing an existing JWT token,
     extending its expiration time.
     """
+    if is_token_blacklisted(token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has been revoked",
+        )
+
     try:
         new_token = await token_provider.refresh_token(token)
+
+        # Blacklist the old token so it can't be reused
+        _blacklist_token(token)
 
         # Validate the new token to get user info
         authenticated_user = await token_provider.validate_token(new_token)
@@ -297,19 +347,24 @@ async def refresh_token(
             username=authenticated_user.username,
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error("Token refresh failed: %s", e)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Token refresh failed: {str(e)}",
+            detail="Token refresh failed",
         )
 
 
 @router.post("/logout")
-async def logout() -> dict[str, str]:
+async def logout(
+    token: Annotated[str, Depends(extract_token_from_header)],
+) -> dict[str, str]:
     """
     Logout user and invalidate token.
 
-    This endpoint handles user logout. In a production system,
-    this would typically blacklist the token or mark it as invalid.
+    Blacklists the bearer token so it can no longer be used for authentication.
     """
+    _blacklist_token(token)
     return {"message": "Successfully logged out"}

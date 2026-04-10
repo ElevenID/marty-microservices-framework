@@ -98,7 +98,7 @@ repos:
         name: Check for typos
         exclude: ^(package-lock\.json|.*\.svg|examples/demos/istio-1\.27\.2/.*|ops/k8s/templates/.*|mmf/framework/infrastructure/repository\.py|mmf/framework/infrastructure/persistence\.py)$
 
-  # Python - Type checking (disabled - compatibility issues with Python 3.14)
+  # Python - Type checking (disabled - compatibility issues with Python 3.14, mypy v1.8 too old)
   # - repo: https://github.com/pre-commit/mirrors-mypy
   #   rev: v1.8.0
   #   hooks:
@@ -108,16 +108,16 @@ repos:
   #       args: [--ignore-missing-imports, --warn-unused-configs]
   #       exclude: ^(tests/.*\.py|examples/.*\.py|scripts/detect_globals\.py|.*migration.*\.py|.*legacy.*\.py|tools/scaffolding/.*\.py|boneyard/)$
 
-  # Dead code detection - TODO: Re-enable after cleaning up unused code
+  # Dead code detection — 90 findings at 80% confidence, needs cleanup pass first
   # - repo: https://github.com/jendrikseipp/vulture
-  #   rev: v2.13
+  #   rev: v2.14
   #   hooks:
   #     - id: vulture
   #       name: Find dead Python code
-  #       args: ['--min-confidence', '80', 'mmf/', 'src/', 'tests/', 'services/', 'scripts/']
+  #       args: ['--min-confidence', '80', 'mmf/', 'tests/', 'scripts/']
   #       exclude: ^(tools/scaffolding/.*\.py|boneyard/|\.venv/)$
 
-  # Python - Code complexity - TODO: Re-enable when Python 3.14 compatible
+  # Python - Code complexity (broken on Python 3.14 — radon configparser crash)
   # - repo: https://github.com/yunojuno/pre-commit-xenon
   #   rev: v0.1
   #   hooks:
@@ -170,9 +170,9 @@ repos:
         pass_filenames: false
         exclude: ^(src/framework/testing/|tests/|templates/|examples/|.*_example\.py|.*demo.*\.py|setup_dev\.py|microservice_project_template/|\.venv/|boneyard/)
 
-  # Security - SAST Analysis (disabled - compatibility issues with Python 3.14)
+  # Security - SAST Analysis — works on 3.14 now (v1.142+), but 43 findings to fix first
   # - repo: https://github.com/returntocorp/semgrep
-  #   rev: v1.45.0
+  #   rev: v1.142.1
   #   hooks:
   #     - id: semgrep
   #       name: Semgrep SAST analysis

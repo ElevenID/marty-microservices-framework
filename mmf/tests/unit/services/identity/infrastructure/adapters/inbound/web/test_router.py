@@ -1,4 +1,3 @@
-import importlib
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
@@ -6,18 +5,16 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-# Dynamic import for module with reserved keyword 'in'
-module_name = "mmf.services.identity.infrastructure.adapters.in.web.router"
-router_module = importlib.import_module(module_name)
-
-router = router_module.router
-get_jwt_config = router_module.get_jwt_config
-get_basic_auth_config = router_module.get_basic_auth_config
-get_token_provider = router_module.get_token_provider
-get_basic_auth_provider = router_module.get_basic_auth_provider
-get_auth_use_case = router_module.get_auth_use_case
-get_basic_auth_use_case = router_module.get_basic_auth_use_case
-get_validate_use_case = router_module.get_validate_use_case
+from mmf.services.identity.infrastructure.adapters.inbound.web.router import (
+    router,
+    get_jwt_config,
+    get_basic_auth_config,
+    get_token_provider,
+    get_basic_auth_provider,
+    get_auth_use_case,
+    get_basic_auth_use_case,
+    get_validate_use_case,
+)
 
 from mmf.services.identity.application.use_cases import (
     AuthenticateWithBasicUseCase,

@@ -29,6 +29,8 @@ from mmf.core.security.ports.threat_detection import IThreatDetector
 
 logger = logging.getLogger(__name__)
 
+_placeholder_mode_logged = False
+
 # Optional ML dependencies
 try:
     ML_AVAILABLE = True
@@ -82,9 +84,22 @@ class MLThreatDetector(IThreatDetector):
         except Exception as e:
             logger.error(f"Failed to initialize ML models: {e}")
 
+    def _warn_placeholder_mode(self, operation: str) -> None:
+        """Log once when fallback placeholder logic is being used."""
+        global _placeholder_mode_logged
+        if _placeholder_mode_logged:
+            return
+        _placeholder_mode_logged = True
+        logger.warning(
+            "ML threat detection placeholder mode active during %s; "
+            "results are heuristic/default until feature extraction and model training are implemented",
+            operation,
+        )
+
     async def analyze_event(self, event: SecurityEvent) -> ThreatDetectionResult:
         """Analyze event using ML models (Placeholder)."""
         # ML detector focuses on behavioral analysis, not single event
+        self._warn_placeholder_mode("analyze_event")
         return ThreatDetectionResult(
             event=event,
             is_threat=False,
@@ -116,6 +131,7 @@ class MLThreatDetector(IThreatDetector):
             # Extract features (mock)
             # features = np.array([[len(e.endpoint or "") for e in recent_events]])
             # In real impl, we would extract meaningful features and use the detector
+            self._warn_placeholder_mode("analyze_user_behavior")
             pass
 
         return profile
@@ -125,6 +141,7 @@ class MLThreatDetector(IThreatDetector):
     ) -> ServiceBehaviorProfile:
         """Analyze service behavior."""
         # Mock implementation - recent_events unused for now
+        self._warn_placeholder_mode("analyze_service_behavior")
         _ = recent_events
         if service_name not in self.service_profiles:
             self.service_profiles[service_name] = ServiceBehaviorProfile(service_name=service_name)
@@ -134,6 +151,7 @@ class MLThreatDetector(IThreatDetector):
     async def detect_anomalies(self, data: builtins.dict[str, Any]) -> AnomalyDetectionResult:
         """Detect anomalies in generic data."""
         # Mock implementation - data unused for now
+        self._warn_placeholder_mode("detect_anomalies")
         _ = data
         if not self.anomaly_detector:
             return AnomalyDetectionResult(is_anomaly=False, anomaly_score=0.0, confidence=0.0)
@@ -159,6 +177,7 @@ class MLThreatDetector(IThreatDetector):
         """Get threat detection statistics."""
         return {
             "ml_enabled": ML_AVAILABLE and self.config.enable_ml_detection,
+            "placeholder_mode": True,
             "user_profiles": len(self.user_profiles),
             "service_profiles": len(self.service_profiles),
         }

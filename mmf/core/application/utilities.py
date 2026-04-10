@@ -32,8 +32,9 @@ class DatabaseUtilities:
     def _quote_identifier(self, identifier: str) -> str:
         """Quote SQL identifier safely."""
         validated = self._validate_table_name(identifier)
-        # Use double quotes for SQL standard identifier quoting
-        return f'"{validated}"'
+        # Quote each part separately for schema.table identifiers
+        parts = validated.split(".")
+        return ".".join(f'"{part}"' for part in parts)
 
     async def check_connection(self) -> dict[str, Any]:
         """Check database connection and return status."""

@@ -8,11 +8,11 @@ import sys
 from pathlib import Path
 
 
-def run_command(cmd, description):
+def run_command(cmd, description, cwd=None):
     """Run a command and handle errors."""
     print(f"🔄 {description}...")
     try:
-        subprocess.run(cmd, shell=True, check=True, capture_output=True, text=True)
+        subprocess.run(cmd, check=True, capture_output=True, text=True, cwd=cwd)
         print(f"✅ {description} completed successfully")
         return True
     except subprocess.CalledProcessError as e:
@@ -48,22 +48,22 @@ def main():
     # Install the package in development mode
     steps = [
         (
-            f"cd {framework_path} && uv sync --group dev",
+            ["uv", "sync", "--group", "dev"],
             "Installing Marty CLI with uv (dev dependencies)",
         ),
         (
-            f"cd {framework_path} && uv add --dev pytest pytest-json-report",
+            ["uv", "add", "--dev", "pytest", "pytest-json-report"],
             "Adding test dependencies",
         ),
         (
-            f"cd {framework_path} && uv pip install -e .",
+            ["uv", "pip", "install", "-e", "."],
             "Installing CLI in development mode",
         ),
     ]
 
     failed_steps = []
     for cmd, description in steps:
-        if not run_command(cmd, description):
+        if not run_command(cmd, description, cwd=framework_path):
             failed_steps.append(description)
 
     print("\n" + "=" * 40)

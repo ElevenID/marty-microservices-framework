@@ -105,8 +105,8 @@ class SQLGenerator:
         if not values:
             return f"-- No data to insert into {table_name}"
 
-        columns_str = ", ".join(columns)
-        insert_sql = f"INSERT INTO {table_name} ({columns_str}) VALUES\n"
+        columns_str = ", ".join(f'"{col}"' for col in columns)
+        insert_sql = f'INSERT INTO "{table_name}" ({columns_str}) VALUES\n'
 
         value_rows = []
         for row in values:

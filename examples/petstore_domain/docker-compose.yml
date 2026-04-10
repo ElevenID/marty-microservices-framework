@@ -51,7 +51,7 @@ services:
   # --- Observability Stack ---
 
   jaeger:
-    image: jaegertracing/all-in-one:latest
+    image: jaegertracing/all-in-one:1.64
     ports:
       - "16686:16686" # UI
       - "4317:4317"   # OTLP gRPC
@@ -60,14 +60,14 @@ services:
       - COLLECTOR_OTLP_ENABLED=true
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.1.0
     volumes:
       - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:11.4.0
     ports:
       - "3000:3000"
     environment:
@@ -76,7 +76,7 @@ services:
       - prometheus
 
   dozzle:
-    image: amir20/dozzle:latest
+    image: amir20/dozzle:v8.9.1
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:

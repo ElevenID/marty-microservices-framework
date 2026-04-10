@@ -192,6 +192,8 @@ class RSAChallengeSigner:
         Returns:
             RSAChallengeSigner with newly generated keypair
         """
+        if key_size < 2048:
+            raise ValueError(f"RSA key size {key_size} is below minimum 2048 bits")
         private_key = rsa.generate_private_key(
             public_exponent=65537,
             key_size=key_size,

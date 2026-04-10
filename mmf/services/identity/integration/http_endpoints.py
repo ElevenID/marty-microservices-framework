@@ -166,7 +166,7 @@ async def authenticate_with_jwt(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Internal authentication error: {str(e)}",
+            detail="Internal authentication error",
         ) from e
 
 
@@ -214,7 +214,7 @@ async def validate_token(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Token validation error: {str(e)}",
+            detail="Token validation error",
         ) from e
 
 

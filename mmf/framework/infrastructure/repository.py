@@ -202,14 +202,14 @@ class SQLAlchemyRepository(Repository[ModelType], Generic[ModelType]):
         """Count total entities."""
         async with self.get_session() as session:
             try:
-                query = select(self.model_class)
+                query = select(func.count()).select_from(self.model_class)
 
                 # Apply soft delete filter if model supports it
                 if hasattr(self.model_class, "deleted_at"):
                     query = query.where(self.model_class.deleted_at.is_(None))
 
                 result = await session.execute(query)
-                return len(list(result.scalars().all()))
+                return result.scalar_one()
 
             except Exception as e:
                 logger.error("Error counting %s: %s", self.model_class.__name__, e)

@@ -666,7 +666,19 @@ class ABACManager:
     ) -> bool:
         """Check if access should be allowed."""
         result = self._evaluator.evaluate_access(principal, resource, action, environment)
-        return result.decision in [PolicyEffect.ALLOW, PolicyEffect.AUDIT]
+        allowed = result.decision in [PolicyEffect.ALLOW, PolicyEffect.AUDIT]
+        principal_id = principal.get("id", principal.get("sub", "unknown"))
+        if allowed:
+            logger.debug(
+                "ABAC decision ALLOW: principal=%s resource=%s action=%s decision=%s",
+                principal_id, resource, action, result.decision.value,
+            )
+        else:
+            logger.info(
+                "ABAC decision DENY: principal=%s resource=%s action=%s decision=%s",
+                principal_id, resource, action, result.decision.value,
+            )
+        return allowed
 
     def require_access(
         self,

@@ -197,7 +197,7 @@ class JWTAuthenticationMiddleware(BaseHTTPMiddleware):
             if not is_optional:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail=f"Token validation failed: {str(e)}",
+                    detail="Token validation failed",
                     headers={"WWW-Authenticate": "Bearer"},
                 ) from e
             return None
@@ -277,7 +277,7 @@ class JWTBearer(HTTPBearer):
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Token validation failed: {str(e)}",
+                detail="Token validation failed",
             ) from e
 
 

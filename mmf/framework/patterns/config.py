@@ -99,8 +99,8 @@ class MessageBrokerConfig:
     # RabbitMQ settings
     rabbitmq_host: str = "localhost"
     rabbitmq_port: int = 5672
-    rabbitmq_username: str = "guest"
-    rabbitmq_password: str = "guest"
+    rabbitmq_username: str = ""
+    rabbitmq_password: str = ""
     rabbitmq_virtual_host: str = "/"
 
     # Common settings

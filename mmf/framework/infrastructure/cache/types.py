@@ -84,7 +84,7 @@ class CacheConfig:
     password: str | None = None
     max_connections: int = 100
     default_ttl: int = 3600  # 1 hour
-    serialization: SerializationFormat = SerializationFormat.PICKLE
+    serialization: SerializationFormat = SerializationFormat.JSON
     compression_enabled: bool = True
     key_prefix: str = ""
     namespace: str = "default"

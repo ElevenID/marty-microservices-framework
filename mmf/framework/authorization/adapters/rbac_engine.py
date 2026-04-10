@@ -372,8 +372,16 @@ class RBACManager:
 
             for permission in user_permissions:
                 if permission.matches(resource_type, resource_id, action):
+                    logger.debug(
+                        "RBAC decision GRANTED: user=%s resource=%s:%s action=%s",
+                        user_id, resource_type, resource_id, action,
+                    )
                     return True
 
+            logger.info(
+                "RBAC decision DENIED: user=%s resource=%s:%s action=%s",
+                user_id, resource_type, resource_id, action,
+            )
             return False
 
         except Exception as e:
@@ -397,6 +405,10 @@ class RBACManager:
             raise PermissionDeniedError(
                 f"Permission denied for {action} on {resource_type}:{resource_id}"
             )
+        logger.debug(
+            "RBAC require_permission GRANTED: user=%s resource=%s:%s action=%s",
+            user_id, resource_type, resource_id, action,
+        )
 
     def check_role(self, user_id: str, role_name: str) -> bool:
         """

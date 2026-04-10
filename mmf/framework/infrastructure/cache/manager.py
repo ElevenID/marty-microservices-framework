@@ -308,7 +308,11 @@ def cached(
                 bound_args.apply_defaults()
                 key_values.update(bound_args.arguments)
             except Exception:
-                pass
+                logging.getLogger(__name__).warning(
+                    "Cache key argument binding failed for %s; skipping args",
+                    func.__name__,
+                    exc_info=True,
+                )
 
             cache_key = key_template.format(**key_values)
 

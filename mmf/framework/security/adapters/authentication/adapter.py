@@ -73,11 +73,27 @@ class IdentityServiceAuthenticator(IAuthenticator):
             return AuthenticationResult(success=False, error=str(e))
 
     async def validate_token(self, token: str) -> AuthenticationResult:
-        """Validate token using Identity Service."""
+        """Validate token using Identity Service JWT provider."""
         try:
-            # TODO: Implement token validation using auth manager
-            # For now, return not implemented
-            return AuthenticationResult(success=False, error="Not implemented")
+            # Look for a provider that supports token validation (JWT adapter)
+            for provider in self.auth_manager._providers.values():
+                if hasattr(provider, "validate_token"):
+                    user = await provider.validate_token(token)
+                    return AuthenticationResult(
+                        success=True,
+                        user=AuthenticatedUser(
+                            user_id=user.user_id,
+                            username=user.username or "",
+                            email=user.email,
+                            roles=set(user.roles),
+                            permissions=set(user.permissions),
+                            metadata=user.metadata,
+                        ),
+                    )
+            return AuthenticationResult(
+                success=False,
+                error="No token validation provider registered",
+            )
         except Exception as e:
             logger.error(f"Token validation failed: {e}")
             return AuthenticationResult(success=False, error=str(e))

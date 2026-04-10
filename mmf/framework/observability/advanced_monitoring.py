@@ -610,7 +610,7 @@ class LogAggregator:
                     "span_id": format(span_context.span_id, "016x"),
                 }
         except Exception:
-            pass
+            logging.getLogger(__name__).debug("Failed to retrieve trace context", exc_info=True)
         return None
 
     def _analyze_log_patterns(self, log_data: builtins.dict[str, Any]):

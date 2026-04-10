@@ -395,8 +395,8 @@ def create_authentication_config(
             "security.enable_rate_limiting": True,
             "security.enable_audit_logging": True,
             "jwt.verify_signature": True,
-            "basic_auth.default_admin_password": os.getenv("ADMIN_PASSWORD", "CHANGE_ME"),
-            "jwt.secret_key": os.getenv("JWT_SECRET_KEY", "CHANGE_ME"),
+            "basic_auth.default_admin_password": os.environ["ADMIN_PASSWORD"],
+            "jwt.secret_key": os.environ["JWT_SECRET_KEY"],
         },
     }
 

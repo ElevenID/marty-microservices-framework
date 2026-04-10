@@ -6,6 +6,7 @@ encryption, decryption, digital signatures, password hashing, and key rotation.
 """
 
 import base64
+import logging
 import secrets
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
@@ -16,6 +17,8 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
 from mmf.core.security.ports.cryptography import ICryptographyManager
+
+logger = logging.getLogger(__name__)
 
 
 class CryptographyService(ICryptographyManager):
@@ -142,6 +145,7 @@ class CryptographyService(ICryptographyManager):
             return True
 
         except Exception:
+            logger.exception("Signature verification failed with unexpected error")
             return False
 
     def hash_password(self, password: str) -> str:
@@ -155,6 +159,7 @@ class CryptographyService(ICryptographyManager):
         try:
             return bcrypt.checkpw(password.encode("utf-8"), hashed_password.encode("utf-8"))
         except Exception:
+            logger.exception("Password verification failed with unexpected error")
             return False
 
     def generate_secure_token(self, length: int = 32) -> str:

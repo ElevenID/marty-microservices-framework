@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..domain.database import (
     DatabaseManager,
     DeadlockError,
+    IsolationLevel,
     RetryableError,
     TransactionError,
 )
@@ -30,7 +31,7 @@ T = TypeVar("T")
 class TransactionConfig:
     """Transaction configuration."""
 
-    isolation_level: str | None = None
+    isolation_level: IsolationLevel | None = None
     read_only: bool = False
     deferrable: bool = False
     max_retries: int = 3
@@ -78,7 +79,7 @@ class TransactionManager:
             # Set transaction configuration after begin()
             if config.isolation_level:
                 await session.execute(
-                    text(f"SET TRANSACTION ISOLATION LEVEL {config.isolation_level}")
+                    text(f"SET TRANSACTION ISOLATION LEVEL {config.isolation_level.value}")
                 )
             if config.read_only:
                 await session.execute(text("SET TRANSACTION READ ONLY"))

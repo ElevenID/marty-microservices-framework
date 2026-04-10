@@ -86,32 +86,34 @@ class ServiceDiscoveryService:
         """Register a new service."""
         try:
             async with AsyncSessionLocal() as session:
-                # Check if service already exists
-                stmt = select(Service).where(Service.name == service_info.name)
-                result = await session.execute(stmt)
-                existing_service = result.scalar_one_or_none()
+                # Upsert: insert or update on conflict to avoid TOCTOU race
+                from sqlalchemy.dialects.postgresql import insert as pg_insert
 
-                if existing_service:
-                    # Update existing service
-                    existing_service.address = service_info.address
-                    existing_service.port = service_info.port
-                    existing_service.health_check_url = service_info.health_check_url
-                    existing_service.tags = service_info.tags
-                    existing_service.metadata = service_info.metadata
-                    existing_service.last_seen = datetime.utcnow()
-                else:
-                    # Create new service
-                    db_service = Service(
-                        name=service_info.name,
-                        address=service_info.address,
-                        port=service_info.port,
-                        health_check_url=service_info.health_check_url,
-                        tags=service_info.tags,
-                        metadata=service_info.metadata,
-                        last_seen=datetime.utcnow(),
+                values = dict(
+                    name=service_info.name,
+                    address=service_info.address,
+                    port=service_info.port,
+                    health_check_url=service_info.health_check_url,
+                    tags=service_info.tags,
+                    metadata=service_info.metadata,
+                    last_seen=datetime.utcnow(),
+                )
+                stmt = (
+                    pg_insert(Service)
+                    .values(**values)
+                    .on_conflict_do_update(
+                        index_elements=["name"],
+                        set_=dict(
+                            address=service_info.address,
+                            port=service_info.port,
+                            health_check_url=service_info.health_check_url,
+                            tags=service_info.tags,
+                            metadata=service_info.metadata,
+                            last_seen=datetime.utcnow(),
+                        ),
                     )
-                    session.add(db_service)
-
+                )
+                await session.execute(stmt)
                 await session.commit()
 
                 # Update in-memory cache
