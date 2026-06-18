@@ -1,36 +1,10 @@
-title = "Gitleaks Configuration"
-description = "Gitleaks configuration for Marty Microservices Framework"
+title = "Marty MSF Gitleaks Configuration"
+
+[extend]
+useDefault = true
 
 [allowlist]
-description = "Global allowlist"
+description = "Vendored Istio demo fixtures are excluded from repository-owned secret policy."
 paths = [
-  '''(?i)example.*''',
-  '''(?i)demo.*''',
-  '''(?i)template.*''',
-  '''(?i)test.*''',
-  '''\.secrets\.baseline$''',
-  '''examples/''',
-  '''demos/''',
-  '''templates/''',
-  '''k8s/.*\.yaml$''',
-  '''.*README\.md$''',
-  '''.*\.md$''',
-  '''.*istio.*''',
-]
-
-regexes = [
-  '''(?i)example''',
-  '''(?i)demo''',
-  '''(?i)test''',
-  '''(?i)template''',
-  '''(?i)placeholder''',
-  '''(?i)dummy''',
-  '''your-.*-key''',
-  '''admin''',
-  '''YWRtaW4=''',
-  '''base64.*example''',
-]
-
-commits = [
-  '''75a69aa77abb5c093dede0076e56bfa6aaf567f1''', # Istio demo files  # pragma: allowlist secret
+  '''examples/demos/istio-1\.27\.2/.*''',
 ]
