@@ -104,7 +104,25 @@ jobs:
         sudo install -m 0755 gitleaks /usr/local/bin/gitleaks
 
     - name: Run GitLeaks secrets scan
-      run: gitleaks detect --source . --no-git --redact --verbose --config .gitleaks.toml
+      run: |
+        case "${{ github.event_name }}" in
+          pull_request)
+            RANGE="${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
+            ;;
+          push)
+            RANGE="${{ github.event.before }}..${{ github.sha }}"
+            ;;
+          *)
+            RANGE=""
+            ;;
+        esac
+
+        if [ -z "$RANGE" ] || [[ "$RANGE" == 000000* ]]; then
+          echo "Skipping GitLeaks diff scan; no comparable commit range for ${{ github.event_name }}."
+          exit 0
+        fi
+
+        gitleaks detect --source . --log-opts="$RANGE" --redact --verbose --config .gitleaks.toml
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
