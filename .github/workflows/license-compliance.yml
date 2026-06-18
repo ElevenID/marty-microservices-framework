@@ -57,9 +57,8 @@ jobs:
 
       - name: Generate dependency license inventory
         run: |
-          . .venv/bin/activate
-          python -m pip install pip-licenses
-          pip-licenses --format=json > dependency-licenses.json
+          uv pip install pip-licenses
+          uv run --no-sync pip-licenses --format=json > dependency-licenses.json
 
       - name: Upload dependency license inventory
         uses: actions/upload-artifact@v4

@@ -177,7 +177,7 @@ def mock_siem_events() -> list[dict[str, Any]]:
             "source": "endpoint_protection",
             "message": "Malware signature detected",
             "metadata": {
-                "file_path": "/tmp/suspicious_file.exe",
+                "file_path": "/tmp/suspicious_file.exe",  # nosec B108
                 "hash": "abc123def456",  # pragma: allowlist secret
                 "user": "test_user",
             },

@@ -13,6 +13,29 @@ from typing import Any
 class SQLGenerator:
     """Utilities for generating valid PostgreSQL SQL."""
 
+    _IDENTIFIER_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)?$")
+
+    @staticmethod
+    def quote_identifier(identifier: str) -> str:
+        """Validate and quote a SQL identifier."""
+        if not SQLGenerator._IDENTIFIER_RE.fullmatch(identifier):
+            raise ValueError(f"Invalid SQL identifier: {identifier}")
+        return ".".join(f'"{part}"' for part in identifier.split("."))
+
+    @staticmethod
+    def format_sql_literal(value: Any) -> str:
+        """Format a scalar or JSON value as a SQL literal."""
+        if value is None:
+            return "NULL"
+        if isinstance(value, bool):
+            return "TRUE" if value else "FALSE"
+        if isinstance(value, int | float):
+            return str(value)
+        if isinstance(value, dict | list):
+            value = SQLGenerator.format_jsonb_value(value)
+        escaped = str(value).replace("'", "''")
+        return f"'{escaped}'"
+
     @staticmethod
     def format_jsonb_value(value: Any) -> str:
         """
@@ -105,24 +128,15 @@ class SQLGenerator:
         if not values:
             return f"-- No data to insert into {table_name}"
 
-        columns_str = ", ".join(f'"{col}"' for col in columns)
-        insert_sql = f'INSERT INTO "{table_name}" ({columns_str}) VALUES\n'
+        quoted_table = SQLGenerator.quote_identifier(table_name)
+        columns_str = ", ".join(SQLGenerator.quote_identifier(col) for col in columns)
+        insert_sql = f"INSERT INTO {quoted_table} ({columns_str}) VALUES\n"  # nosec B608
 
         value_rows = []
         for row in values:
             formatted_values = []
             for value in row:
-                if value is None:
-                    formatted_values.append("NULL")
-                elif isinstance(value, str) and not value.startswith("'"):
-                    # Assume it's a regular string value, not a function call
-                    formatted_values.append(f"'{value}'")
-                elif isinstance(value, dict | list):
-                    # Format structured data as proper JSON for JSONB columns
-                    formatted_values.append(f"'{SQLGenerator.format_jsonb_value(value)}'")
-                else:
-                    # Keep as-is (for numbers, function calls like NOW(), etc.)
-                    formatted_values.append(str(value))
+                formatted_values.append(SQLGenerator.format_sql_literal(value))
 
             value_rows.append(f"  ({', '.join(formatted_values)})")
 

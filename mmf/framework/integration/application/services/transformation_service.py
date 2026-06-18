@@ -7,8 +7,8 @@ import io
 import json
 from collections.abc import Callable
 from typing import Any
-from xml.etree import ElementTree as ET
 
+from defusedxml import ElementTree as ET
 from mmf.framework.integration.domain.exceptions import TransformationError
 from mmf.framework.integration.domain.models import DataFormat
 from mmf.framework.integration.ports.transformation import TransformationPort

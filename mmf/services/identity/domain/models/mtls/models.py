@@ -513,7 +513,7 @@ class CertificateValidationResult(ValueObject):
 def calculate_certificate_fingerprint(cert_data: bytes, algorithm: str = "sha256") -> str:
     """Calculate certificate fingerprint."""
     if algorithm.lower() == "sha1":
-        hash_obj = hashlib.sha1()
+        hash_obj = hashlib.sha1(usedforsecurity=False)
     elif algorithm.lower() == "sha256":
         hash_obj = hashlib.sha256()
     else:

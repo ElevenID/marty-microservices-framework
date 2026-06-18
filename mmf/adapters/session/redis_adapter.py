@@ -35,7 +35,7 @@ class RedisSessionAdapter(ISessionManager):
     # Redis key prefixes
     SESSION_PREFIX = "session:"
     USER_SESSIONS_PREFIX = "user_sessions:"
-    REFRESH_TOKEN_PREFIX = "refresh_token:"
+    REFRESH_TOKEN_PREFIX = "refresh_token:"  # nosec B105
 
     def __init__(
         self,
