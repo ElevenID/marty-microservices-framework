@@ -33,7 +33,7 @@ mmf/                        # Core Framework & Services
 
 ### Prerequisites
 
-* Python 3.10+
+* Python 3.11+
 * Docker & Docker Compose
 
 ### Installation
@@ -78,3 +78,11 @@ Explore the `examples/` directory for practical implementations:
 ## ⚠️ Legacy Code
 
 Legacy components from the previous monolithic architecture have been moved to `boneyard/`.
+
+## License
+
+This repository is licensed under the GNU Affero General Public License v3.0 only (`AGPL-3.0-only`). See [`LICENSE`](LICENSE).
+
+## Production Use
+
+This framework is published as open-source software, but production deployments still require careful configuration of secrets, databases, network boundaries, backups, monitoring, data retention, and dependency review. Validate your deployment and supply-chain controls before using it in production.
