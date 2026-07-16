@@ -57,8 +57,10 @@ jobs:
 
     - name: Run pip-audit dependency vulnerability check
       run: |
-        pip-audit --format json --output pip-audit-report.json || true
-        pip-audit
+        # Audit the project dependency graph, not the scanner environment
+        # (which also contains semgrep's unrelated MCP dependencies).
+        pip-audit . --format json --output pip-audit-report.json || true
+        pip-audit .
 
     - name: Run Semgrep security rules
       run: |
