@@ -13,7 +13,7 @@ pip install marty-msf
 ### From Source
 
 ```bash
-git clone https://github.com/your-org/marty-microservices-framework.git
+git clone https://github.com/ElevenID/marty-microservices-framework.git
 cd marty-microservices-framework
 pip install -e .
 ```
@@ -244,7 +244,7 @@ template = "fastapi-service"
 
 [build]
 docker_registry = "your-registry.com"
-docker_namespace = "your-org"
+docker_namespace = "example"
 
 [deployment]
 environments = ["development", "staging", "production"]
@@ -262,7 +262,7 @@ email = "you@example.com"
 
 [defaults]
 docker_registry = "your-registry.com"
-docker_namespace = "your-org"
+docker_namespace = "example"
 kubernetes_namespace = "default"
 ```
 
@@ -376,6 +376,6 @@ Available Jinja2 filters:
 ## Support
 
 - **Documentation**: [https://marty-msf.readthedocs.io](https://marty-msf.readthedocs.io)
-- **Issues**: [https://github.com/your-org/marty-microservices-framework/issues](https://github.com/your-org/marty-microservices-framework/issues)
-- **Discussions**: [https://github.com/your-org/marty-microservices-framework/discussions](https://github.com/your-org/marty-microservices-framework/discussions)
-- **Slack**: [#marty-framework](https://your-org.slack.com/channels/marty-framework)
+- **Issues**: [https://github.com/ElevenID/marty-microservices-framework/issues](https://github.com/ElevenID/marty-microservices-framework/issues)
+- **Discussions**: [https://github.com/ElevenID/marty-microservices-framework/discussions](https://github.com/ElevenID/marty-microservices-framework/discussions)
+- **Community**: use the repository Discussions forum for public questions.

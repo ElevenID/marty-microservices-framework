@@ -331,7 +331,7 @@ kubectl run load-generator --image=busybox -it --rm -- /bin/sh
 
 If you encounter issues not covered in this guide:
 
-1. Check the [MMF GitHub Issues](https://github.com/your-org/marty-microservices-framework/issues)
+1. Check the [MMF GitHub Issues](https://github.com/ElevenID/marty-microservices-framework/issues)
 2. Consult the [MMF Documentation](../README.md)
 3. Join the community discussion forums
 4. For urgent production issues, contact the platform team

@@ -50,7 +50,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: Run Bandit security scan
         run: |
@@ -60,13 +60,13 @@ jobs:
 
       - name: Upload Bandit results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: bandit-report-${{ inputs.service-name }}
           path: bandit-report.json
 
       - name: Run Semgrep security scan
-        uses: returntocorp/semgrep-action@v1
+        uses: returntocorp/semgrep-action@713efdd345f3035192eaa63f56867b88e63e4e5d
         with:
           config: auto
         env:
@@ -75,7 +75,7 @@ jobs:
       - name: Upload Semgrep results
         if: always()
         continue-on-error: true
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@b7351df727350dca84cb9d725d57dcf5bc82ba26
         with:
           sarif_file: semgrep.sarif
           category: semgrep-${{ inputs.service-name }}
@@ -86,10 +86,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c
         with:
           python-version: '3.13'
 
@@ -107,7 +107,7 @@ jobs:
 
       - name: Upload Safety results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: safety-report-${{ inputs.service-name }}
           path: safety-report.json
@@ -120,7 +120,7 @@ jobs:
 
       - name: Upload pip-audit results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: pip-audit-report-${{ inputs.service-name }}
           path: pip-audit-report.json
@@ -168,14 +168,14 @@ jobs:
 
       - name: Upload Trivy scan results
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@b7351df727350dca84cb9d725d57dcf5bc82ba26
         with:
           sarif_file: trivy-results.sarif
           category: trivy-${{ inputs.service-name }}
 
       - name: Upload detailed Trivy results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: trivy-report-${{ inputs.service-name }}
           path: trivy-results.json
@@ -190,7 +190,7 @@ jobs:
 
       - name: Upload configuration scan results
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@b7351df727350dca84cb9d725d57dcf5bc82ba26
         with:
           sarif_file: trivy-config.sarif
           category: trivy-config-${{ inputs.service-name }}
