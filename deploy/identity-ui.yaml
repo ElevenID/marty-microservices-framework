@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identity-ui
+  namespace: mmf-system
+  labels:
+    app: identity-ui
+    component: ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: identity-ui
+  template:
+    metadata:
+      labels:
+        app: identity-ui
+        component: ui
+    spec:
+      containers:
+      - name: identity-ui
+        image: mmf/identity-ui:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+          name: http
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity-ui
+  namespace: mmf-system
+  labels:
+    app: identity-ui
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: identity-ui
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: identity-ui
+  namespace: mmf-system
+  labels:
+    app: identity-ui
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+  - host: localhost
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: identity-ui
+            port:
+              number: 80

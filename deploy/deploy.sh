@@ -46,19 +46,36 @@ kubectl wait --namespace ingress-nginx \
 echo -e "${YELLOW}🐳 Building Docker image...${NC}"
 docker build -t mmf/identity-service:minimal .
 
+echo -e "${YELLOW}🐳 Building UI Docker image...${NC}"
+docker build -t mmf/identity-ui:latest -f mmf/services/identity/ui/Dockerfile mmf/services/identity/ui
+
 # Load image into KIND cluster
 echo -e "${YELLOW}📥 Loading Docker image into KIND cluster...${NC}"
 kind load docker-image mmf/identity-service:minimal --name mmf-example
+kind load docker-image mmf/identity-ui:latest --name mmf-example
+
+# Deploy Vault
+echo -e "${YELLOW}🔐 Deploying Vault...${NC}"
+kubectl apply -f deploy/vault.yaml
+echo -e "${YELLOW}⏳ Waiting for Vault to be ready...${NC}"
+kubectl wait --namespace default \
+  --for=condition=available deployment/vault \
+  --timeout=300s
 
 # Deploy application
 echo -e "${YELLOW}🚀 Deploying application to Kubernetes...${NC}"
 kubectl apply -f deploy/namespace.yaml
 kubectl apply -f deploy/identity-service.yaml
+kubectl apply -f deploy/identity-ui.yaml
 
 # Wait for deployment to be ready
 echo -e "${YELLOW}⏳ Waiting for deployment to be ready...${NC}"
 kubectl wait --namespace mmf-system \
   --for=condition=available deployment/identity-service \
+  --timeout=300s
+
+kubectl wait --namespace mmf-system \
+  --for=condition=available deployment/identity-ui \
   --timeout=300s
 
 # Show status
@@ -81,6 +98,9 @@ echo -e "Then access the service at:"
 echo -e "${GREEN}http://identity.local:8080/health${NC}"
 echo -e "${GREEN}http://identity.local:8080/users${NC}"
 echo ""
+echo -e "Access the UI at:"
+echo -e "${GREEN}http://localhost:8080${NC}"
+echo ""
 echo -e "To test authentication:"
 echo -e "${GREEN}curl -X POST http://identity.local:8080/authenticate \\${NC}"
 echo -e "${GREEN}  -H \"Content-Type: application/json\" \\${NC}"
@@ -89,5 +109,6 @@ echo -e "${GREEN}  -d '{\"username\": \"admin\", \"password\": \"admin123\"}'${N
 echo ""
 echo -e "${BLUE}🔧 Useful Commands:${NC}"
 echo -e "View logs: ${YELLOW}kubectl logs -n mmf-system -l app=identity-service -f${NC}"
-echo -e "Port forward: ${YELLOW}kubectl port-forward -n mmf-system svc/identity-service 8000:80${NC}"
+echo -e "Port forward App: ${YELLOW}kubectl port-forward -n mmf-system svc/identity-service 8000:80${NC}"
+echo -e "Port forward Vault: ${YELLOW}kubectl port-forward svc/vault 8200:8200${NC}"
 echo -e "Delete cluster: ${YELLOW}kind delete cluster --name mmf-example${NC}"

@@ -23,11 +23,13 @@ RUN uv pip install --system \
     pydantic-settings>=2.11.0 \
     aiofiles>=24.1.0 \
     click>=8.1.0 \
-    pyyaml>=6.0.0
+    pyyaml>=6.0.0 \
+    hvac>=2.3.0 \
+    redis>=5.0.0 \
+    bcrypt>=4.0.1
 
 # Copy application code
-COPY mmf_new/ ./mmf_new/
-COPY platform_core/ ./platform_core/
+COPY mmf/ ./mmf/
 
 # Set Python path
 ENV PYTHONPATH=/app
@@ -35,9 +37,13 @@ ENV PYTHONPATH=/app
 # Expose port
 EXPOSE 8000
 
+# Create non-root user
+RUN adduser --disabled-password --gecos '' appuser
+USER appuser
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Run the application using system Python
-CMD ["python", "-m", "uvicorn", "mmf_new.services.identity.infrastructure.adapters.http_adapter:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "mmf.services.identity.infrastructure.adapters.http_adapter:app", "--host", "0.0.0.0", "--port", "8000"]

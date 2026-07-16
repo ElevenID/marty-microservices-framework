@@ -22,11 +22,11 @@ This directory contains utility scripts for development, testing, and maintenanc
 - **validate_templates.py** - Template validation
 - **verify_security_framework.py** - Security framework verification
 - **check_dependencies.py** - Dependency checking and validation
+- **check_license_metadata.py** - License/README/manifest consistency validation
 - **check_import_order.py** - Import placement validation (pre-commit hook)
 
 ## Generation Scripts
 
-- **generate_service.py** - Service generation utility
 - **helm_to_kustomize_converter.py** - Migration tool for Helm to Kustomize
 
 ## Infrastructure Scripts
@@ -47,9 +47,6 @@ python scripts/setup_dev.py
 
 # Validate framework
 ./scripts/validate.sh
-
-# Generate a new service
-python scripts/generate_service.py
 ```
 
 For scripts that require specific environments or dependencies, refer to the script's documentation header for requirements and usage instructions.

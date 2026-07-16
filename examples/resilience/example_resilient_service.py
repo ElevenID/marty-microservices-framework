@@ -15,7 +15,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 
-from marty_msf.framework.resilience import (
+from mmf.framework.resilience import (
     HTTPPoolConfig,
     PoolConfig,
     PoolType,

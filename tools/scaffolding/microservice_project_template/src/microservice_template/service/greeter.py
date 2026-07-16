@@ -10,11 +10,6 @@ import time
 import grpc
 import pandas as pd
 import structlog
-from microservice_template.config import AppSettings
-from microservice_template.observability.metrics import MetricsServer
-from microservice_template.proto import greeter_pb2, greeter_pb2_grpc
-from microservice_template.service.analytics import AnalyticsService
-from opentelemetry import trace
 
 # Import resilience patterns for robust service design
 from marty_msf.framework.resilience import (
@@ -31,6 +26,11 @@ from marty_msf.framework.resilience import (
     register_database_dependency,
     resilience_pattern,
 )
+from microservice_template.config import AppSettings
+from microservice_template.observability.metrics import MetricsServer
+from microservice_template.proto import greeter_pb2, greeter_pb2_grpc
+from microservice_template.service.analytics import AnalyticsService
+from opentelemetry import trace
 
 
 class GreeterService(greeter_pb2_grpc.GreeterServiceServicer):

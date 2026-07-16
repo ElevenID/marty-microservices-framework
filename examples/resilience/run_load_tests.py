@@ -9,7 +9,7 @@ import asyncio
 import logging
 from pathlib import Path
 
-from marty_msf.framework.resilience.load_testing import (
+from mmf.framework.resilience.load_testing import (
     LoadTester,
     LoadTestScenario,
     LoadTestSuite,

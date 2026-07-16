@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'petstore-services'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets:
+        - 'pet-service:8000'
+        - 'store-service:8001'
+        - 'delivery-board-service:8002'

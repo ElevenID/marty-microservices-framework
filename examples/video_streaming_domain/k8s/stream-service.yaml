@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stream-service
+  namespace: video-streaming
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stream-service
+  template:
+    metadata:
+      labels:
+        app: stream-service
+    spec:
+      containers:
+      - name: stream-service
+        image: mmf/stream-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8002
+        env:
+        - name: CATALOG_SERVICE_URL
+          value: "http://catalog-service:8001"
+        resources:
+          requests:
+            cpu: "100m"
+          limits:
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stream-service
+  namespace: video-streaming
+spec:
+  selector:
+    app: stream-service
+  ports:
+  - port: 8002
+    targetPort: 8002

@@ -30,6 +30,14 @@ spec:
           value: "/app"
         - name: LOG_LEVEL
           value: "INFO"
+        - name: PLUGIN_DIR
+          value: "/app/platform_plugins"
+        - name: VAULT_ADDR
+          value: "http://vault.default.svc.cluster.local:8200"
+        - name: VAULT_TOKEN
+          value: "root"
+        - name: VAULT_MOUNT_POINT
+          value: "secret"
         livenessProbe:
           httpGet:
             path: /health

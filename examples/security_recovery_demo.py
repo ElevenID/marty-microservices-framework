@@ -13,7 +13,7 @@ Usage:
 import asyncio
 from datetime import datetime, timedelta, timezone
 
-from marty_msf.security import (
+from mmf.framework.security import (
     ComplianceFramework,
     SecurityEventSeverity,
     SecurityEventType,

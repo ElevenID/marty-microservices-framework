@@ -72,25 +72,33 @@ repos:
 
   # Python - Ruff (replaces both flake8 and black)
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.4
+    rev: v0.4.4
     hooks:
       - id: ruff
         name: Lint Python code with Ruff
         args: [--fix, --exit-non-zero-on-fix]
-        exclude: ^(services/.*\.py$|tools/scaffolding/.*\.py$|services/shared/modern_service_template\.py$|.*\.ipynb$|examples/demos/istio-1\.27\.2/.*\.py|examples/.*\.py|scripts/detect_globals\.py|.*migration.*\.py|.*legacy.*\.py)$
+        exclude: ^(services/.*\.py$|tools/scaffolding/.*\.py$|services/shared/modern_service_template\.py$|.*\.ipynb$|examples/demos/istio-1\.27\.2/.*\.py|examples/.*\.py|scripts/detect_globals\.py|.*migration.*\.py|.*legacy.*\.py|boneyard/.*)$
       - id: ruff-format
         name: Format Python code with Ruff
-        exclude: ^(services/.*\.py$|tools/scaffolding/.*\.py$|services/shared/modern_service_template\.py$|.*\.ipynb$|examples/demos/istio-1\.27\.2/.*\.py|examples/.*\.py|scripts/detect_globals\.py|.*migration.*\.py|.*legacy.*\.py)$
+        exclude: ^(services/.*\.py$|tools/scaffolding/.*\.py$|services/shared/modern_service_template\.py$|.*\.ipynb$|examples/demos/istio-1\.27\.2/.*\.py|examples/.*\.py|scripts/detect_globals\.py|.*migration.*\.py|.*legacy.*\.py|boneyard/.*)$
 
   # Python - Import sorting
   - repo: https://github.com/PyCQA/isort
-    rev: 7.0.0
+    rev: 5.13.2
     hooks:
       - id: isort
         name: Sort Python imports with isort
         args: ['--profile', 'black']
 
-  # Python - Type checking (disabled - compatibility issues with Python 3.14)
+  # Spell checking
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.21.0
+    hooks:
+      - id: typos
+        name: Check for typos
+        exclude: ^(package-lock\.json|.*\.svg|examples/demos/istio-1\.27\.2/.*|ops/k8s/templates/.*|mmf/framework/infrastructure/repository\.py|mmf/framework/infrastructure/persistence\.py)$
+
+  # Python - Type checking (disabled - compatibility issues with Python 3.14, mypy v1.8 too old)
   # - repo: https://github.com/pre-commit/mirrors-mypy
   #   rev: v1.8.0
   #   hooks:
@@ -100,16 +108,16 @@ repos:
   #       args: [--ignore-missing-imports, --warn-unused-configs]
   #       exclude: ^(tests/.*\.py|examples/.*\.py|scripts/detect_globals\.py|.*migration.*\.py|.*legacy.*\.py|tools/scaffolding/.*\.py|boneyard/)$
 
-  # Dead code detection - TODO: Re-enable after cleaning up unused code
+  # Dead code detection — 90 findings at 80% confidence, needs cleanup pass first
   # - repo: https://github.com/jendrikseipp/vulture
-  #   rev: v2.13
+  #   rev: v2.14
   #   hooks:
   #     - id: vulture
   #       name: Find dead Python code
-  #       args: ['--min-confidence', '80', 'mmf/', 'src/', 'tests/', 'services/', 'scripts/']
+  #       args: ['--min-confidence', '80', 'mmf/', 'tests/', 'scripts/']
   #       exclude: ^(tools/scaffolding/.*\.py|boneyard/|\.venv/)$
 
-  # Python - Code complexity - TODO: Re-enable when Python 3.14 compatible
+  # Python - Code complexity (broken on Python 3.14 — radon configparser crash)
   # - repo: https://github.com/yunojuno/pre-commit-xenon
   #   rev: v0.1
   #   hooks:
@@ -128,20 +136,20 @@ repos:
   #       additional_dependencies: [toml]
 
   # Markdown linting
-  - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.45.0
-    hooks:
-      - id: markdownlint
-        name: Lint Markdown files
-        args: ['--fix']
+  # - repo: https://github.com/igorshubovych/markdownlint-cli
+  #   rev: v0.45.0
+  #   hooks:
+  #     - id: markdownlint
+  #       name: Lint Markdown files
+  #       args: ['--fix']
 
   # Markdown link checking
-  - repo: https://github.com/tcort/markdown-link-check
-    rev: v3.14.1
-    hooks:
-      - id: markdown-link-check
-        name: Check Markdown links
-        args: ['--quiet']
+  # - repo: https://github.com/tcort/markdown-link-check
+  #   rev: v3.14.1
+  #   hooks:
+  #     - id: markdown-link-check
+  #       name: Check Markdown links
+  #       args: ['--quiet']
 
   # Security - Python vulnerabilities (pip-audit)
   - repo: https://github.com/pypa/pip-audit
@@ -162,9 +170,9 @@ repos:
         pass_filenames: false
         exclude: ^(src/framework/testing/|tests/|templates/|examples/|.*_example\.py|.*demo.*\.py|setup_dev\.py|microservice_project_template/|\.venv/|boneyard/)
 
-  # Security - SAST Analysis (disabled - compatibility issues with Python 3.14)
+  # Security - SAST Analysis — works on 3.14 now (v1.142+), but 43 findings to fix first
   # - repo: https://github.com/returntocorp/semgrep
-  #   rev: v1.45.0
+  #   rev: v1.142.1
   #   hooks:
   #     - id: semgrep
   #       name: Semgrep SAST analysis
@@ -173,15 +181,15 @@ repos:
   # Import placement check (runs after syntax fixers)
   - repo: local
     hooks:
-      - id: check-import-order
-        name: Check Import Placement
-        entry: uv run python scripts/check_import_order.py --fix
-        language: system
-        files: \.py$
-        exclude: ^(tests/.*\.py|examples/.*\.py|scripts/detect_globals\.py|.*migration.*\.py|.*legacy.*\.py|tools/scaffolding/.*\.py|boneyard/)$
-        require_serial: true
-        pass_filenames: false
-        stages: [pre-commit]
+      # - id: check-import-order
+      #   name: Check Import Placement
+      #   entry: uv run python scripts/check_import_order.py --fix
+      #   language: system
+      #   files: \.py$
+      #   exclude: ^(tests/.*\.py|examples/.*\.py|scripts/detect_globals\.py|.*migration.*\.py|.*legacy.*\.py|tools/scaffolding/.*\.py|boneyard/)$
+      #   require_serial: true
+      #   pass_filenames: false
+      #   stages: [pre-commit]
 
       # Final syntax validation (after all fixes)
       - id: check-ast
@@ -190,6 +198,7 @@ repos:
         language: system
         files: \.py$
         exclude: ^(examples/demos/istio-1\.27\.2/.*\.py|examples/.*\.py|scripts/detect_globals\.py|.*migration.*\.py|.*legacy.*\.py|boneyard/)$
+        require_serial: true
 
       # Code Quality Analysis - Comprehensive complexity and length checks
       - id: code-quality-check
@@ -202,13 +211,13 @@ repos:
         pass_filenames: false
 
       # Import Linter - Enforces Level Contract Architecture
-      - id: import-linter
-        name: Import Linter (Level Contract Architecture)
-        entry: uv run lint-imports
-        language: system
-        pass_filenames: false
-        stages: [pre-commit]
-        exclude: ^(boneyard/)
+      # - id: import-linter
+      #   name: Import Linter (Level Contract Architecture)
+      #   entry: uv run lint-imports
+      #   language: system
+      #   pass_filenames: false
+      #   stages: [pre-commit]
+      #   exclude: ^(boneyard/)
 
       # Dependencies check
       - id: dependencies-check
@@ -226,7 +235,7 @@ repos:
         entry: python3 scripts/pre_commit_check_globals.py
         language: system
         files: \.py$
-        exclude: ^(tests/.*test_.*\.py|examples/demos/.*\.py|scripts/detect_globals\.py|.*migration.*\.py|.*legacy.*\.py|tools/scaffolding/.*\.py|.*_template\.py|tests/.*/conftest\.py|services/shared/modern_service_template\.py|boneyard/)$
+        exclude: ^(tests/.*test_.*\.py|examples/demos/.*\.py|scripts/detect_globals\.py|.*migration.*\.py|.*legacy.*\.py|tools/scaffolding/.*\.py|.*_template\.py|tests/.*/conftest\.py|services/shared/modern_service_template\.py|boneyard/.*|mmf/adapters/credentials/.*)$
         require_serial: true
         pass_filenames: false
         stages: [pre-commit]

@@ -10,14 +10,15 @@ authors = [
     {name = "Marty Framework Team", email = "team@marty-msf.com"}
 ]
 readme = "README.md"
-license = {text = "MIT"}
-requires-python = ">=3.14"
+license = {text = "AGPL-3.0-only"}
+requires-python = ">=3.11"
 keywords = ["microservices", "framework", "fastapi", "docker", "kubernetes"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.11",
     "Topic :: Software Development :: Libraries :: Application Frameworks",
     "Topic :: System :: Distributed Computing",
 ]
@@ -27,6 +28,7 @@ dependencies = [
     "fastapi>=0.104.0",
     "uvicorn[standard]>=0.24.0",
     "pydantic>=2.5.0",
+    "sqlmodel>=0.0.22",
     "python-multipart>=0.0.6",
     "click>=8.1.0",
     "rich>=14.2.0",
@@ -35,57 +37,56 @@ dependencies = [
     "pyyaml>=6.0.0",
     "aiohttp>=3.13.0",
     "aiofiles>=24.1.0",
+    "aiosqlite>=0.20.0",
     "pydantic-settings>=2.11.0",
     "psutil>=7.1.0",
+    "structlog>=23.2.0",
+    "tenacity>=8.2.0",
+    "httpx>=0.25.0",
+    "jsonschema>=4.20.0",
+    "defusedxml>=0.7.1",
+    "dishka>=1.0.0",
+    "taskiq>=0.11.0",
+    "taskiq-fastapi>=0.3.0",
+]
+
+[project.optional-dependencies]
+security = [
     "pyjwt>=2.10.1",
     "cryptography>=46.0.2",
     "bcrypt>=5.0.0",
     "passlib>=1.7.4",
-    "playwright>=1.55.0",
-    "aiokafka>=0.12.0",
-    "jsonschema>=4.20.0",
-    "pika>=1.3.2",
+    "hvac>=2.3.0",
+    "defusedxml>=0.7.1",
+    "bandit[toml]>=1.8.0",
+]
+data = [
+    "sqlalchemy>=2.0.44",
+    "asyncpg>=0.29.0",
+    "psycopg2-binary>=2.9.11",
     "pymongo>=4.15.3",
     "redis>=6.4.0",
-    "psycopg2-binary>=2.9.11",
-    "grpcio-health-checking>=1.75.1",
-    "grpcio-reflection>=1.75.1",
+    "elasticsearch>=9.1.1",
+]
+messaging = [
+    "faststream[kafka,rabbit,redis,nats]>=0.5.0",
+]
+cloud = [
     "boto3>=1.40.48",
     "azure-identity>=1.25.1",
     "azure-keyvault-secrets>=4.10.0",
     "google-cloud-secret-manager>=2.25.0",
-    "hvac>=2.3.0",
-    # CLI and project generation tools
-    "cookiecutter>=2.5.0",
-    "gitpython>=3.1.40",
-    # gRPC support
-    "grpcio>=1.75.1",
-    "grpcio-tools>=1.75.1",
-    # Database integration
-    "sqlalchemy>=2.0.44",
-    # Testing and development
-    "docker>=7.1.0",
-    # Security features
-    "bandit[toml]>=1.8.0",
-    "defusedxml>=0.7.1",
-    # Analytics and visualization dependencies
-    "matplotlib>=3.9.4",
-    "seaborn>=0.13.2",
-    "numpy>=2.0.2",
-    "scipy>=1.11.0",
-    "locust>=2.34.0",
-    "schedule>=1.2.0",
-    # Microservices
-    "asyncpg>=0.29.0",
-    "celery>=5.3.0",
-    "prometheus-client>=0.19.0",
-    "structlog>=23.2.0",
-    "tenacity>=8.2.0",
-    "httpx>=0.25.0",
-    # Cloud providers support
-    "kubernetes>=28.1.0",
     "google-cloud-core>=2.4.0",
-    # Observability and monitoring
+    "kubernetes>=28.1.0",
+]
+grpc = [
+    "grpcio>=1.76.0",
+    "grpcio-tools>=1.76.0",
+    "grpcio-health-checking>=1.76.0",
+    "grpcio-reflection>=1.76.0",
+]
+observability = [
+    "prometheus-client>=0.19.0",
     "opentelemetry-api>=1.37.0",
     "opentelemetry-sdk>=1.37.0",
     "opentelemetry-exporter-otlp-proto-grpc>=1.37.0",
@@ -100,11 +101,80 @@ dependencies = [
     "opentelemetry-instrumentation-urllib3>=0.48b0",
     "opentelemetry-propagator-b3>=1.37.0",
     "opentelemetry-exporter-jaeger",
+]
+test = [
+    "playwright>=1.55.0",
+    "pytest-archon>=0.0.6",
+    "docker>=7.1.0",
+    "locust>=2.34.0",
+    "schedule>=1.2.0",
+    "numpy>=2.0.2",
+]
+analytics = [
+    "matplotlib>=3.9.4",
+    "seaborn>=0.13.2",
+    "numpy>=2.0.2",
+    "scipy>=1.11.0",
+]
+dev = [
+    "cookiecutter>=2.5.0",
+    "gitpython>=3.1.40",
+]
+all = [
+    "pyjwt>=2.10.1",
+    "cryptography>=46.0.2",
+    "bcrypt>=5.0.0",
+    "passlib>=1.7.4",
+    "hvac>=2.3.0",
+    "defusedxml>=0.7.1",
+    "bandit[toml]>=1.8.0",
+    "sqlalchemy>=2.0.44",
+    "asyncpg>=0.29.0",
+    "psycopg2-binary>=2.9.11",
+    "pymongo>=4.15.3",
+    "redis>=6.4.0",
     "elasticsearch>=9.1.1",
+    "faststream[kafka,rabbit,redis,nats]>=0.5.0",
+    "boto3>=1.40.48",
+    "azure-identity>=1.25.1",
+    "azure-keyvault-secrets>=4.10.0",
+    "google-cloud-secret-manager>=2.25.0",
+    "google-cloud-core>=2.4.0",
+    "kubernetes>=28.1.0",
+    "grpcio>=1.76.0",
+    "grpcio-tools>=1.76.0",
+    "grpcio-health-checking>=1.76.0",
+    "grpcio-reflection>=1.76.0",
+    "prometheus-client>=0.19.0",
+    "opentelemetry-api>=1.37.0",
+    "opentelemetry-sdk>=1.37.0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.37.0",
+    "opentelemetry-exporter-prometheus",
+    "opentelemetry-instrumentation-fastapi>=0.48b0",
+    "opentelemetry-instrumentation-grpc>=0.48b0",
+    "opentelemetry-instrumentation-httpx>=0.48b0",
+    "opentelemetry-instrumentation-psycopg2>=0.48b0",
+    "opentelemetry-instrumentation-redis>=0.48b0",
+    "opentelemetry-instrumentation-requests>=0.48b0",
+    "opentelemetry-instrumentation-sqlalchemy>=0.48b0",
+    "opentelemetry-instrumentation-urllib3>=0.48b0",
+    "opentelemetry-propagator-b3>=1.37.0",
+    "opentelemetry-exporter-jaeger",
+    "playwright>=1.55.0",
+    "pytest-archon>=0.0.6",
+    "docker>=7.1.0",
+    "locust>=2.34.0",
+    "schedule>=1.2.0",
+    "numpy>=2.0.2",
+    "matplotlib>=3.9.4",
+    "seaborn>=0.13.2",
+    "scipy>=1.11.0",
+    "cookiecutter>=2.5.0",
+    "gitpython>=3.1.40",
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/marty_msf"]
+packages = ["mmf"]
 
 [project.urls]
 Homepage = "https://github.com/marty-framework/marty-microservices-framework"
@@ -121,6 +191,9 @@ Issues = "https://github.com/marty-framework/marty-microservices-framework/issue
 # Production plugins will be registered here when they exist
 # production_payment = "plugins.production_payment_service:ProductionPaymentPlugin"
 
+[project.entry-points.pytest11]
+mmf_testing = "mmf.framework.testing.infrastructure.pytest.fixtures"
+
 [dependency-groups]
 dev = [
     # Testing framework and utilities
@@ -128,7 +201,9 @@ dev = [
     "pytest-asyncio>=0.21.0",
     "pytest-cov>=4.1.0",
     "pytest-json-report>=1.5.0",
-    "pytest-mock>=3.10.0",
+    "testcontainers>=3.7.1",
+    "pytest-mock>=3.11.1",
+    "numpy>=2.0.2",
     "pytest-playwright>=0.7.1",
     # Code quality and formatting
     "black>=23.0.0",
@@ -159,9 +234,12 @@ dev = [
     "build>=1.3.0",
     "twine>=6.2.0",
     "radon>=6.0.1",
-    "marty-msf[cli,microservices,observability]",
+    "marty-msf[security,observability]",
     "pipdeptree>=2.29.0",
     "autopep8>=2.3.2",
+    "pytest-archon>=0.0.7",
+    "pact-python>=1.0.0",
+    "factory-boy>=3.3.0",
 ]
 
 # Ruff configuration
@@ -187,7 +265,7 @@ ignore = [
     "C901",  # complex-structure - requires architectural changes
 
     # Import-related (can be auto-fixed in many cases)
-    "I001",  # unsorted-imports - can be auto-fixed
+    # "I001",  # unsorted-imports - can be auto-fixed
     "E402",  # module-import-not-at-top-of-file
 
     # Exception handling improvements needed
@@ -213,7 +291,7 @@ select = [
     "E",    # pycodestyle errors
     "W",    # pycodestyle warnings
     "F",    # pyflakes
-    "I",    # isort
+    # "I",    # isort - disabled to avoid conflict with isort hook
     "B",    # flake8-bugbear
     "UP",   # pyupgrade
     "C",    # flake8-comprehensions
@@ -251,7 +329,7 @@ marty-msf = { workspace = true }
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-testpaths = ["tests"]
+testpaths = ["tests", "mmf"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
@@ -260,12 +338,6 @@ addopts = [
     "--strict-config",
     "--verbose",
     "--tb=short",
-    "--cov=src",
-    "--cov-branch",
-    "--cov-report=term-missing",
-    "--cov-report=html:htmlcov",
-    "--cov-report=xml",
-    "--cov-fail-under=80",
     "--asyncio-mode=auto",
     "--durations=10",
 ]
@@ -280,9 +352,28 @@ markers = [
     "kafka: Tests that require Kafka/event bus",
     "redis: Tests that require Redis/caching",
     "docker: Tests that require Docker containers",
+    "fault_injection: Chaos engineering tests",
+    "contract: Contract tests",
+    "authentication: Security authentication tests",
     "chaos: Chaos engineering tests",
     "security: Security and compliance tests",
+    "resilience: Resilience tests",
+    "api_contract: API contract tests",
+    "load_test: Load tests",
+    "authorization: Security authorization tests",
+    "recovery: Recovery tests",
+    "schema_validation: Schema validation tests",
+    "stress_test: Stress tests",
+    "vulnerability: Vulnerability tests",
+    "network_chaos: Network chaos tests",
+    "backward_compatibility: Backward compatibility tests",
+    "benchmark: Benchmark tests",
+    "penetration: Penetration tests",
+    "resource_chaos: Resource chaos tests",
+    "crypto: Cryptography tests",
+    "pact: Pact consumer-driven contract tests",
 ]
+asyncio_mode = "auto"
 filterwarnings = [
     "error",
     "ignore::UserWarning",
@@ -293,10 +384,9 @@ log_cli = true
 log_cli_level = "INFO"
 log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
 log_cli_date_format = "%Y-%m-%d %H:%M:%S"
-asyncio_mode = "auto"
 
 [tool.coverage.run]
-source = ["src"]
+source = ["mmf"]
 branch = true
 omit = [
     "*/tests/*",
@@ -334,26 +424,26 @@ output = "coverage.xml"
 
 # Import Linter Configuration - Enforces Level Contract Architecture
 [tool.importlinter]
-root_package = "marty_msf"
+root_package = "mmf"
 
+# Core layer isolation - domain cannot import from infrastructure
 [[tool.importlinter.contracts]]
-name = "Security API layer has no internal dependencies"
-type = "forbidden"
-source_modules = ["marty_msf.security_core.api"]
-forbidden_modules = [
-    "marty_msf.authentication.auth_impl",
-    "marty_msf.authorization.authz_impl",
-    "marty_msf.security_core.bootstrap",
-    "marty_msf.security_core.factory"
+name = "Domain Layer Independence"
+type = "layers"
+containers = ["mmf.core"]
+layers = [
+    "platform",
+    "application",
+    "domain",
 ]
 
+# Services follow hexagonal architecture
 [[tool.importlinter.contracts]]
-name = "Implementation modules follow level contract"
-type = "forbidden"
-source_modules = [
-    "marty_msf.authentication.auth_impl",
-    "marty_msf.authorization.authz_impl"
-]
-forbidden_modules = [
-    "marty_msf.security_core.factory"
+name = "Identity Service Layer Contract"
+type = "layers"
+containers = ["mmf.services.identity"]
+layers = [
+    "infrastructure",
+    "application",
+    "domain",
 ]

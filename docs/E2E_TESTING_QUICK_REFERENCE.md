@@ -81,7 +81,7 @@ docker rmi mmf/identity-service:e2e-test
 
 ## Development Workflow
 
-1. **Make code changes** in `mmf_new/` or `platform_core/`
+1. **Make code changes** in `mmf/` or `platform_core/`
 2. **Run quick tests**: `./tests/e2e/kind/test-e2e.sh -m quick -k`
 3. **Debug if needed**: Use port-forward and logs
 4. **Run full suite**: `./tests/e2e/kind/test-e2e.sh` before committing
@@ -168,7 +168,7 @@ Add to `.vscode/tasks.json`:
 
 After successful e2e tests:
 
-1. **Migrate more services** from `mmf/` to `mmf_new/`
+1. **Migrate more services** from `mmf/` to `mmf/`
 2. **Add service-specific tests** for each migrated component
 3. **Implement integration tests** between services
 4. **Add performance benchmarks** for SLA validation

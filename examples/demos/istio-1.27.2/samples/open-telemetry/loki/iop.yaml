@@ -4,7 +4,7 @@ spec:
   meshConfig:
     extensionProviders:
       - name: otel
-        envoyOtelAls:
+        envoyOtelAlso:
           service: opentelemetry-collector.istio-system.svc.cluster.local
           port: 4317
           logFormat:

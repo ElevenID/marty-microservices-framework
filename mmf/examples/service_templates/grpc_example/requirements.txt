@@ -1,0 +1,7 @@
+# gRPC example service requirements
+aiofiles==25.1.0
+aiohttp==3.14.1
+grpcio==1.81.1
+grpcio-tools==1.81.1
+protobuf==6.33.6
+sqlalchemy[asyncio]==2.0.51

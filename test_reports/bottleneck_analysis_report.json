@@ -1,0 +1,98 @@
+{
+  "test_summary": {
+    "test_name": "Comprehensive Bottleneck Analysis",
+    "test_duration": "30 seconds per load level",
+    "load_levels_tested": [
+      1,
+      5,
+      10,
+      20
+    ],
+    "total_bottlenecks": 0,
+    "total_audit_events": 0
+  },
+  "performance_trends": {
+    "cpu_usage_by_load": {
+      "1": 20.025000000000002,
+      "5": 18.664285714285715,
+      "10": 18.053571428571427,
+      "20": 26.744444444444444
+    },
+    "memory_usage_by_load": {
+      "1": 0.2560053552900042,
+      "5": 0.25007895060947966,
+      "10": 0.24938583374023438,
+      "20": 0.2491650757966218
+    },
+    "bottlenecks_by_load": {
+      "1": 0,
+      "5": 0,
+      "10": 0,
+      "20": 0
+    }
+  },
+  "bottleneck_analysis": {
+    "critical_bottlenecks": [],
+    "bottleneck_types": {
+      "cpu": 0,
+      "memory": 0,
+      "response_time": 0,
+      "error_rate": 0
+    }
+  },
+  "detailed_results": {
+    "load_level_1": {
+      "load_level": 1,
+      "metrics_count": 28,
+      "bottlenecks": [],
+      "performance_summary": {
+        "avg_cpu_usage": 20.025000000000002,
+        "avg_memory_usage": 0.2560053552900042,
+        "max_cpu_usage": 36.0,
+        "max_memory_usage": 0.26879310607910156
+      },
+      "audit_events": 0,
+      "error_events": 0
+    },
+    "load_level_5": {
+      "load_level": 5,
+      "metrics_count": 28,
+      "bottlenecks": [],
+      "performance_summary": {
+        "avg_cpu_usage": 18.664285714285715,
+        "avg_memory_usage": 0.25007895060947966,
+        "max_cpu_usage": 28.6,
+        "max_memory_usage": 0.2516746520996094
+      },
+      "audit_events": 0,
+      "error_events": 0
+    },
+    "load_level_10": {
+      "load_level": 10,
+      "metrics_count": 28,
+      "bottlenecks": [],
+      "performance_summary": {
+        "avg_cpu_usage": 18.053571428571427,
+        "avg_memory_usage": 0.24938583374023438,
+        "max_cpu_usage": 27.4,
+        "max_memory_usage": 0.24938583374023438
+      },
+      "audit_events": 0,
+      "error_events": 0
+    },
+    "load_level_20": {
+      "load_level": 20,
+      "metrics_count": 27,
+      "bottlenecks": [],
+      "performance_summary": {
+        "avg_cpu_usage": 26.744444444444444,
+        "avg_memory_usage": 0.2491650757966218,
+        "max_cpu_usage": 50.0,
+        "max_memory_usage": 0.24938583374023438
+      },
+      "audit_events": 0,
+      "error_events": 0
+    }
+  },
+  "recommendations": []
+}

@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: video-ui
+  namespace: video-streaming
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: video-ui
+  template:
+    metadata:
+      labels:
+        app: video-ui
+    spec:
+      containers:
+      - name: video-ui
+        image: mmf/video-ui:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: video-ui
+  namespace: video-streaming
+spec:
+  selector:
+    app: video-ui
+  ports:
+  - port: 80
+    targetPort: 80

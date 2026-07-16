@@ -1,10 +1,10 @@
 # Open Telemetry with Loki
 
-This sample demonstrates Istio's Open Telemetry [ALS(Access Log Service)](https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/access_loggers/grpc/v3/als.proto) and sending logs to [Loki](https://github.com/grafana/loki).
+This sample demonstrates Istio's Open Telemetry [ALSO(Access Log Service)](https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/access_loggers/grpc/v3/als.proto) and sending logs to [Loki](https://github.com/grafana/loki).
 
 ## Install Istio
 
-Run the following script to install Istio with an Open Telemetry ALS provider:
+Run the following script to install Istio with an Open Telemetry ALSO provider:
 
 ```bash
 istioctl install -f iop.yaml -y
@@ -66,7 +66,7 @@ Next, add a Telemetry resource that tells Istio to send access logs to the OpenT
 kubectl apply -f telemetry.yaml
 ```
 
-## Check ALS output
+## Check ALSO output
 
 Following this [doc](../../httpbin/README.md), start the `fortio` and `httpbin` services.
 
@@ -76,7 +76,7 @@ Run the following script to request `httpbin` from `fortio`.
 kubectl exec -it deploy/fortio -- fortio curl httpbin:8000/ip
 ```
 
-Run the following script to view ALS output.
+Run the following script to view ALSO output.
 
 ```bash
 kubectl logs -l app=opentelemetry-collector -n istio-system --tail=-1

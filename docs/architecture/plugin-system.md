@@ -69,7 +69,7 @@ Service plugins are domain bundles that provide business logic and services. The
 
 ```python
 # plugins/payment_processing/plugin.py
-from marty_msf.framework.plugins.core import MMFPlugin
+from mmf.core.plugins import MMFPlugin
 
 class PaymentProcessingPlugin(MMFPlugin):
     def get_metadata(self):

@@ -19,7 +19,7 @@
 **New Organized Structure**
 
 - Restructured project layout following modern Python package standards
-- Moved all source code to `src/marty_msf/` for better organization
+- Moved all source code to `mmf/` for better organization
 - Consolidated all service templates under `services/` directory
 - Organized documentation under `docs/` with clear categorization
 - Created dedicated `ops/` directory for operational concerns

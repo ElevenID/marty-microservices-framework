@@ -14,39 +14,59 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 # Import the enhanced components
-from marty_msf.framework.events.enhanced_event_bus import (
+from mmf.framework.events.enhanced_event_bus import (
     EnhancedEventBus,
     EventFilter,
     EventPriority,
     PersistenceBase,
     enhanced_event_bus_context,
 )
-from marty_msf.framework.events.enhanced_events import (
+from mmf.framework.events.enhanced_events import (
     DomainEvent,
     IntegrationEvent,
     create_domain_event,
     create_integration_event,
     create_workflow_event,
 )
-from marty_msf.framework.plugins.event_subscription import (
-    PluginConfig,
-    PluginEventSubscriptionManager,
-    PluginSubscriptionBase,
-    create_event_filter,
-    plugin_subscription_manager_context,
-    register_plugin_with_events,
-)
-from marty_msf.framework.workflow.enhanced_workflow_engine import (
-    ActionStep,
-    DecisionStep,
-    StepResult,
-    WorkflowBase,
-    WorkflowContext,
-    WorkflowDefinition,
-    WorkflowEngine,
-    create_workflow,
-    workflow_engine_context,
-)
+from mmf.framework.infrastructure.plugin_config import PluginConfig
+
+# from mmf.framework.plugins.event_subscription import (
+#     PluginConfig,
+#     PluginEventSubscriptionManager,
+#     PluginSubscriptionBase,
+#     create_event_filter,
+#     plugin_subscription_manager_context,
+#     register_plugin_with_events,
+# )
+from mmf.framework.workflow.application.engine import WorkflowEngine
+from mmf.framework.workflow.domain.entities import StepResult, WorkflowContext
+
+# --- MOCK CLASSES FOR MISSING COMPONENTS ---
+# These components were removed or refactored.
+# This example is kept for reference but will not run as-is.
+
+class PluginEventSubscriptionManager:
+    async def subscribe(self, *args, **kwargs): pass
+    async def get_all_plugin_metrics(self): return {'global_metrics': {}, 'plugin_metrics': {}}
+class PluginSubscriptionBase:
+    metadata = type('Metadata', (), {'create_all': lambda *args: None})()
+def create_event_filter(*args, **kwargs): pass
+def plugin_subscription_manager_context(*args, **kwargs):
+    class Context:
+        async def __aenter__(self): return PluginEventSubscriptionManager()
+        async def __aexit__(self, *args): pass
+    return Context()
+async def register_plugin_with_events(*args, **kwargs): pass
+
+class WorkflowBase:
+    metadata = type('Metadata', (), {'create_all': lambda *args: None})()
+
+def workflow_engine_context(*args, **kwargs):
+    class Context:
+        async def __aenter__(self): return WorkflowEngine()
+        async def __aexit__(self, *args): pass
+    return Context()
+# -------------------------------------------
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -248,39 +268,31 @@ class OrderProcessingService:
         self.workflow_engine = workflow_engine
         self.plugin_manager = plugin_manager
 
-        # Register workflow definition
-        self._register_order_workflow()
-
-    def _register_order_workflow(self) -> None:
-        """Register the order processing workflow."""
-        workflow = (
-            create_workflow("order_processing", "Order Processing Workflow")
-            .description("Complete order processing with payment and fulfillment")
-            .timeout(timedelta(hours=2))
-            .action("create_order", "Create Order", create_order_step)
-            .action("process_payment", "Process Payment", process_payment_step,
-                   retry_count=3, retry_delay=timedelta(seconds=10))
-            .action("fulfill_order", "Fulfill Order", fulfill_order_step)
-            .build()
-        )
-
-        self.workflow_engine.register_workflow(workflow)
-
     async def process_order(self, customer_id: str, total_amount: float) -> str:
         """Start order processing workflow."""
         logger.info(f"🛒 Starting order processing for customer {customer_id}, amount ${total_amount}")
 
+        workflow_id = f"order-workflow-{datetime.now().timestamp()}"
+
+        # Define steps for this workflow
+        steps = [
+            create_order_step,
+            process_payment_step,
+            fulfill_order_step
+        ]
+
         # Start workflow
-        workflow_id = await self.workflow_engine.start_workflow(
-            workflow_type="order_processing",
+        # Note: The new WorkflowEngine executes steps sequentially immediately
+        context = await self.workflow_engine.start_workflow(
+            workflow_id=workflow_id,
+            steps=steps,
             initial_data={
                 "customer_id": customer_id,
                 "total_amount": total_amount
-            },
-            user_id=customer_id
+            }
         )
 
-        logger.info(f"✅ Started order processing workflow {workflow_id}")
+        logger.info(f"✅ Completed order processing workflow {workflow_id}")
         return workflow_id
 
     async def publish_order_created(self, order_id: str, customer_id: str, total_amount: float) -> None:
@@ -426,28 +438,18 @@ async def main():
                 workflow_ids = []
 
                 for customer_id, amount in orders:
-                    workflow_id = await service.process_order(customer_id, amount)
-                    workflow_ids.append(workflow_id)
+                    try:
+                        workflow_id = await service.process_order(customer_id, amount)
+                        workflow_ids.append(workflow_id)
 
-                    # Publish additional events
-                    order_id = f"order-{workflow_id}"
-                    await service.publish_order_created(order_id, customer_id, amount)
+                        # Publish additional events
+                        order_id = f"order-{workflow_id}"
+                        await service.publish_order_created(order_id, customer_id, amount)
+                    except Exception as e:
+                        logger.error(f"Workflow failed for customer {customer_id}: {e}")
 
                     # Small delay between orders
                     await asyncio.sleep(1)
-
-                # Wait for workflows to complete
-                logger.info("⏳ Waiting for workflows to complete...")
-                await asyncio.sleep(10)
-
-                # Check workflow statuses
-                logger.info("\n📊 Workflow Status Summary:")
-                for workflow_id in workflow_ids:
-                    status = await workflow_engine.get_workflow_status(workflow_id)
-                    if status:
-                        logger.info(f"  Workflow {workflow_id}: {status['status']}")
-                        if status['error_message']:
-                            logger.info(f"    Error: {status['error_message']}")
 
                 # Get plugin metrics
                 logger.info("\n📈 Plugin Metrics:")

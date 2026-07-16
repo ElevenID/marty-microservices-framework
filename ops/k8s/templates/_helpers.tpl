@@ -91,31 +91,17 @@ Generate RabbitMQ URL
 {{- end }}
 
 {{/*
-Default TLS Certificate (for development only)
+Default TLS Certificate
 */}}
 {{- define "defaultTLSCert" -}}
------BEGIN CERTIFICATE-----
-MIIBkTCB+wIJAMlyFqk69v+9MA0GCSqGSIb3DQEBBQUAMBQxEjAQBgNVBAMMCWxv
-Y2FsaG9zdDAeFw0yNDAxMDEwMDAwMDBaFw0yNTAxMDEwMDAwMDBaMBQxEjAQBgNV
-BAMMCWxvY2FsaG9zdDBcMA0GCSqGSIb3DQEBAQUAA0sAMEgCQQDTwqq/ynci1kM5
-K1L5E7tSzgj0WZ1fgH5h9K5F0v8ZO7X9Z4K5F0v8ZO7X9Z4K5F0v8ZO7X9Z4K5F0
-v8ZO7X9ZAgMBAAEwDQYJKoZIhvcNAQEFBQADQQBcH9j6n3A5t8j6n3A5t8j6n3A5
-t8j6n3A5t8j6n3A5t8j6n3A5t8j6n3A5t8j6n3A5t8j6n3A5t8j6n3A5
------END CERTIFICATE-----
+{{- default "" .Values.tls.cert -}}
 {{- end }}
 
 {{/*
-Default TLS Private Key (for development only)
+Default TLS Private Key
 */}}
 {{- define "defaultTLSKey" -}}
------BEGIN PRIVATE KEY-----
-MIIBVAIBADANBgkqhkiG9w0BAQEFAASCAT4wggE6AgEAAkEA08Kqv8p3ItZDOStS
-+RO7Us4I9FmdX4B+YfSuRdL/GTu1/WeCuRdL/GTu1/WeCuRdL/GTu1/WeCuRdL/G
-Tu1/WQIDAQABAkEAw8Kqv8p3ItZDOStS+RO7Us4I9FmdX4B+YfSuRdL/GTu1/WeC
-uRdL/GTu1/WeCuRdL/GTu1/WeCuRdL/GTu1/WQIhAOPCqr/KdyLWQzkrUvkTu1LO
-CPRZXV+AfmH0rkXS/xk7AgkA4L/GTu1/WeCuRdL/GTu1/WeCuRdL/GTu1/WeCuRd
-L/GTu1/WQIhANPCqr/KdyLWQzkrUvkTu1LOCPRZXV+AfmH0rkXS/xk7
------END PRIVATE KEY-----
+{{- default "" .Values.tls.key -}}
 {{- end }}
 
 {{/*

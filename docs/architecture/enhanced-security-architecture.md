@@ -567,7 +567,7 @@ vault_client = VaultClient(VaultConfig(
 
 **Infrastructure Requirements:**
 
-- HashiCorp Vault cluster (minimum 3 nodes for HA)
+- HashCorp Vault cluster (minimum 3 nodes for HA)
 - Vault Agent for local caching (optional)
 - Network connectivity to Vault API
 - Service accounts with appropriate roles
@@ -697,7 +697,7 @@ server = grpc.aio.server(interceptors=[
 
 ## Infrastructure Requirements
 
-### 1. HashiCorp Vault Deployment
+### 1. HashCorp Vault Deployment
 
 #### Production Deployment
 

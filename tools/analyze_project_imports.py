@@ -15,10 +15,10 @@ from typing import Any
 
 
 class ImportAnalyzer:
-    def __init__(self, project_root: str, project_name: str = "marty_msf", real_time: bool = True):
+    def __init__(self, project_root: str, project_name: str = "mmf", real_time: bool = True):
         self.project_root = Path(project_root)
         self.project_name = project_name
-        self.src_path = self.project_root / "src" / project_name
+        self.src_path = self.project_root / project_name
         self.real_time = real_time
         self.analysis_timestamp = None
 
@@ -302,7 +302,7 @@ def main():
     force_regenerate = "--force" in sys.argv or "--real-time" in sys.argv
     quiet_mode = "--quiet" in sys.argv
 
-    analyzer = ImportAnalyzer(".", "marty_msf", real_time=True)
+    analyzer = ImportAnalyzer(".", "mmf", real_time=True)
 
     # Check if cached analysis exists and is recent
     cache_file = Path("internal_import_analysis.json")

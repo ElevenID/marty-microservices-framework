@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendation-service
+  namespace: video-streaming
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recommendation-service
+  template:
+    metadata:
+      labels:
+        app: recommendation-service
+    spec:
+      containers:
+      - name: recommendation-service
+        image: mmf/recommendation-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8003
+        env:
+        - name: CATALOG_SERVICE_URL
+          value: "http://catalog-service:8001"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: recommendation-service
+  namespace: video-streaming
+spec:
+  selector:
+    app: recommendation-service
+  ports:
+  - port: 8003
+    targetPort: 8003
