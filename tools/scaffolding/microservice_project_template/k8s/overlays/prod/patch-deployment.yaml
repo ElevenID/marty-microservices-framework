@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
         - name: microservice-template
-          image: ghcr.io/your-org/microservice-template:latest
+          image: ghcr.io/example/microservice-template@sha256:REPLACE_WITH_RELEASE_DIGEST
           resources:
             requests:
               cpu: 200m

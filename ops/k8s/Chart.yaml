@@ -4,9 +4,9 @@ description: A Helm chart for Marty Phase 2 Enterprise Microservices
 type: application
 version: 2.0.0
 appVersion: "2.0.0"
-home: https://github.com/your-org/marty-microservices-framework
+home: https://github.com/ElevenID/marty-microservices-framework
 sources:
-- https://github.com/your-org/marty-microservices-framework
+- https://github.com/ElevenID/marty-microservices-framework
 maintainers:
 - name: Marty Framework Team
   email: team@marty-framework.io

@@ -14,7 +14,7 @@ This directory contains comprehensive demonstrations of all capabilities of the 
 
 ```bash
 # Clone and navigate to the repository
-git clone https://github.com/burdettadam/marty-microservices-framework.git
+git clone https://github.com/ElevenID/marty-microservices-framework.git
 cd marty-microservices-framework
 
 # Activate the virtual environment
@@ -137,7 +137,7 @@ This interactive script provides:
 python3 --version
 
 # Clone the repository
-git clone https://github.com/burdettadam/marty-microservices-framework.git
+git clone https://github.com/ElevenID/marty-microservices-framework.git
 cd marty-microservices-framework
 
 # Activate virtual environment (created during development)
