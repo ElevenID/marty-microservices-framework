@@ -54,10 +54,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@6dfebec6ddbcd197e02256fbdf54deb334fb7f06
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990
 
       - name: Install Python ${{ inputs.python-version }}
         run: uv python install ${{ inputs.python-version }}
@@ -89,7 +89,7 @@ jobs:
 
       - name: Upload test results
         if: ${{ inputs.run-tests && always() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: test-results-${{ inputs.service-name }}
           path: |
@@ -99,7 +99,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: ${{ inputs.run-tests }}
-        uses: codecov/codecov-action@ab904c41d6ece82784817410c45d8b8c02684457
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f
         with:
           file: ./coverage.xml
           flags: ${{ inputs.service-name }}
@@ -111,7 +111,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Run Bandit security scan
         run: |
@@ -120,7 +120,7 @@ jobs:
 
       - name: Upload security scan results
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: security-scan-${{ inputs.service-name }}
           path: bandit-report.json
@@ -133,7 +133,7 @@ jobs:
 
       - name: Upload safety check results
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: safety-check-${{ inputs.service-name }}
           path: safety-report.json
