@@ -38,13 +38,15 @@ jobs:
     - name: Check if PR should run tests
       id: check
       run: |
-        if [[ "${{ github.event.pull_request.draft }}" == "true" && "${{ github.event.action }}" != "ready_for_review" ]]; then
+        if [[ "${{ github.event.pull_request.draft }}" == "true" && "${GITHUB_EVENT_ACTION}" != "ready_for_review" ]]; then
           echo "should_run=false" >> $GITHUB_OUTPUT
           echo "Skipping tests for draft PR"
         else
           echo "should_run=true" >> $GITHUB_OUTPUT
           echo "Running tests for PR"
         fi
+      env:
+        GITHUB_EVENT_ACTION: ${{ github.event.action }}
 
   # Quick validation tests - run first
   quick-validation:
@@ -206,14 +208,14 @@ jobs:
       run: |
         echo "Cleaning up E2E test resources..."
         # Clean up KIND clusters
-        for cluster in $(kind get clusters 2>/dev/null | grep -E "(test|e2e|mmf)" || true); do
+        kind get clusters 2>/dev/null | grep -E "(test|e2e|mmf)" | while IFS= read -r cluster; do
           echo "Deleting cluster: $cluster"
           kind delete cluster --name "$cluster" || true
         done
 
         # Clean up Docker images
         docker rmi mmf/identity-service:e2e-test || true
-        docker rmi $(docker images -q --filter "reference=mmf/*:*test*" 2>/dev/null) || true
+        docker images -q --filter "reference=mmf/*:*test*" 2>/dev/null | xargs -r docker rmi || true
 
   # Performance baseline - ensure no major regressions
   performance-check:

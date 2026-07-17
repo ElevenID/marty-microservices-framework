@@ -141,7 +141,7 @@ jobs:
 
       - name: Scan container image
         run: |
-          IMAGE_NAME="${{ inputs.registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:${{ inputs.image-tag }}"
+          IMAGE_NAME="${INPUTS_REGISTRY}/${{ github.repository_owner }}/${INPUTS_SERVICE_NAME}:${INPUTS_IMAGE_TAG}"
           echo "Scanning image: $IMAGE_NAME"
 
           # Scan for vulnerabilities
@@ -165,6 +165,10 @@ jobs:
             echo "❌ High severity vulnerabilities found, failing build"
             exit 1
           fi
+        env:
+          INPUTS_REGISTRY: ${{ inputs.registry }}
+          INPUTS_SERVICE_NAME: ${{ inputs.service-name }}
+          INPUTS_IMAGE_TAG: ${{ inputs.image-tag }}
 
       - name: Upload Trivy scan results
         if: always()
@@ -182,11 +186,15 @@ jobs:
 
       - name: Scan image configuration
         run: |
-          IMAGE_NAME="${{ inputs.registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:${{ inputs.image-tag }}"
+          IMAGE_NAME="${INPUTS_REGISTRY}/${{ github.repository_owner }}/${INPUTS_SERVICE_NAME}:${INPUTS_IMAGE_TAG}"
 
           # Scan for misconfigurations
           trivy image --security-checks config --format sarif --output trivy-config.sarif "$IMAGE_NAME"
           trivy image --security-checks config "$IMAGE_NAME"
+        env:
+          INPUTS_REGISTRY: ${{ inputs.registry }}
+          INPUTS_SERVICE_NAME: ${{ inputs.service-name }}
+          INPUTS_IMAGE_TAG: ${{ inputs.image-tag }}
 
       - name: Upload configuration scan results
         if: always()
@@ -203,7 +211,7 @@ jobs:
     steps:
       - name: Generate security summary
         run: |
-          echo "## Security Scan Summary for ${{ inputs.service-name }}" >> $GITHUB_STEP_SUMMARY
+          echo "## Security Scan Summary for ${INPUTS_SERVICE_NAME}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "### Scan Configuration" >> $GITHUB_STEP_SUMMARY
@@ -225,3 +233,5 @@ jobs:
           else
             echo "✅ **Overall Status**: PASSED - No critical security issues found" >> $GITHUB_STEP_SUMMARY
           fi
+        env:
+          INPUTS_SERVICE_NAME: ${{ inputs.service-name }}
