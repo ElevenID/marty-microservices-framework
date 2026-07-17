@@ -58,18 +58,21 @@ jobs:
 
         # Determine test mode
         if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-          echo "test-mode=${{ github.event.inputs.test_mode }}" >> $GITHUB_OUTPUT
+          echo "test-mode=${GITHUB_EVENT_INPUTS_TEST_MODE}" >> $GITHUB_OUTPUT
           echo "should-run=true" >> $GITHUB_OUTPUT
-        elif [[ "${{ github.event.pull_request.title }}" == *"[quick]"* ]]; then
+        elif [[ "${GITHUB_EVENT_PULL_REQUEST_TITLE}" == *"[quick]"* ]]; then
           echo "test-mode=quick" >> $GITHUB_OUTPUT
           echo "should-run=true" >> $GITHUB_OUTPUT
-        elif [[ "${{ github.event.pull_request.title }}" == *"[chaos]"* ]]; then
+        elif [[ "${GITHUB_EVENT_PULL_REQUEST_TITLE}" == *"[chaos]"* ]]; then
           echo "test-mode=chaos" >> $GITHUB_OUTPUT
           echo "should-run=true" >> $GITHUB_OUTPUT
         else
           echo "test-mode=comprehensive" >> $GITHUB_OUTPUT
           echo "should-run=true" >> $GITHUB_OUTPUT
         fi
+      env:
+        GITHUB_EVENT_INPUTS_TEST_MODE: ${{ github.event.inputs.test_mode }}
+        GITHUB_EVENT_PULL_REQUEST_TITLE: ${{ github.event.pull_request.title }}
 
   # Infrastructure setup
   setup-infrastructure:

@@ -60,7 +60,9 @@ jobs:
         uses: astral-sh/setup-uv@6dfebec6ddbcd197e02256fbdf54deb334fb7f06
 
       - name: Install Python ${{ inputs.python-version }}
-        run: uv python install ${{ inputs.python-version }}
+        run: uv python install ${INPUTS_PYTHON_VERSION}
+        env:
+          INPUTS_PYTHON_VERSION: ${{ inputs.python-version }}
 
       - name: Install dependencies
         run: uv sync --group dev
@@ -69,23 +71,30 @@ jobs:
         if: ${{ inputs.run-lint }}
         id: lint
         run: |
-          echo "Running Ruff linting for ${{ inputs.service-name }}"
+          echo "Running Ruff linting for ${INPUTS_SERVICE_NAME}"
           uv run ruff check src tests --output-format=github
           echo "results=passed" >> $GITHUB_OUTPUT
+        env:
+          INPUTS_SERVICE_NAME: ${{ inputs.service-name }}
 
       - name: Run type checking
         if: ${{ inputs.run-type-check }}
         run: |
-          echo "Running type checking for ${{ inputs.service-name }}"
+          echo "Running type checking for ${INPUTS_SERVICE_NAME}"
           uv run mypy src/
+        env:
+          INPUTS_SERVICE_NAME: ${{ inputs.service-name }}
 
       - name: Run tests
         if: ${{ inputs.run-tests }}
         id: test
         run: |
-          echo "Running tests for ${{ inputs.service-name }}"
-          ${{ inputs.test-command }} --junitxml=test-results.xml --cov=src --cov-report=xml
+          echo "Running tests for ${INPUTS_SERVICE_NAME}"
+          ${INPUTS_TEST_COMMAND} --junitxml=test-results.xml --cov=src --cov-report=xml
           echo "results=passed" >> $GITHUB_OUTPUT
+        env:
+          INPUTS_SERVICE_NAME: ${{ inputs.service-name }}
+          INPUTS_TEST_COMMAND: ${{ inputs.test-command }}
 
       - name: Upload test results
         if: ${{ inputs.run-tests && always() }}

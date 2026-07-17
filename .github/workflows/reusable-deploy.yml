@@ -78,11 +78,15 @@ jobs:
       - name: Set namespace
         id: namespace
         run: |
-          if [ -n "${{ inputs.namespace }}" ]; then
-            echo "namespace=${{ inputs.namespace }}" >> $GITHUB_OUTPUT
+          if [ -n "${INPUTS_NAMESPACE}" ]; then
+            echo "namespace=${INPUTS_NAMESPACE}" >> $GITHUB_OUTPUT
           else
-            echo "namespace=${{ inputs.service-name }}-${{ inputs.environment }}" >> $GITHUB_OUTPUT
+            echo "namespace=${INPUTS_SERVICE_NAME}-${INPUTS_ENVIRONMENT}" >> $GITHUB_OUTPUT
           fi
+        env:
+          INPUTS_NAMESPACE: ${{ inputs.namespace }}
+          INPUTS_SERVICE_NAME: ${{ inputs.service-name }}
+          INPUTS_ENVIRONMENT: ${{ inputs.environment }}
 
       - name: Create namespace if not exists
         run: |
@@ -90,7 +94,7 @@ jobs:
 
       - name: Update image tag in Kustomize
         run: |
-          cd ${{ inputs.kustomize-path }}/${{ inputs.environment }}
+          cd ${INPUTS_KUSTOMIZE_PATH}/${INPUTS_ENVIRONMENT}
 
           # Create or update kustomization.yaml with new image
           if ! grep -q "images:" kustomization.yaml; then
@@ -99,51 +103,71 @@ jobs:
           fi
 
           # Use kustomize edit to set image
-          kustomize edit set image ${{ inputs.service-name }}=ghcr.io/${{ github.repository_owner }}/${{ inputs.service-name }}:${{ inputs.image-tag }}
+          kustomize edit set image ${INPUTS_SERVICE_NAME}=ghcr.io/${{ github.repository_owner }}/${INPUTS_SERVICE_NAME}:${INPUTS_IMAGE_TAG}
+        env:
+          INPUTS_KUSTOMIZE_PATH: ${{ inputs.kustomize-path }}
+          INPUTS_ENVIRONMENT: ${{ inputs.environment }}
+          INPUTS_SERVICE_NAME: ${{ inputs.service-name }}
+          INPUTS_IMAGE_TAG: ${{ inputs.image-tag }}
 
       - name: Validate Kustomize build
         run: |
-          cd ${{ inputs.kustomize-path }}/${{ inputs.environment }}
+          cd ${INPUTS_KUSTOMIZE_PATH}/${INPUTS_ENVIRONMENT}
           kustomize build . > /tmp/manifests.yaml
           kubectl --dry-run=client apply -f /tmp/manifests.yaml
+        env:
+          INPUTS_KUSTOMIZE_PATH: ${{ inputs.kustomize-path }}
+          INPUTS_ENVIRONMENT: ${{ inputs.environment }}
 
       - name: Deploy (dry-run)
         if: ${{ inputs.dry-run }}
         run: |
-          cd ${{ inputs.kustomize-path }}/${{ inputs.environment }}
-          echo "🔍 Dry-run deployment for ${{ inputs.service-name }} in ${{ inputs.environment }}"
+          cd ${INPUTS_KUSTOMIZE_PATH}/${INPUTS_ENVIRONMENT}
+          echo "🔍 Dry-run deployment for ${INPUTS_SERVICE_NAME} in ${INPUTS_ENVIRONMENT}"
           kustomize build . | kubectl apply --dry-run=client -f -
+        env:
+          INPUTS_KUSTOMIZE_PATH: ${{ inputs.kustomize-path }}
+          INPUTS_ENVIRONMENT: ${{ inputs.environment }}
+          INPUTS_SERVICE_NAME: ${{ inputs.service-name }}
 
       - name: Deploy to Kubernetes
         if: ${{ !inputs.dry-run }}
         run: |
-          cd ${{ inputs.kustomize-path }}/${{ inputs.environment }}
-          echo "🚀 Deploying ${{ inputs.service-name }} to ${{ inputs.environment }}"
+          cd ${INPUTS_KUSTOMIZE_PATH}/${INPUTS_ENVIRONMENT}
+          echo "🚀 Deploying ${INPUTS_SERVICE_NAME} to ${INPUTS_ENVIRONMENT}"
           kustomize build . | kubectl apply -f -
+        env:
+          INPUTS_KUSTOMIZE_PATH: ${{ inputs.kustomize-path }}
+          INPUTS_ENVIRONMENT: ${{ inputs.environment }}
+          INPUTS_SERVICE_NAME: ${{ inputs.service-name }}
 
       - name: Wait for rollout
         if: ${{ !inputs.dry-run && inputs.wait-for-rollout }}
         run: |
           echo "⏳ Waiting for rollout to complete..."
-          kubectl rollout status deployment/${{ inputs.service-name }} -n ${{ steps.namespace.outputs.namespace }} --timeout=600s
+          kubectl rollout status deployment/${INPUTS_SERVICE_NAME} -n ${{ steps.namespace.outputs.namespace }} --timeout=600s
+        env:
+          INPUTS_SERVICE_NAME: ${{ inputs.service-name }}
 
       - name: Verify deployment
         if: ${{ !inputs.dry-run }}
         run: |
           echo "✅ Verifying deployment..."
-          kubectl get pods -n ${{ steps.namespace.outputs.namespace }} -l app.kubernetes.io/name=${{ inputs.service-name }}
-          kubectl get services -n ${{ steps.namespace.outputs.namespace }} -l app.kubernetes.io/name=${{ inputs.service-name }}
+          kubectl get pods -n ${{ steps.namespace.outputs.namespace }} -l app.kubernetes.io/name=${INPUTS_SERVICE_NAME}
+          kubectl get services -n ${{ steps.namespace.outputs.namespace }} -l app.kubernetes.io/name=${INPUTS_SERVICE_NAME}
+        env:
+          INPUTS_SERVICE_NAME: ${{ inputs.service-name }}
 
       - name: Run health checks
         if: ${{ !inputs.dry-run }}
         run: |
           echo "🏥 Running health checks..."
           # Wait for pods to be ready
-          kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=${{ inputs.service-name }} -n ${{ steps.namespace.outputs.namespace }} --timeout=300s
+          kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=${INPUTS_SERVICE_NAME} -n ${{ steps.namespace.outputs.namespace }} --timeout=300s
 
           # Check deployment status
-          READY_REPLICAS=$(kubectl get deployment ${{ inputs.service-name }} -n ${{ steps.namespace.outputs.namespace }} -o jsonpath='{.status.readyReplicas}')
-          DESIRED_REPLICAS=$(kubectl get deployment ${{ inputs.service-name }} -n ${{ steps.namespace.outputs.namespace }} -o jsonpath='{.spec.replicas}')
+          READY_REPLICAS=$(kubectl get deployment ${INPUTS_SERVICE_NAME} -n ${{ steps.namespace.outputs.namespace }} -o jsonpath='{.status.readyReplicas}')
+          DESIRED_REPLICAS=$(kubectl get deployment ${INPUTS_SERVICE_NAME} -n ${{ steps.namespace.outputs.namespace }} -o jsonpath='{.spec.replicas}')
 
           if [ "$READY_REPLICAS" = "$DESIRED_REPLICAS" ]; then
             echo "✅ Health check passed: $READY_REPLICAS/$DESIRED_REPLICAS replicas ready"
@@ -151,24 +175,32 @@ jobs:
             echo "❌ Health check failed: $READY_REPLICAS/$DESIRED_REPLICAS replicas ready"
             exit 1
           fi
+        env:
+          INPUTS_SERVICE_NAME: ${{ inputs.service-name }}
 
       - name: Rollback on failure
         if: ${{ failure() && inputs.rollback-on-failure && !inputs.dry-run }}
         run: |
           echo "🔄 Rolling back deployment due to failure..."
-          kubectl rollout undo deployment/${{ inputs.service-name }} -n ${{ steps.namespace.outputs.namespace }}
-          kubectl rollout status deployment/${{ inputs.service-name }} -n ${{ steps.namespace.outputs.namespace }} --timeout=600s
+          kubectl rollout undo deployment/${INPUTS_SERVICE_NAME} -n ${{ steps.namespace.outputs.namespace }}
+          kubectl rollout status deployment/${INPUTS_SERVICE_NAME} -n ${{ steps.namespace.outputs.namespace }} --timeout=600s
+        env:
+          INPUTS_SERVICE_NAME: ${{ inputs.service-name }}
 
       - name: Generate deployment summary
         if: always()
         run: |
           echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- **Service**: ${{ inputs.service-name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Environment**: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Service**: ${INPUTS_SERVICE_NAME}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: ${INPUTS_ENVIRONMENT}" >> $GITHUB_STEP_SUMMARY
           echo "- **Namespace**: ${{ steps.namespace.outputs.namespace }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Image Tag**: ${{ inputs.image-tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image Tag**: ${INPUTS_IMAGE_TAG}" >> $GITHUB_STEP_SUMMARY
           echo "- **Dry Run**: ${{ inputs.dry-run }}" >> $GITHUB_STEP_SUMMARY
 
           if [ "${{ inputs.dry-run }}" = "false" ]; then
-            echo "- **Status**: $(kubectl get deployment ${{ inputs.service-name }} -n ${{ steps.namespace.outputs.namespace }} -o jsonpath='{.status.conditions[?(@.type=="Progressing")].status}' 2>/dev/null || echo "Unknown")" >> $GITHUB_STEP_SUMMARY
+            echo "- **Status**: $(kubectl get deployment ${INPUTS_SERVICE_NAME} -n ${{ steps.namespace.outputs.namespace }} -o jsonpath='{.status.conditions[?(@.type=="Progressing")].status}' 2>/dev/null || echo "Unknown")" >> $GITHUB_STEP_SUMMARY
           fi
+        env:
+          INPUTS_SERVICE_NAME: ${{ inputs.service-name }}
+          INPUTS_ENVIRONMENT: ${{ inputs.environment }}
+          INPUTS_IMAGE_TAG: ${{ inputs.image-tag }}

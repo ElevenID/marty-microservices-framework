@@ -42,7 +42,7 @@ jobs:
 
     services:
       redis:
-        image: redis:7.2-alpine
+        image: redis:7.2-alpine@sha256:dfa18828cbc07b3ae6a95ec7343f6c214fdee2d836197b4be8e9904420762cd8
         ports:
           - 6379:6379
         options: >-
@@ -52,7 +52,7 @@ jobs:
           --health-retries 5
 
       rabbitmq:
-        image: rabbitmq:3.12-management-alpine
+        image: rabbitmq:3.12-management-alpine@sha256:0b44fbcc3a4bf22d00090f1353127577dbe1fcb109c41669733a9d7ecf6c3a78
         ports:
           - 5672:5672
           - 15672:15672
@@ -66,7 +66,7 @@ jobs:
           --health-retries 3
 
       postgres:
-        image: postgres:15-alpine
+        image: postgres:15-alpine@sha256:3d0f7584ed7d04e27fa050d6683a74746608faf21f202be78460d679cc56461f
         env:
           POSTGRES_PASSWORD: test
           POSTGRES_USER: test
@@ -221,12 +221,12 @@ jobs:
 
     services:
       redis:
-        image: redis:7.2-alpine
+        image: redis:7.2-alpine@sha256:dfa18828cbc07b3ae6a95ec7343f6c214fdee2d836197b4be8e9904420762cd8
         ports:
           - 6379:6379
 
       rabbitmq:
-        image: rabbitmq:3.12-management-alpine
+        image: rabbitmq:3.12-management-alpine@sha256:0b44fbcc3a4bf22d00090f1353127577dbe1fcb109c41669733a9d7ecf6c3a78
         ports:
           - 5672:5672
         env:

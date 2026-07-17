@@ -113,7 +113,10 @@ jobs:
       - name: Sign container image
         if: ${{ inputs.sign-image && inputs.push }}
         run: |
-          cosign sign --yes ${{ inputs.registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}@${{ steps.build.outputs.digest }}
+          cosign sign --yes ${INPUTS_REGISTRY}/${{ github.repository_owner }}/${INPUTS_SERVICE_NAME}@${{ steps.build.outputs.digest }}
+        env:
+          INPUTS_REGISTRY: ${{ inputs.registry }}
+          INPUTS_SERVICE_NAME: ${{ inputs.service-name }}
 
       - name: Install Trivy
         if: ${{ inputs.scan-image }}
@@ -128,7 +131,10 @@ jobs:
       - name: Scan image for vulnerabilities
         if: ${{ inputs.scan-image }}
         run: |
-          trivy image --format sarif --output trivy-results.sarif ${{ inputs.registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:${{ github.sha }}
+          trivy image --format sarif --output trivy-results.sarif ${INPUTS_REGISTRY}/${{ github.repository_owner }}/${INPUTS_SERVICE_NAME}:${{ github.sha }}
+        env:
+          INPUTS_REGISTRY: ${{ inputs.registry }}
+          INPUTS_SERVICE_NAME: ${{ inputs.service-name }}
 
       - name: Upload Trivy scan results
         if: ${{ inputs.scan-image && always() }}
@@ -141,7 +147,10 @@ jobs:
         if: ${{ inputs.push }}
         run: |
           # Generate Software Bill of Materials
-          trivy image --format spdx-json --output sbom.spdx.json ${{ inputs.registry }}/${{ github.repository_owner }}/${{ inputs.service-name }}:${{ github.sha }}
+          trivy image --format spdx-json --output sbom.spdx.json ${INPUTS_REGISTRY}/${{ github.repository_owner }}/${INPUTS_SERVICE_NAME}:${{ github.sha }}
+        env:
+          INPUTS_REGISTRY: ${{ inputs.registry }}
+          INPUTS_SERVICE_NAME: ${{ inputs.service-name }}
 
       - name: Upload SBOM
         if: ${{ inputs.push }}

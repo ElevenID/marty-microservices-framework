@@ -81,16 +81,16 @@ jobs:
       run: |
         cd ${{ github.workspace }}
 
-        echo "🚀 Running MMF E2E tests with scope: ${{ github.event.inputs.test_scope }}"
+        echo "🚀 Running MMF E2E tests with scope: ${GITHUB_EVENT_INPUTS_TEST_SCOPE}"
 
         # Set debug flags if enabled
         DEBUG_FLAGS=""
-        if [[ "${{ github.event.inputs.debug_mode }}" == "true" ]]; then
+        if [[ "${GITHUB_EVENT_INPUTS_DEBUG_MODE}" == "true" ]]; then
           DEBUG_FLAGS="--debug"
           echo "🐛 Debug mode enabled"
         fi
 
-        case "${{ github.event.inputs.test_scope }}" in
+        case "${GITHUB_EVENT_INPUTS_TEST_SCOPE}" in
           "smoke")
             echo "💨 Running MMF smoke tests..."
             ./tests/run_mmf_tests.sh --e2e --smoke --verbose $DEBUG_FLAGS
@@ -104,10 +104,13 @@ jobs:
             ./tests/run_mmf_tests.sh --e2e --verbose $DEBUG_FLAGS
             ;;
           *)
-            echo "❌ Unknown test scope: ${{ github.event.inputs.test_scope }}"
+            echo "❌ Unknown test scope: ${GITHUB_EVENT_INPUTS_TEST_SCOPE}"
             exit 1
             ;;
         esac
+      env:
+        GITHUB_EVENT_INPUTS_TEST_SCOPE: ${{ github.event.inputs.test_scope }}
+        GITHUB_EVENT_INPUTS_DEBUG_MODE: ${{ github.event.inputs.debug_mode }}
 
     - name: Check KIND clusters
       if: always()
@@ -155,10 +158,10 @@ jobs:
       run: |
         echo "## 🚀 Quick E2E Test Summary" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Test Scope:** ${{ github.event.inputs.test_scope }}" >> $GITHUB_STEP_SUMMARY
-        echo "**Debug Mode:** ${{ github.event.inputs.debug_mode }}" >> $GITHUB_STEP_SUMMARY
-        if [[ -n "${{ github.event.inputs.pr_number }}" ]]; then
-          echo "**PR Number:** #${{ github.event.inputs.pr_number }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Test Scope:** ${GITHUB_EVENT_INPUTS_TEST_SCOPE}" >> $GITHUB_STEP_SUMMARY
+        echo "**Debug Mode:** ${GITHUB_EVENT_INPUTS_DEBUG_MODE}" >> $GITHUB_STEP_SUMMARY
+        if [[ -n "${GITHUB_EVENT_INPUTS_PR_NUMBER}" ]]; then
+          echo "**PR Number:** #${GITHUB_EVENT_INPUTS_PR_NUMBER}" >> $GITHUB_STEP_SUMMARY
         fi
         echo "" >> $GITHUB_STEP_SUMMARY
 
@@ -181,3 +184,7 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### 📊 Artifacts" >> $GITHUB_STEP_SUMMARY
         echo "Test logs, KIND manifests, and results are available in the artifacts section." >> $GITHUB_STEP_SUMMARY
+      env:
+        GITHUB_EVENT_INPUTS_TEST_SCOPE: ${{ github.event.inputs.test_scope }}
+        GITHUB_EVENT_INPUTS_DEBUG_MODE: ${{ github.event.inputs.debug_mode }}
+        GITHUB_EVENT_INPUTS_PR_NUMBER: ${{ github.event.inputs.pr_number }}
