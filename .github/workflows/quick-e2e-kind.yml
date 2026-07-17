@@ -173,7 +173,7 @@ jobs:
         echo "- **Test Runner:** MMF Unified Test Framework" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
 
-        if [[ $? -eq 0 ]]; then
+        if [[ "$JOB_STATUS" == "success" ]]; then
           echo "### ✅ Result: **PASSED**" >> $GITHUB_STEP_SUMMARY
           echo "All E2E tests completed successfully!" >> $GITHUB_STEP_SUMMARY
         else
@@ -185,6 +185,7 @@ jobs:
         echo "### 📊 Artifacts" >> $GITHUB_STEP_SUMMARY
         echo "Test logs, KIND manifests, and results are available in the artifacts section." >> $GITHUB_STEP_SUMMARY
       env:
+        JOB_STATUS: ${{ job.status }}
         GITHUB_EVENT_INPUTS_TEST_SCOPE: ${{ github.event.inputs.test_scope }}
         GITHUB_EVENT_INPUTS_DEBUG_MODE: ${{ github.event.inputs.debug_mode }}
         GITHUB_EVENT_INPUTS_PR_NUMBER: ${{ github.event.inputs.pr_number }}
