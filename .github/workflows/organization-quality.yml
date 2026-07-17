@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   workflow-quality:
-    uses: ElevenID/.github/.github/workflows/quality-workflows.yml@a856f4d647890aa741fd1da7e7e2f7097ce50969
+    uses: ElevenID/.github/.github/workflows/quality-workflows.yml@b27772ce9a431bdfdfa87310c8c4bfd9787a3dd1
     with:
       policy-ref: 758fce1cd36f6f6bde12fed80921b86f19c2916b
 
