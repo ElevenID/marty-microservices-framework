@@ -87,14 +87,6 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Run TruffleHog secrets scan
-      uses: trufflesecurity/trufflehog@8708801319700a16c56abb86628803ba766d5563
-      with:
-        path: ./
-        base: main
-        head: HEAD
-        extra_args: --only-verified
-
     - name: Install GitLeaks
       env:
         GITLEAKS_VERSION: v8.30.1
