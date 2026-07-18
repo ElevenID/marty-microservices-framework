@@ -19,6 +19,7 @@ from mmf.services.biometric.di_config import BiometricDIContainer
 
 # ── Pydantic request / response models ──────────────────────────────────
 
+
 class VerifyRequest(BaseModel):
     reference_image: str = Field(..., description="Base64-encoded reference image")
     probe_image: str = Field(..., description="Base64-encoded probe image")
@@ -51,6 +52,7 @@ class QualityResponse(BaseModel):
 
 
 # ── App factory ─────────────────────────────────────────────────────────
+
 
 def create_app(container: BiometricDIContainer | None = None) -> FastAPI:
     """Create the biometric FastAPI app."""

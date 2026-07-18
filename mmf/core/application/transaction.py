@@ -78,9 +78,12 @@ class TransactionManager:
 
             # Set transaction configuration after begin()
             if config.isolation_level:
-                await session.execute(
-                    text(f"SET TRANSACTION ISOLATION LEVEL {config.isolation_level.value}")
+                isolation_level = (
+                    config.isolation_level.value
+                    if isinstance(config.isolation_level, IsolationLevel)
+                    else str(config.isolation_level)
                 )
+                await session.execute(text(f"SET TRANSACTION ISOLATION LEVEL {isolation_level}"))
             if config.read_only:
                 await session.execute(text("SET TRANSACTION READ ONLY"))
             if config.deferrable:

@@ -186,8 +186,7 @@ class KongRouteSynchronizer:
             service_id = await self._get_service_id(config.service_name)
             if not service_id:
                 logger.error(
-                    f"Cannot create route {config.name}: "
-                    f"service {config.service_name} not found"
+                    f"Cannot create route {config.name}: service {config.service_name} not found"
                 )
                 return False
 

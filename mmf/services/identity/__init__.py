@@ -41,12 +41,7 @@ from .config import (
 from .domain.models import AuthenticatedUser
 
 # Infrastructure Layer
-from .infrastructure.adapters import (
-    APIKeyAdapter,
-    APIKeyConfig,
-    BasicAuthAdapter,
-    BasicAuthConfig,
-)
+from .infrastructure.adapters import BasicAuthAdapter, BasicAuthConfig
 
 __all__ = [
     # Configuration
@@ -82,6 +77,4 @@ __all__ = [
     # Infrastructure Adapters
     "BasicAuthAdapter",
     "BasicAuthConfig",
-    "APIKeyAdapter",
-    "APIKeyConfig",
 ]

@@ -41,7 +41,7 @@ class MigrationManagerPort(ABC):
         message: str,
         autogenerate: bool = True,
         sql_mode: bool = False,
-    ) -> Optional[str]:
+    ) -> str | None:
         """Create a new migration.
 
         Args:
@@ -84,7 +84,7 @@ class MigrationManagerPort(ABC):
         pass
 
     @abstractmethod
-    def current(self) -> Optional[str]:
+    def current(self) -> str | None:
         """Get the current migration revision.
 
         Returns:

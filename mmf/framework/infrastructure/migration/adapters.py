@@ -42,9 +42,9 @@ class AlembicMigrationAdapter(MigrationManagerPort):
         """
         self.database_url = database_url
         self.metadata = metadata
-        self.alembic_cfg: Optional[Config] = None
-        self._service_name: Optional[str] = None
-        self._migrations_dir: Optional[Path] = None
+        self.alembic_cfg: Config | None = None
+        self._service_name: str | None = None
+        self._migrations_dir: Path | None = None
 
     def initialize(self, service_name: str, migrations_dir: Path) -> None:
         """Initialize Alembic migration infrastructure.
@@ -95,7 +95,7 @@ class AlembicMigrationAdapter(MigrationManagerPort):
         message: str,
         autogenerate: bool = True,
         sql_mode: bool = False,
-    ) -> Optional[str]:
+    ) -> str | None:
         """Create a new Alembic migration.
 
         Args:
@@ -172,7 +172,7 @@ class AlembicMigrationAdapter(MigrationManagerPort):
         except Exception as e:
             raise MigrationError(f"Failed to downgrade: {e}") from e
 
-    def current(self) -> Optional[str]:
+    def current(self) -> str | None:
         """Get current migration revision.
 
         Returns:
@@ -216,8 +216,7 @@ class AlembicMigrationAdapter(MigrationManagerPort):
             for revision in script.walk_revisions():
                 if verbose:
                     revisions.append(
-                        f"{revision.revision}: {revision.doc} "
-                        f"(down: {revision.down_revision})"
+                        f"{revision.revision}: {revision.doc} (down: {revision.down_revision})"
                     )
                 else:
                     revisions.append(revision.revision)
@@ -261,9 +260,7 @@ class AlembicMigrationAdapter(MigrationManagerPort):
     def _ensure_initialized(self) -> None:
         """Ensure migration infrastructure is initialized."""
         if not self.alembic_cfg:
-            raise MigrationError(
-                "Migration adapter not initialized. Call initialize() first."
-            )
+            raise MigrationError("Migration adapter not initialized. Call initialize() first.")
 
     def _create_alembic_ini(self, path: Path) -> None:
         """Create alembic.ini configuration file."""

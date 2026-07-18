@@ -382,9 +382,9 @@ class TestAuditability:
         critical_failures = [
             c for c in compliance_checks if not c["passed"] and "critical" in c["check"]
         ]
-        assert (
-            len(critical_failures) == 0
-        ), f"Critical compliance checks failed: {critical_failures}"
+        assert len(critical_failures) == 0, (
+            f"Critical compliance checks failed: {critical_failures}"
+        )
 
         # Print summary
         self._print_audit_summary(report)

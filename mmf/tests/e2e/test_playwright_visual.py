@@ -398,15 +398,15 @@ class TestPlaywrightVisual:
                 print(f"\\n📋 Visual test report saved to: {report_file}")
 
                 # Assertions
-                assert test_results["dashboard_load"][
-                    "success"
-                ], "Dashboard should load successfully"
-                assert test_results["responsive_design"][
-                    "mobile_compatible"
-                ], "Dashboard should be mobile compatible"
-                assert test_results["interactive_elements"][
-                    "all_buttons_functional"
-                ], "All buttons should be functional"
+                assert test_results["dashboard_load"]["success"], (
+                    "Dashboard should load successfully"
+                )
+                assert test_results["responsive_design"]["mobile_compatible"], (
+                    "Dashboard should be mobile compatible"
+                )
+                assert test_results["interactive_elements"]["all_buttons_functional"], (
+                    "All buttons should be functional"
+                )
 
                 # Print summary
                 self._print_visual_test_summary(report)

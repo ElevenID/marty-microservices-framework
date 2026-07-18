@@ -24,7 +24,9 @@ class FileSystemAdapter(ExternalSystemPort):
 
     def __init__(self, config: ConnectionConfig):
         self.config = config
-        self.base_path = Path(config.endpoint_url).expanduser() if config.endpoint_url else Path.cwd()
+        self.base_path = (
+            Path(config.endpoint_url).expanduser() if config.endpoint_url else Path.cwd()
+        )
         self.connected = False
 
     async def connect(self) -> bool:

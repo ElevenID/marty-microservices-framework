@@ -7,6 +7,7 @@ distributed tracing, intelligent alerting, log aggregation, and observability an
 
 import asyncio
 import builtins
+import logging
 import statistics
 from collections import defaultdict, deque
 from dataclasses import dataclass, field

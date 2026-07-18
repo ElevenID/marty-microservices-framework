@@ -209,9 +209,9 @@ class TestCryptographicSecurity:
 
         # Test hash strength (should use strong algorithm like bcrypt, scrypt, or argon2)
         assert len(hash1) >= 60, "Hash should be at least 60 characters (bcrypt)"
-        assert hash1.startswith(
-            ("$2b$", "$scrypt$", "$argon2")
-        ), "Should use strong hashing algorithm"
+        assert hash1.startswith(("$2b$", "$scrypt$", "$argon2")), (
+            "Should use strong hashing algorithm"
+        )
 
     async def test_encryption_security(self, crypto_service):
         """Test encryption/decryption security."""

@@ -671,12 +671,18 @@ class ABACManager:
         if allowed:
             logger.debug(
                 "ABAC decision ALLOW: principal=%s resource=%s action=%s decision=%s",
-                principal_id, resource, action, result.decision.value,
+                principal_id,
+                resource,
+                action,
+                result.decision.value,
             )
         else:
             logger.info(
                 "ABAC decision DENY: principal=%s resource=%s action=%s decision=%s",
-                principal_id, resource, action, result.decision.value,
+                principal_id,
+                resource,
+                action,
+                result.decision.value,
             )
         return allowed
 

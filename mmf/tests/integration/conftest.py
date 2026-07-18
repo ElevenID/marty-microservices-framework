@@ -13,12 +13,8 @@ import asyncpg
 import docker
 import pytest
 import redis.asyncio as redis
-from testcontainers.kafka import KafkaContainer
 from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
-
-from mmf.framework.events.enhanced_event_bus import EnhancedEventBus as EventBus
-from mmf.framework.messaging import MessagingManager as MessageBus
 
 
 def is_docker_available() -> bool:
@@ -46,7 +42,9 @@ async def postgres_container() -> AsyncGenerator[PostgresContainer, None]:
     """Provide a PostgreSQL container for integration tests."""
     if not is_docker_available():
         pytest.skip("Docker is not available")
-    with PostgresContainer("postgres:15-alpine") as postgres:
+    with PostgresContainer(
+        "postgres:15-alpine@sha256:cae15a3b718f23497a60b7cafdcf205216d7949680972da0584db00fb68bf3e6"
+    ) as postgres:
         postgres.start()
         yield postgres
 
@@ -56,19 +54,11 @@ async def redis_container() -> AsyncGenerator[RedisContainer, None]:
     """Provide a Redis container for integration tests."""
     if not is_docker_available():
         pytest.skip("Docker is not available")
-    with RedisContainer("redis:7-alpine") as redis:
-        redis.start()
-        yield redis
-
-
-@pytest.fixture(scope="session")
-async def kafka_container() -> AsyncGenerator[KafkaContainer, None]:
-    """Provide a Kafka container for integration tests."""
-    if not is_docker_available():
-        pytest.skip("Docker is not available")
-    with KafkaContainer("confluentinc/cp-kafka:latest") as kafka:
-        kafka.start()
-        yield kafka
+    with RedisContainer(
+        "redis:7-alpine@sha256:b1addbe72465a718643cff9e60a58e6df1841e29d6d7d60c9a85d8d72f08d1a7"
+    ) as redis_container:
+        redis_container.start()
+        yield redis_container
 
 
 @pytest.fixture
@@ -109,48 +99,7 @@ async def real_redis_client(redis_container: RedisContainer):
 
     # Cleanup
     await client.flushdb()
-    await client.close()
-
-
-@pytest.fixture
-async def real_event_bus(
-    kafka_container: KafkaContainer, test_service_name: str
-) -> AsyncGenerator[EventBus, None]:
-    """Provide a real event bus with Kafka for integration tests."""
-    bootstrap_servers = [f"localhost:{kafka_container.get_exposed_port(9093)}"]
-
-    event_bus = EventBus(
-        service_name=test_service_name,
-        bootstrap_servers=bootstrap_servers,
-        consumer_group=f"{test_service_name}-integration-test",
-    )
-
-    try:
-        await event_bus.start()
-        yield event_bus
-    finally:
-        await event_bus.stop()
-
-
-@pytest.fixture
-async def real_message_bus(
-    kafka_container: KafkaContainer, test_service_name: str
-) -> AsyncGenerator[MessageBus, None]:
-    """Provide a real message bus with Kafka for integration tests."""
-    bootstrap_servers = [f"localhost:{kafka_container.get_exposed_port(9093)}"]
-
-    config = {
-        "kafka_bootstrap_servers": bootstrap_servers,
-        "kafka_consumer_group": f"{test_service_name}-integration-test",
-    }
-
-    message_bus = MessageBus(service_name=test_service_name, config=config)
-
-    try:
-        await message_bus.start()
-        yield message_bus
-    finally:
-        await message_bus.stop()
+    await client.aclose()
 
 
 @pytest.fixture

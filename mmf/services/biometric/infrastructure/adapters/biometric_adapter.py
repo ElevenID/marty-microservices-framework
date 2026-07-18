@@ -19,6 +19,7 @@ from mmf.services.biometric.application.ports_out import (
 def _get_rust_module():
     try:
         import _marty_biometrics
+
         return _marty_biometrics
     except ImportError:
         raise RuntimeError(
