@@ -87,14 +87,6 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Run TruffleHog secrets scan
-      uses: trufflesecurity/trufflehog@8708801319700a16c56abb86628803ba766d5563
-      with:
-        path: ./
-        base: main
-        head: HEAD
-        extra_args: --only-verified
-
     - name: Install GitLeaks
       env:
         GITLEAKS_VERSION: v8.30.1
@@ -109,7 +101,7 @@ jobs:
       run: |
         case "${{ github.event_name }}" in
           pull_request)
-            RANGE="${{ github.event.pull_request.head.sha }}^..${{ github.event.pull_request.head.sha }}"
+            RANGE="${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
             ;;
           push)
             RANGE="${{ github.event.before }}..${{ github.sha }}"
