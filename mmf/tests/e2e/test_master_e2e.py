@@ -423,9 +423,9 @@ class TestMasterE2E:
         execution = master_summary["test_execution_summary"]
 
         # At least 75% of tests should pass
-        assert (
-            execution["success_rate"] >= 75
-        ), f"Test success rate too low: {execution['success_rate']:.1f}% (minimum: 75%)"
+        assert execution["success_rate"] >= 75, (
+            f"Test success rate too low: {execution['success_rate']:.1f}% (minimum: 75%)"
+        )
 
         # At least one test should have completed successfully
         assert execution["successful_tests"] > 0, "No tests completed successfully"
@@ -435,16 +435,16 @@ class TestMasterE2E:
             "error"
         ):
             bottleneck_report = test_results["bottleneck_analysis"]
-            assert (
-                "test_summary" in bottleneck_report
-            ), "Bottleneck analysis should generate test summary"
+            assert "test_summary" in bottleneck_report, (
+                "Bottleneck analysis should generate test summary"
+            )
 
         # Critical assertion: if timeout detection ran, it should have phase results
         if test_results["timeout_detection"] and not test_results["timeout_detection"].get("error"):
             timeout_report = test_results["timeout_detection"]
-            assert (
-                "test_summary" in timeout_report
-            ), "Timeout detection should generate test summary"
+            assert "test_summary" in timeout_report, (
+                "Timeout detection should generate test summary"
+            )
 
         # Critical assertion: if audit ran, it should track events
         if test_results["auditability"] and not test_results["auditability"].get("error"):

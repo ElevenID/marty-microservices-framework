@@ -122,13 +122,9 @@ class GrpcChannelManager:
                 target, credentials, options=options, interceptors=interceptors
             )
         else:
-            channel = aio.insecure_channel(
-                target, options=options, interceptors=interceptors
-            )
+            channel = aio.insecure_channel(target, options=options, interceptors=interceptors)
 
-        logger.info(
-            "Created gRPC channel to %s (tls=%s)", target, self._tls_enabled
-        )
+        logger.info("Created gRPC channel to %s (tls=%s)", target, self._tls_enabled)
         return channel
 
 
@@ -166,9 +162,7 @@ class GrpcStubFactory:
         """Get or create a stub instance by service name."""
         reg = self._registry.get(name)
         if reg is None:
-            raise KeyError(
-                f"Service '{name}' not registered. Known: {list(self._registry)}"
-            )
+            raise KeyError(f"Service '{name}' not registered. Known: {list(self._registry)}")
 
         if reg.instance is not None:
             return reg.instance

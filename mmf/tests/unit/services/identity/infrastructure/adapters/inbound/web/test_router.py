@@ -264,8 +264,8 @@ class TestAuthRouter:
         response = client.post("/auth/logout")
 
         # Verify
-        assert response.status_code == 200
-        assert response.json() == {"message": "Successfully logged out"}
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Authorization header required"
 
     def test_missing_auth_header(self, client):
         # Execute

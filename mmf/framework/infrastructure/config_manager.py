@@ -162,7 +162,11 @@ class BaseServiceConfig(BaseSettings):
     """Base configuration for all services."""
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="allow"
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_prefix="MMF_",
+        case_sensitive=False,
+        extra="allow",
     )
 
     # Service identification

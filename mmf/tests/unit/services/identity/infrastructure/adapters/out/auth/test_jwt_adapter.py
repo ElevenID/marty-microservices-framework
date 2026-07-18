@@ -171,7 +171,7 @@ class TestJWTTokenProvider:
     @pytest.mark.asyncio
     async def test_create_token_timezone_handling(self):
         """Test that naive datetime is converted to UTC."""
-        naive_expiry = datetime(2026, 1, 1, 12, 0, 0)  # No timezone, future date
+        naive_expiry = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=1)
 
         token = await self.provider.create_token(self.test_user, expires_at=naive_expiry)
 
@@ -185,7 +185,7 @@ class TestJWTTokenProvider:
 
         # Should be treated as UTC
         expected_timestamp = naive_expiry.replace(tzinfo=timezone.utc).timestamp()
-        assert payload["exp"] == expected_timestamp
+        assert payload["exp"] == int(expected_timestamp)
 
     @pytest.mark.asyncio
     async def test_validate_token_success(self):

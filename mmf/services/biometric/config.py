@@ -6,6 +6,7 @@ from enum import Enum
 
 class BiometricProviderType(Enum):
     """Available biometric provider implementations."""
+
     MOCK = "mock"
     LOCAL_ONNX = "local_onnx"
 

@@ -8,6 +8,7 @@ from typing import Optional
 @dataclass
 class FaceMatchRequest:
     """Inbound request DTO for face verification."""
+
     reference_image: str
     probe_image: str
     threshold: float | None = None
@@ -16,6 +17,7 @@ class FaceMatchRequest:
 @dataclass
 class FaceMatchResult:
     """Result of a face verification."""
+
     verified: bool
     similarity: float
     threshold: float
@@ -28,6 +30,7 @@ class FaceMatchResult:
 @dataclass
 class QualityResult:
     """Result of a face quality assessment."""
+
     overall_score: float
     face_detected: bool
     face_count: int

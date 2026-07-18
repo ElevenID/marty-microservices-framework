@@ -96,13 +96,13 @@ class TestFrameworkConfig:
     @patch.dict(
         os.environ,
         {
-            "SERVICE_NAME": "env-service",
-            "ENVIRONMENT": "staging",
-            "DEBUG": "true",
-            "LOGGING_LEVEL": "ERROR",
-            "PORT": "8081",
-            "DATABASE_URL": "sqlite:///:memory:",
-            "SECRET_KEY": "env-secret",  # pragma: allowlist secret
+            "MMF_SERVICE_NAME": "env-service",
+            "MMF_ENVIRONMENT": "staging",
+            "MMF_DEBUG": "true",
+            "MMF_LOGGING_LEVEL": "ERROR",
+            "MMF_PORT": "8081",
+            "MMF_DATABASE_URL": "sqlite:///:memory:",
+            "MMF_SECRET_KEY": "env-secret",  # pragma: allowlist secret
         },
     )
     def test_config_from_environment(self):
@@ -119,11 +119,11 @@ class TestFrameworkConfig:
     @patch.dict(
         os.environ,
         {
-            "SERVICE_NAME": "env-service",
-            "DEBUG": "false",
-            "PORT": "invalid",
-            "DATABASE_URL": "sqlite:///:memory:",
-            "SECRET_KEY": "env-secret",  # pragma: allowlist secret
+            "MMF_SERVICE_NAME": "env-service",
+            "MMF_DEBUG": "false",
+            "MMF_PORT": "invalid",
+            "MMF_DATABASE_URL": "sqlite:///:memory:",
+            "MMF_SECRET_KEY": "env-secret",  # pragma: allowlist secret
         },
     )
     def test_config_from_environment_with_invalid_values(self):
@@ -254,10 +254,10 @@ class TestFrameworkConfig:
         with patch.dict(
             os.environ,
             {
-                "DEBUG": env_value,
-                "SERVICE_NAME": "bool-test",
-                "DATABASE_URL": "sqlite:///:memory:",
-                "SECRET_KEY": "secret",
+                "MMF_DEBUG": env_value,
+                "MMF_SERVICE_NAME": "bool-test",
+                "MMF_DATABASE_URL": "sqlite:///:memory:",
+                "MMF_SECRET_KEY": "secret",
             },
         ):
             config = FrameworkConfig()

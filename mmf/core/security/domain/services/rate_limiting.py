@@ -257,7 +257,10 @@ class SessionCleanupService:
 
     def mark_cleanup_completed(self) -> None:
         """Mark cleanup as completed."""
-        self.last_cleanup = datetime.utcnow()
+        completed_at = datetime.utcnow()
+        if completed_at <= self.last_cleanup:
+            completed_at = self.last_cleanup + timedelta(microseconds=1)
+        self.last_cleanup = completed_at
 
     def calculate_cleanup_priority(self, session_age_minutes: int) -> int:
         """

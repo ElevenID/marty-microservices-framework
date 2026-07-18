@@ -289,7 +289,7 @@ jobs:
   e2e-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'

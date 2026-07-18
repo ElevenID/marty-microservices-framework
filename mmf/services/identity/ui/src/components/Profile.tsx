@@ -29,9 +29,9 @@ export const Profile: React.FC<ProfileProps> = ({ token, onLogout }) => {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(response.data);
-      } catch (err: any) {
+      } catch (error: unknown) {
         setError('Failed to load user profile');
-        if (err.response?.status === 401) {
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
           onLogout();
         }
       } finally {
@@ -50,7 +50,7 @@ export const Profile: React.FC<ProfileProps> = ({ token, onLogout }) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       alert(response.data.valid ? 'Token is valid!' : 'Token is invalid!');
-    } catch (err) {
+    } catch {
       alert('Validation failed');
     }
   };

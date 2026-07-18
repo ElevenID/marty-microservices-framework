@@ -123,9 +123,7 @@ class ConsulAdapter(IServiceRegistry):
             response.raise_for_status()
 
             self._stats["total_deregistrations"] += 1
-            logger.info(
-                f"Deregistered service {service_name} " f"instance {instance_id} from Consul"
-            )
+            logger.info(f"Deregistered service {service_name} instance {instance_id} from Consul")
             return True
 
         except httpx.HTTPError as e:

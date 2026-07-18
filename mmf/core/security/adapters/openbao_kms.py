@@ -108,9 +108,7 @@ class OpenBaoKMSProvider:
     def _transit_url(self, action: str, key_name: str) -> str:
         return f"/v1/{self._transit_mount}/{action}/{key_name}"
 
-    async def _request(
-        self, method: str, url: str, **kwargs: Any
-    ) -> dict[str, Any]:
+    async def _request(self, method: str, url: str, **kwargs: Any) -> dict[str, Any]:
         resp = await self._client.request(method, url, **kwargs)
         resp.raise_for_status()
         return resp.json() if resp.content else {}
@@ -143,9 +141,7 @@ class OpenBaoKMSProvider:
         data = await self._request("GET", self._transit_url("keys", key_name))
         keys_data = data.get("data", {}).get("keys", {})
         latest_version = str(data.get("data", {}).get("latest_version", 1))
-        public_key_pem = (
-            keys_data.get(latest_version, {}).get("public_key", "").encode()
-        )
+        public_key_pem = keys_data.get(latest_version, {}).get("public_key", "").encode()
 
         now = datetime.now(timezone.utc)
         metadata = KeyMetadata(
@@ -289,25 +285,31 @@ class OpenBaoKMSProvider:
 
             return {
                 "kty": "EC",
-                "crv": {256: "P-256", 384: "P-384", 521: "P-521"}.get(
-                    pub.key_size, "P-256"
-                ),
+                "crv": {256: "P-256", 384: "P-384", 521: "P-521"}.get(pub.key_size, "P-256"),
                 "x": b64url_encode(nums.x.to_bytes(size, "big")),
                 "y": b64url_encode(nums.y.to_bytes(size, "big")),
             }
         if isinstance(pub, ed25519.Ed25519PublicKey):
             raw = pub.public_bytes_raw()
-            return {"kty": "OKP", "crv": "Ed25519", "x": base64.urlsafe_b64encode(raw).rstrip(b"=").decode()}
+            return {
+                "kty": "OKP",
+                "crv": "Ed25519",
+                "x": base64.urlsafe_b64encode(raw).rstrip(b"=").decode(),
+            }
         if isinstance(pub, rsa.RSAPublicKey):
             nums = pub.public_numbers()
             return {
                 "kty": "RSA",
                 "n": base64.urlsafe_b64encode(
                     nums.n.to_bytes((nums.n.bit_length() + 7) // 8, "big")
-                ).rstrip(b"=").decode(),
+                )
+                .rstrip(b"=")
+                .decode(),
                 "e": base64.urlsafe_b64encode(
                     nums.e.to_bytes((nums.e.bit_length() + 7) // 8, "big")
-                ).rstrip(b"=").decode(),
+                )
+                .rstrip(b"=")
+                .decode(),
             }
         raise ValueError(f"Unsupported key type: {type(pub)}")
 

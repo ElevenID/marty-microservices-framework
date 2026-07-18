@@ -96,7 +96,7 @@ class GithubActionsAdapter(PipelinePort):
             workflow["jobs"]["build"] = {
                 "runs-on": "ubuntu-latest",
                 "steps": [
-                    {"uses": "actions/checkout@v4"},
+                    {"uses": "actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0"},
                     {
                         "name": "Set up Docker Buildx",
                         "uses": "docker/setup-buildx-action@v3",
@@ -128,7 +128,7 @@ class GithubActionsAdapter(PipelinePort):
                 "runs-on": "ubuntu-latest",
                 "needs": "build" if PipelineStage.BUILD in config.stages else None,
                 "steps": [
-                    {"uses": "actions/checkout@v4"},
+                    {"uses": "actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0"},
                     {"name": "Run tests", "run": "make test"},
                     {
                         "name": "Upload test results",
@@ -143,7 +143,7 @@ class GithubActionsAdapter(PipelinePort):
             workflow["jobs"]["security-scan"] = {
                 "runs-on": "ubuntu-latest",
                 "steps": [
-                    {"uses": "actions/checkout@v4"},
+                    {"uses": "actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0"},
                     {
                         "name": "Run Trivy vulnerability scanner",
                         "uses": "aquasecurity/trivy-action@master",
@@ -179,7 +179,7 @@ class GithubActionsAdapter(PipelinePort):
                     and PipelineStage.SECURITY_SCAN in config.stages
                     else ["build"],
                     "steps": [
-                        {"uses": "actions/checkout@v4"},
+                        {"uses": "actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0"},
                         {
                             "name": "Set up kubectl",
                             "uses": "azure/setup-kubectl@v3",

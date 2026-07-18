@@ -350,14 +350,14 @@ class MockPushAdapter:
             assert self.sent_count == count, f"Expected {count} messages, got {self.sent_count}"
 
         if min_count is not None:
-            assert (
-                self.sent_count >= min_count
-            ), f"Expected at least {min_count} messages, got {self.sent_count}"
+            assert self.sent_count >= min_count, (
+                f"Expected at least {min_count} messages, got {self.sent_count}"
+            )
 
         if max_count is not None:
-            assert (
-                self.sent_count <= max_count
-            ), f"Expected at most {max_count} messages, got {self.sent_count}"
+            assert self.sent_count <= max_count, (
+                f"Expected at most {max_count} messages, got {self.sent_count}"
+            )
 
     def assert_message_sent_to(
         self,

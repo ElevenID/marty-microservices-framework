@@ -110,12 +110,12 @@ class TestTimeoutDetection:
 
         # Assertions
         assert len(results) == len(test_phases), "Should have results for all phases"
-        assert any(
-            phase["timeouts"] > 0 for phase in results.values()
-        ), "Should detect timeouts under high load"
-        assert any(
-            phase["circuit_breaker_trips"] > 0 for phase in results.values()
-        ), "Circuit breaker should trip under stress"
+        assert any(phase["timeouts"] > 0 for phase in results.values()), (
+            "Should detect timeouts under high load"
+        )
+        assert any(phase["circuit_breaker_trips"] > 0 for phase in results.values()), (
+            "Circuit breaker should trip under stress"
+        )
 
         # Print summary
         self._print_timeout_summary(report)

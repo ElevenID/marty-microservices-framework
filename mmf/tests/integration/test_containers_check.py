@@ -31,4 +31,4 @@ async def test_redis_container_connection(redis_container: RedisContainer):
         value = await client.get("test_key")
         assert value == b"test_value"
     finally:
-        await client.close()
+        await client.aclose()

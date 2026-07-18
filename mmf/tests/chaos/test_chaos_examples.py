@@ -92,9 +92,9 @@ class TestNetworkChaos:
         recovery_time = time.time() - recovery_start
 
         # Assertions
-        assert (
-            partition_success_rate < baseline_success_rate
-        ), "System should show degraded performance during partition"
+        assert partition_success_rate < baseline_success_rate, (
+            "System should show degraded performance during partition"
+        )
         assert recovery_time < 30, f"Recovery took too long: {recovery_time:.2f}s"
         assert recovery_success_rate >= baseline_success_rate * 0.9, (
             f"System did not recover properly: {recovery_success_rate:.2f} vs "
@@ -163,9 +163,9 @@ class TestNetworkChaos:
 
                 # System should handle packet loss gracefully
                 expected_min_success = max(0.5, 1 - loss_rate * 2)  # Account for retries
-                assert (
-                    success_rate >= expected_min_success
-                ), f"Success rate {success_rate:.2f} too low for {loss_rate:.1%} packet loss"
+                assert success_rate >= expected_min_success, (
+                    f"Success rate {success_rate:.2f} too low for {loss_rate:.1%} packet loss"
+                )
 
 
 @pytest.mark.chaos
@@ -199,14 +199,14 @@ class TestResourceChaos:
 
                 # System should handle memory pressure gracefully
                 if pressure_level <= 0.8:
-                    assert (
-                        success_rate >= 0.8
-                    ), f"High failure rate under {pressure_level:.0%} memory pressure"
+                    assert success_rate >= 0.8, (
+                        f"High failure rate under {pressure_level:.0%} memory pressure"
+                    )
                     assert oom_rate == 0, "Should not have OOM errors at moderate memory pressure"
                 else:
-                    assert (
-                        success_rate >= 0.5
-                    ), f"System fails completely under {pressure_level:.0%} memory pressure"
+                    assert success_rate >= 0.5, (
+                        f"System fails completely under {pressure_level:.0%} memory pressure"
+                    )
                     assert oom_rate < 0.3, "Too many OOM errors under high memory pressure"
 
     async def test_cpu_stress_resilience(self, chaos_experiment, system_under_test):
@@ -239,9 +239,9 @@ class TestResourceChaos:
 
                 # Response times may increase but should remain reasonable
                 max_acceptable_response = 10.0  # 10 seconds
-                assert (
-                    avg_response_time < max_acceptable_response
-                ), f"Response time {avg_response_time:.2f}s too high under {cpu_load:.0%} CPU load"
+                assert avg_response_time < max_acceptable_response, (
+                    f"Response time {avg_response_time:.2f}s too high under {cpu_load:.0%} CPU load"
+                )
 
     async def test_disk_io_chaos(self, chaos_experiment, system_under_test):
         """Test system resilience during disk I/O issues."""
@@ -325,14 +325,14 @@ class TestServiceChaos:
                 # Expectations vary by dependency criticality
                 if dependency in ["database", "message_queue"]:
                     # Critical dependencies - expect graceful degradation
-                    assert (
-                        success_rate + degraded_rate >= 0.8
-                    ), f"System should degrade gracefully when {dependency} fails"
+                    assert success_rate + degraded_rate >= 0.8, (
+                        f"System should degrade gracefully when {dependency} fails"
+                    )
                 else:
                     # Non-critical dependencies - expect continued operation
-                    assert (
-                        success_rate >= 0.9
-                    ), f"System should continue operating when {dependency} fails"
+                    assert success_rate >= 0.9, (
+                        f"System should continue operating when {dependency} fails"
+                    )
 
     async def test_cascading_failure_prevention(self, chaos_experiment, system_under_test):
         """Test prevention of cascading failures."""
@@ -375,9 +375,9 @@ class TestServiceChaos:
                 )
 
                 # Response times should not degrade excessively
-                assert (
-                    avg_response_time < 10.0
-                ), f"Response time degradation indicates cascading failure: {avg_response_time:.2f}s"
+                assert avg_response_time < 10.0, (
+                    f"Response time degradation indicates cascading failure: {avg_response_time:.2f}s"
+                )
 
     async def test_traffic_spike_resilience(self, chaos_experiment, system_under_test):
         """Test system behavior under sudden traffic spikes."""
@@ -426,14 +426,14 @@ class TestServiceChaos:
                 # System should handle traffic spikes gracefully
                 if multiplier <= 5:
                     assert success_rate >= 0.7, f"High failure rate at {multiplier}x traffic"
-                    assert (
-                        rate_limited_rate <= 0.3
-                    ), f"Excessive rate limiting at {multiplier}x traffic"
+                    assert rate_limited_rate <= 0.3, (
+                        f"Excessive rate limiting at {multiplier}x traffic"
+                    )
                 else:
                     # High traffic - rate limiting expected
-                    assert (
-                        success_rate + rate_limited_rate >= 0.8
-                    ), f"System should rate limit gracefully at {multiplier}x traffic"
+                    assert success_rate + rate_limited_rate >= 0.8, (
+                        f"System should rate limit gracefully at {multiplier}x traffic"
+                    )
 
                 # Should not have excessive errors
                 assert error_rate <= 0.1, f"Too many errors at {multiplier}x traffic"
@@ -599,12 +599,12 @@ class TestChaosMonkey:
         avg_response_time = sum(response_times) / len(response_times) if response_times else 0
 
         # System should maintain reasonable performance under comprehensive chaos
-        assert (
-            success_rate >= 0.7
-        ), f"System failed under comprehensive chaos: {success_rate:.2f} success rate"
-        assert (
-            avg_response_time < 15.0
-        ), f"Response times too high under comprehensive chaos: {avg_response_time:.2f}s"
+        assert success_rate >= 0.7, (
+            f"System failed under comprehensive chaos: {success_rate:.2f} success rate"
+        )
+        assert avg_response_time < 15.0, (
+            f"Response times too high under comprehensive chaos: {avg_response_time:.2f}s"
+        )
 
         # System should not have complete outages
         consecutive_failures = 0
@@ -617,6 +617,6 @@ class TestChaosMonkey:
                 consecutive_failures += 1
                 max_consecutive_failures = max(max_consecutive_failures, consecutive_failures)
 
-        assert (
-            max_consecutive_failures <= 5
-        ), f"Too many consecutive failures: {max_consecutive_failures}"
+        assert max_consecutive_failures <= 5, (
+            f"Too many consecutive failures: {max_consecutive_failures}"
+        )

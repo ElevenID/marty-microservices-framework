@@ -14,6 +14,7 @@ from mmf.services.biometric.application.ports_out import (
 @dataclass
 class VerifyBiometricRequest:
     """Input for the verify-biometric use case."""
+
     reference_image: str
     probe_image: str
     threshold: float | None = None

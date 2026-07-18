@@ -137,9 +137,7 @@ class GrpcAdapter(ExternalSystemPort):
                     private_key=client_key,
                     certificate_chain=client_cert,
                 )
-                self.channel = aio.secure_channel(
-                    target, credentials, options=channel_options
-                )
+                self.channel = aio.secure_channel(target, credentials, options=channel_options)
             else:
                 self.channel = aio.insecure_channel(target, options=channel_options)
 
@@ -264,9 +262,7 @@ class GrpcAdapter(ExternalSystemPort):
         stub_name, method_name = parts
         stub = self._stubs.get(stub_name)
         if stub is None:
-            raise ValueError(
-                f"Stub '{stub_name}' not found. Registered: {list(self._stubs)}"
-            )
+            raise ValueError(f"Stub '{stub_name}' not found. Registered: {list(self._stubs)}")
         rpc_method = getattr(stub, method_name)
         timeout = request.timeout or self.config.timeout
         return await rpc_method(request.data, timeout=timeout)

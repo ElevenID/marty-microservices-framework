@@ -48,6 +48,7 @@ def _blacklist_token(token: str, ttl: int = 3600) -> None:
     """Add a token to the blacklist."""
     global _blacklist_last_cleanup
     import hashlib
+
     token_hash = hashlib.sha256(token.encode()).hexdigest()
     now = time.time()
     _blacklisted_tokens[token_hash] = now + ttl
@@ -62,6 +63,7 @@ def _blacklist_token(token: str, ttl: int = 3600) -> None:
 def is_token_blacklisted(token: str) -> bool:
     """Check if a token has been blacklisted."""
     import hashlib
+
     token_hash = hashlib.sha256(token.encode()).hexdigest()
     expiry = _blacklisted_tokens.get(token_hash)
     if expiry is None:

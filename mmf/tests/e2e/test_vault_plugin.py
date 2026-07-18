@@ -63,9 +63,9 @@ def test_vault_plugin_integration():
 
         print(f"Vault Plugin Status: {status}, Version: {version}")
 
-        assert (
-            status == "ACTIVE"
-        ), f"Vault plugin is {status}, expected ACTIVE. Check service logs for errors."
+        assert status == "ACTIVE", (
+            f"Vault plugin is {status}, expected ACTIVE. Check service logs for errors."
+        )
 
     except requests.RequestException as e:
         pytest.fail(f"Request failed: {e}")
