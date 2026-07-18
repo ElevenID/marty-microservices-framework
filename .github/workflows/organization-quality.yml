@@ -14,13 +14,13 @@ permissions:
 
 jobs:
   workflow-quality:
-    uses: ElevenID/.github/.github/workflows/quality-workflows.yml@f83fc445234c615ab10b26c5382c4ae9bd526314
+    uses: ElevenID/.github/.github/workflows/quality-workflows.yml@f471fff1902112af03a02e2c21776afca791b27f
     with:
-      policy-ref: 758fce1cd36f6f6bde12fed80921b86f19c2916b
+      policy-ref: f471fff1902112af03a02e2c21776afca791b27f
 
   dependency-review:
     if: github.event_name == 'pull_request'
-    uses: ElevenID/.github/.github/workflows/dependency-review.yml@758fce1cd36f6f6bde12fed80921b86f19c2916b
+    uses: ElevenID/.github/.github/workflows/dependency-review.yml@f471fff1902112af03a02e2c21776afca791b27f
 
   scorecard:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
@@ -28,4 +28,4 @@ jobs:
       security-events: write # Required to upload Scorecard SARIF.
       id-token: write # Required for keyless Scorecard result publishing.
       contents: read
-    uses: ElevenID/.github/.github/workflows/scorecard.yml@758fce1cd36f6f6bde12fed80921b86f19c2916b
+    uses: ElevenID/.github/.github/workflows/scorecard.yml@f471fff1902112af03a02e2c21776afca791b27f
