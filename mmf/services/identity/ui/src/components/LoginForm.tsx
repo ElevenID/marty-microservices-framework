@@ -28,8 +28,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
       } else {
         setError(response.data.error_message || 'Login failed');
       }
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Login failed');
+    } catch (error: unknown) {
+      const detail = axios.isAxiosError<{ detail?: string }>(error)
+        ? error.response?.data?.detail
+        : undefined;
+      setError(detail || 'Login failed');
     } finally {
       setLoading(false);
     }

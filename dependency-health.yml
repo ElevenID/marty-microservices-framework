@@ -1,0 +1,14 @@
+version: 1
+dependencies:
+  - package: typescript
+    ecosystem: npm
+    owner: ElevenID
+    upstream: https://github.com/microsoft/TypeScript
+    current: "6.0.3"
+    target: "7.0.2"
+    status: blocked
+    decision: upgrade
+    advisories: []
+    tracking-issue: ""
+    review-after: 2026-10-18
+    rationale: typescript-eslint 8 currently supports TypeScript below 6.1; forcing TypeScript 7 creates an invalid peer graph.

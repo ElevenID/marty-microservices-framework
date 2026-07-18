@@ -1,5 +1,17 @@
 version: 2
 updates:
+  - package-ecosystem: npm
+    directory: /ops/dashboards/frontend
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /mmf/services/identity/ui
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /examples/video_streaming_domain/ui
+    schedule:
+      interval: weekly
   - package-ecosystem: pip
     directory: /
     schedule:
