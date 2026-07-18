@@ -1,13 +1,13 @@
 version: 2
 updates:
   - package-ecosystem: npm
-    directory: /ops/dashboards/frontend
-    schedule:
-      interval: weekly
-  - package-ecosystem: npm
     directory: /mmf/services/identity/ui
     schedule:
       interval: weekly
+    ignore:
+      # typescript-eslint 8.64 supports TypeScript <6.1; see dependency-health.yml.
+      - dependency-name: typescript
+        versions: [">=7.0.0"]
   - package-ecosystem: npm
     directory: /examples/video_streaming_domain/ui
     schedule:
