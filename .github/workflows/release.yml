@@ -23,7 +23,7 @@ env:
   CARGO_TERM_COLOR: always
   MMF_PUBLICATION_LAYERS: >-
     mmf-core mmf-testkit mmf-ml mmf-workflow;
-    mmf-config mmf-data mmf-observability mmf-resilience mmf-runtime;
+    mmf-config mmf-data mmf-observability mmf-resilience mmf-runtime mmf-security-contracts;
     mmf-security mmf-messaging mmf-push;
     mmf-platform mmf-plugins mmf-patterns;
     mmf-services;

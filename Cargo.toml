@@ -15,6 +15,7 @@ members = [
     "crates/mmf-resilience",
     "crates/mmf-runtime",
     "crates/mmf-security",
+    "crates/mmf-security-contracts",
     "crates/mmf-services",
     "crates/mmf-testkit",
     "crates/mmf-workflow",
@@ -49,6 +50,7 @@ mmf-patterns = { version = "0.1.1", path = "crates/mmf-patterns" }
 mmf-resilience = { version = "0.1.1", path = "crates/mmf-resilience" }
 mmf-runtime = { version = "0.1.1", path = "crates/mmf-runtime" }
 mmf-security = { version = "0.1.1", path = "crates/mmf-security", default-features = false }
+mmf-security-contracts = { version = "0.1.1", path = "crates/mmf-security-contracts" }
 mmf-services = { version = "0.1.1", path = "crates/mmf-services" }
 mmf-testkit = { version = "0.1.1", path = "crates/mmf-testkit" }
 mmf-workflow = { version = "0.1.1", path = "crates/mmf-workflow" }

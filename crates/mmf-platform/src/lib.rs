@@ -21,7 +21,7 @@ pub use discovery::*;
 pub use gateway::*;
 pub use grpc::*;
 pub use http::*;
-pub use mmf_security::{MeshType, ServiceMeshManager, ServiceMeshPolicy};
+pub use mmf_security_contracts::{MeshType, ServiceMeshManager, ServiceMeshPolicy};
 pub use ports::*;
 pub use proxy::*;
 

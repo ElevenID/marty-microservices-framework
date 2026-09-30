@@ -1877,7 +1877,7 @@ dependencies = [
  "mmf-core",
  "mmf-observability",
  "mmf-resilience",
- "mmf-security",
+ "mmf-security-contracts",
  "rand",
  "redis",
  "regex",
@@ -1962,6 +1962,7 @@ dependencies = [
  "hmac",
  "mmf-core",
  "mmf-observability",
+ "mmf-security-contracts",
  "p256",
  "p384",
  "p521",
@@ -1975,6 +1976,16 @@ dependencies = [
  "thiserror",
  "tokio",
  "uuid",
+]
+
+[[package]]
+name = "mmf-security-contracts"
+version = "0.1.1"
+dependencies = [
+ "async-trait",
+ "mmf-core",
+ "serde",
+ "thiserror",
 ]
 
 [[package]]

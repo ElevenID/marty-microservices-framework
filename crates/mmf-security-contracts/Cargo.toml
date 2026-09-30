@@ -1,0 +1,17 @@
+[package]
+name = "mmf-security-contracts"
+description = "Lightweight security errors and service-mesh contracts for MMF"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[dependencies]
+async-trait.workspace = true
+mmf-core.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

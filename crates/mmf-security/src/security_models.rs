@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::SecurityError;
+pub use mmf_security_contracts::{MeshType, MtlsMode, ServiceMeshManager, ServiceMeshPolicy};
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -217,42 +218,4 @@ pub struct AuditEvent {
 #[async_trait]
 pub trait Auditor: Send + Sync {
     async fn record(&self, event: AuditEvent) -> Result<(), SecurityError>;
-}
-
-#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum MeshType {
-    Istio,
-    Linkerd,
-    Consul,
-    Kuma,
-    None,
-}
-
-#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum MtlsMode {
-    Strict,
-    Permissive,
-    Disabled,
-}
-
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-pub struct ServiceMeshPolicy {
-    pub name: String,
-    pub source_identities: BTreeSet<String>,
-    pub destination_services: BTreeSet<String>,
-    pub allowed_methods: BTreeSet<String>,
-    pub allowed_paths: BTreeSet<String>,
-    pub mtls_mode: MtlsMode,
-    #[serde(default)]
-    pub rate_limit_rule: Option<String>,
-}
-
-#[async_trait]
-pub trait ServiceMeshManager: Send + Sync {
-    async fn apply_policy(&self, policy: &ServiceMeshPolicy) -> Result<(), SecurityError>;
-    async fn remove_policy(&self, name: &str) -> Result<(), SecurityError>;
-    async fn list_policies(&self) -> Result<Vec<ServiceMeshPolicy>, SecurityError>;
-    async fn health(&self) -> Result<BTreeMap<String, String>, SecurityError>;
 }
