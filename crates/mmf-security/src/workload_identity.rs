@@ -2,6 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+pub use mmf_core::constant_time_secret_eq;
 use serde::{Deserialize, Serialize};
 
 use crate::SecurityError;
@@ -111,19 +112,6 @@ impl WorkloadIdentityPolicy {
                 WorkloadAuthorizationDecision::Allow
             })
     }
-}
-
-#[must_use]
-pub fn constant_time_secret_eq(expected: &[u8], candidate: &[u8]) -> bool {
-    let mut difference = expected.len() ^ candidate.len();
-    let maximum = expected.len().max(candidate.len());
-    for index in 0..maximum {
-        difference |= usize::from(
-            expected.get(index).copied().unwrap_or_default()
-                ^ candidate.get(index).copied().unwrap_or_default(),
-        );
-    }
-    difference == 0
 }
 
 fn valid_method(value: &str) -> bool {
