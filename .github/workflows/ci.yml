@@ -31,5 +31,7 @@ jobs:
         run: cargo fmt --all -- --check
       - name: Lint workspace
         run: cargo clippy --locked --workspace --all-targets -- -D warnings
+      - name: Check security without optional Cedar policy
+        run: cargo check --locked -p mmf-security --no-default-features
       - name: Test workspace and retirement guards
         run: cargo test --locked --workspace
