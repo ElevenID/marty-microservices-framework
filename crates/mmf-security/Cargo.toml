@@ -16,6 +16,7 @@ hmac.workspace = true
 hkdf = { workspace = true, optional = true }
 mmf-core.workspace = true
 mmf-observability.workspace = true
+mmf-security-contracts.workspace = true
 rand.workspace = true
 redis = { workspace = true, optional = true }
 regex.workspace = true

@@ -47,8 +47,8 @@ jobs:
         shell: bash
         run: |
           graph="$(cargo tree --locked -p mmf-platform --no-default-features --target all -e normal,build --prefix none)"
-          if grep -E '^redis v' <<< "$graph"; then
-            echo "Redis leaked into the lean platform dependency graph" >&2
+          if grep -E '^(redis|mmf-security) v' <<< "$graph"; then
+            echo "Redis or full security implementation leaked into the lean platform dependency graph" >&2
             exit 1
           fi
       - name: Keep CLI lean and facade complete
@@ -57,8 +57,8 @@ jobs:
           cargo check --locked -p mmf-cli
           cli_graph="$(cargo tree --locked -p mmf-cli --target all -e normal,build --prefix none)"
           facade_graph="$(cargo tree --locked -p mmf --target all -e normal,build --prefix none)"
-          if grep -E '^redis v' <<< "$cli_graph"; then
-            echo "Redis leaked into the CLI dependency graph" >&2
+          if grep -E '^(redis|mmf-security) v' <<< "$cli_graph"; then
+            echo "Full security implementation or Redis leaked into the CLI dependency graph" >&2
             exit 1
           fi
           if ! grep -E '^redis v' <<< "$facade_graph"; then
