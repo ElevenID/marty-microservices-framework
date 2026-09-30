@@ -22,6 +22,8 @@ mod tests {
         assert!(constant_time_secret_eq(b"same", b"same"));
         assert!(!constant_time_secret_eq(b"same", b"different"));
         assert!(!constant_time_secret_eq(b"same", b"samf"));
+        assert!(constant_time_secret_eq(b"", b""));
         assert!(!constant_time_secret_eq(b"", b"nonempty"));
+        assert!(!constant_time_secret_eq(b"\0", b"\0\0"));
     }
 }
