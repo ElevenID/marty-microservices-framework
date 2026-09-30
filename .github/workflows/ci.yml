@@ -41,6 +41,15 @@ jobs:
             echo "Optional security implementations leaked into the lean dependency graph" >&2
             exit 1
           fi
+      - name: Keep session ECDH curves free of signing defaults
+        shell: bash
+        run: |
+          cargo check --locked -p mmf-security --no-default-features --features session-ecdh
+          features="$(cargo tree --locked -p mmf-security --no-default-features --features session-ecdh --target all -e features --prefix none)"
+          if grep -E '^p(256|384|521) feature "(default|ecdsa|precomputed-tables)"$' <<< "$features"; then
+            echo "Unused signing or precomputed-table features leaked into session ECDH" >&2
+            exit 1
+          fi
       - name: Check platform without Redis
         run: cargo check --locked -p mmf-platform --no-default-features
       - name: Keep Redis out of the lean platform graph
