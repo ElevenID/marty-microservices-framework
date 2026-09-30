@@ -29,6 +29,7 @@ pub mod security_pipeline;
 pub mod session;
 pub mod session_configuration;
 pub mod session_events;
+#[cfg(feature = "session-ecdh")]
 pub mod session_keys;
 pub mod session_manager;
 mod uri;
@@ -59,6 +60,7 @@ use serde::{Deserialize, Serialize};
 pub use session::*;
 pub use session_configuration::*;
 pub use session_events::*;
+#[cfg(feature = "session-ecdh")]
 pub use session_keys::*;
 pub use session_manager::*;
 use thiserror::Error;

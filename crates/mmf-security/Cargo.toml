@@ -13,7 +13,7 @@ base64.workspace = true
 cedar-policy = { workspace = true, optional = true }
 chrono.workspace = true
 hmac.workspace = true
-hkdf.workspace = true
+hkdf = { workspace = true, optional = true }
 mmf-core.workspace = true
 mmf-observability.workspace = true
 rand.workspace = true
@@ -23,9 +23,9 @@ serde.workspace = true
 serde_json.workspace = true
 sha1.workspace = true
 sha2.workspace = true
-p256.workspace = true
-p384.workspace = true
-p521.workspace = true
+p256 = { workspace = true, optional = true }
+p384 = { workspace = true, optional = true }
+p521 = { workspace = true, optional = true }
 thiserror.workspace = true
 tokio.workspace = true
 uuid.workspace = true
@@ -36,8 +36,9 @@ serde_json.workspace = true
 [features]
 # Preserve the published API for existing consumers while allowing lightweight
 # security contracts to omit Cedar and its policy compiler.
-default = ["cedar"]
+default = ["cedar", "session-ecdh"]
 cedar = ["dep:cedar-policy"]
+session-ecdh = ["dep:hkdf", "dep:p256", "dep:p384", "dep:p521"]
 
 [lints]
 workspace = true
