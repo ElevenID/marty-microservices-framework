@@ -6,9 +6,11 @@ use std::{
 };
 
 use async_trait::async_trait;
+#[cfg(feature = "redis")]
 use redis::aio::MultiplexedConnection;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+#[cfg(feature = "redis")]
 use tokio::sync::Mutex as AsyncMutex;
 use uuid::Uuid;
 
@@ -406,12 +408,14 @@ impl IdempotencyStore for InMemoryIdempotencyStore {
     }
 }
 
+#[cfg(feature = "redis")]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 struct RedisCachedResponse {
     fingerprint: String,
     response: IdempotencyResponse,
 }
 
+#[cfg(feature = "redis")]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 struct RedisLeaseState {
     fingerprint: String,
@@ -419,6 +423,7 @@ struct RedisLeaseState {
 }
 
 /// Atomic Redis idempotency storage for multi-instance gateways and services.
+#[cfg(feature = "redis")]
 pub struct RedisIdempotencyStore {
     connection: AsyncMutex<MultiplexedConnection>,
     key_prefix: String,
@@ -426,6 +431,7 @@ pub struct RedisIdempotencyStore {
     lock_ttl_ms: u64,
 }
 
+#[cfg(feature = "redis")]
 impl std::fmt::Debug for RedisIdempotencyStore {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter
@@ -437,6 +443,7 @@ impl std::fmt::Debug for RedisIdempotencyStore {
     }
 }
 
+#[cfg(feature = "redis")]
 impl RedisIdempotencyStore {
     pub async fn connect(
         redis_url: &str,
@@ -503,6 +510,7 @@ impl RedisIdempotencyStore {
     }
 }
 
+#[cfg(feature = "redis")]
 fn redis_idempotency_keys(prefix: &str, namespace: &str) -> (String, String) {
     let digest = hex_digest(namespace.as_bytes());
     let data = format!("{prefix}:{digest}");
@@ -510,6 +518,7 @@ fn redis_idempotency_keys(prefix: &str, namespace: &str) -> (String, String) {
     (data, lock)
 }
 
+#[cfg(feature = "redis")]
 const REDIS_IDEMPOTENCY_BEGIN_SCRIPT: &str = r"
 local cached = redis.call('GET', KEYS[1])
 if cached then
@@ -535,6 +544,7 @@ redis.call('SET', KEYS[2], ARGV[3], 'PX', ARGV[4])
 return {'started', ARGV[2]}
 ";
 
+#[cfg(feature = "redis")]
 const REDIS_IDEMPOTENCY_COMPLETE_SCRIPT: &str = r"
 local active = redis.call('GET', KEYS[2])
 if not active then return 0 end
@@ -545,6 +555,7 @@ redis.call('DEL', KEYS[2])
 return 1
 ";
 
+#[cfg(feature = "redis")]
 const REDIS_IDEMPOTENCY_ABORT_SCRIPT: &str = r"
 local active = redis.call('GET', KEYS[1])
 if not active then return 0 end
@@ -553,6 +564,7 @@ if not ok or value['fingerprint'] ~= ARGV[1] or value['token'] ~= ARGV[2] then r
 return redis.call('DEL', KEYS[1])
 ";
 
+#[cfg(feature = "redis")]
 #[async_trait]
 impl IdempotencyStore for RedisIdempotencyStore {
     async fn begin(
@@ -739,12 +751,14 @@ mod tests {
         fingerprint: String,
     }
 
+    #[cfg(feature = "redis")]
     #[derive(Deserialize)]
     struct RedisFixture {
         schema_version: u32,
         idempotency: RedisIdempotencyFixture,
     }
 
+    #[cfg(feature = "redis")]
     #[derive(Deserialize)]
     struct RedisIdempotencyFixture {
         prefix: String,
@@ -762,6 +776,7 @@ mod tests {
         .expect("valid HTTP runtime fixture")
     }
 
+    #[cfg(feature = "redis")]
     fn redis_fixture() -> RedisFixture {
         serde_json::from_str(include_str!(
             "../../../contracts/redis-runtime-behavior.json"
@@ -866,6 +881,7 @@ mod tests {
         ));
     }
 
+    #[cfg(feature = "redis")]
     #[tokio::test]
     async fn language_neutral_redis_idempotency_contract() {
         let fixture = redis_fixture();
