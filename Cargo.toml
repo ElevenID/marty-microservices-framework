@@ -80,6 +80,16 @@ url = "2"
 [workspace.lints.rust]
 unsafe_code = "forbid"
 
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.test]
+debug = "line-tables-only"
+
+[profile.debugging]
+inherits = "dev"
+debug = "full"
+
 [workspace.lints.clippy]
 all = { level = "deny", priority = -1 }
 pedantic = { level = "deny", priority = -1 }
