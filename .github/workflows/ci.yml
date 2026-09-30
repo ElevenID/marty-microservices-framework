@@ -36,7 +36,7 @@ jobs:
       - name: Keep optional security dependencies out of the lean graph
         shell: bash
         run: |
-          graph="$(cargo tree --locked -p mmf-security --no-default-features -e normal --prefix none)"
+          graph="$(cargo tree --locked -p mmf-security --no-default-features --target all -e normal,build --prefix none)"
           if grep -E '^(cedar-policy|redis|hkdf|p256|p384|p521) v' <<< "$graph"; then
             echo "Optional security implementations leaked into the lean dependency graph" >&2
             exit 1
