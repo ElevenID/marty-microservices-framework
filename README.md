@@ -27,6 +27,10 @@ cargo clippy --locked --workspace --all-targets -- -D warnings
 cargo test --locked --workspace
 ```
 
+Dev and test builds use line-table debug information for faster iteration.
+Use `cargo build --profile debugging` or `cargo test --profile debugging`
+when a debugger needs full local-variable information.
+
 Consumers may pin a reviewed immutable repository revision. Governed Rust
 releases also package every crate and can publish them to crates.io when the
 separate registry environment gate is enabled.
