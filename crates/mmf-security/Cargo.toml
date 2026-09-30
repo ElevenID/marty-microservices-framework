@@ -10,7 +10,7 @@ version.workspace = true
 [dependencies]
 async-trait.workspace = true
 base64.workspace = true
-cedar-policy.workspace = true
+cedar-policy = { workspace = true, optional = true }
 chrono.workspace = true
 hmac.workspace = true
 hkdf.workspace = true
@@ -32,6 +32,12 @@ uuid.workspace = true
 
 [dev-dependencies]
 serde_json.workspace = true
+
+[features]
+# Preserve the published API for existing consumers while allowing lightweight
+# security contracts to omit Cedar and its policy compiler.
+default = ["cedar"]
+cedar = ["dep:cedar-policy"]
 
 [lints]
 workspace = true
