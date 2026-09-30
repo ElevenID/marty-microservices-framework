@@ -524,14 +524,15 @@ mod tests {
     fn public_key_pem_and_provider_port_preserve_the_legacy_surface() {
         let establishment = EcdhSessionEstablishment::default();
         let provider: &dyn SessionKeyEstablishment = &establishment;
-        let generated = provider.generate_ephemeral_keypair(Some(EllipticCurve::P256));
-        assert!(!generated.public_key_bytes().is_empty());
 
         for curve in [
             EllipticCurve::P256,
             EllipticCurve::P384,
             EllipticCurve::P521,
         ] {
+            let generated = provider.generate_ephemeral_keypair(Some(curve));
+            assert_eq!(generated.curve, curve);
+            assert!(!generated.public_key_bytes().is_empty());
             let keypair = EphemeralKeyPair::from_scalar(curve, 1, 1_000).expect("keypair");
             let pem = keypair.public_key_pem().expect("public PEM");
             assert!(pem.starts_with("-----BEGIN PUBLIC KEY-----\n"));
