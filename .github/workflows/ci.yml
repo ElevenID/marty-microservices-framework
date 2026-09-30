@@ -33,5 +33,13 @@ jobs:
         run: cargo clippy --locked --workspace --all-targets -- -D warnings
       - name: Check security without optional implementations
         run: cargo check --locked -p mmf-security --no-default-features
+      - name: Keep optional security dependencies out of the lean graph
+        shell: bash
+        run: |
+          graph="$(cargo tree --locked -p mmf-security --no-default-features --target all -e normal,build --prefix none)"
+          if grep -E '^(cedar-policy|redis|hkdf|p256|p384|p521) v' <<< "$graph"; then
+            echo "Optional security implementations leaked into the lean dependency graph" >&2
+            exit 1
+          fi
       - name: Test workspace and retirement guards
         run: cargo test --locked --workspace
