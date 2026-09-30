@@ -702,9 +702,7 @@ dependencies = [
  "der",
  "digest 0.11.3",
  "elliptic-curve",
- "rfc6979",
  "signature",
- "spki",
  "zeroize",
 ]
 
@@ -2096,7 +2094,6 @@ dependencies = [
  "elliptic-curve",
  "primefield",
  "primeorder",
- "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2110,7 +2107,6 @@ dependencies = [
  "fiat-crypto",
  "primefield",
  "primeorder",
- "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2124,7 +2120,6 @@ dependencies = [
  "elliptic-curve",
  "primefield",
  "primeorder",
- "sha2 0.11.0",
 ]
 
 [[package]]
@@ -2316,9 +2311,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5c9f42978c78a00e3d68f69fc03e57a234debae69da4020a4fb588fcdcd07b06"
 dependencies = [
  "elliptic-curve",
- "once_cell",
  "primefield",
- "serdect",
  "wnaf",
 ]
 
@@ -2556,16 +2549,6 @@ dependencies = [
  "wasm-bindgen-futures",
  "wasm-streams",
  "web-sys",
-]
-
-[[package]]
-name = "rfc6979"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4a459cddafb3fe76b31fd8f1108007566c40301feb64dc7b54656eb7388172b"
-dependencies = [
- "crypto-bigint",
- "hmac",
 ]
 
 [[package]]
@@ -2912,16 +2895,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
-]
-
-[[package]]
-name = "serdect"
-version = "0.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66cf8fedced2fcf12406bcb34223dffb92eaf34908ede12fed414c82b7f00b3e"
-dependencies = [
- "base16ct",
- "serde",
 ]
 
 [[package]]

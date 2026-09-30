@@ -65,9 +65,9 @@ sha2 = "0.11"
 sha1 = "0.11"
 hmac = "0.13"
 hkdf = "0.13"
-p256 = { version = "0.14", features = ["ecdh", "pem"] }
-p384 = { version = "0.14", features = ["ecdh", "pem"] }
-p521 = { version = "0.14", features = ["ecdh", "pem"] }
+p256 = { version = "0.14", default-features = false, features = ["ecdh", "getrandom", "pem"] }
+p384 = { version = "0.14", default-features = false, features = ["ecdh", "getrandom", "pem"] }
+p521 = { version = "0.14", default-features = false, features = ["ecdh", "getrandom", "pem"] }
 redis = { version = "1.5", default-features = false, features = ["tokio-comp"] }
 sqlx = { version = "0.9", default-features = false, features = ["json", "postgres", "runtime-tokio", "tls-rustls-ring-webpki"] }
 thiserror = "2"
