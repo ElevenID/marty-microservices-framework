@@ -4,9 +4,11 @@
 
 mod json;
 mod matching;
+mod secret;
 pub use json::{JsonObjectOrder, spaced_json};
 
 pub use matching::wildcard_matches;
+pub use secret::constant_time_secret_eq;
 
 use std::collections::BTreeMap;
 
