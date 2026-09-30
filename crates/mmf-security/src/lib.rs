@@ -6,10 +6,13 @@
 
 #![forbid(unsafe_code)]
 
+#[cfg(feature = "cedar")]
 pub mod applicant_approval;
 pub mod application_event;
 mod authorization;
+#[cfg(feature = "cedar")]
 pub mod cedar;
+#[cfg(feature = "cedar")]
 pub mod credential_verification;
 mod identity;
 pub mod jwt_hmac;
@@ -33,10 +36,13 @@ mod workload_identity;
 
 use std::sync::Arc;
 
+#[cfg(feature = "cedar")]
 pub use applicant_approval::*;
 pub use application_event::*;
 pub use authorization::*;
+#[cfg(feature = "cedar")]
 pub use cedar::*;
+#[cfg(feature = "cedar")]
 pub use credential_verification::*;
 pub use identity::*;
 pub use managed_session::*;
