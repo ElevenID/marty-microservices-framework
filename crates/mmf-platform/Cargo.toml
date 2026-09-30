@@ -7,6 +7,10 @@ repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
 
+[features]
+default = ["redis"]
+redis = ["dep:redis"]
+
 [dependencies]
 async-trait.workspace = true
 mmf-core.workspace = true
@@ -14,7 +18,7 @@ mmf-observability.workspace = true
 mmf-resilience.workspace = true
 mmf-security.workspace = true
 rand.workspace = true
-redis.workspace = true
+redis = { workspace = true, optional = true }
 regex.workspace = true
 reqwest.workspace = true
 rustls.workspace = true
