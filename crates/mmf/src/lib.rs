@@ -19,3 +19,16 @@ pub use mmf_security as security;
 pub use mmf_services as services;
 pub use mmf_testkit as testkit;
 pub use mmf_workflow as workflow;
+
+#[cfg(test)]
+mod tests {
+    use super::{core, platform, security};
+
+    #[test]
+    fn mesh_contract_reexports_preserve_type_identity() {
+        let _: fn(platform::ServiceMeshPolicy) -> security::ServiceMeshPolicy = |policy| policy;
+        let _: fn(&dyn platform::ServiceMeshManager) -> &dyn security::ServiceMeshManager =
+            |manager| manager;
+        let _: fn(security::SecurityError) -> core::MmfError = Into::into;
+    }
+}
