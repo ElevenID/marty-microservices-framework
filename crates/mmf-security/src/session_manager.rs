@@ -6,7 +6,9 @@ use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use async_trait::async_trait;
+#[cfg(feature = "redis")]
 use redis::AsyncCommands;
+#[cfg(feature = "redis")]
 use redis::aio::MultiplexedConnection;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -252,10 +254,12 @@ impl SessionTokenVault for InMemorySessionTokenVault {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg(feature = "redis")]
 pub struct RedisSessionKeys {
     prefix: String,
 }
 
+#[cfg(feature = "redis")]
 impl RedisSessionKeys {
     #[must_use]
     pub fn new(prefix: impl Into<String>) -> Self {
@@ -280,11 +284,13 @@ impl RedisSessionKeys {
     }
 }
 
+#[cfg(feature = "redis")]
 pub struct RedisManagedSessionStore {
     connection: Mutex<MultiplexedConnection>,
     keys: RedisSessionKeys,
 }
 
+#[cfg(feature = "redis")]
 impl RedisManagedSessionStore {
     pub async fn connect(
         redis_url: &str,
@@ -352,6 +358,7 @@ impl RedisManagedSessionStore {
     }
 }
 
+#[cfg(feature = "redis")]
 #[async_trait]
 impl ManagedSessionStore for RedisManagedSessionStore {
     async fn create(&self, session: &ManagedSession) -> Result<(), SecurityError> {
@@ -478,6 +485,7 @@ impl ManagedSessionStore for RedisManagedSessionStore {
     }
 }
 
+#[cfg(feature = "redis")]
 #[async_trait]
 impl SessionTokenVault for RedisManagedSessionStore {
     async fn put(&self, session_id: &str, tokens: SessionTokens) -> Result<(), SecurityError> {
@@ -1167,6 +1175,7 @@ impl SessionManager {
     }
 }
 
+#[cfg(feature = "redis")]
 fn backend_error(operation: &str, error: impl fmt::Display) -> SecurityError {
     SecurityError::ProviderUnavailable(format!("failed to {operation}: {error}"))
 }
@@ -1478,7 +1487,8 @@ mod tests {
     }
 
     #[test]
-    fn redis_keys_and_secret_debugging_match_the_shared_contract() {
+    #[cfg(feature = "redis")]
+    fn redis_keys_match_the_shared_contract() {
         let fixture = fixture();
         let keys =
             RedisSessionKeys::new(fixture["redis"]["key_prefix"].as_str().expect("key prefix"));
@@ -1491,6 +1501,10 @@ mod tests {
             keys.tokens("session-123"),
             fixture["redis"]["refresh_token_key"]
         );
+    }
+
+    #[test]
+    fn secret_debugging_redacts_tokens() {
         let tokens = SessionTokens {
             refresh_token: Some("top-secret".into()),
             refresh_expires_at_ms: Some(10_000),

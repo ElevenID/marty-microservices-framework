@@ -2,9 +2,12 @@ use std::collections::{BTreeMap, VecDeque};
 use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
+#[cfg(feature = "redis")]
 use redis::aio::MultiplexedConnection;
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "redis")]
 use tokio::sync::Mutex as AsyncMutex;
+#[cfg(feature = "redis")]
 use uuid::Uuid;
 
 use crate::{DistributedRateLimiter, SecurityError};
@@ -159,11 +162,13 @@ impl DistributedRateLimiter for InMemoryRateLimiter {
 }
 
 /// Atomic Redis implementation of every canonical rate-limit strategy.
+#[cfg(feature = "redis")]
 pub struct RedisRateLimiter {
     connection: AsyncMutex<MultiplexedConnection>,
     key_prefix: String,
 }
 
+#[cfg(feature = "redis")]
 impl RedisRateLimiter {
     pub async fn connect(
         redis_url: &str,
@@ -224,6 +229,7 @@ impl RedisRateLimiter {
     }
 }
 
+#[cfg(feature = "redis")]
 fn strategy_name(strategy: RateLimitStrategy) -> &'static str {
     match strategy {
         RateLimitStrategy::TokenBucket => "token_bucket",
@@ -233,6 +239,7 @@ fn strategy_name(strategy: RateLimitStrategy) -> &'static str {
     }
 }
 
+#[cfg(feature = "redis")]
 fn redis_rate_limit_key(prefix: &str, rule: &RateLimitRule, quota: &RateLimitQuota) -> String {
     format!(
         "{}:{}:{}",
@@ -242,6 +249,7 @@ fn redis_rate_limit_key(prefix: &str, rule: &RateLimitRule, quota: &RateLimitQuo
     )
 }
 
+#[cfg(feature = "redis")]
 const REDIS_RATE_LIMIT_SCRIPT: &str = r"
 local strategy = ARGV[1]
 local now = tonumber(ARGV[2])
@@ -320,6 +328,7 @@ end
 return {allowed, current, remaining, reset, retry}
 ";
 
+#[cfg(feature = "redis")]
 #[async_trait]
 impl DistributedRateLimiter for RedisRateLimiter {
     async fn check(
@@ -541,7 +550,7 @@ fn result(
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "redis"))]
 mod redis_tests {
     use super::*;
 
