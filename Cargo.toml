@@ -42,7 +42,7 @@ mmf-data = { version = "0.1.1", path = "crates/mmf-data" }
 mmf-messaging = { version = "0.1.1", path = "crates/mmf-messaging" }
 mmf-ml = { version = "0.1.1", path = "crates/mmf-ml" }
 mmf-observability = { version = "0.1.1", path = "crates/mmf-observability" }
-mmf-platform = { version = "0.1.1", path = "crates/mmf-platform" }
+mmf-platform = { version = "0.1.1", path = "crates/mmf-platform", default-features = false }
 mmf-plugins = { version = "0.1.1", path = "crates/mmf-plugins" }
 mmf-push = { version = "0.1.1", path = "crates/mmf-push" }
 mmf-patterns = { version = "0.1.1", path = "crates/mmf-patterns" }
