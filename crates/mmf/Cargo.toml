@@ -21,7 +21,7 @@ mmf-push.workspace = true
 mmf-patterns.workspace = true
 mmf-resilience.workspace = true
 mmf-runtime.workspace = true
-mmf-security = { workspace = true, features = ["cedar", "session-ecdh", "redis"] }
+mmf-security = { workspace = true, features = ["default"] }
 mmf-services.workspace = true
 mmf-testkit.workspace = true
 mmf-workflow.workspace = true
