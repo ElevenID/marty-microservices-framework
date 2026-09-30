@@ -48,7 +48,7 @@ mmf-push = { version = "0.1.1", path = "crates/mmf-push" }
 mmf-patterns = { version = "0.1.1", path = "crates/mmf-patterns" }
 mmf-resilience = { version = "0.1.1", path = "crates/mmf-resilience" }
 mmf-runtime = { version = "0.1.1", path = "crates/mmf-runtime" }
-mmf-security = { version = "0.1.1", path = "crates/mmf-security" }
+mmf-security = { version = "0.1.1", path = "crates/mmf-security", default-features = false }
 mmf-services = { version = "0.1.1", path = "crates/mmf-services" }
 mmf-testkit = { version = "0.1.1", path = "crates/mmf-testkit" }
 mmf-workflow = { version = "0.1.1", path = "crates/mmf-workflow" }
