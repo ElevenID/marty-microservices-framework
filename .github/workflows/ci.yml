@@ -29,6 +29,14 @@ jobs:
           components: clippy,rustfmt
       - name: Check formatting
         run: cargo fmt --all -- --check
+      - name: Prevent duplicate crypto generations in the default workspace graph
+        shell: bash
+        run: |
+          duplicates="$(cargo tree --locked --workspace -d -e normal --target all --depth 0)"
+          if grep -E '^(p256|p384|p521|sha2|hmac|rand) v' <<< "$duplicates"; then
+            echo "Duplicate cryptographic dependency generations entered the default workspace graph" >&2
+            exit 1
+          fi
       - name: Lint workspace
         run: cargo clippy --locked --workspace --all-targets -- -D warnings
       - name: Check security without optional implementations
