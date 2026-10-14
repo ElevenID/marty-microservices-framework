@@ -249,6 +249,7 @@ impl OpenBaoTlsSigner {
             .tls_certs_only([ca])
             .no_proxy()
             .https_only(true)
+            .redirect(reqwest::redirect::Policy::none())
             .timeout(request_timeout)
             .build()
             .map_err(|_| invalid("OpenBao TLS HTTP client is invalid"))?;
