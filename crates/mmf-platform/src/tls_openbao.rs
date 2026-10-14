@@ -21,7 +21,9 @@ use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use url::Url;
 
-use crate::{KeylessTlsIdentity, PlatformError};
+use crate::{
+    KeylessGrpcChannelFactory, KeylessGrpcTransportOptions, KeylessTlsIdentity, PlatformError,
+};
 
 const SIGNATURE_SCHEME: SignatureScheme = SignatureScheme::ECDSA_NISTP256_SHA256;
 
@@ -67,6 +69,31 @@ impl OpenBaoTlsIdentityFiles {
         )
         .await?;
         KeylessTlsIdentity::new(chain, Arc::new(signer))
+    }
+
+    /// Connect a gRPC client with a certificate whose signing key remains in
+    /// `OpenBao`. The HTTPS origin supplies the verified server name.
+    pub async fn grpc_channel(
+        &self,
+        target: &str,
+        server_ca_file: &Path,
+        options: KeylessGrpcTransportOptions,
+    ) -> Result<tonic::transport::Channel, PlatformError> {
+        let server_ca = read_public_certificates(server_ca_file)?;
+        let server_name = Url::parse(target)
+            .ok()
+            .filter(|url| url.scheme() == "https")
+            .and_then(|url| url.host_str().map(str::to_owned))
+            .ok_or_else(|| invalid("gRPC TLS target must have an HTTPS hostname"))?;
+        let identity = self.connect().await?;
+        Ok(KeylessGrpcChannelFactory::with_options(
+            target,
+            &server_name,
+            &identity,
+            server_ca,
+            options,
+        )?
+        .connect_lazy())
     }
 }
 
