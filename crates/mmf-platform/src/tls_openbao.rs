@@ -79,6 +79,32 @@ impl OpenBaoTlsIdentityFiles {
         server_ca_file: &Path,
         options: KeylessGrpcTransportOptions,
     ) -> Result<tonic::transport::Channel, PlatformError> {
+        Ok(self
+            .grpc_factory(target, server_ca_file, options)
+            .await?
+            .connect_lazy())
+    }
+
+    /// Establish a keyless gRPC connection before reporting the dependency
+    /// healthy. This retains the behavior of callers that connected eagerly.
+    pub async fn grpc_channel_connected(
+        &self,
+        target: &str,
+        server_ca_file: &Path,
+        options: KeylessGrpcTransportOptions,
+    ) -> Result<tonic::transport::Channel, PlatformError> {
+        self.grpc_factory(target, server_ca_file, options)
+            .await?
+            .connect()
+            .await
+    }
+
+    async fn grpc_factory(
+        &self,
+        target: &str,
+        server_ca_file: &Path,
+        options: KeylessGrpcTransportOptions,
+    ) -> Result<KeylessGrpcChannelFactory, PlatformError> {
         let server_ca = read_public_certificates(server_ca_file)?;
         let server_name = Url::parse(target)
             .ok()
@@ -86,14 +112,7 @@ impl OpenBaoTlsIdentityFiles {
             .and_then(|url| url.host_str().map(str::to_owned))
             .ok_or_else(|| invalid("gRPC TLS target must have an HTTPS hostname"))?;
         let identity = self.connect().await?;
-        Ok(KeylessGrpcChannelFactory::with_options(
-            target,
-            &server_name,
-            &identity,
-            server_ca,
-            options,
-        )?
-        .connect_lazy())
+        KeylessGrpcChannelFactory::with_options(target, &server_name, &identity, server_ca, options)
     }
 }
 
