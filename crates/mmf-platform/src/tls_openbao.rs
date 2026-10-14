@@ -72,6 +72,18 @@ impl OpenBaoTlsIdentityFiles {
         KeylessTlsIdentity::new(chain, Arc::new(signer))
     }
 
+    async fn connect_for_handshake(
+        &self,
+        handshake_timeout: Duration,
+    ) -> Result<KeylessTlsIdentity, PlatformError> {
+        let mut bounded = self.clone();
+        // Rustls calls Signer::sign synchronously. Tokio's outer handshake
+        // timeout cannot preempt that call, so its KMS request must fit inside
+        // the handshake budget as well.
+        bounded.request_timeout = bounded.request_timeout.min(handshake_timeout);
+        bounded.connect().await
+    }
+
     /// Connect a gRPC client with a certificate whose signing key remains in
     /// `OpenBao`. The HTTPS origin supplies the verified server name.
     pub async fn grpc_channel(
@@ -109,7 +121,7 @@ impl OpenBaoTlsIdentityFiles {
         handshake_timeout: Duration,
     ) -> Result<KeylessGrpcTlsAcceptor, PlatformError> {
         let client_ca = read_public_certificates(client_ca_file)?;
-        let identity = self.connect().await?;
+        let identity = self.connect_for_handshake(handshake_timeout).await?;
         KeylessGrpcTlsAcceptor::new(&identity, client_ca, max_handshakes, handshake_timeout)
     }
 
@@ -119,7 +131,7 @@ impl OpenBaoTlsIdentityFiles {
         max_handshakes: usize,
         handshake_timeout: Duration,
     ) -> Result<KeylessGrpcTlsAcceptor, PlatformError> {
-        let identity = self.connect().await?;
+        let identity = self.connect_for_handshake(handshake_timeout).await?;
         KeylessGrpcTlsAcceptor::without_client_auth(&identity, max_handshakes, handshake_timeout)
     }
 
@@ -135,7 +147,7 @@ impl OpenBaoTlsIdentityFiles {
             .filter(|url| url.scheme() == "https")
             .and_then(|url| url.host_str().map(str::to_owned))
             .ok_or_else(|| invalid("gRPC TLS target must have an HTTPS hostname"))?;
-        let identity = self.connect().await?;
+        let identity = self.connect_for_handshake(options.connect_timeout).await?;
         KeylessGrpcChannelFactory::with_options(target, &server_name, &identity, server_ca, options)
     }
 }
