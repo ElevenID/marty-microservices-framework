@@ -251,6 +251,9 @@ fn validate_certificate(value: Option<&[u8]>) -> Result<(), PlatformError> {
         value
             .windows(b"-----BEGIN CERTIFICATE-----".len())
             .any(|window| window == b"-----BEGIN CERTIFICATE-----")
+            && !value
+                .windows(b"PRIVATE KEY".len())
+                .any(|window| window == b"PRIVATE KEY")
     }) {
         Ok(())
     } else {
@@ -284,4 +287,25 @@ const fn default_http2_keepalive_interval_ms() -> u64 {
 }
 const fn default_http2_keepalive_timeout_ms() -> u64 {
     10_000
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn public_ca_material_rejects_bundled_private_key() {
+        let config = GrpcChannelConfig {
+            target: "https://example.test:443".into(),
+            security: GrpcTransportSecurity::ServerTls,
+            trust: GrpcTrustMode::CustomCa,
+            ..GrpcChannelConfig::default()
+        };
+        let material = GrpcTlsMaterial {
+            ca_certificate_pem: Some(
+                b"-----BEGIN CERTIFICATE-----\npublic\n-----END CERTIFICATE-----\n-----BEGIN PRIVATE KEY-----\nsecret\n-----END PRIVATE KEY-----".to_vec(),
+            ),
+        };
+        assert!(GrpcChannelFactory::new(config, material).is_err());
+    }
 }
