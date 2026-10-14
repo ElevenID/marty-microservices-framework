@@ -22,7 +22,8 @@ use sha2::{Digest, Sha256};
 use url::Url;
 
 use crate::{
-    KeylessGrpcChannelFactory, KeylessGrpcTransportOptions, KeylessTlsIdentity, PlatformError,
+    KeylessGrpcChannelFactory, KeylessGrpcTlsAcceptor, KeylessGrpcTransportOptions,
+    KeylessTlsIdentity, PlatformError,
 };
 
 const SIGNATURE_SCHEME: SignatureScheme = SignatureScheme::ECDSA_NISTP256_SHA256;
@@ -97,6 +98,19 @@ impl OpenBaoTlsIdentityFiles {
             .await?
             .connect()
             .await
+    }
+
+    /// Prepare an mTLS gRPC listener with remote signing and verified client
+    /// certificates. The caller must still authorize the peer workload.
+    pub async fn grpc_acceptor(
+        &self,
+        client_ca_file: &Path,
+        max_handshakes: usize,
+        handshake_timeout: Duration,
+    ) -> Result<KeylessGrpcTlsAcceptor, PlatformError> {
+        let client_ca = read_public_certificates(client_ca_file)?;
+        let identity = self.connect().await?;
+        KeylessGrpcTlsAcceptor::new(&identity, client_ca, max_handshakes, handshake_timeout)
     }
 
     async fn grpc_factory(
