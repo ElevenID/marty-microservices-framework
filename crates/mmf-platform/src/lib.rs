@@ -15,6 +15,7 @@ mod grpc_keyless;
 mod http;
 mod ports;
 mod proxy;
+mod tls_openbao;
 
 pub use client::*;
 pub use deployment::*;
@@ -26,6 +27,7 @@ pub use http::*;
 pub use mmf_security_contracts::{MeshType, ServiceMeshManager, ServiceMeshPolicy};
 pub use ports::*;
 pub use proxy::*;
+pub use tls_openbao::*;
 
 use mmf_core::{ErrorCode, MmfError};
 use thiserror::Error;
