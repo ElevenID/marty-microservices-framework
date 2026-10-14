@@ -111,7 +111,8 @@ impl OpenBaoTlsSigner {
         let ca = reqwest::Certificate::from_der(ca_certificate_der)
             .map_err(|_| invalid("OpenBao TLS CA certificate is invalid"))?;
         let client = reqwest::blocking::Client::builder()
-            .add_root_certificate(ca)
+            .tls_certs_only([ca])
+            .no_proxy()
             .https_only(true)
             .timeout(request_timeout)
             .build()
@@ -206,6 +207,7 @@ fn parse_public_key(metadata: &Value, key_version: u32) -> Result<Vec<u8>, Platf
         .as_str()
         .ok_or_else(|| invalid("OpenBao TLS key version has no public key"))?;
     let body = pem
+        .trim()
         .strip_prefix("-----BEGIN PUBLIC KEY-----")
         .and_then(|part| part.strip_suffix("-----END PUBLIC KEY-----"))
         .ok_or_else(|| invalid("OpenBao TLS public key PEM is invalid"))?;
@@ -304,7 +306,7 @@ mod tests {
             "type": "ecdsa-p256", "exportable": false,
             "allow_plaintext_backup": false,
             "keys": {"2": {"public_key": format!(
-                "-----BEGIN PUBLIC KEY-----\n{public}\n-----END PUBLIC KEY-----")}}
+                "-----BEGIN PUBLIC KEY-----\n{public}\n-----END PUBLIC KEY-----\n")}}
         }});
         assert_eq!(parse_public_key(&metadata, 2).unwrap(), [1, 2, 3]);
         assert!(parse_public_key(&metadata, 1).is_err());
