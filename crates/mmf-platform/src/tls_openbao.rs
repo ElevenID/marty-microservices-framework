@@ -75,6 +75,8 @@ impl OpenBaoTlsSigner {
 
     /// Load the public key from `OpenBao` and reject exportable or backupable keys.
     /// The endpoint must be HTTPS; the certificate authority is explicitly supplied.
+    /// Call this only from a blocking thread; asynchronous services should use
+    /// [`Self::connect`].
     pub fn new(
         endpoint: &str,
         ca_certificate_der: &[u8],
@@ -104,7 +106,9 @@ impl OpenBaoTlsSigner {
                 .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_')
             || key_version == 0
             || request_timeout.is_zero()
+            || request_timeout > Duration::from_secs(30)
             || max_concurrent_signs == 0
+            || max_concurrent_signs > 512
         {
             return Err(invalid("OpenBao TLS signer configuration is invalid"));
         }
