@@ -108,6 +108,19 @@ pub fn keyless_grpc_server_config(
     Ok(Arc::new(config))
 }
 
+/// Build a keyless gRPC listener whose callers authenticate at the application
+/// layer. The HTTP/2 ALPN setting is required even without client mTLS.
+pub fn keyless_grpc_server_config_without_client_auth(
+    identity: &KeylessTlsIdentity,
+) -> Result<Arc<ServerConfig>, PlatformError> {
+    install_default_crypto_provider()?;
+    let mut config = ServerConfig::builder()
+        .with_no_client_auth()
+        .with_cert_resolver(identity.resolver());
+    config.alpn_protocols = vec![b"h2".to_vec()];
+    Ok(Arc::new(config))
+}
+
 /// Build a client configuration for CA-validated gRPC mTLS.
 pub fn keyless_grpc_client_config(
     identity: &KeylessTlsIdentity,
@@ -304,10 +317,27 @@ impl KeylessGrpcTlsAcceptor {
         max_handshakes: usize,
         handshake_timeout: Duration,
     ) -> Result<Self, PlatformError> {
+        let tls = keyless_grpc_server_config(identity, client_ca_der)?;
+        Self::from_config(tls, max_handshakes, handshake_timeout)
+    }
+
+    pub fn without_client_auth(
+        identity: &KeylessTlsIdentity,
+        max_handshakes: usize,
+        handshake_timeout: Duration,
+    ) -> Result<Self, PlatformError> {
+        let tls = keyless_grpc_server_config_without_client_auth(identity)?;
+        Self::from_config(tls, max_handshakes, handshake_timeout)
+    }
+
+    fn from_config(
+        tls: Arc<ServerConfig>,
+        max_handshakes: usize,
+        handshake_timeout: Duration,
+    ) -> Result<Self, PlatformError> {
         if max_handshakes == 0 || handshake_timeout.is_zero() {
             return Err(invalid("gRPC TLS handshake limits must be positive"));
         }
-        let tls = keyless_grpc_server_config(identity, client_ca_der)?;
         Ok(Self {
             tls: TlsAcceptor::from(tls),
             permits: Arc::new(Semaphore::new(max_handshakes)),

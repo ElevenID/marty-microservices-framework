@@ -113,6 +113,16 @@ impl OpenBaoTlsIdentityFiles {
         KeylessGrpcTlsAcceptor::new(&identity, client_ca, max_handshakes, handshake_timeout)
     }
 
+    /// Prepare a keyless gRPC listener using application-layer client auth.
+    pub async fn grpc_acceptor_without_client_auth(
+        &self,
+        max_handshakes: usize,
+        handshake_timeout: Duration,
+    ) -> Result<KeylessGrpcTlsAcceptor, PlatformError> {
+        let identity = self.connect().await?;
+        KeylessGrpcTlsAcceptor::without_client_auth(&identity, max_handshakes, handshake_timeout)
+    }
+
     async fn grpc_factory(
         &self,
         target: &str,
