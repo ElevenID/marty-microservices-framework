@@ -47,6 +47,32 @@ impl fmt::Debug for OpenBaoTlsSigner {
 }
 
 impl OpenBaoTlsSigner {
+    /// Fetch key metadata on a blocking worker before constructing a signer in
+    /// an asynchronous service. This avoids blocking a `Tokio` I/O worker.
+    pub async fn connect(
+        endpoint: String,
+        ca_certificate_der: Vec<u8>,
+        key_name: String,
+        key_version: u32,
+        token_file: PathBuf,
+        request_timeout: Duration,
+        max_concurrent_signs: usize,
+    ) -> Result<Self, PlatformError> {
+        tokio::task::spawn_blocking(move || {
+            Self::new(
+                &endpoint,
+                &ca_certificate_der,
+                &key_name,
+                key_version,
+                token_file,
+                request_timeout,
+                max_concurrent_signs,
+            )
+        })
+        .await
+        .map_err(|_| PlatformError::ProviderUnavailable("OpenBao TLS key metadata".into()))?
+    }
+
     /// Load the public key from `OpenBao` and reject exportable or backupable keys.
     /// The endpoint must be HTTPS; the certificate authority is explicitly supplied.
     pub fn new(

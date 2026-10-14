@@ -77,6 +77,19 @@ fn trusted_roots(ca_certificates_der: Vec<Vec<u8>>) -> Result<RootCertStore, Pla
     Ok(roots)
 }
 
+/// Build an HTTPS listener which authenticates with a remote signer. Use this
+/// only for routes whose client authentication is enforced at the application
+/// layer; gRPC workload links should use `keyless_grpc_server_config` instead.
+pub fn keyless_https_server_config(
+    identity: &KeylessTlsIdentity,
+) -> Result<Arc<ServerConfig>, PlatformError> {
+    install_default_crypto_provider()?;
+    let config = ServerConfig::builder()
+        .with_no_client_auth()
+        .with_cert_resolver(identity.resolver());
+    Ok(Arc::new(config))
+}
+
 /// Build a server configuration which requires a trusted client certificate.
 /// The caller must bind the authenticated peer identity to its own workload
 /// authorization after the handshake.
