@@ -28,7 +28,7 @@
   ],
   "server_tls": {
     "client_certificate_required": true,
-    "required_material": ["ca_certificate", "server_certificate", "server_private_key"],
+    "required_material": ["ca_certificate", "server_certificate", "remote_signer"],
     "partial_material_behavior": "fail_closed"
   },
   "service_secret_comparison": "constant_time"

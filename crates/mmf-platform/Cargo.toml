@@ -13,21 +13,27 @@ redis = ["dep:redis"]
 
 [dependencies]
 async-trait.workspace = true
+base64.workspace = true
 mmf-core.workspace = true
 mmf-observability.workspace = true
 mmf-resilience.workspace = true
 mmf-security-contracts.workspace = true
+http.workspace = true
+hyper-util.workspace = true
 rand.workspace = true
 redis = { workspace = true, optional = true }
 regex.workspace = true
-reqwest.workspace = true
+reqwest = { workspace = true, features = ["blocking", "json"] }
 rustls.workspace = true
+rustls-pemfile.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
+tokio-rustls.workspace = true
 tonic.workspace = true
+tower.workspace = true
 url.workspace = true
 uuid.workspace = true
 

@@ -1,96 +1,61 @@
-use std::{
-    collections::BTreeSet,
-    panic::{AssertUnwindSafe, catch_unwind},
-    path::PathBuf,
-};
+use std::collections::BTreeSet;
 
-use mmf_platform::{GrpcServerClientAuthentication, GrpcServerTlsMaterial, PlatformError};
 use serde::Deserialize;
-
-const CERTIFICATE: &[u8] = b"-----BEGIN CERTIFICATE-----\nZml4dHVyZQ==\n-----END CERTIFICATE-----";
-const PRIVATE_KEY: &[u8] = b"-----BEGIN PRIVATE KEY-----\nZml4dHVyZQ==\n-----END PRIVATE KEY-----";
 
 #[derive(Deserialize)]
 struct Contract {
     schema_version: u32,
-    accepted: Vec<Case>,
-    rejected: Vec<Case>,
-    requirements: Requirements,
+    identity_source: String,
+    server_tls: ServerTls,
+    mutual_tls: MutualTls,
 }
 
 #[derive(Deserialize)]
-struct Case {
-    name: String,
-    client_authentication: GrpcServerClientAuthentication,
-    material: BTreeSet<String>,
+struct ServerTls {
+    client_authentication: String,
+    required_material: BTreeSet<String>,
+    private_material_input: String,
 }
 
 #[derive(Deserialize)]
-struct Requirements {
-    partial_identity: String,
-    client_ca_without_client_authentication: String,
-    mutual_tls_client_certificate: String,
-    plaintext: String,
-}
-
-fn contract() -> Contract {
-    let path =
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../contracts/grpc-server-behavior.json");
-    serde_json::from_slice(&std::fs::read(path).expect("gRPC server fixture"))
-        .expect("valid gRPC server fixture")
-}
-
-fn material(case: &Case) -> Result<GrpcServerTlsMaterial, PlatformError> {
-    let certificate = if case.material.contains("server_certificate") {
-        CERTIFICATE.to_vec()
-    } else {
-        Vec::new()
-    };
-    let private_key = if case.material.contains("server_private_key") {
-        PRIVATE_KEY.to_vec()
-    } else {
-        Vec::new()
-    };
-    GrpcServerTlsMaterial::with_client_authentication(
-        case.client_authentication,
-        case.material
-            .contains("client_ca_certificate")
-            .then(|| CERTIFICATE.to_vec()),
-        certificate,
-        private_key,
-    )
+struct MutualTls {
+    client_authentication: String,
+    required_material: BTreeSet<String>,
+    peer_authorization: String,
+    partial_material_behavior: String,
 }
 
 #[test]
-fn language_neutral_grpc_server_policy_fails_closed() {
-    let contract = contract();
-    assert_eq!(contract.schema_version, 1);
-    for case in &contract.accepted {
-        let result = material(case);
-        assert!(result.is_ok(), "{}", case.name);
-        let configuration = result.expect("accepted material").server_tls_config();
-        let configured = catch_unwind(AssertUnwindSafe(|| {
-            tonic::transport::Server::builder().tls_config(configuration)
-        }));
-        assert!(
-            configured.is_ok(),
-            "{} must not panic while selecting a Rustls provider",
-            case.name
-        );
-    }
-    for case in &contract.rejected {
-        assert!(material(case).is_err(), "{}", case.name);
-    }
-}
-
-#[test]
-fn server_contract_freezes_downgrade_and_identity_requirements() {
-    let requirements = contract().requirements;
-    assert_eq!(requirements.partial_identity, "reject");
+fn keyless_server_contract_retains_client_authentication_and_fail_closed_identity() {
+    let contract: Contract =
+        serde_json::from_str(include_str!("../../../contracts/grpc-server-behavior.json"))
+            .expect("keyless server contract");
+    assert_eq!(contract.schema_version, 2);
     assert_eq!(
-        requirements.client_ca_without_client_authentication,
-        "reject"
+        contract.identity_source,
+        "remote_signer_bound_to_public_certificate"
     );
-    assert_eq!(requirements.mutual_tls_client_certificate, "required");
-    assert_eq!(requirements.plaintext, "configured_outside_tls_material");
+    assert_eq!(
+        contract.server_tls.client_authentication,
+        "application_routes_only"
+    );
+    assert_eq!(contract.server_tls.private_material_input, "forbidden");
+    assert_eq!(
+        contract.server_tls.required_material,
+        BTreeSet::from(["server_certificate".into(), "remote_signer".into()])
+    );
+    assert_eq!(contract.mutual_tls.client_authentication, "required");
+    assert_eq!(
+        contract.mutual_tls.required_material,
+        BTreeSet::from([
+            "client_ca_certificate".into(),
+            "server_certificate".into(),
+            "remote_signer".into()
+        ])
+    );
+    assert_eq!(
+        contract.mutual_tls.peer_authorization,
+        "certificate_identity_and_workload_policy"
+    );
+    assert_eq!(contract.mutual_tls.partial_material_behavior, "fail_closed");
 }

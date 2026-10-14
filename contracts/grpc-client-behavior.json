@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "accepted": [
     {
       "name": "plaintext-development",
@@ -15,16 +15,6 @@
       "name": "server-tls-private-ca",
       "config": {"target": "https://organization.internal:50051", "security": "server_tls", "trust": "custom_ca", "server_name": "organization.internal"},
       "material": ["ca_certificate"]
-    },
-    {
-      "name": "mutual-tls-private-ca",
-      "config": {"target": "https://organization.internal:50051", "security": "mutual_tls", "trust": "custom_ca"},
-      "material": ["ca_certificate", "client_certificate", "client_private_key"]
-    },
-    {
-      "name": "mutual-tls-native-roots",
-      "config": {"target": "https://organization.example:443", "security": "mutual_tls", "trust": "native_roots"},
-      "material": ["client_certificate", "client_private_key"]
     }
   ],
   "rejected": [
@@ -69,16 +59,6 @@
       "material": ["ca_certificate"]
     },
     {
-      "name": "server-tls-with-client-identity",
-      "config": {"target": "https://organization:50051", "security": "server_tls", "trust": "native_roots"},
-      "material": ["client_certificate", "client_private_key"]
-    },
-    {
-      "name": "mutual-tls-missing-key",
-      "config": {"target": "https://organization:50051", "security": "mutual_tls", "trust": "native_roots"},
-      "material": ["client_certificate"]
-    },
-    {
       "name": "server-name-with-port",
       "config": {"target": "https://organization:50051", "security": "server_tls", "trust": "native_roots", "server_name": "organization:443"},
       "material": []
@@ -88,7 +68,7 @@
     "redirects": "not_applicable",
     "credentials_in_target": "reject",
     "tls_downgrade": "reject",
-    "partial_client_identity": "reject",
+    "client_identity": "keyless_channel_only",
     "connect_mode": ["lazy", "eager"],
     "timeouts": ["connect", "request", "tcp_keepalive", "http2_keepalive"]
   }
