@@ -3,7 +3,7 @@
 
 use std::{
     fmt, fs,
-    path::PathBuf,
+    path::{Path, PathBuf},
     sync::{
         Arc,
         atomic::{AtomicUsize, Ordering},
@@ -21,9 +21,70 @@ use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use url::Url;
 
-use crate::PlatformError;
+use crate::{KeylessTlsIdentity, PlatformError};
 
 const SIGNATURE_SCHEME: SignatureScheme = SignatureScheme::ECDSA_NISTP256_SHA256;
+
+/// Public certificate files and a scoped remote reference for a TLS identity.
+/// This type has no private-key path or local signing fallback.
+#[derive(Clone)]
+pub struct OpenBaoTlsIdentityFiles {
+    pub certificate_chain_file: PathBuf,
+    pub kms_ca_cert_file: PathBuf,
+    pub kms_endpoint: String,
+    pub kms_token_file: PathBuf,
+    pub kms_key_name: String,
+    pub kms_key_version: u32,
+    pub request_timeout: Duration,
+    pub max_concurrent_signs: usize,
+}
+
+impl fmt::Debug for OpenBaoTlsIdentityFiles {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("OpenBaoTlsIdentityFiles(..)")
+    }
+}
+
+impl OpenBaoTlsIdentityFiles {
+    /// Load only public certificates, verify the KMS metadata and bind the
+    /// leaf certificate's public key to the versioned remote signer.
+    pub async fn connect(&self) -> Result<KeylessTlsIdentity, PlatformError> {
+        let chain = read_public_certificates(&self.certificate_chain_file)?;
+        let ca = read_public_certificates(&self.kms_ca_cert_file)?;
+        if ca.len() != 1 {
+            return Err(invalid("OpenBao TLS trust requires one CA certificate"));
+        }
+        let signer = OpenBaoTlsSigner::connect(
+            self.kms_endpoint.clone(),
+            ca.into_iter()
+                .next()
+                .ok_or_else(|| invalid("OpenBao TLS CA certificate is missing"))?,
+            self.kms_key_name.clone(),
+            self.kms_key_version,
+            self.kms_token_file.clone(),
+            self.request_timeout,
+            self.max_concurrent_signs,
+        )
+        .await?;
+        KeylessTlsIdentity::new(chain, Arc::new(signer))
+    }
+}
+
+/// Read only public X.509 certificates from a PEM file.
+pub fn read_public_certificates(path: &Path) -> Result<Vec<Vec<u8>>, PlatformError> {
+    let pem = fs::read(path).map_err(|_| invalid("TLS certificate file could not be read"))?;
+    if String::from_utf8_lossy(&pem).contains("PRIVATE KEY") {
+        return Err(invalid("TLS certificate file contains private material"));
+    }
+    let certificates = rustls_pemfile::certs(&mut pem.as_slice())
+        .map(|result| result.map(|cert| cert.as_ref().to_vec()))
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|_| invalid("TLS certificate PEM is invalid"))?;
+    if certificates.is_empty() {
+        return Err(invalid("TLS certificate file has no certificates"));
+    }
+    Ok(certificates)
+}
 
 /// The public identity and bounded remote-signing contract for one TLS key version.
 pub struct OpenBaoTlsSigner {
