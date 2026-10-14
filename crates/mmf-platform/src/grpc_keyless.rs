@@ -122,6 +122,47 @@ pub fn keyless_grpc_client_config(
     Ok(Arc::new(config))
 }
 
+/// Bounded connection and keepalive settings for a keyless gRPC channel.
+#[derive(Clone, Copy, Debug)]
+pub struct KeylessGrpcTransportOptions {
+    pub connect_timeout: Duration,
+    pub request_timeout: Duration,
+    pub tcp_keepalive: Duration,
+    pub http2_keepalive_interval: Duration,
+    pub http2_keepalive_timeout: Duration,
+}
+
+impl Default for KeylessGrpcTransportOptions {
+    fn default() -> Self {
+        Self {
+            connect_timeout: Duration::from_secs(5),
+            request_timeout: Duration::from_secs(10),
+            tcp_keepalive: Duration::from_secs(30),
+            http2_keepalive_interval: Duration::from_secs(30),
+            http2_keepalive_timeout: Duration::from_secs(10),
+        }
+    }
+}
+
+impl KeylessGrpcTransportOptions {
+    fn validate(self) -> Result<(), PlatformError> {
+        let bounded = |value: Duration| {
+            value >= Duration::from_millis(1) && value <= Duration::from_secs(300)
+        };
+        if !bounded(self.connect_timeout)
+            || !bounded(self.request_timeout)
+            || !bounded(self.tcp_keepalive)
+            || !bounded(self.http2_keepalive_interval)
+            || !bounded(self.http2_keepalive_timeout)
+        {
+            return Err(invalid(
+                "gRPC TLS transport durations must be within 1 ms and 5 minutes",
+            ));
+        }
+        Ok(())
+    }
+}
+
 /// A Tonic channel whose TCP socket is wrapped by Rustls with a keyless mTLS
 /// identity. Tonic's PEM-only TLS connector is bypassed, while gRPC requests
 /// retain an HTTPS origin and HTTP/2 ALPN.
@@ -141,9 +182,27 @@ impl KeylessGrpcChannelFactory {
         connect_timeout: Duration,
         request_timeout: Duration,
     ) -> Result<Self, PlatformError> {
-        if connect_timeout.is_zero() || request_timeout.is_zero() {
-            return Err(invalid("gRPC TLS timeouts must be positive"));
-        }
+        Self::with_options(
+            target,
+            server_name,
+            identity,
+            server_ca_der,
+            KeylessGrpcTransportOptions {
+                connect_timeout,
+                request_timeout,
+                ..KeylessGrpcTransportOptions::default()
+            },
+        )
+    }
+
+    pub fn with_options(
+        target: &str,
+        server_name: &str,
+        identity: &KeylessTlsIdentity,
+        server_ca_der: Vec<Vec<u8>>,
+        options: KeylessGrpcTransportOptions,
+    ) -> Result<Self, PlatformError> {
+        options.validate()?;
         let target_url = Url::parse(target).map_err(|_| invalid("gRPC TLS target is invalid"))?;
         if target_url.scheme() != "https"
             || target_url.host_str().is_none()
@@ -175,11 +234,11 @@ impl KeylessGrpcChannelFactory {
         let endpoint = Endpoint::from_shared(transport_url.as_str().to_owned())
             .map_err(|_| invalid("gRPC TLS target is invalid"))?
             .origin(origin)
-            .connect_timeout(connect_timeout)
-            .timeout(request_timeout)
-            .tcp_keepalive(Some(Duration::from_secs(30)))
-            .http2_keep_alive_interval(Duration::from_secs(30))
-            .keep_alive_timeout(Duration::from_secs(10))
+            .connect_timeout(options.connect_timeout)
+            .timeout(options.request_timeout)
+            .tcp_keepalive(Some(options.tcp_keepalive))
+            .http2_keep_alive_interval(options.http2_keepalive_interval)
+            .keep_alive_timeout(options.http2_keepalive_timeout)
             .keep_alive_while_idle(true);
         let tls = keyless_grpc_client_config(identity, server_ca_der)?;
         Ok(Self {
@@ -264,5 +323,32 @@ impl KeylessGrpcTlsAcceptor {
         timeout(self.handshake_timeout, self.tls.accept(stream))
             .await
             .map_err(|_| io::Error::new(io::ErrorKind::TimedOut, "gRPC TLS handshake timeout"))?
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::time::Duration;
+
+    use super::KeylessGrpcTransportOptions;
+
+    #[test]
+    fn keyless_transport_preserves_bounded_keepalive_controls() {
+        let defaults = KeylessGrpcTransportOptions::default();
+        assert_eq!(defaults.tcp_keepalive, Duration::from_secs(30));
+        assert_eq!(defaults.http2_keepalive_interval, Duration::from_secs(30));
+        assert_eq!(defaults.http2_keepalive_timeout, Duration::from_secs(10));
+        assert!(defaults.validate().is_ok());
+        for timeout in [
+            Duration::ZERO,
+            Duration::from_micros(1),
+            Duration::from_secs(301),
+        ] {
+            let options = KeylessGrpcTransportOptions {
+                http2_keepalive_timeout: timeout,
+                ..defaults
+            };
+            assert!(options.validate().is_err());
+        }
     }
 }
