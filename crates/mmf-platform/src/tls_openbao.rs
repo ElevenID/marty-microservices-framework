@@ -175,6 +175,7 @@ pub struct OpenBaoTlsSigner {
     key_name: String,
     key_version: u32,
     token_file: PathBuf,
+    request_timeout: Duration,
     public_spki_der: Vec<u8>,
     active_signs: Arc<AtomicUsize>,
     max_concurrent_signs: usize,
@@ -271,6 +272,7 @@ impl OpenBaoTlsSigner {
             key_name: key_name.into(),
             key_version,
             token_file,
+            request_timeout,
             public_spki_der: Vec::new(),
             active_signs: Arc::new(AtomicUsize::new(0)),
             max_concurrent_signs,
@@ -312,7 +314,11 @@ impl OpenBaoTlsSigner {
     fn sign_remote(&self, message: &[u8]) -> Result<Vec<u8>, rustls::Error> {
         let _permit = SignPermit::acquire(&self.active_signs, self.max_concurrent_signs)?;
         let token = self.token().map_err(|_| unavailable())?;
-        let response: Value = self
+        let remaining = crate::grpc_keyless::remaining_handshake_time();
+        if remaining.is_some_and(|duration| duration.is_zero()) {
+            return Err(unavailable());
+        }
+        let request = self
             .client
             .post(self.url(&format!("v1/transit/sign/{}", self.key_name)))
             .header("X-Vault-Token", token)
@@ -322,7 +328,15 @@ impl OpenBaoTlsSigner {
                 "hash_algorithm": "sha2-256",
                 "marshaling_algorithm": "asn1",
                 "key_version": self.key_version,
-            }))
+            }));
+        // Rustls calls this synchronously, so the outer Tokio handshake
+        // timeout cannot interrupt the HTTP request. Bound it by the time
+        // actually left in the current handshake.
+        let request = match remaining {
+            Some(duration) => request.timeout(duration.min(self.request_timeout)),
+            None => request,
+        };
+        let response: Value = request
             .send()
             .and_then(reqwest::blocking::Response::error_for_status)
             .and_then(reqwest::blocking::Response::json)
@@ -410,6 +424,7 @@ impl Clone for OpenBaoTlsSigner {
             key_name: self.key_name.clone(),
             key_version: self.key_version,
             token_file: self.token_file.clone(),
+            request_timeout: self.request_timeout,
             public_spki_der: self.public_spki_der.clone(),
             active_signs: self.active_signs.clone(),
             max_concurrent_signs: self.max_concurrent_signs,

@@ -13,13 +13,23 @@ use rustls::{
     server::WebPkiClientVerifier,
     sign::{CertifiedKey, SigningKey, SingleCertAndKey},
 };
-use tokio::{net::TcpStream, sync::Semaphore, time::timeout};
+use tokio::{net::TcpStream, sync::Semaphore, time::timeout_at};
 use tokio_rustls::{TlsAcceptor, TlsConnector, server::TlsStream};
 use tonic::transport::{Channel, Endpoint};
 use tower::service_fn;
 use url::Url;
 
 use crate::{PlatformError, install_default_crypto_provider};
+
+tokio::task_local! {
+    static HANDSHAKE_DEADLINE: std::time::Instant;
+}
+
+pub(crate) fn remaining_handshake_time() -> Option<Duration> {
+    HANDSHAKE_DEADLINE
+        .try_with(|deadline| deadline.saturating_duration_since(std::time::Instant::now()))
+        .ok()
+}
 
 fn invalid(message: &str) -> PlatformError {
     PlatformError::InvalidConfiguration(message.into())
@@ -159,9 +169,8 @@ impl Default for KeylessGrpcTransportOptions {
 
 impl KeylessGrpcTransportOptions {
     fn validate(self) -> Result<(), PlatformError> {
-        let bounded = |value: Duration| {
-            value >= Duration::from_millis(1) && value <= Duration::from_secs(300)
-        };
+        let bounded =
+            |value: Duration| value >= Duration::from_millis(1) && value <= Duration::from_mins(5);
         if !bounded(self.connect_timeout)
             || !bounded(self.request_timeout)
             || !bounded(self.tcp_keepalive)
@@ -284,20 +293,26 @@ impl KeylessGrpcChannelFactory {
                 let authority = uri.authority().ok_or_else(|| {
                     io::Error::new(io::ErrorKind::InvalidInput, "missing gRPC authority")
                 })?;
-                let stream = timeout(connect_timeout, TcpStream::connect(authority.as_str()))
+                let stream =
+                    tokio::time::timeout(connect_timeout, TcpStream::connect(authority.as_str()))
+                        .await
+                        .map_err(|_| {
+                            io::Error::new(io::ErrorKind::TimedOut, "gRPC TCP connect timeout")
+                        })??;
+                stream.set_nodelay(true)?;
+                let deadline = tokio::time::Instant::now() + connect_timeout;
+                let encrypted = HANDSHAKE_DEADLINE
+                    .scope(deadline.into_std(), async {
+                        timeout_at(
+                            deadline,
+                            TlsConnector::from(tls).connect(server_name, stream),
+                        )
+                        .await
+                    })
                     .await
                     .map_err(|_| {
-                        io::Error::new(io::ErrorKind::TimedOut, "gRPC TCP connect timeout")
+                        io::Error::new(io::ErrorKind::TimedOut, "gRPC TLS handshake timeout")
                     })??;
-                stream.set_nodelay(true)?;
-                let encrypted = timeout(
-                    connect_timeout,
-                    TlsConnector::from(tls).connect(server_name, stream),
-                )
-                .await
-                .map_err(|_| {
-                    io::Error::new(io::ErrorKind::TimedOut, "gRPC TLS handshake timeout")
-                })??;
                 Ok(TokioIo::new(encrypted))
             }
         })
@@ -364,7 +379,11 @@ impl KeylessGrpcTlsAcceptor {
             self.permits.clone().try_acquire_owned().map_err(|_| {
                 io::Error::new(io::ErrorKind::WouldBlock, "gRPC TLS handshake limit")
             })?;
-        timeout(self.handshake_timeout, self.tls.accept(stream))
+        let deadline = tokio::time::Instant::now() + self.handshake_timeout;
+        HANDSHAKE_DEADLINE
+            .scope(deadline.into_std(), async {
+                timeout_at(deadline, self.tls.accept(stream)).await
+            })
             .await
             .map_err(|_| io::Error::new(io::ErrorKind::TimedOut, "gRPC TLS handshake timeout"))?
     }
@@ -374,7 +393,22 @@ impl KeylessGrpcTlsAcceptor {
 mod tests {
     use std::time::Duration;
 
-    use super::KeylessGrpcTransportOptions;
+    use super::{HANDSHAKE_DEADLINE, KeylessGrpcTransportOptions, remaining_handshake_time};
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn synchronous_signer_sees_remaining_handshake_deadline() {
+        assert!(remaining_handshake_time().is_none());
+        HANDSHAKE_DEADLINE
+            .scope(std::time::Instant::now() + Duration::from_secs(1), async {
+                tokio::task::block_in_place(|| {
+                    let remaining = remaining_handshake_time().unwrap();
+                    assert!(!remaining.is_zero());
+                    assert!(remaining <= Duration::from_secs(1));
+                });
+            })
+            .await;
+        assert!(remaining_handshake_time().is_none());
+    }
 
     #[test]
     fn keyless_transport_preserves_bounded_keepalive_controls() {
