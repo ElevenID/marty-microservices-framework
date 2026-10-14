@@ -365,6 +365,29 @@ mod tests {
     use super::*;
 
     #[test]
+    fn public_certificate_loader_fails_closed_and_identity_debug_is_redacted() {
+        let path =
+            std::env::temp_dir().join(format!("mmf-public-tls-{}.pem", uuid::Uuid::new_v4()));
+        fs::write(&path, "not a certificate").unwrap();
+        assert!(read_public_certificates(&path).is_err());
+        fs::remove_file(&path).unwrap();
+
+        let identity = OpenBaoTlsIdentityFiles {
+            certificate_chain_file: PathBuf::from("service-cert.pem"),
+            kms_ca_cert_file: PathBuf::from("bao-ca.pem"),
+            kms_endpoint: "https://private-bao.internal".into(),
+            kms_token_file: PathBuf::from("secret-token-path"),
+            kms_key_name: "tls-key".into(),
+            kms_key_version: 1,
+            request_timeout: Duration::from_secs(3),
+            max_concurrent_signs: 32,
+        };
+        let debug = format!("{identity:?}");
+        assert!(!debug.contains("secret-token-path"));
+        assert!(!debug.contains("private-bao.internal"));
+    }
+
+    #[test]
     fn public_key_requires_non_exportable_non_backupable_p256_and_exact_version() {
         let public = STANDARD.encode([1, 2, 3]);
         let metadata = json!({"data": {
