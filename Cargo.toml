@@ -36,6 +36,8 @@ base64 = "0.23"
 cedar-policy = "4.8.1"
 chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
 http-body-util = "0.1"
+http = "1"
+hyper-util = { version = "0.1", features = ["tokio"] }
 mmf-config = { version = "0.1.1", path = "crates/mmf-config" }
 mmf-cli = { version = "0.1.1", path = "crates/mmf-cli" }
 mmf-core = { version = "0.1.1", path = "crates/mmf-core" }
@@ -72,6 +74,7 @@ redis = { version = "1.5", default-features = false, features = ["tokio-comp"] }
 sqlx = { version = "0.9", default-features = false, features = ["json", "postgres", "runtime-tokio", "tls-rustls-ring-webpki"] }
 thiserror = "2"
 tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "sync", "time"] }
+tokio-rustls = "0.26"
 tonic = { version = "0.14", features = ["tls-native-roots", "tls-ring"] }
 toml = "1.1"
 tower = { version = "0.5", features = ["util"] }

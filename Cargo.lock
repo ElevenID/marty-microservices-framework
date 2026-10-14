@@ -1872,6 +1872,8 @@ name = "mmf-platform"
 version = "0.1.1"
 dependencies = [
  "async-trait",
+ "http",
+ "hyper-util",
  "mmf-core",
  "mmf-observability",
  "mmf-resilience",
@@ -1886,7 +1888,9 @@ dependencies = [
  "sha2 0.11.0",
  "thiserror",
  "tokio",
+ "tokio-rustls",
  "tonic",
+ "tower",
  "url",
  "uuid",
 ]
