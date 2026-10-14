@@ -184,6 +184,7 @@ pub struct KeylessGrpcChannelFactory {
     endpoint: Endpoint,
     tls: Arc<ClientConfig>,
     server_name: ServerName<'static>,
+    connect_timeout: Duration,
 }
 
 impl KeylessGrpcChannelFactory {
@@ -258,6 +259,7 @@ impl KeylessGrpcChannelFactory {
             endpoint,
             tls,
             server_name: name,
+            connect_timeout: options.connect_timeout,
         })
     }
 
@@ -274,6 +276,7 @@ impl KeylessGrpcChannelFactory {
     + 'static {
         let tls = self.tls.clone();
         let server_name = self.server_name.clone();
+        let connect_timeout = self.connect_timeout;
         service_fn(move |uri: Uri| {
             let tls = tls.clone();
             let server_name = server_name.clone();
@@ -281,9 +284,20 @@ impl KeylessGrpcChannelFactory {
                 let authority = uri.authority().ok_or_else(|| {
                     io::Error::new(io::ErrorKind::InvalidInput, "missing gRPC authority")
                 })?;
-                let stream = TcpStream::connect(authority.as_str()).await?;
+                let stream = timeout(connect_timeout, TcpStream::connect(authority.as_str()))
+                    .await
+                    .map_err(|_| {
+                        io::Error::new(io::ErrorKind::TimedOut, "gRPC TCP connect timeout")
+                    })??;
                 stream.set_nodelay(true)?;
-                let encrypted = TlsConnector::from(tls).connect(server_name, stream).await?;
+                let encrypted = timeout(
+                    connect_timeout,
+                    TlsConnector::from(tls).connect(server_name, stream),
+                )
+                .await
+                .map_err(|_| {
+                    io::Error::new(io::ErrorKind::TimedOut, "gRPC TLS handshake timeout")
+                })??;
                 Ok(TokioIo::new(encrypted))
             }
         })
