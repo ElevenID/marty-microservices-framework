@@ -49,7 +49,18 @@ fn workload_authorization_matches_language_neutral_vectors() {
         WorkloadAuthorizationDecision::Unauthenticated
     );
     assert!(contract.server_tls.client_certificate_required);
-    assert_eq!(contract.server_tls.required_material.len(), 3);
+    assert_eq!(
+        contract
+            .server_tls
+            .required_material
+            .into_iter()
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from([
+            "ca_certificate".into(),
+            "server_certificate".into(),
+            "remote_signer".into(),
+        ])
+    );
     assert_eq!(contract.server_tls.partial_material_behavior, "fail_closed");
     assert_eq!(contract.service_secret_comparison, "constant_time");
 

@@ -1,43 +1,15 @@
 {
-  "schema_version": 1,
-  "accepted": [
-    {
-      "name": "server-tls",
-      "client_authentication": "disabled",
-      "material": ["server_certificate", "server_private_key"]
-    },
-    {
-      "name": "mutual-tls",
-      "client_authentication": "required",
-      "material": ["client_ca_certificate", "server_certificate", "server_private_key"]
-    }
-  ],
-  "rejected": [
-    {
-      "name": "server-tls-with-client-ca",
-      "client_authentication": "disabled",
-      "material": ["client_ca_certificate", "server_certificate", "server_private_key"]
-    },
-    {
-      "name": "mutual-tls-without-client-ca",
-      "client_authentication": "required",
-      "material": ["server_certificate", "server_private_key"]
-    },
-    {
-      "name": "missing-server-certificate",
-      "client_authentication": "disabled",
-      "material": ["server_private_key"]
-    },
-    {
-      "name": "missing-server-private-key",
-      "client_authentication": "disabled",
-      "material": ["server_certificate"]
-    }
-  ],
-  "requirements": {
-    "partial_identity": "reject",
-    "client_ca_without_client_authentication": "reject",
-    "mutual_tls_client_certificate": "required",
-    "plaintext": "configured_outside_tls_material"
+  "schema_version": 2,
+  "identity_source": "remote_signer_bound_to_public_certificate",
+  "server_tls": {
+    "client_authentication": "application_routes_only",
+    "required_material": ["server_certificate", "remote_signer"],
+    "private_material_input": "forbidden"
+  },
+  "mutual_tls": {
+    "client_authentication": "required",
+    "required_material": ["client_ca_certificate", "server_certificate", "remote_signer"],
+    "peer_authorization": "certificate_identity_and_workload_policy",
+    "partial_material_behavior": "fail_closed"
   }
 }
