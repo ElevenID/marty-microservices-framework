@@ -176,7 +176,11 @@ impl KeylessGrpcChannelFactory {
             .map_err(|_| invalid("gRPC TLS target is invalid"))?
             .origin(origin)
             .connect_timeout(connect_timeout)
-            .timeout(request_timeout);
+            .timeout(request_timeout)
+            .tcp_keepalive(Some(Duration::from_secs(30)))
+            .http2_keep_alive_interval(Duration::from_secs(30))
+            .keep_alive_timeout(Duration::from_secs(10))
+            .keep_alive_while_idle(true);
         let tls = keyless_grpc_client_config(identity, server_ca_der)?;
         Ok(Self {
             endpoint,
