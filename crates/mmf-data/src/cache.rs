@@ -89,10 +89,22 @@ impl CacheConfig {
             let url = self.url.as_deref().ok_or_else(|| {
                 DataError::ProviderUnavailable("production cache URL is required".into())
             })?;
-            if !url.starts_with("rediss://") && self.backend == CacheBackend::Redis {
-                return Err(DataError::InvalidConfiguration(
-                    "production Redis requires TLS".into(),
-                ));
+            if self.backend == CacheBackend::Redis {
+                let client = redis::Client::open(url).map_err(|_| {
+                    DataError::InvalidConfiguration("production Redis URL is invalid".into())
+                })?;
+                let permitted = match client.get_connection_info().addr() {
+                    redis::ConnectionAddr::TcpTls {
+                        insecure: false, ..
+                    } => true,
+                    redis::ConnectionAddr::Unix(path) => cfg!(unix) && path.is_absolute(),
+                    _ => false,
+                };
+                if !permitted {
+                    return Err(DataError::InvalidConfiguration(
+                        "production Redis requires verified TLS or a local Unix socket".into(),
+                    ));
+                }
             }
         }
         Ok(())
@@ -277,6 +289,19 @@ impl RedisCache {
         });
         let client = redis::Client::open(redis_url)
             .map_err(|error| DataError::InvalidConfiguration(error.to_string()))?;
+        if matches!(
+            client.get_connection_info().addr(),
+            redis::ConnectionAddr::TcpTls { .. }
+        ) && rustls::crypto::CryptoProvider::get_default().is_none()
+            && rustls::crypto::ring::default_provider()
+                .install_default()
+                .is_err()
+            && rustls::crypto::CryptoProvider::get_default().is_none()
+        {
+            return Err(DataError::ProviderUnavailable(
+                "Redis TLS crypto provider could not be installed".into(),
+            ));
+        }
         let connection = client
             .get_multiplexed_async_connection()
             .await

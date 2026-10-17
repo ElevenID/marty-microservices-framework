@@ -76,6 +76,31 @@ fn redis_configuration_is_namespaced_and_fail_closed() {
 
     let tls_config = redis_config("rediss://redis.example.test/0".into(), "production".into());
     assert!(tls_config.validate(true).is_ok());
+
+    let unix_config = redis_config(
+        "unix:///run/marty-redis/redis.sock?db=2".into(),
+        "production".into(),
+    );
+    assert_eq!(unix_config.validate(true).is_ok(), cfg!(unix));
+    for unsafe_url in [
+        "unix://remote.example/run/redis.sock",
+        "redis://redis:6379/0",
+        "rediss://redis.example.test/0#insecure",
+    ] {
+        assert!(
+            redis_config(unsafe_url.into(), "production".into())
+                .validate(true)
+                .is_err(),
+            "{unsafe_url}"
+        );
+    }
+}
+
+#[tokio::test]
+async fn redis_tls_connect_installs_a_crypto_provider_before_dialing() {
+    let config = redis_config("rediss://127.0.0.1:1/0".into(), "tls-provider".into());
+    assert!(RedisCache::connect(config, true).await.is_err());
+    assert!(rustls::crypto::CryptoProvider::get_default().is_some());
 }
 
 #[tokio::test]
@@ -88,7 +113,8 @@ async fn redis_backend_matches_the_canonical_cache_contract_when_available() {
         .expect("system clock")
         .as_nanos();
     let namespace = format!("mmf-redis-acceptance-{}-{unique}", std::process::id());
-    let cache = RedisCache::connect(redis_config(url.clone(), namespace), false)
+    let production = url.starts_with("unix://") || url.starts_with("redis+unix://");
+    let cache = RedisCache::connect(redis_config(url.clone(), namespace), production)
         .await
         .expect("connect primary namespace");
     let isolated = cache
