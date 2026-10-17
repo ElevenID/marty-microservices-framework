@@ -89,10 +89,22 @@ impl CacheConfig {
             let url = self.url.as_deref().ok_or_else(|| {
                 DataError::ProviderUnavailable("production cache URL is required".into())
             })?;
-            if !url.starts_with("rediss://") && self.backend == CacheBackend::Redis {
-                return Err(DataError::InvalidConfiguration(
-                    "production Redis requires TLS".into(),
-                ));
+            if self.backend == CacheBackend::Redis {
+                let client = redis::Client::open(url).map_err(|_| {
+                    DataError::InvalidConfiguration("production Redis URL is invalid".into())
+                })?;
+                let permitted = match client.get_connection_info().addr() {
+                    redis::ConnectionAddr::TcpTls {
+                        insecure: false, ..
+                    } => true,
+                    redis::ConnectionAddr::Unix(path) => cfg!(unix) && path.is_absolute(),
+                    _ => false,
+                };
+                if !permitted {
+                    return Err(DataError::InvalidConfiguration(
+                        "production Redis requires verified TLS or a local Unix socket".into(),
+                    ));
+                }
             }
         }
         Ok(())
