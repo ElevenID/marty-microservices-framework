@@ -97,6 +97,13 @@ fn redis_configuration_is_namespaced_and_fail_closed() {
 }
 
 #[tokio::test]
+async fn redis_tls_connect_installs_a_crypto_provider_before_dialing() {
+    let config = redis_config("rediss://127.0.0.1:1/0".into(), "tls-provider".into());
+    assert!(RedisCache::connect(config, true).await.is_err());
+    assert!(rustls::crypto::CryptoProvider::get_default().is_some());
+}
+
+#[tokio::test]
 async fn redis_backend_matches_the_canonical_cache_contract_when_available() {
     let Ok(url) = std::env::var("MMF_REDIS_TEST_URL") else {
         return;

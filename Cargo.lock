@@ -1804,6 +1804,7 @@ dependencies = [
  "async-trait",
  "mmf-core",
  "redis",
+ "rustls",
  "serde",
  "serde_json",
  "thiserror",

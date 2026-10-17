@@ -289,6 +289,19 @@ impl RedisCache {
         });
         let client = redis::Client::open(redis_url)
             .map_err(|error| DataError::InvalidConfiguration(error.to_string()))?;
+        if matches!(
+            client.get_connection_info().addr(),
+            redis::ConnectionAddr::TcpTls { .. }
+        ) && rustls::crypto::CryptoProvider::get_default().is_none()
+            && rustls::crypto::ring::default_provider()
+                .install_default()
+                .is_err()
+            && rustls::crypto::CryptoProvider::get_default().is_none()
+        {
+            return Err(DataError::ProviderUnavailable(
+                "Redis TLS crypto provider could not be installed".into(),
+            ));
+        }
         let connection = client
             .get_multiplexed_async_connection()
             .await
