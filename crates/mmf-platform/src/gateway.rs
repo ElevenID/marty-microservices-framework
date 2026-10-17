@@ -93,6 +93,9 @@ pub struct GatewayResponse {
     pub status_code: u16,
     #[serde(default)]
     pub headers: BTreeMap<String, String>,
+    /// Separate Set-Cookie fields; HTTP forbids combining them into one value.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub set_cookies: Vec<String>,
     pub body: Option<Vec<u8>>,
     pub response_time_ms: Option<u64>,
     pub upstream_service: Option<String>,
