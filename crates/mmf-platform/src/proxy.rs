@@ -436,6 +436,7 @@ pub fn mip_error_response(
             ("Content-Type".into(), MIP_CONTENT_TYPE.into()),
             ("X-MIP-Version".into(), mip_version.into()),
         ]),
+        set_cookies: Vec::new(),
         body: Some(body),
         response_time_ms: None,
         upstream_service: None,
@@ -632,6 +633,7 @@ mod tests {
                 ("Content-Length".into(), "999".into()),
                 ("X-Upstream".into(), "test".into()),
             ]),
+            set_cookies: Vec::new(),
             body,
             response_time_ms: None,
             upstream_service: Some("test".into()),
@@ -711,6 +713,38 @@ mod tests {
     }
 
     #[test]
+    fn redirects_preserve_individual_session_cookies() {
+        let response = GatewayResponse {
+            status_code: 302,
+            headers: BTreeMap::from([
+                ("location".into(), "/console".into()),
+                ("content-length".into(), "999".into()),
+            ]),
+            set_cookies: vec![
+                "sessionId=synthetic; Path=/; Secure".into(),
+                "marty_impersonation_handoff=; Max-Age=0; Path=/; Secure".into(),
+            ],
+            body: None,
+            response_time_ms: None,
+            upstream_service: Some("auth".into()),
+        };
+        let normalized = normalize_upstream_response(response, &ProxyConfig::default()).unwrap();
+        assert_eq!(normalized.status_code, 302);
+        assert_eq!(
+            normalized.headers.get("location").map(String::as_str),
+            Some("/console")
+        );
+        assert!(!normalized.headers.contains_key("content-length"));
+        assert_eq!(normalized.set_cookies.len(), 2);
+        assert!(normalized.set_cookies[0].starts_with("sessionId="));
+        assert!(normalized.set_cookies[1].starts_with("marty_impersonation_handoff="));
+
+        let prior_wire = r#"{"status_code":200,"headers":{},"body":null,"response_time_ms":null,"upstream_service":null}"#;
+        let decoded: GatewayResponse = serde_json::from_str(prior_wire).unwrap();
+        assert!(decoded.set_cookies.is_empty());
+    }
+
+    #[test]
     fn response_limits_fail_closed() {
         let fixture = fixture();
         let config = ProxyConfig {
@@ -721,6 +755,7 @@ mod tests {
         let response = GatewayResponse {
             status_code: 200,
             headers: BTreeMap::new(),
+            set_cookies: Vec::new(),
             body: Some(vec![0; config.maximum_response_bytes + 1]),
             response_time_ms: None,
             upstream_service: None,
@@ -794,6 +829,7 @@ mod tests {
             Ok(GatewayResponse {
                 status_code: 200,
                 headers: BTreeMap::new(),
+                set_cookies: Vec::new(),
                 body: Some(br#"{"ok":true}"#.to_vec()),
                 response_time_ms: Some(1),
                 upstream_service: Some("documents".into()),
