@@ -40,20 +40,24 @@ The machine-readable ownership inventory remains
 [`contracts/mmf-capabilities.json`](../contracts/mmf-capabilities.json), and
 all behavior fixtures remain under `contracts/`.
 
-## Retirement gates
+## Historical acceptance and recovery record
 
-- Rust formatting, strict Clippy, workspace tests, contract tests, integration
-  tests, and doc tests pass.
-- Organization source and artifact searches find no supported Python MMF
-  consumer.
-- The Rust-only v1.1.202 UI/services/migrations artifacts contain no MMF Python
-  package and pass signature, attestation, checksum, stack smoke, aggregate
-  beta deployment, and credential-lifecycle gates.
-- Production release, configuration, image IDs, container IDs, and data are
-  outside the beta deployment scope and remain unchanged by the aggregate
-  deployment wrapper.
-- Complete Git history and the v1.0.0/v1.0.2 wheel, sdist, SBOM, Sigstore, and
-  checksum evidence have verified primary and secondary retention copies.
+The completed retirement qualified consumer removal, Rust parity, the
+Rust-only v1.1.202 beta lifecycle and two retention copies of the v1.0.0/v1.0.2
+artifacts and complete Git history. Production configuration and data were
+outside that beta deployment scope. The final machine-readable receipt is
+retained in Git history at
+[`c7181c8`](https://github.com/ElevenID/marty-microservices-framework/tree/c7181c86949fdb0fb415e52cee364c19615bcfc6/contracts).
+This historical acceptance is not a current deployment or recovery health check.
+
+The receipt, frozen filename inventory and tests of their recorded constants
+are retired from current source. All behavior fixtures and their direct Rust
+consumers remain. Current CI exercises the workspace, negative contracts,
+capability owners, Python absence and release guards; it does not check old
+beta IDs or infer backup availability from a recorded count/digest. Future
+recovery qualification must read actual retained copies and verify complete
+history/artifacts and checksums before claiming recoverability. This cleanup
+changes no releases, tags, backup copies or retention policy.
 
 ## Continuing rule
 

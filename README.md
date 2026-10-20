@@ -37,22 +37,17 @@ separate registry environment gate is enabled.
 
 ## Python retirement
 
-The former `marty-msf` Python distribution is retired. Its source, packaging,
-examples, generated reports, and Python-specific operations tooling were
-removed only after:
+The former `marty-msf` Python distribution is retired. Source and release
+history retain the completed migration, beta acceptance and recovery record;
+the final machine-readable receipts are available at revision
+[`c7181c8`](https://github.com/ElevenID/marty-microservices-framework/tree/c7181c86949fdb0fb415e52cee364c19615bcfc6/contracts).
+CI no longer reasserts historical deployment IDs, backup counts or checksum
+shapes. Those assertions could not observe current recovery-copy availability.
 
-1. every supported consumer moved to Rust;
-2. language-neutral parity and negative-path contracts passed;
-3. source and released artifacts showed no supported Python consumer;
-4. the v1.0.0 and v1.0.2 distributions, SBOMs, attestations, checksums, tags,
-   and complete Git history had two verified retention copies; and
-5. the aggregate Rust-only v1.1.202 beta deployment and acceptance gates
-   passed without changing the production release.
-
-The immutable Git history and retained release evidence are the rollback and
-historical record. Python framework behavior must not be reintroduced. See
-[`docs/RUST_PLATFORM_MIGRATION_ROADMAP.md`](docs/RUST_PLATFORM_MIGRATION_ROADMAP.md)
-for the capability disposition.
+Current Rust tests directly consume every retained behavior fixture, and
+capability ownership, Python absence and release workflow guards remain.
+See [`docs/RUST_PLATFORM_MIGRATION_ROADMAP.md`](docs/RUST_PLATFORM_MIGRATION_ROADMAP.md)
+for the current capability owners and continuing migration requirements.
 
 Rust platform releases use annotated `vMAJOR.MINOR.PATCH` tags. The release
 workflow re-runs the complete workspace gates, validates every crate package,

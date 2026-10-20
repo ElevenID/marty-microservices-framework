@@ -53,13 +53,13 @@ cargo +1.93.0 clippy --locked -p mmf-config --all-targets -- -D warnings
 
 ## Consumer migration requirement
 
-The retirement guard now checks every named contract in the last recorded
-41-contract baseline at protected revision `020beffb4da1e0ef52b4330b55c3b4633022d529`.
-The historical retirement receipt stays unchanged; new contracts are additive.
-This replaces an exact current-directory count that blocked additions and could
-miss replacing an old contract with an unrelated new one. A regression test
-requires additions to pass and equal-count replacement/deletion to fail. All
-other consumer, beta, recovery and Python-absence checks are retained.
+All behavior fixtures remain directly consumed by Rust tests. The completed
+migration receipt and frozen 41-filename inventory are retired from current
+source: historical deployment IDs, backup digests and filename existence were
+not behavioral or recovery-availability checks. Their final versions remain
+in Git history at `c7181c8`. No numeric oracle, fixture, parser case or consumer
+migration gate is removed. Capability ownership, Python-absence and release
+guards continue alongside the executable positive and negative contracts.
 
 Canvas must adopt the shared owner through a reviewed protected dependency pin,
 preserve explicit identity whitespace, replay its full configuration corpus and
