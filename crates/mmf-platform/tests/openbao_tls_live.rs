@@ -1,6 +1,6 @@
 //! Opt-in component qualification, not installer acceptance. The caller must
 //! hold the native installation-directory lock and authenticate the expected
-//! engine, owned OpenBao containers and completed ingress receipt before/after
+//! engine, owned `OpenBao` containers and completed ingress receipt before/after
 //! this test. No Docker operation or authority mutation is performed here.
 #![cfg(target_os = "linux")]
 
@@ -52,12 +52,17 @@ fn read(root: &Path, name: &str) -> Result<Vec<u8>> {
 }
 
 fn sha256_hex(bytes: &[u8]) -> String {
+    use std::fmt::Write as _;
     Sha256::digest(bytes)
         .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect()
+        .fold(String::with_capacity(64), |mut output, byte| {
+            write!(output, "{byte:02x}").expect("format public digest");
+            output
+        })
 }
 
+// Keep fixture admission and the matching before/after integrity check together.
+#[allow(clippy::too_many_lines)]
 async fn exercise() -> Result<()> {
     let root = PathBuf::from(
         std::env::var("MMF_INSTALLER_TLS_ROOT").map_err(|_| "fixture root required")?,
