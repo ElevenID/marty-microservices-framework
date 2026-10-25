@@ -322,13 +322,7 @@ impl OpenBaoTlsSigner {
             .client
             .post(self.url(&format!("v1/transit/sign/{}", self.key_name)))
             .header("X-Vault-Token", token)
-            .json(&json!({
-                "input": STANDARD.encode(Sha256::digest(message)),
-                "prehashed": true,
-                "hash_algorithm": "sha2-256",
-                "marshaling_algorithm": "asn1",
-                "key_version": self.key_version,
-            }));
+            .json(&sign_request_body(message, self.key_version));
         // Rustls calls this synchronously, so the outer Tokio handshake
         // timeout cannot interrupt the HTTP request. Bound it by the time
         // actually left in the current handshake.
@@ -353,6 +347,19 @@ impl OpenBaoTlsSigner {
             .decode(encoded)
             .map_err(|_| rustls::Error::General("OpenBao TLS signature is invalid".into()))
     }
+}
+
+fn sign_request_body(message: &[u8], key_version: u32) -> Value {
+    // Construction rejects zero. Encode the pinned version as a decimal string
+    // so OpenBao's exact allowed_parameters ACL can match it before Transit
+    // decodes the version as an integer.
+    json!({
+        "input": STANDARD.encode(Sha256::digest(message)),
+        "prehashed": true,
+        "hash_algorithm": "sha2-256",
+        "marshaling_algorithm": "asn1",
+        "key_version": key_version.to_string(),
+    })
 }
 
 fn parse_public_key(metadata: &Value, key_version: u32) -> Result<Vec<u8>, PlatformError> {
@@ -461,6 +468,51 @@ fn unavailable() -> rustls::Error {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn sign_http_body_pins_decimal_string_version_without_changing_signing_parameters() {
+        let client = reqwest::blocking::Client::builder()
+            .no_proxy()
+            .build()
+            .unwrap();
+        for version in [1, 7, u32::MAX] {
+            let request = client
+                .post("https://bao.invalid/v1/transit/sign/tls-key")
+                .json(&sign_request_body(b"TLS handshake transcript", version))
+                .build()
+                .unwrap();
+            let body: Value =
+                serde_json::from_slice(request.body().unwrap().as_bytes().unwrap()).unwrap();
+            assert_eq!(
+                body,
+                json!({
+                    "input": STANDARD.encode(Sha256::digest(b"TLS handshake transcript")),
+                    "prehashed": true,
+                    "hash_algorithm": "sha2-256",
+                    "marshaling_algorithm": "asn1",
+                    "key_version": version.to_string(),
+                })
+            );
+            assert!(body["key_version"].is_string());
+        }
+    }
+
+    #[test]
+    fn zero_version_is_rejected_before_certificate_token_or_network_access() {
+        let result = OpenBaoTlsSigner::new(
+            "https://bao.invalid",
+            &[],
+            "tls-key",
+            0,
+            PathBuf::from("unread-token"),
+            Duration::from_secs(1),
+            1,
+        );
+        assert!(
+            matches!(result, Err(PlatformError::InvalidConfiguration(ref message))
+            if message == "OpenBao TLS signer configuration is invalid")
+        );
+    }
 
     #[test]
     fn public_certificate_loader_fails_closed_and_identity_debug_is_redacted() {
