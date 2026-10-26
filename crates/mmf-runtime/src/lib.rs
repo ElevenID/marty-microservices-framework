@@ -3,6 +3,8 @@
 #![forbid(unsafe_code)]
 
 pub mod managed_task;
+mod native_backend;
+pub use native_backend::{NativeBackendDiagnostics, native_backend_router};
 mod services;
 
 pub use services::*;
