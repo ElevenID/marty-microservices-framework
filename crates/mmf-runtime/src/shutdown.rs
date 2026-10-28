@@ -23,7 +23,9 @@ pub async fn shutdown_signal_best_effort() {
     signal(true, "failed to install SIGTERM handler").await;
 }
 
-async fn signal(best_effort: bool, _termination_context: &'static str) {
+async fn signal(best_effort: bool, termination_context: &'static str) {
+    #[cfg(not(unix))]
+    let _ = termination_context;
     let ctrl_c = async {
         let result = tokio::signal::ctrl_c().await;
         if !best_effort {
@@ -38,7 +40,7 @@ async fn signal(best_effort: bool, _termination_context: &'static str) {
                 signal.recv().await;
             }
         } else {
-            result.expect(_termination_context).recv().await;
+            result.expect(termination_context).recv().await;
         }
     };
     #[cfg(not(unix))]
