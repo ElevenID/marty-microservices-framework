@@ -10,15 +10,20 @@ pub async fn wait_for_shutdown(shutdown: &mut watch::Receiver<bool>) {
 
 /// Match services that fail startup if installing a signal handler fails.
 pub async fn shutdown_signal() {
-    signal(false).await;
+    shutdown_signal_with_termination_context("failed to install SIGTERM handler").await;
+}
+
+/// Strict signal handling while preserving a caller's termination-registration diagnostic.
+pub async fn shutdown_signal_with_termination_context(termination_context: &'static str) {
+    signal(false, termination_context).await;
 }
 
 /// Match services whose existing policy returns on signal installation errors.
 pub async fn shutdown_signal_best_effort() {
-    signal(true).await;
+    signal(true, "failed to install SIGTERM handler").await;
 }
 
-async fn signal(best_effort: bool) {
+async fn signal(best_effort: bool, _termination_context: &'static str) {
     let ctrl_c = async {
         let result = tokio::signal::ctrl_c().await;
         if !best_effort {
@@ -33,10 +38,7 @@ async fn signal(best_effort: bool) {
                 signal.recv().await;
             }
         } else {
-            result
-                .expect("failed to install SIGTERM handler")
-                .recv()
-                .await;
+            result.expect(_termination_context).recv().await;
         }
     };
     #[cfg(not(unix))]
