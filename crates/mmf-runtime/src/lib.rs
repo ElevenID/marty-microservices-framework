@@ -3,6 +3,9 @@
 #![forbid(unsafe_code)]
 
 pub mod managed_task;
+mod shutdown;
+
+pub use shutdown::{shutdown_signal, shutdown_signal_best_effort, wait_for_shutdown};
 mod native_backend;
 pub use native_backend::{NativeBackendDiagnostics, native_backend_router};
 mod services;
