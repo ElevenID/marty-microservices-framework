@@ -4,10 +4,7 @@
 use std::{
     fmt, fs,
     path::{Path, PathBuf},
-    sync::{
-        Arc,
-        atomic::{AtomicUsize, Ordering},
-    },
+    sync::{Arc, atomic::AtomicUsize},
     time::Duration,
 };
 
@@ -21,6 +18,7 @@ use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use url::Url;
 
+use crate::grpc_keyless::RemoteSignPermit;
 use crate::{
     KeylessGrpcChannelFactory, KeylessGrpcTlsAcceptor, KeylessGrpcTransportOptions,
     KeylessTlsIdentity, PlatformError,
@@ -30,7 +28,7 @@ const SIGNATURE_SCHEME: SignatureScheme = SignatureScheme::ECDSA_NISTP256_SHA256
 
 /// Public certificate files and a scoped remote reference for a TLS identity.
 /// This type has no private-key path or local signing fallback.
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct OpenBaoTlsIdentityFiles {
     pub certificate_chain_file: PathBuf,
     pub kms_ca_cert_file: PathBuf,
@@ -312,7 +310,7 @@ impl OpenBaoTlsSigner {
     }
 
     fn sign_remote(&self, message: &[u8]) -> Result<Vec<u8>, rustls::Error> {
-        let _permit = SignPermit::acquire(&self.active_signs, self.max_concurrent_signs)?;
+        let _permit = RemoteSignPermit::acquire(&self.active_signs, self.max_concurrent_signs)?;
         let token = self.token().map_err(|_| unavailable())?;
         let remaining = crate::grpc_keyless::remaining_handshake_time();
         if remaining.is_some_and(|duration| duration.is_zero()) {
@@ -439,25 +437,6 @@ impl Clone for OpenBaoTlsSigner {
     }
 }
 
-struct SignPermit(Arc<AtomicUsize>);
-
-impl SignPermit {
-    fn acquire(counter: &Arc<AtomicUsize>, limit: usize) -> Result<Self, rustls::Error> {
-        counter
-            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |count| {
-                (count < limit).then_some(count + 1)
-            })
-            .map_err(|_| rustls::Error::General("OpenBao TLS signing limit".into()))?;
-        Ok(Self(counter.clone()))
-    }
-}
-
-impl Drop for SignPermit {
-    fn drop(&mut self) {
-        self.0.fetch_sub(1, Ordering::AcqRel);
-    }
-}
-
 fn invalid(message: &str) -> PlatformError {
     PlatformError::InvalidConfiguration(message.into())
 }
@@ -579,9 +558,9 @@ mod tests {
     #[test]
     fn concurrent_signs_are_bounded_and_permit_releases_on_drop() {
         let counter = Arc::new(AtomicUsize::new(0));
-        let first = SignPermit::acquire(&counter, 1).unwrap();
-        assert!(SignPermit::acquire(&counter, 1).is_err());
+        let first = RemoteSignPermit::acquire(&counter, 1).unwrap();
+        assert!(RemoteSignPermit::acquire(&counter, 1).is_err());
         drop(first);
-        assert!(SignPermit::acquire(&counter, 1).is_ok());
+        assert!(RemoteSignPermit::acquire(&counter, 1).is_ok());
     }
 }

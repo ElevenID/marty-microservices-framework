@@ -21,7 +21,7 @@ fn every_intended_capability_has_one_rust_owner() {
         serde_json::from_str(include_str!("../../../contracts/mmf-capabilities.json"))
             .expect("valid capability inventory");
     assert_eq!(inventory.schema_version, 1);
-    assert_eq!(inventory.capabilities.len(), 18);
+    assert_eq!(inventory.capabilities.len(), 19);
 
     let mut ids = BTreeSet::new();
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");

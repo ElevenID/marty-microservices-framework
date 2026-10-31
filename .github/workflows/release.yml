@@ -22,7 +22,7 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
   MMF_PUBLICATION_LAYERS: >-
-    mmf-core mmf-testkit mmf-ml mmf-workflow;
+    mmf-core mmf-testkit mmf-ml mmf-workflow mmf-aws-kms;
     mmf-config mmf-data mmf-observability mmf-resilience mmf-runtime mmf-security-contracts;
     mmf-security mmf-messaging mmf-push;
     mmf-platform mmf-plugins mmf-patterns;
@@ -42,7 +42,7 @@ jobs:
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
-          toolchain: 1.93.0
+          toolchain: 1.95.0
           components: clippy,rustfmt
       - name: Bind tag, workflow, main ancestry, and workspace version
         shell: bash
@@ -66,6 +66,12 @@ jobs:
         run: cargo clippy --locked --workspace --all-targets -- -D warnings
       - name: Test workspace and behavior contracts
         run: cargo test --locked --workspace
+      - name: Verify optional AWS KMS operations and keyless TLS
+        run: |
+          cargo clippy --locked -p mmf-aws-kms --features sdk --all-targets -- -D warnings
+          cargo clippy --locked -p mmf-platform --no-default-features --features aws-kms --all-targets -- -D warnings
+          cargo test --locked -p mmf-aws-kms --features sdk
+          cargo test --locked -p mmf-platform --no-default-features --features aws-kms
 
   build:
     name: Build source release
@@ -78,7 +84,7 @@ jobs:
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
-          toolchain: 1.93.0
+          toolchain: 1.95.0
       - name: Validate every crate package and archive workspace source
         shell: bash
         env:
@@ -126,7 +132,7 @@ jobs:
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
-          toolchain: 1.93.0
+          toolchain: 1.95.0
       - name: Publish in dependency order and support safe retries
         shell: bash
         env:

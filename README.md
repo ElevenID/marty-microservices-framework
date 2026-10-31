@@ -17,6 +17,9 @@ in consumer services.
 - `mmf-plugins`, `mmf-services`, `mmf-push`, `mmf-ml`, `mmf-patterns`,
   `mmf-testkit`, and `mmf-cli` provide higher-level capabilities and tooling.
 - `mmf` is the facade crate; it does not contain a second implementation.
+- `mmf-aws-kms` owns explicit AWS credentials, exact key references and bounded
+  signing, MAC and symmetric operations. Its `sdk` feature and the
+  `mmf-platform/aws-kms` TLS adapter are optional. Rust 1.95 is required.
 
 Language-neutral fixtures in [`contracts`](contracts) define the retained
 behavior. Rust implementations execute those contracts in CI.

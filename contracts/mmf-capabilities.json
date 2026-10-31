@@ -3,6 +3,7 @@
   "capabilities": [
     {"id": "core-lifecycle", "owner": "mmf-core", "status": "native-active"},
     {"id": "configuration-secrets", "owner": "mmf-config", "status": "native-active"},
+    {"id": "aws-kms-operations", "owner": "mmf-aws-kms", "status": "native-active"},
     {"id": "service-runtime", "owner": "mmf-runtime", "status": "native-active"},
     {"id": "data-cache-migrations", "owner": "mmf-data", "status": "native-active"},
     {"id": "messaging-events-outbox", "owner": "mmf-messaging", "status": "native-active"},

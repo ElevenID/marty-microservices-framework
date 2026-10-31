@@ -1,0 +1,31 @@
+[package]
+name = "mmf-aws-kms"
+description = "Bounded AWS KMS operations over explicit workload or supplied credentials"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[features]
+default = []
+sdk = ["dep:aws-config", "dep:aws-credential-types", "dep:aws-sdk-kms", "dep:aws-smithy-http-client", "dep:tokio"]
+
+[dependencies]
+aws-config = { workspace = true, optional = true }
+aws-credential-types = { workspace = true, optional = true }
+aws-sdk-kms = { workspace = true, optional = true }
+aws-smithy-http-client = { workspace = true, optional = true }
+base64.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, optional = true }
+url.workspace = true
+
+[dev-dependencies]
+axum.workspace = true
+tokio.workspace = true
+
+[lints]
+workspace = true
