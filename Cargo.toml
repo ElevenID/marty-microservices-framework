@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/mmf",
+    "crates/mmf-aws-kms",
     "crates/mmf-config",
     "crates/mmf-core",
     "crates/mmf-cli",
@@ -26,12 +27,16 @@ resolver = "2"
 edition = "2024"
 license = "AGPL-3.0-only"
 repository = "https://github.com/ElevenID/marty-microservices-framework"
-rust-version = "1.93"
+rust-version = "1.95"
 version = "0.1.1"
 
 [workspace.dependencies]
 axum = "0.8"
 async-trait = "0.1"
+aws-config = { version = "=1.10.1", default-features = false, features = ["default-https-client", "rt-tokio"] }
+aws-credential-types = "=1.3.0"
+aws-sdk-kms = { version = "=1.114.0", default-features = false, features = ["default-https-client", "rt-tokio"] }
+aws-smithy-http-client = "=1.3.0"
 base64 = "0.23"
 cedar-policy = "4.8.1"
 chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
@@ -39,6 +44,7 @@ http-body-util = "0.1"
 http = "1"
 hyper-util = { version = "0.1", features = ["tokio"] }
 mmf-config = { version = "0.1.1", path = "crates/mmf-config" }
+mmf-aws-kms = { version = "0.1.1", path = "crates/mmf-aws-kms", default-features = false }
 mmf-cli = { version = "0.1.1", path = "crates/mmf-cli" }
 mmf-core = { version = "0.1.1", path = "crates/mmf-core" }
 mmf-data = { version = "0.1.1", path = "crates/mmf-data" }

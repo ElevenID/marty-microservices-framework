@@ -3,7 +3,16 @@
 //! The `SigningKey` implementation is supplied by the service's KMS adapter;
 //! this module never accepts a private-key PEM or serializes key material.
 
-use std::{fmt, future::Future, io, sync::Arc, time::Duration};
+use std::{
+    fmt,
+    future::Future,
+    io,
+    sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+    },
+    time::Duration,
+};
 
 use http::Uri;
 use hyper_util::rt::TokioIo;
@@ -29,6 +38,27 @@ pub(crate) fn remaining_handshake_time() -> Option<Duration> {
     HANDSHAKE_DEADLINE
         .try_with(|deadline| deadline.saturating_duration_since(std::time::Instant::now()))
         .ok()
+}
+
+/// Shared fail-fast bound for synchronous remote signers. The permit survives
+/// clones and is released on success, failure and unwinding.
+pub(crate) struct RemoteSignPermit(Arc<AtomicUsize>);
+
+impl RemoteSignPermit {
+    pub(crate) fn acquire(counter: &Arc<AtomicUsize>, limit: usize) -> Result<Self, rustls::Error> {
+        counter
+            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |count| {
+                (count < limit).then_some(count + 1)
+            })
+            .map_err(|_| rustls::Error::General("Remote TLS signing limit".into()))?;
+        Ok(Self(counter.clone()))
+    }
+}
+
+impl Drop for RemoteSignPermit {
+    fn drop(&mut self) {
+        self.0.fetch_sub(1, Ordering::AcqRel);
+    }
 }
 
 fn invalid(message: &str) -> PlatformError {

@@ -10,11 +10,13 @@ version.workspace = true
 [features]
 default = ["redis"]
 redis = ["dep:redis"]
+aws-kms = ["dep:mmf-aws-kms", "mmf-aws-kms/sdk"]
 
 [dependencies]
 async-trait.workspace = true
 base64.workspace = true
 mmf-core.workspace = true
+mmf-aws-kms = { workspace = true, optional = true }
 mmf-observability.workspace = true
 mmf-resilience.workspace = true
 mmf-security-contracts.workspace = true
@@ -36,6 +38,9 @@ tonic.workspace = true
 tower.workspace = true
 url.workspace = true
 uuid.workspace = true
+
+[dev-dependencies]
+axum.workspace = true
 
 [lints]
 workspace = true

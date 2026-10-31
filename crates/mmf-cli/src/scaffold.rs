@@ -582,7 +582,7 @@ fn behavior_test(names: &ProjectNames) -> String {
 
 fn dockerfile(names: &ProjectNames) -> String {
     format!(
-        "FROM rust:1.93 AS build\nWORKDIR /app\nCOPY . .\nRUN cargo build --release --locked\nFROM gcr.io/distroless/cc-debian12:nonroot\nCOPY --from=build /app/target/release/{0} /usr/local/bin/service\nUSER nonroot\nENTRYPOINT [\"/usr/local/bin/service\"]\n",
+        "FROM rust:1.95 AS build\nWORKDIR /app\nCOPY . .\nRUN cargo build --release --locked\nFROM gcr.io/distroless/cc-debian12:nonroot\nCOPY --from=build /app/target/release/{0} /usr/local/bin/service\nUSER nonroot\nENTRYPOINT [\"/usr/local/bin/service\"]\n",
         names.kebab
     )
 }
