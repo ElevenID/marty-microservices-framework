@@ -91,6 +91,22 @@ impl RuntimeState {
         }
     }
 
+    /// Register the caller's explicit required components and enter Starting.
+    /// Component selection, health checks and activation remain caller policy.
+    pub fn starting<I, N>(build: BuildInfo, required_components: I) -> Result<Self, MmfError>
+    where
+        I: IntoIterator<Item = N>,
+        N: Into<String>,
+    {
+        let state = Self::new(build);
+        for component in required_components {
+            state.register_required_component(component)?;
+        }
+        state.transition(LifecycleState::Initialized)?;
+        state.transition(LifecycleState::Starting)?;
+        Ok(state)
+    }
+
     pub fn transition(&self, next: LifecycleState) -> Result<(), MmfError> {
         let mut inner = self
             .inner
@@ -150,6 +166,18 @@ impl RuntimeState {
             .components
             .insert(name.into(), health);
         Ok(())
+    }
+
+    /// Record the successful health check without changing registration or
+    /// lifecycle policy. This preserves `set_component_health` name handling.
+    pub fn mark_component_healthy(&self, name: impl Into<String>) -> Result<(), MmfError> {
+        self.set_component_health(
+            name,
+            ComponentHealth {
+                status: HealthStatus::Healthy,
+                message: None,
+            },
+        )
     }
 
     pub fn health(&self) -> Result<HealthReport, MmfError> {
@@ -545,5 +573,53 @@ mod tests {
         let state = runtime();
         assert!(state.register_required_component(" ").is_err());
         assert!(state.register_optional_component("x".repeat(129)).is_err());
+    }
+
+    #[test]
+    fn starting_runtime_preserves_required_readiness_and_lifecycle() {
+        let build = runtime().build_info().unwrap();
+        let state =
+            RuntimeState::starting(build.clone(), [" database ", "provider", "database"]).unwrap();
+        assert_eq!(state.build_info().unwrap().service, build.service);
+        let report = state.readiness().unwrap();
+        assert_eq!(report.lifecycle, LifecycleState::Starting);
+        assert!(!report.ready);
+        assert!(!report.required_components_healthy);
+        state.register_optional_component("telemetry").unwrap();
+        state.mark_component_healthy("database").unwrap();
+        let error = state.transition(LifecycleState::Active).unwrap_err();
+        assert_eq!(error.code, mmf_core::ErrorCode::DependencyUnavailable);
+        assert_eq!(error.details["components"], "provider");
+        state.mark_component_healthy("provider").unwrap();
+        state.transition(LifecycleState::Active).unwrap();
+        // Optional components do not gate activation, but their unknown health
+        // still participates in the existing aggregate readiness report.
+        assert!(!state.readiness().unwrap().ready);
+        state.mark_component_healthy("telemetry").unwrap();
+        assert!(state.readiness().unwrap().ready);
+        state.transition(LifecycleState::Draining).unwrap();
+        assert!(!state.readiness().unwrap().ready);
+        state.transition(LifecycleState::Stopped).unwrap();
+        assert_eq!(
+            state.readiness().unwrap().lifecycle,
+            LifecycleState::Stopped
+        );
+    }
+
+    #[test]
+    fn starting_validates_component_names_without_implicitly_requiring_health_updates() {
+        let build = runtime().build_info().unwrap();
+        for invalid in [" ".to_owned(), "x".repeat(129)] {
+            let error = RuntimeState::starting(build.clone(), [invalid])
+                .err()
+                .unwrap();
+            assert_eq!(error.code, mmf_core::ErrorCode::InvalidInput);
+        }
+        let state = RuntimeState::starting(build, std::iter::empty::<String>()).unwrap();
+        state
+            .mark_component_healthy("unregistered-observer")
+            .unwrap();
+        state.transition(LifecycleState::Active).unwrap();
+        assert!(state.readiness().unwrap().ready);
     }
 }

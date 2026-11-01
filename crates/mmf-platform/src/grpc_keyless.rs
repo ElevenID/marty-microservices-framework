@@ -7,6 +7,7 @@ use std::{
     fmt,
     future::Future,
     io,
+    path::Path,
     sync::{
         Arc,
         atomic::{AtomicUsize, Ordering},
@@ -212,6 +213,48 @@ impl KeylessGrpcTransportOptions {
             ));
         }
         Ok(())
+    }
+}
+
+/// Validate public inputs before polling the provider's identity future. The
+/// provider keeps ownership of remote credential discovery and request bounds.
+pub(crate) async fn prepare_grpc_channel_factory(
+    target: &str,
+    server_ca_file: &Path,
+    options: KeylessGrpcTransportOptions,
+    identity: impl Future<Output = Result<KeylessTlsIdentity, PlatformError>>,
+) -> Result<KeylessGrpcChannelFactory, PlatformError> {
+    let server_ca = crate::read_public_certificates(server_ca_file)?;
+    let server_name = Url::parse(target)
+        .ok()
+        .filter(|url| url.scheme() == "https")
+        .and_then(|url| url.host_str().map(str::to_owned))
+        .ok_or_else(|| invalid("gRPC TLS target must have an HTTPS hostname"))?;
+    let identity = identity.await?;
+    KeylessGrpcChannelFactory::with_options(target, &server_name, &identity, server_ca, options)
+}
+
+/// `Some` retains certificate-authenticated peers; `None` retains application
+/// authentication. Public provider methods keep that choice explicit.
+pub(crate) async fn prepare_grpc_acceptor(
+    client_ca_file: Option<&Path>,
+    max_handshakes: usize,
+    handshake_timeout: Duration,
+    identity: impl Future<Output = Result<KeylessTlsIdentity, PlatformError>>,
+) -> Result<KeylessGrpcTlsAcceptor, PlatformError> {
+    let client_ca = client_ca_file
+        .map(crate::read_public_certificates)
+        .transpose()?;
+    let identity = identity.await?;
+    match client_ca {
+        Some(client_ca) => {
+            KeylessGrpcTlsAcceptor::new(&identity, client_ca, max_handshakes, handshake_timeout)
+        }
+        None => KeylessGrpcTlsAcceptor::without_client_auth(
+            &identity,
+            max_handshakes,
+            handshake_timeout,
+        ),
     }
 }
 
@@ -421,9 +464,185 @@ impl KeylessGrpcTlsAcceptor {
 
 #[cfg(test)]
 mod tests {
-    use std::time::Duration;
+    use std::{
+        path::PathBuf,
+        sync::{
+            Arc,
+            atomic::{AtomicBool, Ordering},
+        },
+        time::Duration,
+    };
 
-    use super::{HANDSHAKE_DEADLINE, KeylessGrpcTransportOptions, remaining_handshake_time};
+    use base64::{Engine as _, engine::general_purpose::STANDARD};
+    use rustls::{
+        SignatureAlgorithm, SignatureScheme,
+        pki_types::SubjectPublicKeyInfoDer,
+        sign::{Signer, SigningKey},
+    };
+
+    use crate::PlatformError;
+
+    use super::{
+        HANDSHAKE_DEADLINE, KeylessGrpcTransportOptions, KeylessTlsIdentity, prepare_grpc_acceptor,
+        prepare_grpc_channel_factory, remaining_handshake_time,
+    };
+
+    // Public-only fixture from marty-ui c8e62e1, public_certificates/root-ca.pem.
+    // Admission/assembly tests do not claim a usable server-auth certificate.
+    const PUBLIC_CERTIFICATE: &str = include_str!("../tests/fixtures/keyless-public-ca.pem.txt");
+
+    struct PublicCertificateFile(PathBuf);
+
+    impl PublicCertificateFile {
+        fn new() -> Self {
+            let path = std::env::temp_dir()
+                .join(format!("mmf-keyless-assembly-{}.pem", uuid::Uuid::new_v4()));
+            std::fs::write(&path, PUBLIC_CERTIFICATE).unwrap();
+            Self(path)
+        }
+    }
+
+    impl Drop for PublicCertificateFile {
+        fn drop(&mut self) {
+            std::fs::remove_file(&self.0).unwrap();
+        }
+    }
+
+    #[derive(Debug)]
+    struct PublicOnlyKey;
+
+    impl SigningKey for PublicOnlyKey {
+        fn choose_scheme(&self, _: &[SignatureScheme]) -> Option<Box<dyn Signer>> {
+            None
+        }
+
+        fn public_key(&self) -> Option<SubjectPublicKeyInfoDer<'_>> {
+            Some(SubjectPublicKeyInfoDer::from(STANDARD.decode("MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE808enVR9XO/NlkhM83gTqewR40pSHC0UMOFYYVilSNLZBem1zfrjoS+NNSgn4f5cVFic+i5SLwYs/u4d2crkjg==").unwrap()))
+        }
+
+        fn algorithm(&self) -> SignatureAlgorithm {
+            SignatureAlgorithm::ECDSA
+        }
+    }
+
+    fn public_identity() -> KeylessTlsIdentity {
+        let chain = rustls_pemfile::certs(&mut PUBLIC_CERTIFICATE.as_bytes())
+            .map(|certificate| certificate.unwrap().as_ref().to_vec())
+            .collect();
+        KeylessTlsIdentity::new(chain, Arc::new(PublicOnlyKey)).unwrap()
+    }
+
+    #[tokio::test]
+    async fn invalid_public_inputs_do_not_poll_the_remote_identity() {
+        let certificate = PublicCertificateFile::new();
+        let missing = certificate.0.with_extension("missing");
+        let polled = AtomicBool::new(false);
+        for (target, ca_file, expected) in [
+            (
+                "http://plain.invalid",
+                &missing,
+                "TLS certificate file could not be read",
+            ),
+            (
+                "http://plain.invalid",
+                &certificate.0,
+                "gRPC TLS target must have an HTTPS hostname",
+            ),
+            (
+                "not an origin",
+                &certificate.0,
+                "gRPC TLS target must have an HTTPS hostname",
+            ),
+        ] {
+            let result = prepare_grpc_channel_factory(
+                target,
+                ca_file,
+                KeylessGrpcTransportOptions::default(),
+                async {
+                    polled.store(true, Ordering::SeqCst);
+                    Err(PlatformError::ProviderUnavailable(
+                        "must not be polled".into(),
+                    ))
+                },
+            )
+            .await;
+            assert!(
+                matches!(result, Err(PlatformError::InvalidConfiguration(ref message)) if message == expected)
+            );
+            assert!(!polled.load(Ordering::SeqCst));
+        }
+        let result = prepare_grpc_acceptor(Some(&missing), 2, Duration::from_secs(1), async {
+            polled.store(true, Ordering::SeqCst);
+            Err(PlatformError::ProviderUnavailable(
+                "must not be polled".into(),
+            ))
+        })
+        .await;
+        assert!(
+            matches!(result, Err(PlatformError::InvalidConfiguration(ref message)) if message == "TLS certificate file could not be read")
+        );
+        assert!(!polled.load(Ordering::SeqCst));
+    }
+
+    #[tokio::test]
+    async fn provider_failure_is_preserved_for_client_and_both_acceptor_modes() {
+        let certificate = PublicCertificateFile::new();
+        let expected = PlatformError::ProviderUnavailable("remote identity unavailable".into());
+        let result = prepare_grpc_channel_factory(
+            "https://localhost:1",
+            &certificate.0,
+            KeylessGrpcTransportOptions::default(),
+            async { Err(expected.clone()) },
+        )
+        .await;
+        assert!(matches!(result, Err(error) if error == expected));
+        for ca_file in [None, Some(certificate.0.as_path())] {
+            let result = prepare_grpc_acceptor(ca_file, 2, Duration::from_secs(1), async {
+                Err(expected.clone())
+            })
+            .await;
+            assert!(matches!(result, Err(error) if error == expected));
+        }
+    }
+
+    #[tokio::test]
+    async fn common_assembly_keeps_lazy_clients_and_explicit_acceptor_modes() {
+        let certificate = PublicCertificateFile::new();
+        let identity = public_identity();
+        let options = KeylessGrpcTransportOptions {
+            connect_timeout: Duration::from_millis(20),
+            ..Default::default()
+        };
+        let factory =
+            prepare_grpc_channel_factory("https://127.0.0.1:1", &certificate.0, options, async {
+                Ok(identity.clone())
+            })
+            .await
+            .unwrap();
+        let _lazy = factory.connect_lazy();
+        assert!(
+            tokio::time::timeout(Duration::from_secs(1), factory.connect())
+                .await
+                .unwrap()
+                .is_err()
+        );
+        for ca_file in [None, Some(certificate.0.as_path())] {
+            let acceptor = prepare_grpc_acceptor(ca_file, 2, Duration::from_millis(50), async {
+                Ok(identity.clone())
+            })
+            .await
+            .unwrap();
+            assert_eq!(acceptor.permits.available_permits(), 2);
+            assert_eq!(acceptor.handshake_timeout, Duration::from_millis(50));
+            assert!(
+                prepare_grpc_acceptor(ca_file, 0, Duration::from_millis(50), async {
+                    Ok(identity.clone())
+                })
+                .await
+                .is_err()
+            );
+        }
+    }
 
     #[tokio::test(flavor = "multi_thread")]
     async fn synchronous_signer_sees_remaining_handshake_deadline() {

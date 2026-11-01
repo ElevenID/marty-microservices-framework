@@ -16,7 +16,7 @@ const ARN: &str = "arn:aws:kms:us-east-2:111122223333:key/tls-existing";
 const PUBLIC: &str = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE808enVR9XO/NlkhM83gTqewR40pSHC0UMOFYYVilSNLZBem1zfrjoS+NNSgn4f5cVFic+i5SLwYs/u4d2crkjg==";
 // Public-only fixture from marty-ui c8e62e1, public_certificates/root-ca.pem.
 // Used only for certificate/SPKI binding, not as a server-auth certificate.
-const CERTIFICATE: &str = "-----BEGIN CERTIFICATE-----\nMIIB4zCCAYmgAwIBAgIUYpQvlnGTkA7M3om4B/KDGoZA+YgwCgYIKoZIzj0EAwIw\nPzELMAkGA1UEBhMCVVMxEzARBgNVBAoTCkRpc3Bvc2FibGUxGzAZBgNVBAMTEkRp\nc3Bvc2FibGUgUm9vdCBDQTAeFw0yNjEwMDcwOTExMDlaFw0zNjEwMDQwOTExMzla\nMD8xCzAJBgNVBAYTAlVTMRMwEQYDVQQKEwpEaXNwb3NhYmxlMRswGQYDVQQDExJE\naXNwb3NhYmxlIFJvb3QgQ0EwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAATzTx6d\nVH1c782WSEzzeBOp7BHjSlIcLRQw4VhhWKVI0tkF6bXN+uOhL401KCfh/lxUWJz6\nLlIvBiz+7h3ZyuSOo2MwYTAOBgNVHQ8BAf8EBAMCAQYwDwYDVR0TAQH/BAUwAwEB\n/zAdBgNVHQ4EFgQUWvEQKsiY7F+P3GPOZkaNMrN1mpkwHwYDVR0jBBgwFoAUWvEQ\nKsiY7F+P3GPOZkaNMrN1mpkwCgYIKoZIzj0EAwIDSAAwRQIhAJUsT7rFkj6Gs9vv\n/HU5NHBeq1axCQ6/ty+heazA2mGBAiAKy2pr6ymFNwHz4bwCT0eggVAyv652xXaq\nm8WRiJ8gAA==\n-----END CERTIFICATE-----\n";
+const CERTIFICATE: &str = include_str!("../../tests/fixtures/keyless-public-ca.pem.txt");
 
 #[derive(Clone)]
 struct Stub {
