@@ -118,9 +118,13 @@ impl OpenBaoTlsIdentityFiles {
         max_handshakes: usize,
         handshake_timeout: Duration,
     ) -> Result<KeylessGrpcTlsAcceptor, PlatformError> {
-        let client_ca = read_public_certificates(client_ca_file)?;
-        let identity = self.connect_for_handshake(handshake_timeout).await?;
-        KeylessGrpcTlsAcceptor::new(&identity, client_ca, max_handshakes, handshake_timeout)
+        crate::grpc_keyless::prepare_grpc_acceptor(
+            Some(client_ca_file),
+            max_handshakes,
+            handshake_timeout,
+            Box::pin(self.connect_for_handshake(handshake_timeout)),
+        )
+        .await
     }
 
     /// Prepare a keyless gRPC listener using application-layer client auth.
@@ -129,8 +133,13 @@ impl OpenBaoTlsIdentityFiles {
         max_handshakes: usize,
         handshake_timeout: Duration,
     ) -> Result<KeylessGrpcTlsAcceptor, PlatformError> {
-        let identity = self.connect_for_handshake(handshake_timeout).await?;
-        KeylessGrpcTlsAcceptor::without_client_auth(&identity, max_handshakes, handshake_timeout)
+        crate::grpc_keyless::prepare_grpc_acceptor(
+            None,
+            max_handshakes,
+            handshake_timeout,
+            Box::pin(self.connect_for_handshake(handshake_timeout)),
+        )
+        .await
     }
 
     async fn grpc_factory(
@@ -139,14 +148,13 @@ impl OpenBaoTlsIdentityFiles {
         server_ca_file: &Path,
         options: KeylessGrpcTransportOptions,
     ) -> Result<KeylessGrpcChannelFactory, PlatformError> {
-        let server_ca = read_public_certificates(server_ca_file)?;
-        let server_name = Url::parse(target)
-            .ok()
-            .filter(|url| url.scheme() == "https")
-            .and_then(|url| url.host_str().map(str::to_owned))
-            .ok_or_else(|| invalid("gRPC TLS target must have an HTTPS hostname"))?;
-        let identity = self.connect_for_handshake(options.connect_timeout).await?;
-        KeylessGrpcChannelFactory::with_options(target, &server_name, &identity, server_ca, options)
+        crate::grpc_keyless::prepare_grpc_channel_factory(
+            target,
+            server_ca_file,
+            options,
+            Box::pin(self.connect_for_handshake(options.connect_timeout)),
+        )
+        .await
     }
 }
 
