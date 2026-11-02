@@ -10,6 +10,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use hmac::{Hmac, KeyInit, Mac};
+use mmf_core::constant_time_secret_eq;
 use rand::RngExt as _;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -765,7 +766,7 @@ impl NativeMfaService {
             }
             MfaDeviceType::SmsPhone | MfaDeviceType::Email => {
                 let expected = string_field(&device.device_data, "enrollment_code_hash")?;
-                constant_time_eq(
+                constant_time_secret_eq(
                     expected.as_bytes(),
                     hex(&hash_code(verification_code)).as_bytes(),
                 )
@@ -1011,7 +1012,7 @@ impl NativeMfaService {
                 MfaMethod::Sms | MfaMethod::Email => state
                     .challenge_code_hashes
                     .get(&challenge.challenge_id)
-                    .is_some_and(|expected| constant_time_eq(expected, &hash_code(code))),
+                    .is_some_and(|expected| constant_time_secret_eq(expected, &hash_code(code))),
                 _ => false,
             }
         };
@@ -1434,7 +1435,7 @@ pub fn verify_totp_at(
     for offset in -(i64::from(config.window))..=i64::from(config.window) {
         let candidate_counter = counter.saturating_add_signed(offset);
         let expected = generate_totp(config, secret, candidate_counter)?;
-        if constant_time_eq(expected.as_bytes(), code.as_bytes()) {
+        if constant_time_secret_eq(expected.as_bytes(), code.as_bytes()) {
             return Ok(true);
         }
     }
@@ -1511,18 +1512,6 @@ pub fn validate_email_address(value: &str) -> bool {
 
 fn hash_code(code: &str) -> Vec<u8> {
     Sha256::digest(code.as_bytes()).to_vec()
-}
-
-fn constant_time_eq(left: &[u8], right: &[u8]) -> bool {
-    if left.len() != right.len() {
-        return false;
-    }
-    left.iter()
-        .zip(right)
-        .fold(0_u8, |difference, (left, right)| {
-            difference | (left ^ right)
-        })
-        == 0
 }
 
 fn hex(bytes: &[u8]) -> String {
