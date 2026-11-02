@@ -4,6 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use async_trait::async_trait;
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
+use mmf_core::constant_time_secret_eq;
 use rand::RngExt as _;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -433,7 +434,7 @@ impl OAuth2Client {
         }
         self.secret_digest
             .as_deref()
-            .is_some_and(|expected| constant_time_eq(expected, &hash_secret(secret)))
+            .is_some_and(|expected| constant_time_secret_eq(expected, &hash_secret(secret)))
     }
 
     #[must_use]
@@ -2092,15 +2093,19 @@ pub fn verify_pkce(
     method: Option<PkceMethod>,
     verifier: Option<&str>,
 ) -> bool {
+    // The shared comparator scans the longer input. Keep impossible challenge
+    // lengths on the existing early-rejection path before comparing secrets.
     match (challenge, method, verifier) {
         (None, None, _) => true,
         (Some(challenge), Some(PkceMethod::Plain), Some(verifier)) => {
             valid_pkce_value(verifier)
-                && constant_time_eq(challenge.as_bytes(), verifier.as_bytes())
+                && challenge.len() == verifier.len()
+                && constant_time_secret_eq(challenge.as_bytes(), verifier.as_bytes())
         }
         (Some(challenge), Some(PkceMethod::S256), Some(verifier)) => {
             valid_pkce_value(verifier)
-                && constant_time_eq(
+                && challenge.len() == 43
+                && constant_time_secret_eq(
                     challenge.as_bytes(),
                     generate_code_challenge(verifier).as_bytes(),
                 )
@@ -2155,18 +2160,6 @@ fn hash_secret(secret: &str) -> Vec<u8> {
     Sha256::digest(secret.as_bytes()).to_vec()
 }
 
-fn constant_time_eq(left: &[u8], right: &[u8]) -> bool {
-    if left.len() != right.len() {
-        return false;
-    }
-    left.iter()
-        .zip(right)
-        .fold(0_u8, |difference, (left, right)| {
-            difference | (left ^ right)
-        })
-        == 0
-}
-
 fn random_token(bytes: usize) -> String {
     let mut value = vec![0_u8; bytes];
     rand::rng().fill(value.as_mut_slice());
@@ -2187,6 +2180,58 @@ fn percent_encode(value: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn pkce_comparison_rejects_malformed_challenge_lengths() {
+        let verifier = "v".repeat(43);
+        let digest = super::generate_code_challenge(&verifier);
+        assert!(super::verify_pkce(
+            Some(&verifier),
+            Some(super::PkceMethod::Plain),
+            Some(&verifier)
+        ));
+        assert!(super::verify_pkce(
+            Some(&digest),
+            Some(super::PkceMethod::S256),
+            Some(&verifier)
+        ));
+        for challenge in [
+            String::new(),
+            "x".repeat(42),
+            "x".repeat(44),
+            "x".repeat(129),
+            "x".repeat(16_384),
+        ] {
+            assert!(!super::verify_pkce(
+                Some(&challenge),
+                Some(super::PkceMethod::Plain),
+                Some(&verifier)
+            ));
+            assert!(!super::verify_pkce(
+                Some(&challenge),
+                Some(super::PkceMethod::S256),
+                Some(&verifier)
+            ));
+        }
+        let wrong = "x".repeat(43);
+        assert!(!super::verify_pkce(
+            Some(&wrong),
+            Some(super::PkceMethod::Plain),
+            Some(&verifier)
+        ));
+        assert!(!super::verify_pkce(
+            Some(&wrong),
+            Some(super::PkceMethod::S256),
+            Some(&verifier)
+        ));
+        assert!(super::verify_pkce(None, None, Some(&verifier)));
+        assert!(!super::verify_pkce(Some(&digest), None, Some(&verifier)));
+        assert!(!super::verify_pkce(
+            Some(&digest),
+            Some(super::PkceMethod::S256),
+            None
+        ));
+    }
+
     use super::*;
 
     #[derive(Deserialize)]

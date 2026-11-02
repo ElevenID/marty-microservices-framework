@@ -18,6 +18,26 @@ mod tests {
     use super::constant_time_secret_eq;
 
     #[test]
+    fn secret_comparison_covers_binary_boundaries_and_mismatch_positions() {
+        let bytes: Vec<u8> = (0..=u8::MAX).collect();
+        assert!(constant_time_secret_eq(&bytes, &bytes));
+        for index in [0, bytes.len() / 2, bytes.len() - 1] {
+            let mut different = bytes.clone();
+            different[index] ^= 1;
+            assert!(!constant_time_secret_eq(&bytes, &different));
+            assert!(!constant_time_secret_eq(&different, &bytes));
+        }
+        for (left, right) in [
+            (&b""[..], &b"\0"[..]),
+            (&b"same"[..], &b"same\0"[..]),
+            (&b"\xff\0"[..], &b"\xff"[..]),
+        ] {
+            assert!(!constant_time_secret_eq(left, right));
+            assert!(!constant_time_secret_eq(right, left));
+        }
+    }
+
+    #[test]
     fn equal_and_unequal_secrets_match_existing_behavior() {
         assert!(constant_time_secret_eq(b"same", b"same"));
         assert!(!constant_time_secret_eq(b"same", b"different"));
