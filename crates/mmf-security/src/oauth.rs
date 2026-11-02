@@ -432,9 +432,12 @@ impl OAuth2Client {
         if self.client_type == OAuth2ClientType::Public {
             return true;
         }
-        self.secret_digest
-            .as_deref()
-            .is_some_and(|expected| constant_time_secret_eq(expected, &hash_secret(secret)))
+        self.secret_digest.as_deref().is_some_and(|expected| {
+            let candidate = hash_secret(secret);
+            // Restored clients can carry a malformed digest. Preserve the
+            // previous length rejection before the shared comparator scans it.
+            expected.len() == candidate.len() && constant_time_secret_eq(expected, &candidate)
+        })
     }
 
     #[must_use]
@@ -2327,6 +2330,32 @@ mod tests {
             request_id: "request-1".into(),
             created_at_ms: fixture.authorization.created_at_ms,
             metadata: BTreeMap::new(),
+        }
+    }
+
+    #[test]
+    fn restored_client_digests_preserve_secret_verification_boundaries() {
+        let fixture = fixture();
+        let original = client(&fixture.client);
+        let mut stored = serde_json::to_value(&original).unwrap();
+        assert!(stored.get("secret_digest").is_none());
+        let digest = hash_secret(&fixture.client.secret);
+        stored["secret_digest"] = serde_json::json!(digest);
+        let restored: OAuth2Client = serde_json::from_value(stored.clone()).unwrap();
+        assert!(restored.verify_client_secret(&fixture.client.secret));
+        assert!(!restored.verify_client_secret("incorrect"));
+        for index in [0, digest.len() / 2, digest.len() - 1] {
+            let mut changed = digest.clone();
+            changed[index] ^= 1;
+            stored["secret_digest"] = serde_json::json!(changed);
+            let restored: OAuth2Client = serde_json::from_value(stored.clone()).unwrap();
+            assert!(!restored.verify_client_secret(&fixture.client.secret));
+        }
+        for length in [0, 1, 31, 33, 65_536] {
+            stored["secret_digest"] = serde_json::json!(vec![0_u8; length]);
+            let restored: OAuth2Client = serde_json::from_value(stored.clone()).unwrap();
+            assert!(!restored.verify_client_secret(&fixture.client.secret));
+            assert!(!restored.verify_client_secret(""));
         }
     }
 
