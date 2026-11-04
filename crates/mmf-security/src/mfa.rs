@@ -20,6 +20,7 @@ use tokio::sync::RwLock;
 use uuid::Uuid;
 
 use crate::SecurityError;
+use crate::uri::percent_encode_component;
 
 type HmacSha1 = Hmac<Sha1>;
 type HmacSha256 = Hmac<Sha256>;
@@ -1132,8 +1133,8 @@ impl NativeMfaService {
 
     #[must_use]
     pub fn totp_setup_uri(&self, secret: &str, user_identifier: &str) -> String {
-        let issuer = percent_encode(&self.config.totp.issuer);
-        let user = percent_encode(user_identifier);
+        let issuer = percent_encode_component(&self.config.totp.issuer);
+        let user = percent_encode_component(user_identifier);
         format!(
             "otpauth://totp/{issuer}:{user}?secret={secret}&issuer={issuer}&algorithm={algorithm:?}&digits={digits}&period={period}",
             algorithm = self.config.totp.algorithm,
@@ -1573,18 +1574,6 @@ fn base32_decode(value: &str) -> Result<Vec<u8>, SecurityError> {
         ));
     }
     Ok(output)
-}
-
-fn percent_encode(value: &str) -> String {
-    value
-        .bytes()
-        .map(|byte| match byte {
-            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
-                char::from(byte).to_string()
-            }
-            _ => format!("%{byte:02X}"),
-        })
-        .collect()
 }
 
 #[cfg(test)]
@@ -2061,5 +2050,16 @@ mod tests {
         let uri = service.totp_setup_uri(&secret, &case.user_identifier);
         assert!(uri.contains(&case.encoded_user_identifier));
         assert!(uri.contains(&case.encoded_issuer));
+    }
+
+    #[test]
+    fn setup_uri_keeps_issuer_and_user_inside_their_components() {
+        let mut config = MfaConfig::default();
+        config.totp.issuer = "Café +/Issuer".into();
+        let service = NativeMfaService::new(config, None, BTreeMap::new()).unwrap();
+        assert_eq!(
+            service.totp_setup_uri("JBSWY3DPEHPK3PXP", "a:b@example.test?x=1&y=%\n"),
+            "otpauth://totp/Caf%C3%A9%20%2B%2FIssuer:a%3Ab%40example.test%3Fx%3D1%26y%3D%25%0A?secret=JBSWY3DPEHPK3PXP&issuer=Caf%C3%A9%20%2B%2FIssuer&algorithm=Sha1&digits=6&period=30"
+        );
     }
 }

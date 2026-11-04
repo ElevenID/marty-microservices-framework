@@ -1,3 +1,16 @@
+/// Encode one URI component, preserving unreserved ASCII and using UTF-8 escapes.
+pub(crate) fn percent_encode_component(value: &str) -> String {
+    value
+        .bytes()
+        .map(|byte| match byte {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                char::from(byte).to_string()
+            }
+            _ => format!("%{byte:02X}"),
+        })
+        .collect()
+}
+
 pub(crate) fn valid_https_url(value: &str) -> bool {
     !value.contains('#') && authority(value, "https://").is_some_and(valid_authority)
 }
@@ -77,6 +90,24 @@ fn valid_scheme(scheme: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn component_encoding_preserves_bytes_and_uri_delimiter_boundaries() {
+        for (input, expected) in [
+            ("", ""),
+            ("AZaz09-_.~", "AZaz09-_.~"),
+            (" +%", "%20%2B%25"),
+            (
+                ":/?#[]@!$&'()*+,;=",
+                "%3A%2F%3F%23%5B%5D%40%21%24%26%27%28%29%2A%2B%2C%3B%3D",
+            ),
+            ("\0\t\r\n\u{7f}", "%00%09%0D%0A%7F"),
+            ("café/雪", "caf%C3%A9%2F%E9%9B%AA"),
+            ("%2F", "%252F"),
+        ] {
+            assert_eq!(percent_encode_component(input), expected, "{input:?}");
+        }
+    }
 
     #[test]
     fn redirects_require_exact_secure_or_loopback_authorities() {
