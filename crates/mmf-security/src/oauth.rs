@@ -13,7 +13,7 @@ use tokio::sync::RwLock;
 use uuid::Uuid;
 
 use crate::SecurityError;
-use crate::uri::{valid_native_redirect_uri, valid_redirect_uri};
+use crate::uri::{percent_encode_component, valid_native_redirect_uri, valid_redirect_uri};
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -908,7 +908,11 @@ impl OAuth2AuthorizationResponse {
             ("error_uri", self.error_uri.as_deref()),
         ] {
             if let Some(value) = value {
-                params.push(format!("{}={}", percent_encode(key), percent_encode(value)));
+                params.push(format!(
+                    "{}={}",
+                    percent_encode_component(key),
+                    percent_encode_component(value)
+                ));
             }
         }
         if let Some(token_type) = self.token_type {
@@ -2169,20 +2173,50 @@ fn random_token(bytes: usize) -> String {
     URL_SAFE_NO_PAD.encode(value)
 }
 
-fn percent_encode(value: &str) -> String {
-    value
-        .bytes()
-        .map(|byte| match byte {
-            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
-                char::from(byte).to_string()
-            }
-            _ => format!("%{byte:02X}"),
-        })
-        .collect()
-}
-
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn redirects_encode_components_without_changing_query_or_rejection_policy() {
+        for (redirect, separator) in [
+            ("https://client.example/callback", "?"),
+            ("https://client.example/callback?existing=1", "&"),
+            ("com.example.app://callback", "?"),
+        ] {
+            let response = super::OAuth2AuthorizationResponse::success(
+                redirect,
+                "code +/%",
+                Some("café&next=#\n".into()),
+            );
+            assert_eq!(
+                response.redirect_url().unwrap(),
+                format!(
+                    "{redirect}{separator}code=code%20%2B%2F%25&state=caf%C3%A9%26next%3D%23%0A"
+                )
+            );
+        }
+        let response = super::OAuth2AuthorizationResponse::failure(
+            "https://client.example/callback",
+            "access_denied",
+            Some("no + access".into()),
+            Some("https://issuer.example/help?q=a&b=1".into()),
+            Some(String::new()),
+        );
+        assert_eq!(
+            response.redirect_url().unwrap(),
+            "https://client.example/callback?state=&error=access_denied&error_description=no%20%2B%20access&error_uri=https%3A%2F%2Fissuer.example%2Fhelp%3Fq%3Da%26b%3D1"
+        );
+        for redirect in [
+            "javascript://callback",
+            "https://client.example/callback#fragment",
+        ] {
+            assert!(
+                super::OAuth2AuthorizationResponse::success(redirect, "code", None)
+                    .redirect_url()
+                    .is_err()
+            );
+        }
+    }
+
     #[test]
     fn pkce_comparison_rejects_malformed_challenge_lengths() {
         let verifier = "v".repeat(43);
