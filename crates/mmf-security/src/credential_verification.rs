@@ -1,14 +1,20 @@
-//! Canonical Cedar authorization for verified credential evidence.
+//! Typed credential-evidence adapter for a caller-resolved Cedar policy set.
+//!
+//! MMF owns schema validation, bounded inputs, and Cedar evaluation. The caller
+//! owns policy selection and the rules for formats, compliance, trust, and age.
 
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 use crate::{
-    CedarAuthorizationDecision, CedarAuthorizationRequest, CedarConfig, CedarPolicyEngine,
-    SecurityError,
+    CedarAuthorizationDecision, CedarAuthorizationRequest, CedarPolicyEngine, SecurityError,
 };
 
-const SCHEMA: &str = r#"
+/// Schema for the credential facts projected by this adapter.
+///
+/// This vocabulary contains no default authorization rules. Resolve the active
+/// policy in the domain service, then validate it against this schema.
+pub const CREDENTIAL_VERIFICATION_SCHEMA: &str = r#"
 namespace MIP {
   type CredentialContext = {
     credential_format: String,
@@ -42,84 +48,7 @@ namespace MIP {
 }
 "#;
 
-const POLICIES: &str = r#"
-@id("permit-valid-credentials")
-permit (principal, action == MIP::Action::"credentials:verify", resource)
-when {
-  !context.is_revoked &&
-  !context.is_expired &&
-  context.issuer_trust_level >= 50
-};
-
-@id("deny-revoked-credentials")
-forbid (principal, action == MIP::Action::"credentials:verify", resource)
-when { context.is_revoked };
-
-@id("deny-expired-credentials")
-forbid (principal, action == MIP::Action::"credentials:verify", resource)
-when { context.is_expired };
-
-@id("deny-untrusted-issuers")
-forbid (principal, action == MIP::Action::"credentials:verify", resource)
-when { context.issuer_trust_level < 10 };
-
-@id("icao-dtc-format-requirement")
-forbid (principal, action == MIP::Action::"credentials:verify", resource)
-when {
-  context.compliance_code == "ICAO_DTC" &&
-  context.credential_format != "MDOC"
-};
-
-@id("icao-dtc-holder-binding")
-forbid (principal, action == MIP::Action::"credentials:verify", resource)
-when {
-  context.compliance_code == "ICAO_DTC" &&
-  !context.holder_binding_present
-};
-
-@id("aamva-mdl-format-requirement")
-forbid (principal, action == MIP::Action::"credentials:verify", resource)
-when {
-  context.compliance_code == "AAMVA_MDL" &&
-  context.credential_format != "MDOC"
-};
-
-@id("aamva-mdl-holder-binding")
-forbid (principal, action == MIP::Action::"credentials:verify", resource)
-when {
-  context.compliance_code == "AAMVA_MDL" &&
-  !context.holder_binding_present
-};
-
-@id("eudi-pid-format-requirement")
-forbid (principal, action == MIP::Action::"credentials:verify", resource)
-when {
-  context.compliance_code == "EUDI_PID" &&
-  context.credential_format != "SD_JWT_VC"
-};
-
-@id("eudi-pid-holder-binding")
-forbid (principal, action == MIP::Action::"credentials:verify", resource)
-when {
-  context.compliance_code == "EUDI_PID" &&
-  !context.holder_binding_present
-};
-
-@id("deny-weak-algorithms")
-forbid (principal, action == MIP::Action::"credentials:verify", resource)
-when { context.algorithm == "RS256" || context.algorithm == "RS384" };
-
-@id("high-assurance-freshness")
-forbid (principal, action == MIP::Action::"credentials:verify", resource)
-when {
-  (context.compliance_code == "ICAO_DTC" ||
-   context.compliance_code == "AAMVA_MDL" ||
-   context.compliance_code == "EUDI_PID") &&
-  context.credential_age_seconds > 86400
-};
-"#;
-
-/// Verified, verifier-owned facts accepted by the bundled credential policy.
+/// Verified, verifier-owned facts supplied to the resolved credential policy.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 #[allow(clippy::struct_excessive_bools)]
@@ -138,18 +67,19 @@ pub struct CredentialVerificationAuthorizationFacts {
     pub algorithm: String,
 }
 
-/// Immutable, feature-complete credential-verification Cedar preset.
+/// Immutable adapter over an explicitly configured Cedar engine.
+///
+/// There is no default policy or implicit permit. Callers must resolve the active
+/// policy and construct a validated [`CedarPolicyEngine`] before using it.
 #[derive(Clone, Debug)]
 pub struct CredentialVerificationPolicyEngine {
     cedar: CedarPolicyEngine,
 }
 
 impl CredentialVerificationPolicyEngine {
-    /// Load and strictly validate the bundled schema and policies.
-    pub fn new() -> Result<Self, SecurityError> {
-        Ok(Self {
-            cedar: CedarPolicyEngine::from_human_schema(POLICIES, SCHEMA, CedarConfig::default())?,
-        })
+    /// Bind the adapter to a policy and schema already validated by MMF.
+    pub fn new(cedar: CedarPolicyEngine) -> Self {
+        Self { cedar }
     }
 
     /// Evaluate authenticated evidence. Invalid or incomplete facts are errors, never permits.
@@ -162,7 +92,14 @@ impl CredentialVerificationPolicyEngine {
         let credential_age_seconds = i64::try_from(facts.credential_age_seconds).map_err(|_| {
             SecurityError::Authorization("credential age exceeds Cedar Long range".into())
         })?;
-        let mut decision = self.cedar.authorize_request(CedarAuthorizationRequest {
+        let credential_status = if facts.is_revoked {
+            "REVOKED"
+        } else if facts.is_expired {
+            "EXPIRED"
+        } else {
+            "ACTIVE"
+        };
+        self.cedar.authorize_request(CedarAuthorizationRequest {
             principal_type: "MIP::User".into(),
             principal_id: "verifier".into(),
             action_type: "MIP::Action".into(),
@@ -197,7 +134,7 @@ impl CredentialVerificationPolicyEngine {
                     "uid": {"type": "MIP::Credential", "id": "presented-credential"},
                     "attrs": {
                         "format": facts.credential_format,
-                        "status": "ACTIVE",
+                        "status": credential_status,
                         "compliance_code": facts.compliance_code,
                         "issuer_id": facts.issuer_id,
                         "trust_level": trust_level
@@ -205,37 +142,7 @@ impl CredentialVerificationPolicyEngine {
                     "parents": [{"type": "MIP::Organization", "id": facts.organization_id}]
                 }
             ]),
-        })?;
-        decision.determining_policies = decision
-            .determining_policies
-            .into_iter()
-            .map(|policy| canonical_policy_reason(&policy).to_owned())
-            .collect();
-        Ok(decision)
-    }
-}
-
-fn canonical_policy_reason(policy: &str) -> &str {
-    match policy {
-        "policy0" => "permit-valid-credentials",
-        "policy1" => "deny-revoked-credentials",
-        "policy2" => "deny-expired-credentials",
-        "policy3" => "deny-untrusted-issuers",
-        "policy4" => "icao-dtc-format-requirement",
-        "policy5" => "icao-dtc-holder-binding",
-        "policy6" => "aamva-mdl-format-requirement",
-        "policy7" => "aamva-mdl-holder-binding",
-        "policy8" => "eudi-pid-format-requirement",
-        "policy9" => "eudi-pid-holder-binding",
-        "policy10" => "deny-weak-algorithms",
-        "policy11" => "high-assurance-freshness",
-        other => other,
-    }
-}
-
-impl Default for CredentialVerificationPolicyEngine {
-    fn default() -> Self {
-        Self::new().expect("bundled credential-verification Cedar policy must be valid")
+        })
     }
 }
 
@@ -258,17 +165,25 @@ fn validate_facts(facts: &CredentialVerificationAuthorizationFacts) -> Result<()
             "credential authorization trust level must be between 0 and 100".into(),
         ));
     }
+    if facts.revocation_required && !facts.revocation_checked {
+        return Err(SecurityError::Authorization(
+            "required credential status evidence is unavailable".into(),
+        ));
+    }
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::CedarConfig;
     use serde_json::Value;
+    use std::collections::BTreeMap;
 
     #[derive(Deserialize)]
     struct Contract {
         schema_version: u32,
+        policy_sources: BTreeMap<String, String>,
         base_facts: CredentialVerificationAuthorizationFacts,
         cases: Vec<Case>,
     }
@@ -276,21 +191,37 @@ mod tests {
     #[derive(Deserialize)]
     struct Case {
         name: String,
+        policy: String,
         patch: Value,
         allowed: bool,
         #[serde(default)]
         expected_reasons: Vec<String>,
     }
 
-    #[test]
-    fn language_neutral_credential_verification_contract() {
-        let contract: Contract = serde_json::from_str(include_str!(
+    fn contract() -> Contract {
+        serde_json::from_str(include_str!(
             "../../../contracts/credential-verification-authorization-behavior.json"
         ))
-        .unwrap();
-        assert_eq!(contract.schema_version, 1);
-        let engine = CredentialVerificationPolicyEngine::new().unwrap();
+        .unwrap()
+    }
+
+    fn engine(source: &str) -> CredentialVerificationPolicyEngine {
+        CredentialVerificationPolicyEngine::new(
+            CedarPolicyEngine::from_human_schema(
+                source,
+                CREDENTIAL_VERIFICATION_SCHEMA,
+                CedarConfig::default(),
+            )
+            .unwrap(),
+        )
+    }
+
+    #[test]
+    fn language_neutral_resolved_policy_contract() {
+        let contract = contract();
+        assert_eq!(contract.schema_version, 2);
         for case in contract.cases {
+            let engine = engine(&contract.policy_sources[&case.policy]);
             let mut value = serde_json::to_value(&contract.base_facts).unwrap();
             for (key, patch) in case.patch.as_object().unwrap() {
                 value[key] = patch.clone();
@@ -299,34 +230,85 @@ mod tests {
                 serde_json::from_value(value).unwrap();
             let decision = engine.authorize(&facts).unwrap();
             assert_eq!(decision.allowed, case.allowed, "{}", case.name);
-            if !case.expected_reasons.is_empty() {
-                assert_eq!(decision.determining_policies, case.expected_reasons);
-            }
+            assert_eq!(
+                decision.determining_policies, case.expected_reasons,
+                "{}",
+                case.name
+            );
         }
     }
 
     #[test]
-    fn invalid_facts_fail_closed() {
-        let mut facts: CredentialVerificationAuthorizationFacts = serde_json::from_value(json!({
-            "organization_id": "org-1",
-            "credential_format": "SD_JWT_VC",
-            "compliance_code": "UNSPECIFIED",
-            "issuer_id": "did:example:issuer",
-            "issuer_trust_level": 87,
-            "credential_age_seconds": 30,
-            "revocation_checked": false,
-            "revocation_required": false,
-            "is_revoked": false,
-            "is_expired": false,
-            "holder_binding_present": true,
-            "algorithm": "EdDSA"
-        }))
-        .unwrap();
-        let engine = CredentialVerificationPolicyEngine::new().unwrap();
+    fn changing_resolved_policy_changes_the_decision_without_changing_facts() {
+        let contract = contract();
+        let standard = engine(&contract.policy_sources["standard"]);
+        let strict = engine(&contract.policy_sources["strict"]);
+        assert!(standard.authorize(&contract.base_facts).unwrap().allowed);
+        assert!(!strict.authorize(&contract.base_facts).unwrap().allowed);
+    }
+
+    #[test]
+    fn invalid_or_missing_policy_cannot_construct_an_engine() {
+        for source in [
+            "",
+            "not a Cedar policy",
+            "permit(principal, action, resource) when { context.missing };",
+        ] {
+            assert!(
+                CedarPolicyEngine::from_human_schema(
+                    source,
+                    CREDENTIAL_VERIFICATION_SCHEMA,
+                    CedarConfig::default(),
+                )
+                .is_err()
+            );
+        }
+    }
+
+    #[test]
+    fn incompatible_schema_cannot_authorize_projected_facts() {
+        let cedar = CedarPolicyEngine::from_human_schema(
+            "permit(principal, action, resource);",
+            "entity User; entity Resource; action \"read\" appliesTo { principal: User, resource: Resource, context: {} };",
+            CedarConfig::default(),
+        ).unwrap();
+        assert!(
+            CredentialVerificationPolicyEngine::new(cedar)
+                .authorize(&contract().base_facts)
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn invalid_facts_fail_closed_even_with_an_explicit_permit() {
+        let mut facts = contract().base_facts;
+        let engine = engine("permit(principal, action, resource);");
         facts.issuer_trust_level = 101;
         assert!(engine.authorize(&facts).is_err());
         facts.issuer_trust_level = 87;
+        facts.credential_age_seconds = u64::MAX;
+        assert!(engine.authorize(&facts).is_err());
+        facts.credential_age_seconds = 30;
         facts.algorithm.clear();
         assert!(engine.authorize(&facts).is_err());
+        facts.algorithm = "x".repeat(4097);
+        assert!(engine.authorize(&facts).is_err());
+        facts.algorithm = "EdDSA".into();
+        facts.revocation_required = true;
+        facts.revocation_checked = false;
+        assert!(engine.authorize(&facts).is_err());
+    }
+
+    #[test]
+    fn entity_status_cannot_contradict_verified_revocation_or_expiry() {
+        let engine =
+            engine("permit(principal, action, resource) when { resource.status == \"ACTIVE\" };");
+        let mut facts = contract().base_facts;
+        assert!(engine.authorize(&facts).unwrap().allowed);
+        facts.is_revoked = true;
+        assert!(!engine.authorize(&facts).unwrap().allowed);
+        facts.is_revoked = false;
+        facts.is_expired = true;
+        assert!(!engine.authorize(&facts).unwrap().allowed);
     }
 }
