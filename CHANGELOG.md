@@ -4,6 +4,11 @@
 
 ### Changed
 
+- Credential authorization now requires a caller-resolved `CedarPolicyEngine`.
+  `CredentialVerificationPolicyEngine::new(cedar)` replaces the implicit preset
+  and `Default`; the shared `CREDENTIAL_VERIFICATION_SCHEMA` remains available.
+  Format, compliance, trust, algorithm, and freshness rules belong to the active
+  domain policy. Diagnostics retain the configured Cedar policy identifiers.
 - Made the 18-crate Rust workspace the only MMF implementation and marked
   every capability `native-active` in the machine-readable inventory.
 - Replaced Python CI, dependency automation, contributor commands, and stale
