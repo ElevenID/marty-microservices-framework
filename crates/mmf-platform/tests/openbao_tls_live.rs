@@ -227,7 +227,7 @@ async fn exercise() -> Result<()> {
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 #[ignore = "requires externally locked, authenticated live installer ingress fixture"]
 async fn actual_scoped_openbao_signer_completes_tls_and_rejects_wrong_sni() {
-    let result = timeout(Duration::from_secs(40), exercise()).await;
+    let result = timeout(Duration::from_secs(40), Box::pin(exercise())).await;
     assert!(
         matches!(result, Ok(Ok(()))),
         "live TLS component qualification failed (details redacted)"
