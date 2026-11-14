@@ -187,3 +187,72 @@ async fn redis_backend_matches_the_canonical_cache_contract_when_available() {
     );
     isolated.clear().await.expect("clear isolated namespace");
 }
+
+#[tokio::test]
+async fn redis_namespace_globs_do_not_cross_cache_boundaries_when_available() {
+    let Ok(url) = std::env::var("MMF_REDIS_TEST_URL") else {
+        return;
+    };
+    let unique = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("system clock")
+        .as_nanos();
+    let production = url.starts_with("unix://") || url.starts_with("redis+unix://");
+    let base = RedisCache::connect(
+        redis_config(url, format!("mmf-literal-keyspace-{unique}")),
+        production,
+    )
+    .await
+    .expect("connect test namespace");
+
+    for (index, (literal, neighbor)) in [
+        ("tenant*", "tenant-other"),
+        ("tenant?", "tenantX"),
+        ("tenant[ab]", "tenanta"),
+        (r"tenant\literal", "tenantliteral"),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        for in_namespace in [true, false] {
+            let family = format!("mmf-literal-{unique}-{index}-{in_namespace}");
+            let (cache, isolated) = if in_namespace {
+                (
+                    base.with_key_space(format!("{family}-{literal}"), "cache"),
+                    base.with_key_space(format!("{family}-{neighbor}"), "cache"),
+                )
+            } else {
+                (
+                    base.with_key_space(&family, literal),
+                    base.with_key_space(&family, neighbor),
+                )
+            };
+            let cache = cache.expect("literal cache view");
+            let isolated = isolated.expect("neighbor cache view");
+            cache
+                .set("shared", b"primary".to_vec(), None, 0)
+                .await
+                .expect("set literal-keyspace value");
+            isolated
+                .set("shared", b"neighbor".to_vec(), None, 0)
+                .await
+                .expect("set neighbor value");
+            assert_eq!(
+                cache.keys("sha*", 0).await.expect("scan literal keyspace"),
+                ["shared"],
+                "literal {literal:?}, in_namespace={in_namespace}",
+            );
+            cache.clear().await.expect("clear literal keyspace");
+            assert_eq!(
+                cache.get("shared", 0).await.expect("read cleared key"),
+                None
+            );
+            assert_eq!(
+                isolated.get("shared", 0).await.expect("read neighbor key"),
+                Some(b"neighbor".to_vec()),
+                "literal {literal:?}, in_namespace={in_namespace}",
+            );
+            isolated.clear().await.expect("clear neighbor fixture");
+        }
+    }
+}

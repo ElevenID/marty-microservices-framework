@@ -392,7 +392,17 @@ impl RedisCache {
             ));
         }
         let prefix = self.namespace_prefix();
-        let match_pattern = format!("{prefix}{pattern}");
+        // The configured keyspace is literal data; only the caller's key pattern
+        // may contain Redis glob operators. Escaping keeps SCAN (and clear's
+        // subsequent DEL) within the same keyspace used by GET and SET.
+        let mut match_pattern = String::with_capacity(prefix.len() + pattern.len());
+        for character in prefix.chars() {
+            if matches!(character, '*' | '?' | '[' | ']' | '\\') {
+                match_pattern.push('\\');
+            }
+            match_pattern.push(character);
+        }
+        match_pattern.push_str(pattern);
         let mut cursor = 0_u64;
         let mut keys = Vec::new();
         loop {
@@ -406,6 +416,7 @@ impl RedisCache {
                         .arg(200_u16),
                 )
                 .await?;
+            page.retain(|key| key.starts_with(&prefix));
             keys.append(&mut page);
             if next == 0 {
                 break;
