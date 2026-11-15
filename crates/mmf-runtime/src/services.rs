@@ -1,5 +1,5 @@
 use std::any::{Any, TypeId, type_name};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, btree_map::Entry};
 use std::sync::{Arc, Mutex, RwLock};
 
 use mmf_core::{ErrorCode, MmfError};
@@ -179,16 +179,16 @@ impl ServiceContainer {
             .registrations
             .write()
             .map_err(|_| MmfError::new(ErrorCode::Internal, "service registry lock poisoned"))?;
-        if registrations
-            .insert(TypeId::of::<T>(), Arc::new(registration))
-            .is_some()
-        {
-            return Err(MmfError::new(
+        match registrations.entry(TypeId::of::<T>()) {
+            Entry::Vacant(entry) => {
+                entry.insert(Arc::new(registration));
+                Ok(())
+            }
+            Entry::Occupied(_) => Err(MmfError::new(
                 ErrorCode::Conflict,
                 format!("service {} is already registered", type_name::<T>()),
-            ));
+            )),
         }
-        Ok(())
     }
 
     fn registration<T>(&self) -> Result<Arc<Registration>, MmfError>
@@ -374,5 +374,81 @@ mod tests {
             fixture.lifetimes.cross_scope_same
         );
         assert!(first_value.0 > 0);
+    }
+
+    #[test]
+    fn rejected_duplicate_instance_keeps_the_original_service() {
+        let container = ServiceContainer::new();
+        let original = Arc::new(Service(7));
+        container
+            .register_instance(original.clone())
+            .expect("register original");
+
+        let error = container
+            .register_instance(Arc::new(Service(99)))
+            .expect_err("reject duplicate");
+        assert_eq!(error.code, ErrorCode::Conflict);
+        assert!(Arc::ptr_eq(
+            &original,
+            &container.resolve::<Service>().expect("original remains")
+        ));
+    }
+
+    #[test]
+    fn rejected_duplicate_factory_keeps_the_original_lifetime() {
+        let container = ServiceContainer::new();
+        container
+            .register(ServiceLifetime::Scoped, json!({}), |_| Ok(Service(7)))
+            .expect("register original");
+        let error = container
+            .register(ServiceLifetime::Singleton, json!({}), |_| Ok(Service(99)))
+            .expect_err("reject duplicate");
+        assert_eq!(error.code, ErrorCode::Conflict);
+        assert_eq!(
+            container
+                .resolve::<Service>()
+                .expect_err("original still requires a scope")
+                .code,
+            ErrorCode::Conflict
+        );
+        let scope = container.create_scope("retained").expect("scope");
+        assert_eq!(scope.resolve::<Service>().expect("original factory").0, 7);
+    }
+
+    #[test]
+    fn rejected_duplicate_keeps_the_original_shutdown_callback() {
+        let container = ServiceContainer::new();
+        let shutdown_value = Arc::new(AtomicU64::new(0));
+        let original_shutdown = shutdown_value.clone();
+        container
+            .register_with_shutdown(
+                ServiceLifetime::Singleton,
+                json!({}),
+                |_| Ok(Service(7)),
+                Some(move |service: Arc<Service>| {
+                    original_shutdown.fetch_add(service.0, Ordering::Relaxed);
+                    Ok(())
+                }),
+            )
+            .expect("register original");
+        let original = container
+            .resolve::<Service>()
+            .expect("instantiate original");
+        let duplicate_shutdown = shutdown_value.clone();
+        let error = container
+            .register_with_shutdown(
+                ServiceLifetime::Singleton,
+                json!({}),
+                |_| Ok(Service(99)),
+                Some(move |service: Arc<Service>| {
+                    duplicate_shutdown.fetch_add(service.0, Ordering::Relaxed);
+                    Ok(())
+                }),
+            )
+            .expect_err("reject duplicate");
+        assert_eq!(error.code, ErrorCode::Conflict);
+        container.shutdown().expect("shutdown original");
+        container.shutdown().expect("shutdown is idempotent");
+        assert_eq!(shutdown_value.load(Ordering::Relaxed), original.0);
     }
 }
