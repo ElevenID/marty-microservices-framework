@@ -19,24 +19,27 @@ fn unicode_oracle() -> Value {
 #[test]
 fn all_64_published_lexical_vectors_match_without_skipping_errors() {
     let fixture: Value = serde_json::from_str(include_str!(
-        "../../../contracts/canvas-worker-numeric-lexical-oracle.json"
+        "../../../contracts/python-config-lexical-observations.json"
     ))
-    .expect("canonical credentials fixture");
+    .expect("frozen configuration parser observations");
     assert_eq!(
-        fixture["observed_source"],
+        fixture["legacy_observation"]["observed_source"],
         "85b128a85426b3f5aeaf6f948ba5dfa2836e95d8"
     );
-    assert_eq!(fixture["observed_python_version"], "3.12.13");
+    assert_eq!(
+        fixture["legacy_observation"]["observed_python_version"],
+        "3.12.13"
+    );
     let cases = fixture["cases"].as_array().expect("cases");
     assert_eq!(cases.len(), 64);
     for case in cases {
-        let environment = case["environment"].as_object().expect("environment");
-        assert_eq!(environment.len(), 1);
-        let (name, raw) = environment.iter().next().expect("single input");
-        let input = raw.as_str().expect("original environment string");
+        let kind = case["kind"].as_str().expect("numeric input kind");
+        let input = case["input"]
+            .as_str()
+            .expect("original configuration string");
         let invalid = case.get("expected_error").is_some();
-        match name.as_str() {
-            "CANVAS_SYNC_SCHEDULE_LIMIT" => {
+        match kind {
+            "integer" => {
                 let actual = input.parse::<PythonConfigInteger>();
                 if invalid {
                     assert_eq!(actual, Err(InvalidConfigNumber), "{}", case["name"]);
@@ -50,7 +53,7 @@ fn all_64_published_lexical_vectors_match_without_skipping_errors() {
                     );
                 }
             }
-            "CANVAS_SYNC_WORKER_POLL_SECONDS" => {
+            "float" => {
                 let actual = parse_python_config_float(input);
                 if invalid {
                     assert!(actual.is_err(), "{}", case["name"]);

@@ -20,12 +20,18 @@ Service defaults, worker identity and SQL/time error phases remain consumer-owne
 
 ## Frozen evidence and tests
 
-The 64-case lexical fixture is vendored byte-for-byte from credentials protected
-revision `2a8360558d91fea0c50b43af2590fb750ae5c37e`, path
-`contracts/canvas-worker-numeric-lexical-oracle.json`.
-Git blob: `3a9e8df0b605191eaf39990baf3e2e1821a63302`.
-SHA256: `2a99ab2e95ed041a888d35dcf1414c4ed220bc3cb0cebfa4766705a5ee73973a`.
-Do not maintain a separate hand-written list of its expected numeric values.
+The 64-case lexical fixture is owned here as
+`contracts/python-config-lexical-observations.json`. It projects the original
+single-setting environment record into an explicit numeric kind and input string.
+Every case name, input string, expected value and error is unchanged. Rust tests
+consume all 64 cases, including errors, without a service-specific environment
+variable registry. The `legacy_observation` section retains immutable provenance.
+
+The frozen source was vendored from credentials protected revision
+`2a8360558d91fea0c50b43af2590fb750ae5c37e`, Git blob
+`3a9e8df0b605191eaf39990baf3e2e1821a63302`, SHA256
+`2a99ab2e95ed041a888d35dcf1414c4ed220bc3cb0cebfa4766705a5ee73973a`.
+Do not replace its observations with a hand-written list of expected numbers.
 
 `contracts/python-numeric-unicode-oracle.json` was observed by enumerating every
 codepoint in that same immutable issuance image's Python 3.12.13 runtime:
@@ -44,7 +50,7 @@ Rust tests replay all 64 lexical vectors without skips, all Unicode scalar value
 against the observed digit map, accepted/rejected whitespace, digit-limit edges,
 ordered non-finite/signed-zero bounds, 289 ordering comparisons, checked machine
 boundaries, lossless OAuth-style capping and value-free errors. This is parser
-proof, not full Canvas configuration or database/loop acceptance.
+proof, not complete service configuration or database/loop acceptance.
 
 ```sh
 cargo +1.93.0 test --locked -p mmf-config
@@ -61,9 +67,9 @@ in Git history at `c7181c8`. No numeric oracle, fixture, parser case or consumer
 migration gate is removed. Capability ownership, Python-absence and release
 guards continue alongside the executable positive and negative contracts.
 
-Canvas must adopt the shared owner through a reviewed protected dependency pin,
-preserve explicit identity whitespace, replay its full configuration corpus and
-the separate consumer-range oracle, and check conversions at the observed SQL/
-time boundary. A parser passing these tests does not authorize changing routing
-or deleting the retained Python worker. Whole-worker concurrency, cancellation,
-fencing, providers, readiness and beta cutover gates remain required.
+Consumers adopt the shared owner through reviewed dependency pins, preserve their
+own identity and default policies, and check conversions at their SQL/time
+boundaries. Parser compatibility does not establish a caller's routing,
+concurrency, cancellation, provider or readiness behavior. Those tests belong to
+the consuming service. A provider connector remains external and has no authority
+to change platform ownership, approval or signing policy through configuration.

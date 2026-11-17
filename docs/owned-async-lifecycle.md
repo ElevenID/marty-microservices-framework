@@ -59,11 +59,13 @@ already resolved in the lockfile. No dependency version or crypto pin changes.
 The existing synchronous/HTTP runtime and retirement inventory contracts remain
 mandatory alongside these new tests.
 
-## Consumer adoption remains required
+## Consumer verification
 
-This platform primitive alone does not prove Canvas entry-point disposal.
-Adopt the protected revision in the native worker, use its explicit cancellation
-and join boundary, verify actual PostgreSQL pool closure on every initialized
-exit, preserve graceful drain as distinct from cancellation, and retain every
-remaining whole-worker/provider/readiness/consumer/acceptance gate. No Python
-deletion, release selection, deployment or production change is part of this PR.
+Each consuming service must adopt the shared owner through a reviewed dependency
+pin and use its explicit cancellation and join boundary. Its resource lifecycle
+tests must verify disposal on every initialized exit and distinguish graceful
+drain from cancellation. The primitive alone does not prove that a database
+pool, HTTP client or external provider is correctly integrated by its caller.
+
+Service implementation retirement, release qualification and deployment are
+separate decisions owned by that service; they are not shared-library gates.
