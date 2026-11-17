@@ -15,5 +15,5 @@
   "order": ["operation_entered", "operation_dropped", "cleanup_entered", "cleanup_completed", "join_completed"],
   "cleanup_cancellable": false,
   "native_extensions": ["cancellation requests cannot interrupt cleanup once started", "operation panic still cleans up", "cleanup error or panic retains original operation outcome", "pre-start cancellation skips operation but disposes initialized resources", "dropped handles request cleanup without claiming synchronous acknowledgment"],
-  "excluded_guarantees": ["arbitrary detached child tasks", "forced runtime shutdown", "process abort", "host failure", "Canvas deployment or Python deletion"]
+  "excluded_guarantees": ["arbitrary detached child tasks", "forced runtime shutdown", "process abort", "host failure", "consumer deployment or implementation retirement"]
 }
